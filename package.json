@@ -1,0 +1,15 @@
+{
+  "name": "test",
+  "version": "0.0.1",
+  "description": "declarative testing library",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node test/",
+    "test": "node test/ -- --verbose"
+  },
+  "author": "Jascha Ehrenreich <jascha@jaeh.at>",
+  "dependencies": {
+    "argv": "file:../argv",
+    "types": "file:../types"
+  }
+}
