@@ -16,15 +16,14 @@ const t = require('./t')
 const runTest = ({ parent, test }) => {
   const { fn, expect, name, before, items } = test
 
-  const exp = isFunction(expect) ? expect() : expect
-
   if (!isFunction(fn)) {
     if (isObject(test)) {
-      const keys = Object.keys(test)
-
-      return keys.map(key => {
-        return runSuite({ parent: name, name: key, key: `${key}.${name}`, tests: test[key] })
-      })
+      return Object.keys(test).map(key => runSuite({
+        parent: name,
+        name: key,
+        key: `${key}.${name}`,
+        tests: test[key],
+      }))
     }
 
     log.error('AAAAAAAAAAAAAAAAAAR')
@@ -38,7 +37,9 @@ const runTest = ({ parent, test }) => {
 
   const result = fn()
   const msg = fn.toString().replace('() => ', '')
-  const pass = exp === result
+
+  const exp = isFunction(expect) ? expect(result) : expect
+  const pass = isFunction(expect) ? exp : exp === result
 
   if (!pass) {
     stats.add(parent, { fail: 1, all: 1 })
@@ -46,7 +47,7 @@ const runTest = ({ parent, test }) => {
   }
   else {
     stats.add(parent, { pass: 1, all: 1 })
-    log.pass(msg, result, exp)
+    log.pass(msg, result)
   }
 
   if (isFunction(after)) {
