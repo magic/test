@@ -29,14 +29,15 @@ const paint = (key, ...str) => {
 
 const log = (...val) => console.log(...val)
 
-log.info = (...val) => VERBOSE && console.log(...val)
+log.info = (...val) => VERBOSE && console.log(val.join(' ').substr(0, VERBOSE ? 100 : 20))
 
-log.success = (...val) => log.info(paint('green', val.join(' ')))
+log.success = (...val) => log.info(paint('green', val.join(' ')).substr(0, VERBOSE ? 100 : 20))
 
-log.error = (...val) => console.error(paint('red', JSON.stringify(val)))
+log.error = (...val) => console.error(paint('red', JSON.stringify(val)).substr(0, VERBOSE ? 100 : 20))
 
-log.pass = (msg, result, expect) => VERBOSE && console.log(paint('green', '* pass:'), `\`${msg}\``, `expected: ${expect}`, `got ${result}`)
-log.fail = (msg, result, expect) => log(paint('red', '* fail:'), `\`${msg}\``, `expected: ${expect}`, `got: ${result}`)
+log.pass = (msg, result, expect) => VERBOSE && console.log(paint('green', '* pass:'), `\`${msg}\``, `returned ${result}`.substr(0, VERBOSE ? 100 : 20))
+
+log.fail = (msg, result, expect) => log(paint('red', '* fail:'), `\`${msg}\``, `expected: ${expect}`, `got: ${result}`.substr(0, VERBOSE ? 100 : 20))
 
 log.results = suites => {
   console.log('### START TESTS ###\n')
