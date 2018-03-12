@@ -5,11 +5,14 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node test/",
-    "test": "node test/ -- --verbose"
+    "test": "node test/ -- -v"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "dependencies": {
-    "argv": "file:../argv",
+    "config": "file:../config",
+    "cryptography": "file:../cryptography",
+    "deep": "file:../deep",
+    "store": "file:../store",
     "types": "file:../types"
   }
 }
