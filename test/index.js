@@ -1,6 +1,8 @@
-const run = require('../src')
+const { isObject } = require('types')
 
+const run = require('../src')
 const t = require('./t')
+const vals = require('./vals')
 
 const expectTrue = {
   fn: () => true,
@@ -14,21 +16,26 @@ const expectFalse = {
 
 const tests = {
   t,
+  vals,
 
   // test possible test structure
   testNestedObject: {
-    nestedSingleTest: expectTrue,
+    nestedSingleTest: { fn: () => 1, expect: 1 },
     deeper: {
       rabbit: [
-        expectTrue,
-        expectFalse,
+        { fn: () => 1, expect: 1 },
+        { fn: () => false, expect: false },
+        { fn: () => 'string', expect: 'string' },
       ],
     },
   },
-  testNestedArray: [
-    expectTrue,
-    expectFalse,
-  ],
+  testNestedArray: { 
+    arr: [
+      { fn: () => true, expect: true },
+      { fn: () => false, expect: false },
+      { fn: () => ({}), expect: isObject },
+    ],
+  },
 }
 
 run(tests)

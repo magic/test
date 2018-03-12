@@ -1,116 +1,132 @@
-const { isObject, isFunction, isArray, isEmpty } = require('types')
-
-const argv = require('argv')
+const { isUndefinedOrNull, isObject, isFunction, isArray, isEmpty } = require('types')
 
 const stats = require('./stats')
-
 const log = require('./log')
 
-// const count = require('./count')
+const pr = g => new Promise(r => r(g))
 
-const t = require('./t')
+const cleanFunctionString = fn => {
+  if (isUndefinedOrNull(fn.toString)) {
+    return fn
+  }
 
-// TODO 'calculate coverage')
-// TODO 'calculate fail/pass percentages here')
+  return fn.toString()
+    .replace('async t => await ', '')
+    .replace('async () => await ', '')
+    .replace('async (t) => await ', '')
+    .replace('t => ', '')
+    .replace('(t) => ', '')
+    .replace('() => ', '')
+}
 
-const runTest = ({ parent, test }) => {
-  const { fn, expect, name, before, items } = test
+const runTest = async (test) => {
+  try {
+    const { fn, expect, name, before, items, parent } = test
 
-  if (!isFunction(fn)) {
-    if (isObject(test)) {
-      return Object.keys(test).map(key => runSuite({
-        parent: name,
-        name: key,
-        key: `${key}.${name}`,
-        tests: test[key],
-      }))
+    if (!isFunction(fn)) {
+      if (isObject(test)) {
+        const testNames = Object.keys(testNames)
+        return await Promise.all(testNames.map(async key => await runSuite({
+          parent: name,
+          name: key,
+          tests: test[key],
+        })))
+      }
+
+      log.error('AAAAAAAAAAAAAAAAAAR')
+      log.error('runTest: test.fn is not a function', test)
     }
 
-    log.error('AAAAAAAAAAAAAAAAAAR')
-    log.error('runTest: test.fn is not a function', test)
+    let after
+    if (isFunction(before)) {
+      after = await before()
+    }
+
+    let result
+    let msg
+    let exp
+    let expString
+
+    const key = name ? `${parent}.${name}` : `${parent}`
+
+    result = await fn(test)
+    msg = cleanFunctionString(fn)
+
+    const p = isFunction(expect)
+
+    if (isFunction(expect)) {
+      const expectRes = await expect(result)
+      exp = await pr(expectRes)
+      expString = cleanFunctionString(expect)
+    }
+    else {
+      exp = expect
+      expString = expect
+    }
+
+    const pass = isFunction(expect) ? exp === true : exp === result
+
+    stats.test(Object.assign({}, test, { expect: exp, pass, msg, result, expString }))
+
+    if (after && isFunction(after.fn)) {
+      await after.fn()
+    }
+
+    return {
+      result,
+      msg,
+      pass,
+      parent,
+      name,
+      expect: exp,
+    }
   }
-
-  let after
-  if (isFunction(before)) {
-    after = before()
-  }
-
-  const result = fn()
-  const msg = fn.toString().replace('() => ', '')
-
-  const exp = isFunction(expect) ? expect(result) : expect
-  const pass = isFunction(expect) ? exp : exp === result
-
-  if (!pass) {
-    stats.add(parent, { fail: 1, all: 1 })
-    log.fail(msg, result, exp)
-  }
-  else {
-    stats.add(parent, { pass: 1, all: 1 })
-    log.pass(msg, result)
-  }
-
-  if (isFunction(after)) {
-    after()
-  }
-
-  return {
-    result,
-    msg,
-    pass,
-    parent,
-    name,
-    expect: exp,
+  catch(e) {
+    throw e
   }
 }
 
-const mapTest = (run, tests) => {}
-
-const runSuite = ({ parent, name, key, tests }) => {
-  log.info(`\n------ Run: ${key}`)
-
-  if (isFunction(tests)) {
-    tests = tests(name, tests)
-  }
+const runSuite = async (suite) => {
+  const { parent, name, key, tests } = suite
 
   let results
 
   // this is a test, do not loop
   if (isFunction(tests.fn)) {
-    tests.name = name
-    tests.key = key
-
-    return runTest({ parent, test: tests })
+    return await runTest(Object.assign({}, tests, { name, key, parent }))
   }
+  // is a list of unnamed tests
   else if (isArray(tests)) {
-    results = tests.map(test => runTest({ parent: name, key, test }))
+    results = await Promise.all(tests.map(async test => {
+      const fullTest = Object.assign({}, test, { name, key, parent })
+      return await runTest(fullTest)
+    }))
   }
+  // is an object expect to contain arrays of tests for modules
   else if (isObject(tests)) {
     const suiteNames = Object.keys(tests)
 
-    results = suiteNames.map(suiteName => {
-      const suite = runSuite({
+    results = await Promise.all(suiteNames.map(async suiteName => {
+      const suite = await runSuite({
         parent: name,
         name: suiteName,
-        key: `${key}.${suiteName}`,
+        key: `${name}.${suiteName}`,
         tests: tests[suiteName],
       })
 
       return suite
-    })
+    }))
   }
   else {
     log.error('runSuite:', 'invalid tests', tests)
   }
-
-  log.info(`----- Finish ${key}`)
 
   return {
     [key]: results,
   }
 }
 
-const run = (tests) => {
+const run = async (tests) => {
   const state = {}
 
   if (isFunction(tests)) {
@@ -124,14 +140,11 @@ const run = (tests) => {
 
   const suiteNames = Object.keys(tests)
 
-  const results = suiteNames.map(name => {
-    const stats = {}
+  await Promise.all(suiteNames.map(async name => {
+    return await runSuite({ parent: name, name, tests: tests[name] })
+  }))
 
-    const result = runSuite({ name, key: name, tests: tests[name] })
-    return result
-  })
-
-  stats.calculate()
+  stats.info()
 }
 
 module.exports = run

@@ -1,90 +1,130 @@
+const { VERBOSE } = require('config')
 const { isDefined, isFalsy, isNumber, isObject } = require('types')
+
 const log = require('./log')
 
-const counter = {}
-
-const deepAdd = (o, o2) => {
-  if (isFalsy(o) || isFalsy(o2)) {
-    return o
-  }
-
-  if (isNumber(o) && isNumber(o2)) {
-    o += o2
-    return o
-  }
-
-  Object.keys(o2).forEach(key => {
-    o[key] = deepAdd(o[key], o2[key])
-  })
-
-  return o
-}
-
-const add = (key, count = 1) => {
-  if (!key) {
-    return
-  }
-
-  if (!isDefined(counter[key])) {
-    counter[key] = count
-    return
-  }
-
-  if (isObject(count)) {
-    counter[key] = deepAdd(counter[key], count)
-    return
-  }
-
-  if (count) {
-    counter[key] += count
-  }
+const storage = {
+  suites: {},
+  stats: {
+    all: 0,
+    pass: 0,
+    fail: 0,
+  },
 }
 
 const set = (key, value) => {
-  counter[key] = value
-}
-
-const get = key => {
-  if (key) {
-    return counter[key]
+  if (storage[key]) {
+    storage[key] = Object.assign({}, storage[key], value)
   }
-  return counter
+
+  return storage[key]
 }
 
-const calculate = () => {
-  log('--------\n')
-  log.info('Suites:')
+const get = (key) => {
+  if (isDefined(storage[key])) {
+    return storage[key]
+  }
 
-  let percentages = 0
-  let suites = 0
-  let pass = 0
-  let all = 0
+  return undefined
+}
 
-  Object.keys(counter).forEach(key => {
-    const count = counter[key]
-    const percentage = (count.pass / count.all) * 100
+const add = (key, value) => {
+  const data = get(key)
 
-    if (percentage === 100) {
-      log.success(key, `${percentage}%`)
+  Object.keys(value).forEach(k => {
+    if (isObject(data)) {
+      if (isNumber(data[k]) && isNumber(value[k])) {
+        data[k] += value[k]
+      }
     }
-    else {
-      log.error(key, percentage)
-    }
-
-    percentages += percentage
-    pass += count.pass
-    all += count.all
-    suites += 1
   })
 
-  log(`Percentage pass: ${percentages / suites }% ${pass}/${all}`)
-  log('-------')
+  storage[key] = data
+
+  return data
+}
+
+const test = t => {
+  let stat = storage.suites[t.key]
+  let stats = storage.stats
+
+  if (!stat) {
+    stat = {
+      pass: t.pass === false ? 0 : 1,
+      fail: t.pass ? 1 : 0,
+      all: 1,
+      tests: [t],
+    }
+  }
+
+  stat.tests.push(t)
+
+  if (t.pass) {
+    stat.pass += 1
+    stats.pass += 1
+  }
+  else {
+    stat.fail += 1
+    stats.fail += 1
+  }
+
+  stat.all += 1
+  stats.all += 1
+  storage.suites[t.key] = stat
+  storage.stats = stats
+}
+
+const printPercent = p => p === 100 ? log.paint('green', p) : log.paint('red', p)
+
+const info = (results) => {
+  log('--------  Tests:')
+
+  const suites = storage.suites
+  const suiteNames = Object.keys(storage.suites)
+
+  suiteNames.forEach(suiteName => {
+    const { pass, fail, all, tests } = suites[suiteName]
+
+    const percentage = all / pass * 100
+
+    log.info('\n')
+    log.info(`###### Testing: ${suiteName}, Pass: ${pass}/${all} ${printPercent(percentage)}%`)
+    log.info('')
+
+    tests.forEach(test => {
+      if (test.pass) {
+        log.pass(test)
+      }
+      else {
+        log.fail(test)
+      }
+    })
+
+    log.info('--------------------------')
+    // const num = suite
+    //
+    // console.log({ suiteName, suite })
+  })
+
+  const stats = storage.stats
+
+  const percentage = printPercent(stats.all / stats.pass * 100)
+
+  suiteNames.forEach(suiteName => {
+    const {pass, fail, all, tests } = suites[suiteName]
+    const percentage = printPercent(all / pass * 100)
+    log.info(`${suiteName} => Pass: ${pass}/${all} ${percentage}%`)
+  })
+
+  log(`\n  Ran ${stats.all} tests. Passed ${percentage}%`)
+
+  log('---------------------------')
 }
 
 module.exports = {
-  counter,
   add,
-  get,
+  info,
+  test,
   set,
-  calculate,
+  get,
 }
