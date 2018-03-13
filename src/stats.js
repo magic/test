@@ -10,6 +10,7 @@ const storage = {
     pass: 0,
     fail: 0,
   },
+  pkg: '',
 }
 
 const set = (key, value) => {
@@ -17,6 +18,7 @@ const set = (key, value) => {
     storage[key] = Object.assign({}, storage[key], value)
   }
 
+  storage[key] = value
   return storage[key]
 }
 
@@ -57,7 +59,9 @@ const test = t => {
     }
   }
 
-  stat.tests.push(t)
+  if (stat.tests.indexOf(t) === -1) {
+    stat.tests.push(t)
+  }
 
   if (t.pass) {
     stat.pass += 1
@@ -77,18 +81,20 @@ const test = t => {
 const printPercent = p => p === 100 ? log.paint('green', p) : log.paint('red', p)
 
 const info = (results) => {
-  log('--------  Tests:')
-
   const suites = storage.suites
   const suiteNames = Object.keys(storage.suites)
+
+  const pkg = storage.module
+
+  log(`###  Testing package: ${pkg}`)
 
   suiteNames.forEach(suiteName => {
     const { pass, fail, all, tests } = suites[suiteName]
 
-    const percentage = all / pass * 100
+    const percentage = (pass / all) * 100
 
     log.info('\n')
-    log.info(`###### Testing: ${suiteName}, Pass: ${pass}/${all} ${printPercent(percentage)}%`)
+    log.info(`--- ${suiteName}, Pass: ${pass}/${all} ${printPercent(percentage)}%`)
     log.info('')
 
     tests.forEach(test => {
@@ -98,25 +104,26 @@ const info = (results) => {
       else {
         log.fail(test)
       }
+
+      if (test.info) {
+        log.annotate(test.info)
+      }
     })
 
+
     log.info('--------------------------')
-    // const num = suite
-    //
-    // console.log({ suiteName, suite })
   })
 
   const stats = storage.stats
 
-  const percentage = printPercent(stats.all / stats.pass * 100)
-
   suiteNames.forEach(suiteName => {
-    const {pass, fail, all, tests } = suites[suiteName]
-    const percentage = printPercent(all / pass * 100)
+    const { pass, fail, all, tests } = suites[suiteName]
+    const percentage = printPercent((pass / all) * 100)
     log.info(`${suiteName} => Pass: ${pass}/${all} ${percentage}%`)
   })
 
-  log(`\n  Ran ${stats.all} tests. Passed ${percentage}%`)
+  const percentage = printPercent(stats.pass / stats.all * 100)
+  log(`\n  Ran ${stats.all} tests. Passed ${stats.pass}/${stats.all} ${percentage}%`)
 
   log('---------------------------')
 }

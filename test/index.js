@@ -1,7 +1,6 @@
 const { isObject } = require('types')
 
 const run = require('../src')
-const t = require('./t')
 const vals = require('./vals')
 
 const expectTrue = {
@@ -15,7 +14,6 @@ const expectFalse = {
 }
 
 const tests = {
-  t,
   vals,
 
   // test possible test structure
@@ -29,7 +27,7 @@ const tests = {
       ],
     },
   },
-  testNestedArray: { 
+  testNestedArray: {
     arr: [
       { fn: () => true, expect: true },
       { fn: () => false, expect: false },

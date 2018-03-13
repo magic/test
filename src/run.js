@@ -1,4 +1,7 @@
+const path = require('path')
 const { isUndefinedOrNull, isObject, isFunction, isArray, isEmpty } = require('types')
+
+const RUNS = process.env.RUNS || 1
 
 const stats = require('./stats')
 const log = require('./log')
@@ -21,7 +24,7 @@ const cleanFunctionString = fn => {
 
 const runTest = async (test) => {
   try {
-    const { fn, expect, name, before, items, parent } = test
+    const { fn, expect, name, pkg, before, items, parent, runs = 1 } = test
 
     if (!isFunction(fn)) {
       if (isObject(test)) {
@@ -43,34 +46,57 @@ const runTest = async (test) => {
     }
 
     let result
-    let msg
     let exp
     let expString
 
-    const key = name ? `${parent}.${name}` : `${parent}`
-
-    result = await fn(test)
-    msg = cleanFunctionString(fn)
-
-    const p = isFunction(expect)
-
-    if (isFunction(expect)) {
-      const expectRes = await expect(result)
-      exp = await pr(expectRes)
-      expString = cleanFunctionString(expect)
+    const msg = cleanFunctionString(fn)
+    let key = ''
+    if (parent && parent !== pkg) {
+      key = `${pkg}.`
     }
-    else {
-      exp = expect
-      expString = expect
+    if (parent && parent !== name) {
+      key += `${parent}.`
+    }
+    if (name) {
+      key += name
     }
 
-    const pass = isFunction(expect) ? exp === true : exp === result
 
-    stats.test(Object.assign({}, test, { expect: exp, pass, msg, result, expString }))
+    let pass = false
+
+    let res
+    for (let i = 0; i < runs; i++) {
+      res = await fn()
+
+      if (isFunction(expect)) {
+        exp = await expect(res)
+        expString = cleanFunctionString(expect)
+        pass = exp
+      }
+      else {
+        exp = expect
+        expString = expect
+        pass = exp === res
+      }
+
+      if(!pass) {
+        result = res
+        break;
+      }
+
+      // loop is done
+      if (i >= runs - 1) {
+        pass = true
+        result = res
+      }
+    }
 
     if (after && isFunction(after.fn)) {
       await after.fn()
     }
+
+    const stat = Object.assign({}, test, { pkg, key, expect: exp, pass, msg, result, expString })
+    stats.test(stat)
 
     return {
       result,
@@ -87,18 +113,18 @@ const runTest = async (test) => {
 }
 
 const runSuite = async (suite) => {
-  const { parent, name, key, tests } = suite
+  const { parent, name, key, tests, pkg } = suite
 
   let results
 
-  // this is a test, do not loop
+  // this is a single test, do not loop
   if (isFunction(tests.fn)) {
-    return await runTest(Object.assign({}, tests, { name, key, parent }))
+    return await runTest(Object.assign({}, tests, { name, key, parent, pkg }))
   }
   // is a list of unnamed tests
   else if (isArray(tests)) {
     results = await Promise.all(tests.map(async test => {
-      const fullTest = Object.assign({}, test, { name, key, parent })
+      const fullTest = Object.assign({}, test, { name, key, parent, pkg })
       return await runTest(fullTest)
     }))
   }
@@ -112,6 +138,7 @@ const runSuite = async (suite) => {
         name: suiteName,
         key: `${name}.${suiteName}`,
         tests: tests[suiteName],
+        pkg,
       })
 
       return suite
@@ -129,6 +156,7 @@ const runSuite = async (suite) => {
 const run = async (tests) => {
   const state = {}
 
+
   if (isFunction(tests)) {
     tests = tests()
   }
@@ -139,9 +167,13 @@ const run = async (tests) => {
   }
 
   const suiteNames = Object.keys(tests)
+  const pkg = require(path.join(process.cwd(), 'package.json'))
+
+  stats.set('module', pkg.name)
 
   await Promise.all(suiteNames.map(async name => {
-    return await runSuite({ parent: name, name, tests: tests[name] })
+    const suite = { pkg: pkg.name, parent: pkg.name, name, tests: tests[name] }
+    return await runSuite(suite)
   }))
 
   stats.info()
