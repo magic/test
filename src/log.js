@@ -13,6 +13,7 @@ const codes = {
   red: [31, 39],
   green: [32, 39],
   yellow: [33, 39],
+  grey: [94, 39],
 }
 
 const paint = (key, ...str) => {
@@ -35,6 +36,8 @@ log.error = (...val) => console.error(paint('red', JSON.stringify(val)))
 log.pass = ({ msg, result }) => VERBOSE && console.log(paint('green', '* pass:'), msg)
 
 log.fail = ({ msg, result, expString, exp }) => log(paint('red', '* fail:'), `\`${msg}\``, `expected: ${expString}`, `got: ${result} === ${exp}`)
+
+log.annotate = (msg) => log.info(paint('grey', msg))
 
 log.paint = paint
 
