@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node test/",
-    "test": "node test/ -- -v"
+    "test": "node test/ -- -v",
+    "test:multirun": "RUNS=10 node test/ -- -v"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "dependencies": {
