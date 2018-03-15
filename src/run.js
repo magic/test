@@ -1,7 +1,15 @@
 const path = require('path')
 const { isUndefinedOrNull, isObject, isFunction, isArray, isEmpty } = require('types')
 
-const RUNS = process.env.RUNS || 1
+let { RUNS = 1, FN } = process.env
+
+if (FN && FN.indexOf(' ') > -1) {
+  FN = FN.split(' ')
+
+  if (FN.indexOf(',') > -1) {
+    FN = FN.split(',')
+  }
+}
 
 const stats = require('./stats')
 const log = require('./log')
@@ -119,6 +127,10 @@ const runSuite = async (suite) => {
 
   // this is a single test, do not loop
   if (isFunction(tests.fn)) {
+    if (FN && FN.indexOf(name) === -1) {
+      return
+    }
+
     return await runTest(Object.assign({}, tests, { name, key, parent, pkg }))
   }
   // is a list of unnamed tests
@@ -155,7 +167,6 @@ const runSuite = async (suite) => {
 
 const run = async (tests) => {
   const state = {}
-
 
   if (isFunction(tests)) {
     tests = tests()
