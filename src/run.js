@@ -13,22 +13,9 @@ if (FN && FN.indexOf(' ') > -1) {
 
 const stats = require('./stats')
 const log = require('./log')
+const { cleanFunctionString } = require('./lib')
 
 const pr = g => new Promise(r => r(g))
-
-const cleanFunctionString = fn => {
-  if (isUndefinedOrNull(fn.toString)) {
-    return fn
-  }
-
-  return fn.toString()
-    .replace('async t => await ', '')
-    .replace('async () => await ', '')
-    .replace('async (t) => await ', '')
-    .replace('t => ', '')
-    .replace('(t) => ', '')
-    .replace('() => ', '')
-}
 
 const runTest = async (test) => {
   try {

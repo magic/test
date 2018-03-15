@@ -2,6 +2,7 @@ const { isObject } = require('types')
 
 const run = require('../src')
 const vals = require('./vals')
+const cleanFunctionString = require('./lib/cleanFunctionString')
 
 const expectTrue = {
   fn: () => true,
@@ -15,6 +16,7 @@ const expectFalse = {
 
 const tests = {
   vals,
+  cleanFunctionString,
 
   // test possible test structure
   testNestedObject: {
