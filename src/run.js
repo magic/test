@@ -178,14 +178,17 @@ const run = async (tests) => {
   }
 
   const suiteNames = Object.keys(tests)
+
   const pkg = require(path.join(process.cwd(), 'package.json'))
 
   stats.set('module', pkg.name)
 
-  await Promise.all(suiteNames.map(async name => {
-    const suite = { pkg: pkg.name, parent: pkg.name, name, tests: tests[name] }
-    return await runSuite(suite)
-  }))
+  await Promise.all(suiteNames.map(async name => await runSuite({
+    pkg: pkg.name,
+    parent: pkg.name,
+    name,
+    tests: tests[name],
+  })))
 
   stats.info()
 }
