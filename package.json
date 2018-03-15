@@ -5,13 +5,13 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node test/",
-    "test": "node test/ -- -v",
-    "test:multirun": "RUNS=10 node test/ -- -v"
+    "test": "VERBOSE=true node test/ -- -v",
+    "test:multirun": "VERBOSE=true RUNS=10 node test/",
+    "coverage": "nyc npm test"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "dependencies": {
-    "config": "file:../config",
-    "deep": "file:../deep",
+    "deep": "../deep",
     "types": "file:../types"
   }
 }

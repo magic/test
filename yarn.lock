@@ -2,15 +2,8 @@
 # yarn lockfile v1
 
 
-"config@file:../config":
+deep@../deep:
   version "0.0.1"
-  dependencies:
-    types "file:../../../../.cache/yarn/v1/types"
-
-"deep@file:../deep":
-  version "0.0.1"
-  dependencies:
-    types "file:../../../../.cache/yarn/v1/types"
 
 "types@file:../types":
   version "0.0.1"

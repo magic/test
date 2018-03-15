@@ -1,4 +1,4 @@
-const { VERBOSE } = require('config')
+const { VERBOSE } = process.env
 const { isDefined, isFalsy, isNumber, isObject } = require('types')
 
 const log = require('./log')

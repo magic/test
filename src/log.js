@@ -1,4 +1,4 @@
-const { VERBOSE } = require('config')
+const { VERBOSE } = process.env
 
 let styles = {}
 
