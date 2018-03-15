@@ -52,10 +52,10 @@ const test = t => {
 
   if (!stat) {
     stat = {
-      pass: t.pass === false ? 0 : 1,
-      fail: t.pass ? 1 : 0,
-      all: 1,
-      tests: [t],
+      pass: 0,
+      fail: 0,
+      all: 0,
+      tests: [],
     }
   }
 
