@@ -5,12 +5,25 @@
   "main": "src/index.js",
   "scripts": {
     "start": "nyc -a node test/",
-    "lint": "eslint --config ../../.eslintrc.js ./src ./test",
-    "lint:fix": "eslint --fix --config ../../.eslintrc.js ./src ./test",
     "test": "VERBOSE=true nyc -a node test/",
-    "test:multirun": "VERBOSE=true RUNS=10 node test/"
+    "test:multirun": "VERBOSE=true RUNS=10 node test/",
+    "lint": "esw -w ./src ./test",
+    "lint:fix": "eslint --fix ./src ./test"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
+  "eslintConfig": {
+    "extends": "standard",
+    "rules": {
+      "comma-dangle": [
+        "error",
+        "always-multiline"
+      ],
+      "brace-style": [
+        "error",
+        "stroustrup"
+      ]
+    }
+  },
   "dependencies": {
     "deep": "git+http://git@localhost:7005/deep",
     "types": "git+http://git@localhost:7005/types"
