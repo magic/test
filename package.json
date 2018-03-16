@@ -11,7 +11,7 @@
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "dependencies": {
-    "deep": "../deep",
-    "types": "file:../types"
+    "deep": "git+http://git@localhost:7005/deep",
+    "types": "git+http://git@localhost:7005/types"
   }
 }
