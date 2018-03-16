@@ -1,17 +1,17 @@
 const { cleanFunctionString } = require('../../src/lib')
 
 const fns = [
-  { fn: () => cleanFunctionString(async () => await true), expect: 'true' },
-  { fn: () => cleanFunctionString(async (t) => await true), expect: 'true' },
-  { fn: () => cleanFunctionString(async t => await true), expect: 'true' },
+  { fn: () => cleanFunctionString(async () => true), expect: 'true' },
+  { fn: () => cleanFunctionString(async (t) => true), expect: 'true' },
+  { fn: () => cleanFunctionString(async t => true), expect: 'true' },
 
   { fn: () => cleanFunctionString((t) => true), expect: 'true' },
   { fn: () => cleanFunctionString(t => true), expect: 'true' },
   { fn: () => cleanFunctionString(() => true), expect: 'true' },
 
-  { fn: () => cleanFunctionString((async () => await true).toString()), expect: 'true' },
-  { fn: () => cleanFunctionString((async (t) => await true).toString()), expect: 'true' },
-  { fn: () => cleanFunctionString((async t => await true).toString()), expect: 'true' },
+  { fn: () => cleanFunctionString((async () => true).toString()), expect: 'true' },
+  { fn: () => cleanFunctionString((async (t) => true).toString()), expect: 'true' },
+  { fn: () => cleanFunctionString((async t => true).toString()), expect: 'true' },
 
   { fn: () => cleanFunctionString(((t) => true).toString()), expect: 'true' },
   { fn: () => cleanFunctionString((t => true).toString()), expect: 'true' },

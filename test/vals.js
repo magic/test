@@ -31,7 +31,6 @@ const testVals = {
   hexa4: '#3d31',
   hexa8: '#3d3d3111',
   regexp: /test/,
-
   // pointers have to match
   func: vals.func,
   date: vals.date,
@@ -40,7 +39,7 @@ const testVals = {
   err: vals.err,
 }
 
-const invalidTestVals = Object.assign({}, testVals, { t: 't'})
+const invalidTestVals = Object.assign({}, testVals, { t: 't' })
 
 const fn = [
   { fn: () => deep.equals(testVals, vals), expect: true },

@@ -1,5 +1,4 @@
-const { VERBOSE } = process.env
-const { isDefined, isFalsy, isNumber, isObject } = require('types')
+const { isDefined, isNumber, isObject } = require('types')
 
 const log = require('./log')
 
@@ -89,7 +88,7 @@ const info = (results) => {
   log(`###  Testing package: ${pkg}`)
 
   suiteNames.forEach(suiteName => {
-    const { pass, fail, all, tests } = suites[suiteName]
+    const { pass, all, tests } = suites[suiteName]
 
     const percentage = (pass / all) * 100
 
@@ -110,14 +109,13 @@ const info = (results) => {
       }
     })
 
-
     log.info('--------------------------')
   })
 
   const stats = storage.stats
 
   suiteNames.forEach(suiteName => {
-    const { pass, fail, all, tests } = suites[suiteName]
+    const { pass, all } = suites[suiteName]
     const percentage = printPercent((pass / all) * 100)
     log.info(`${suiteName} => Pass: ${pass}/${all} ${percentage}%`)
   })

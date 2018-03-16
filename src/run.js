@@ -1,7 +1,7 @@
 const path = require('path')
-const { isUndefinedOrNull, isObject, isFunction, isArray, isEmpty } = require('types')
+const { isObject, isFunction, isArray } = require('types')
 
-let { RUNS = 1, FN } = process.env
+let { FN } = process.env
 
 if (FN && FN.indexOf(' ') > -1) {
   FN = FN.split(' ')
@@ -15,16 +15,14 @@ const stats = require('./stats')
 const log = require('./log')
 const { cleanFunctionString } = require('./lib')
 
-const pr = g => new Promise(r => r(g))
-
 const runTest = async (test) => {
   try {
-    const { fn, expect, name, pkg, before, items, parent, runs = 1 } = test
+    const { fn, expect, name, pkg, before, parent, runs = 1 } = test
 
     if (!isFunction(fn)) {
       if (isObject(test)) {
-        const testNames = Object.keys(testNames)
-        return await Promise.all(testNames.map(async key => await runSuite({
+        const testNames = Object.keys(test.tests)
+        return Promise.all(testNames.map(async key => runSuite({
           parent: name,
           name: key,
           tests: test[key],
@@ -56,7 +54,6 @@ const runTest = async (test) => {
       key += name
     }
 
-
     let pass = false
 
     let res
@@ -74,9 +71,9 @@ const runTest = async (test) => {
         pass = exp === res
       }
 
-      if(!pass) {
+      if (!pass) {
         result = res
-        break;
+        break
       }
 
       // loop is done
@@ -102,7 +99,7 @@ const runTest = async (test) => {
       expect: exp,
     }
   }
-  catch(e) {
+  catch (e) {
     throw e
   }
 }
@@ -118,13 +115,13 @@ const runSuite = async (suite) => {
       return
     }
 
-    return await runTest(Object.assign({}, tests, { name, key, parent, pkg }))
+    return runTest(Object.assign({}, tests, { name, key, parent, pkg }))
   }
   // is a list of unnamed tests
   else if (isArray(tests)) {
     results = await Promise.all(tests.map(async test => {
       const fullTest = Object.assign({}, test, { name, key, parent, pkg })
-      return await runTest(fullTest)
+      return runTest(fullTest)
     }))
   }
   // is an object expect to contain arrays of tests for modules
@@ -153,8 +150,6 @@ const runSuite = async (suite) => {
 }
 
 const run = async (tests) => {
-  const state = {}
-
   if (isFunction(tests)) {
     tests = tests()
   }
@@ -170,7 +165,7 @@ const run = async (tests) => {
 
   stats.set('module', pkg.name)
 
-  await Promise.all(suiteNames.map(async name => await runSuite({
+  await Promise.all(suiteNames.map(async name => runSuite({
     pkg: pkg.name,
     parent: pkg.name,
     name,

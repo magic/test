@@ -4,16 +4,6 @@ const run = require('../src')
 const vals = require('./vals')
 const cleanFunctionString = require('./lib/cleanFunctionString')
 
-const expectTrue = {
-  fn: () => true,
-  expect: true,
-}
-
-const expectFalse = {
-  fn: () => false,
-  expect: false,
-}
-
 const tests = {
   vals,
   cleanFunctionString,
