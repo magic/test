@@ -4,10 +4,11 @@
   "description": "declarative testing library",
   "main": "src/index.js",
   "scripts": {
-    "start": "node test/",
-    "test": "VERBOSE=true node test/ -- -v",
-    "test:multirun": "VERBOSE=true RUNS=10 node test/",
-    "coverage": "nyc npm test"
+    "start": "nyc -a node test/",
+    "lint": "eslint --config ../../.eslintrc.js ./src ./test",
+    "lint:fix": "eslint --fix --config ../../.eslintrc.js ./src ./test",
+    "test": "VERBOSE=true nyc -a node test/",
+    "test:multirun": "VERBOSE=true RUNS=10 node test/"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "dependencies": {
