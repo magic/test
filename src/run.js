@@ -1,19 +1,42 @@
 const path = require('path')
 const { isObject, isFunction, isArray } = require('types')
 
-let { FN } = process.env
-
-if (FN && FN.indexOf(' ') > -1) {
-  FN = FN.split(' ')
-
-  if (FN.indexOf(',') > -1) {
-    FN = FN.split(',')
-  }
-}
-
 const stats = require('./stats')
 const log = require('./log')
 const { cleanFunctionString } = require('./lib')
+
+
+const getFNS = () => {
+  let { FN = '' } = process.env
+
+  if (!FN) {
+    return FN
+  }
+
+  if (FN.indexOf(' ') > -1) {
+    FN = FN.split(' ')
+
+    if (FN.indexOf(',') > -1) {
+      FN = FN.split(',')
+    }
+  }
+
+  return FN
+}
+
+const getKey = (pkg, parent, name) => {
+  let key = ''
+  if (parent && parent !== pkg) {
+    key = `${pkg}.`
+  }
+  if (parent && parent !== name) {
+    key += `${parent}.`
+  }
+  if (name) {
+    key += name
+  }
+  return key
+}
 
 const runTest = async (test) => {
   try {
@@ -35,7 +58,7 @@ const runTest = async (test) => {
 
     let after
     if (isFunction(before)) {
-      after = await before()
+      after = await before(test)
     }
 
     let result
@@ -43,16 +66,8 @@ const runTest = async (test) => {
     let expString
 
     const msg = cleanFunctionString(fn)
-    let key = ''
-    if (parent && parent !== pkg) {
-      key = `${pkg}.`
-    }
-    if (parent && parent !== name) {
-      key += `${parent}.`
-    }
-    if (name) {
-      key += name
-    }
+
+    const key = getKey(pkg, parent, name)
 
     let pass = false
 
@@ -83,8 +98,8 @@ const runTest = async (test) => {
       }
     }
 
-    if (after && isFunction(after.fn)) {
-      await after.fn()
+    if (isFunction(after)) {
+      await after()
     }
 
     const stat = Object.assign({}, test, { pkg, key, expect: exp, pass, msg, result, expString })
@@ -110,18 +125,19 @@ const runSuite = async (suite) => {
   let results
 
   // this is a single test, do not loop
-  if (isFunction(tests.fn)) {
-    if (FN && FN.indexOf(name) === -1) {
+  if (isObject(tests) && isFunction(tests.fn)) {
+    if (getFNS().indexOf(name) === -1) {
       return
     }
 
-    return runTest(Object.assign({}, tests, { name, key, parent, pkg }))
+    const test = Object.assign({}, tests, { name, key, parent, pkg })
+    return runTest(test)
   }
   // is a list of unnamed tests
   else if (isArray(tests)) {
-    results = await Promise.all(tests.map(async test => {
-      const fullTest = Object.assign({}, test, { name, key, parent, pkg })
-      return runTest(fullTest)
+    results = await Promise.all(tests.map(async t => {
+      const test = Object.assign({}, t, { name, key, parent, pkg })
+      return runTest(test)
     }))
   }
   // is an object expect to contain arrays of tests for modules
@@ -142,6 +158,7 @@ const runSuite = async (suite) => {
   }
   else {
     log.error('runSuite:', 'invalid tests', tests)
+    return new Error('Invalid tests')
   }
 
   return {
@@ -156,7 +173,7 @@ const run = async (tests) => {
 
   if (!isObject(tests)) {
     log.error('NO TEST SUITES', tests)
-    return
+    return new Error('No Test Suites')
   }
 
   const suiteNames = Object.keys(tests)

@@ -1,14 +1,28 @@
-const { isObject } = require('types')
+const { isObject, isError } = require('types')
 
 const run = require('../src')
 const vals = require('./vals')
 const cleanFunctionString = require('./lib/cleanFunctionString')
 
-const tests = {
+process.env.testVar = ''
+const before = (t) => {
+  process.env.testVar += 't'
+  return () => {
+    delete process.env.testVar
+  }
+}
+
+const tests = () => ({
   vals,
   cleanFunctionString,
 
   // test possible test structure
+  before: [
+    { fn: () => true, before, expect: () => process.env.testVar === 't', info: 'Test before function by setting process.env.testVar' },
+  ],
+  after: [
+    { fn: async () => new Promise(r => setTimeout(r, 10)), expect: () => !process.env.testVar, info: 'After should have deleted process.env.testVar'}
+  ],
   testNestedObject: {
     nestedSingleTest: { fn: () => 1, expect: 1 },
     deeper: {
@@ -26,6 +40,21 @@ const tests = {
       { fn: () => ({}), expect: isObject },
     ],
   },
-}
+  testInvalidTests: [
+    {
+      fn: () => {
+        try {
+          return run('INVALID')
+        }
+        catch(e) {
+          return e
+        }
+      },
+      expect: isError,
+    }
+  ],
+  suiteFn: { fn: () => true, expect: true },
+  suiteEmpty: null,
+})
 
 run(tests)
