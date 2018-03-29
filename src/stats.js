@@ -1,15 +1,13 @@
-const { isDefined, isNumber, isObject } = require('types')
-
-const log = require('./log')
+const log = require("./log")
 
 const storage = {
   suites: {},
   stats: {
     all: 0,
     pass: 0,
-    fail: 0,
+    fail: 0
   },
-  pkg: '',
+  pkg: ""
 }
 
 const set = (key, value) => {
@@ -21,20 +19,14 @@ const set = (key, value) => {
   return storage[key]
 }
 
-const get = (key) => {
-  if (isDefined(storage[key])) {
-    return storage[key]
-  }
-
-  return undefined
-}
+const get = key => storage[key]
 
 const add = (key, value) => {
   const data = get(key)
 
   Object.keys(value).forEach(k => {
-    if (isObject(data)) {
-      if (isNumber(data[k]) && isNumber(value[k])) {
+    if (typeof data === "object") {
+      if (typeof data[k] === "number" && typeof value[k] === "number") {
         data[k] += value[k]
       }
     }
@@ -54,7 +46,7 @@ const test = t => {
       pass: 0,
       fail: 0,
       all: 0,
-      tests: [],
+      tests: []
     }
   }
 
@@ -65,8 +57,7 @@ const test = t => {
   if (t.pass) {
     stat.pass += 1
     stats.pass += 1
-  }
-  else {
+  } else {
     stat.fail += 1
     stats.fail += 1
   }
@@ -77,9 +68,10 @@ const test = t => {
   storage.stats = stats
 }
 
-const printPercent = p => p === 100 ? log.paint('green', p) : log.paint('red', p)
+const printPercent = p =>
+  p === 100 ? log.paint("green", p) : log.paint("red", p)
 
-const info = (results) => {
+const info = results => {
   const suites = storage.suites
   const suiteNames = Object.keys(storage.suites)
 
@@ -90,17 +82,18 @@ const info = (results) => {
   suiteNames.forEach(suiteName => {
     const { pass, all, tests } = suites[suiteName]
 
-    const percentage = (pass / all) * 100
+    const percentage = pass / all * 100
 
-    log.info('\n')
-    log.info(`--- ${suiteName}, Pass: ${pass}/${all} ${printPercent(percentage)}%`)
-    log.info('')
+    log.info("\n")
+    log.info(
+      `--- ${suiteName}, Pass: ${pass}/${all} ${printPercent(percentage)}%`
+    )
+    log.info("")
 
     tests.forEach(test => {
       if (test.pass) {
         log.pass(test)
-      }
-      else {
+      } else {
         log.fail(test)
       }
 
@@ -109,21 +102,25 @@ const info = (results) => {
       }
     })
 
-    log.info('--------------------------')
+    log.info("--------------------------")
   })
 
   const stats = storage.stats
 
   suiteNames.forEach(suiteName => {
     const { pass, all } = suites[suiteName]
-    const percentage = printPercent((pass / all) * 100)
+    const percentage = printPercent(pass / all * 100)
     log.info(`${suiteName} => Pass: ${pass}/${all} ${percentage}%`)
   })
 
   const percentage = printPercent(stats.pass / stats.all * 100)
-  log(`\n  Ran ${stats.all} tests. Passed ${stats.pass}/${stats.all} ${percentage}%`)
+  log(
+    `\n  Ran ${stats.all} tests. Passed ${stats.pass}/${
+      stats.all
+    } ${percentage}%`
+  )
 
-  log('---------------------------')
+  log("---------------------------")
 }
 
 module.exports = {
@@ -131,5 +128,5 @@ module.exports = {
   info,
   test,
   set,
-  get,
+  get
 }

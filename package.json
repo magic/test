@@ -7,20 +7,14 @@
     "start": "nyc -a node test/",
     "test": "VERBOSE=true nyc -a node test/",
     "test:multirun": "VERBOSE=true RUNS=10 node test/",
-    "lint": "esw -w ./src ./test",
-    "lint:fix": "eslint --fix ./src ./test"
+    "format": "prettier --write '{src,test}/**/*.js'",
+    "format:check": "prettier --list-different '{src,test}/**/*.js'"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
-  "eslintConfig": {
-    "extends": "standard",
-    "rules": {
-      "comma-dangle": ["error", "always-multiline"],
-      "brace-style": ["error", "stroustrup"],
-      "semi": ["error", "never"]
-    }
+  "prettier": {
+    "semi": false
   },
-  "dependencies": {
-    "deep": "git+http://git@localhost:7005/deep",
-    "types": "git+http://git@localhost:7005/types"
+  "devDependencies": {
+    "prettier": "1.11.1"
   }
 }

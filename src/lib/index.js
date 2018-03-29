@@ -1,5 +1,5 @@
-const cleanFunctionString = require('./cleanFunctionString')
+const cleanFunctionString = require("./cleanFunctionString")
 
 module.exports = {
-  cleanFunctionString,
+  cleanFunctionString
 }

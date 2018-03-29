@@ -1,6 +1,6 @@
-const run = require('./run')
+const run = require("./run")
 
-process.env.NODE_ENV = process.env.NODE_ENV || 'test'
+process.env.NODE_ENV = process.env.NODE_ENV || "test"
 
 run.run = run
 

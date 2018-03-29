@@ -2,10 +2,6 @@
 # yarn lockfile v1
 
 
-"deep@git+http://git@localhost:7005/deep":
-  version "0.0.1"
-  resolved "git+http://git@localhost:7005/deep#4aae9de92e51b5a92ef2195e1680ebfee79da3f9"
-
-"types@git+http://git@localhost:7005/types":
-  version "0.0.1"
-  resolved "git+http://git@localhost:7005/types#9c3460d30e82ef91200b391583842613c3d03288"
+prettier@1.11.1:
+  version "1.11.1"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.11.1.tgz#61e43fc4cd44e68f2b0dfc2c38cd4bb0fccdcc75"
