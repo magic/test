@@ -3,16 +3,23 @@
   "version": "0.0.1",
   "description": "declarative testing library",
   "main": "src/index.js",
+  "bin": {
+    "test": "src/bin/test.js",
+    "coverage": "src/bin/coverage.js"
+  },
   "scripts": {
-    "start": "nyc -a node test/",
-    "test": "VERBOSE=true nyc -a node test/",
-    "test:multirun": "VERBOSE=true RUNS=10 node test/",
+    "start": "NODE_ENV=production nyc -a ./src/bin/test.js",
+    "test": "nyc -a ./src/bin/test.js",
+    "test:multirun": "RUNS=10 ./src/bin/test.js",
     "format": "format --write",
     "format:check": "format --list-different"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "devDependencies": {
-    "@magic/lint": "github:magic/lint",
+    "@magic/lint": "github:magic/lint"
+  },
+  "dependencies": {
+    "@magic/log": "file:../log",
     "nyc": "11.6.0"
   }
 }

@@ -8,6 +8,16 @@
   dependencies:
     prettier "1.11.1"
 
+"@magic/log@file:../log":
+  version "0.0.1"
+  dependencies:
+    "@magic/types" "github:magic/types"
+    bash-color "0.0.4"
+
+"@magic/types@github:magic/types":
+  version "0.0.1"
+  resolved "https://codeload.github.com/magic/types/tar.gz/3b4b58e185e9a721e14101f408547ac013437541"
+
 align-text@^0.1.1, align-text@^0.1.3:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/align-text/-/align-text-0.1.4.tgz#0cd90a561093f35d0a99256c22b7069433fad117"
@@ -170,6 +180,10 @@ base@^0.11.1:
     isobject "^3.0.1"
     mixin-deep "^1.2.0"
     pascalcase "^0.1.1"
+
+bash-color@0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/bash-color/-/bash-color-0.0.4.tgz#e9be8ce33540cada4881768c59bd63865736e913"
 
 brace-expansion@^1.1.7:
   version "1.1.11"
