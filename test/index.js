@@ -1,4 +1,3 @@
-const run = require('../src')
 const vals = require('./vals')
 const lib = require('./lib')
 
@@ -63,4 +62,4 @@ const tests = () => ({
   suiteEmpty: null,
 })
 
-run(tests)
+module.exports = tests
