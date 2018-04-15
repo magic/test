@@ -1,6 +1,6 @@
 const run = require("../src")
 const vals = require("./vals")
-const cleanFunctionString = require("./lib/cleanFunctionString")
+const lib = require("./lib")
 
 process.env.testVar = ""
 const before = t => {
@@ -12,7 +12,7 @@ const before = t => {
 
 const tests = () => ({
   vals,
-  cleanFunctionString,
+  lib,
 
   // test possible test structure
   before: [
