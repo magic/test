@@ -7,15 +7,12 @@
     "start": "nyc -a node test/",
     "test": "VERBOSE=true nyc -a node test/",
     "test:multirun": "VERBOSE=true RUNS=10 node test/",
-    "format": "prettier --write '{src,test}/**/*.js'",
-    "format:check": "prettier --list-different '{src,test}/**/*.js'"
+    "format": "format --write",
+    "format:check": "format --list-different"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
-  "prettier": {
-    "semi": false
-  },
   "devDependencies": {
-    "nyc": "11.6.0",
-    "prettier": "1.11.1"
+    "@magic/lint": "github:magic/lint",
+    "nyc": "11.6.0"
   }
 }
