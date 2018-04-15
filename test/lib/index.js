@@ -1,7 +1,7 @@
 const cleanFunctionString = require("./cleanFunctionString")
-const promiseHandler = require("./promiseHandler")
+const promise = require("./promise")
 
 module.exports = {
   cleanFunctionString,
-  promiseHandler
+  promise
 }
