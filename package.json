@@ -19,7 +19,7 @@
     "@magic/lint": "github:magic/lint"
   },
   "dependencies": {
-    "@magic/log": "file:../log",
+    "@magic/log": "github:magic/log",
     "nyc": "11.6.0"
   }
 }
