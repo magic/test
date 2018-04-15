@@ -1,4 +1,4 @@
-const log = require('./log')
+const log = require('@magic/log')
 
 const storage = {
   suites: {},
@@ -69,7 +69,7 @@ const test = t => {
 }
 
 const printPercent = p =>
-  p === 100 ? log.paint('green', p) : log.paint('red', p)
+  p === 100 ? log.color('green', p) : log.color('red', p)
 
 const info = results => {
   const suites = storage.suites
@@ -119,8 +119,6 @@ const info = results => {
       stats.all
     } ${percentage}%`,
   )
-
-  log('---------------------------')
 }
 
 module.exports = {

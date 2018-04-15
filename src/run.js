@@ -1,7 +1,9 @@
 const path = require('path')
 
+const log = require('@magic/log')
+
 const stats = require('./stats')
-const log = require('./log')
+
 const { cleanFunctionString } = require('./lib')
 
 const getFNS = () => {
