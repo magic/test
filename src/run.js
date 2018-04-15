@@ -1,21 +1,21 @@
-const path = require("path")
+const path = require('path')
 
-const stats = require("./stats")
-const log = require("./log")
-const { cleanFunctionString } = require("./lib")
+const stats = require('./stats')
+const log = require('./log')
+const { cleanFunctionString } = require('./lib')
 
 const getFNS = () => {
-  let { FN = "" } = process.env
+  let { FN = '' } = process.env
 
   if (!FN) {
     return FN
   }
 
-  if (FN.indexOf(" ") > -1) {
-    FN = FN.split(" ")
+  if (FN.indexOf(' ') > -1) {
+    FN = FN.split(' ')
 
-    if (FN.indexOf(",") > -1) {
-      FN = FN.split(",")
+    if (FN.indexOf(',') > -1) {
+      FN = FN.split(',')
     }
   }
 
@@ -23,7 +23,7 @@ const getFNS = () => {
 }
 
 const getKey = (pkg, parent, name) => {
-  let key = ""
+  let key = ''
   if (parent && parent !== pkg) {
     key = `${pkg}.`
   }
@@ -40,26 +40,26 @@ const runTest = async test => {
   try {
     const { fn, expect, name, pkg, before, parent, runs = 1 } = test
 
-    if (typeof fn !== "function") {
-      if (typeof test === "object") {
+    if (typeof fn !== 'function') {
+      if (typeof test === 'object') {
         const testNames = Object.keys(test.tests)
         return Promise.all(
           testNames.map(async key =>
             runSuite({
               parent: name,
               name: key,
-              tests: test[key]
-            })
-          )
+              tests: test[key],
+            }),
+          ),
         )
       }
 
-      log.error("AAAAAAAAAAAAAAAAAAR")
-      log.error("runTest: test.fn is not a function", test)
+      log.error('AAAAAAAAAAAAAAAAAAR')
+      log.error('runTest: test.fn is not a function', test)
     }
 
     let after
-    if (typeof before === "function") {
+    if (typeof before === 'function') {
       after = await before(test)
     }
 
@@ -77,7 +77,7 @@ const runTest = async test => {
     for (let i = 0; i < runs; i++) {
       res = await fn()
 
-      if (typeof expect === "function") {
+      if (typeof expect === 'function') {
         exp = await expect(res)
         expString = cleanFunctionString(expect)
         pass = exp
@@ -99,7 +99,7 @@ const runTest = async test => {
       }
     }
 
-    if (typeof after === "function") {
+    if (typeof after === 'function') {
       await after()
     }
 
@@ -110,7 +110,7 @@ const runTest = async test => {
       pass,
       msg,
       result,
-      expString
+      expString,
     })
     stats.test(stat)
 
@@ -120,7 +120,7 @@ const runTest = async test => {
       pass,
       parent,
       name,
-      expect: exp
+      expect: exp,
     }
   } catch (e) {
     throw e
@@ -139,11 +139,11 @@ const runSuite = async suite => {
       tests.map(async t => {
         const test = Object.assign({}, t, { name, key, parent, pkg })
         return runTest(test)
-      })
+      }),
     )
-  } else if (typeof tests === "object" && tests !== null) {
+  } else if (typeof tests === 'object' && tests !== null) {
     // is an object expect to contain arrays of tests for modules
-    if (typeof tests.fn === "function") {
+    if (typeof tests.fn === 'function') {
       if (getFNS().indexOf(name) === -1) {
         return
       }
@@ -161,37 +161,37 @@ const runSuite = async suite => {
           name: suiteName,
           key: `${name}.${suiteName}`,
           tests: tests[suiteName],
-          pkg
+          pkg,
         })
 
         return suite
-      })
+      }),
     )
   } else {
-    log.error("runSuite:", "invalid tests", tests)
-    return new Error("Invalid tests")
+    log.error('runSuite:', 'invalid tests', tests)
+    return new Error('Invalid tests')
   }
 
   return {
-    [key]: results
+    [key]: results,
   }
 }
 
 const run = async tests => {
-  if (typeof tests === "function") {
+  if (typeof tests === 'function') {
     tests = tests()
   }
 
-  if (typeof tests !== "object") {
-    log.error("NO TEST SUITES", tests)
-    return new Error("No Test Suites")
+  if (typeof tests !== 'object') {
+    log.error('NO TEST SUITES', tests)
+    return new Error('No Test Suites')
   }
 
   const suiteNames = Object.keys(tests)
 
-  const pkg = require(path.join(process.cwd(), "package.json"))
+  const pkg = require(path.join(process.cwd(), 'package.json'))
 
-  stats.set("module", pkg.name)
+  stats.set('module', pkg.name)
 
   await Promise.all(
     suiteNames.map(async name =>
@@ -199,9 +199,9 @@ const run = async tests => {
         pkg: pkg.name,
         parent: pkg.name,
         name,
-        tests: tests[name]
-      })
-    )
+        tests: tests[name],
+      }),
+    ),
   )
 
   stats.info()

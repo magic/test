@@ -1,7 +1,7 @@
-const run = require("./run")
-const { promise } = require("./lib")
+const run = require('./run')
+const { promise } = require('./lib')
 
-process.env.NODE_ENV = process.env.NODE_ENV || "test"
+process.env.NODE_ENV = process.env.NODE_ENV || 'test'
 
 run.run = run
 
