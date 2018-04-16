@@ -8,8 +8,8 @@
     "coverage": "src/bin/coverage.js"
   },
   "scripts": {
-    "start": "NODE_ENV=production nyc -a ./src/bin/test.js",
-    "test": "nyc -a ./src/bin/test.js",
+    "start": "NODE_ENV=production ./src/bin/test.js",
+    "test": "./src/bin/coverage.js",
     "test:multirun": "RUNS=10 ./src/bin/test.js",
     "format": "format --write",
     "format:check": "format --list-different"
