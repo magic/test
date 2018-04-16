@@ -2,7 +2,6 @@
 
 if (process.env.NODE_ENV === 'production') {
   require('./unit')
-}
-else {
+} else {
   require('./coverage')
 }
