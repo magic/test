@@ -10,7 +10,13 @@
 
 "@magic/log@github:magic/log":
   version "0.0.1"
-  resolved "https://codeload.github.com/magic/log/tar.gz/f14b3996c8f8fe6c9f0e0a5496642dfc6843ab6d"
+  resolved "https://codeload.github.com/magic/log/tar.gz/b8faf6d74000cded90cf3e766c02747a45cb65ed"
+  dependencies:
+    "@magic/types" "github:magic/types"
+
+"@magic/types@github:magic/types":
+  version "0.0.1"
+  resolved "https://codeload.github.com/magic/types/tar.gz/3b4b58e185e9a721e14101f408547ac013437541"
 
 align-text@^0.1.1, align-text@^0.1.3:
   version "0.1.4"
