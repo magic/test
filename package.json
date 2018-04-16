@@ -11,9 +11,9 @@
     "f": "src/bin/format.js"
   },
   "scripts": {
-    "start": "NODE_ENV=production ./src/bin/t.js",
+    "start": "./src/bin/t.js -p",
     "test": "./src/bin/t.js",
-    "test:multirun": "RUNS=10 ./src/bin/t.js",
+    "test:multirun": "RUNS=10 ./src/bin/t.js -p",
     "format": "./src/bin/format.js -w",
     "format:check": "./src/bin/format.js"
   },
