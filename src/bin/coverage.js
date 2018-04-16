@@ -17,7 +17,7 @@ let cmd
 if (name === '@magic/test') {
   cmd = path.join(cwd, 'src', 'bin', 'test.js')
 } else {
-  cmd = path.join(cwd, 'node_modules', '.bin', 'test.js')
+  cmd = path.join(cwd, 'node_modules', '.bin', 'test')
 }
 
 process.argv.push(cmd)
