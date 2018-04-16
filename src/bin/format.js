@@ -14,15 +14,16 @@ if (wIndex > -1) {
 process.argv.push('--config')
 
 let cfPath
-if (name === '@magic/lint') {
-  cfPath = path.join(process.cwd(), 'src', 'index.js')
+if (name === '@magic/test') {
+  cfPath = path.join(process.cwd(), 'src', 'format', 'index.js')
 } else {
   cfPath = path.join(
     process.cwd(),
     'node_modules',
     '@magic',
-    'lint',
+    'test',
     'src',
+    'format',
     'index.js',
   )
 }
