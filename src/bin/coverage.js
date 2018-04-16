@@ -1,20 +1,30 @@
 #!/usr/bin/env node
 
-const istanbul = require('istanbul');
-const instrumenter = new istanbul.Instrumenter();
+const path = require('path')
 
-const report = istanbul.Report.create('lcov')
-const collector = new istanbul.Collector
+const cwd = process.cwd()
+const nodeModules = path.join(cwd, 'node_modules')
 
-console.log(Object.keys(istanbul))
+const { name } = require(path.join(cwd, 'package.json'))
 
-const generatedCode = instrumenter.instrumentSync('function meaningOfLife() { return 42; }',
-    'filename.js');
+const cliPath = path.join(
+  nodeModules,
+  'nyc',
+  'bin',
+  'nyc.js'
+)
 
-console.log({ generatedCode })
+if (process.argv.indexOf('-a') === -1) {
+  process.argv.push('-a')
+}
 
-// collector.add(generatedCode)
+let cmd
+if (name === '@magic/test') {
+  cmd = path.join(cwd, 'src', 'bin', 'test.js')
+}
+else {
+  cmd = path.join(cwd, 'node_modules', '.bin', 'test.js')
+}
 
-// report.on('done', function () { console.log('done') })
-
-// report.writeReport(collector)
+process.argv.push(cmd)
+require(cliPath)
