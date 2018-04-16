@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 const path = require('path')
 
+const log = require('@magic/log')
+
 const run = require('../run')
 
 const testDir = path.join(process.cwd(), 'test')

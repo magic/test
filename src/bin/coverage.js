@@ -15,9 +15,9 @@ if (process.argv.indexOf('-a') === -1) {
 
 let cmd
 if (name === '@magic/test') {
-  cmd = path.join(cwd, 'src', 'bin', 'test.js')
+  cmd = path.join(cwd, 'src', 'bin', 'unit.js')
 } else {
-  cmd = path.join(cwd, 'node_modules', '.bin', 'test')
+  cmd = path.join(cwd, 'node_modules', '.bin', 'unit')
 }
 
 process.argv.push(cmd)
