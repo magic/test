@@ -4,13 +4,13 @@
 
 "@magic/lint@github:magic/lint":
   version "0.0.1"
-  resolved "https://codeload.github.com/magic/lint/tar.gz/6c4e91845172889c9866d46fb9712fdc862433f6"
+  resolved "https://codeload.github.com/magic/lint/tar.gz/92d0362fdd33b8767a0cd4bb14c9deca4edb5c26"
   dependencies:
     prettier "1.11.1"
 
 "@magic/log@github:magic/log":
   version "0.0.1"
-  resolved "https://codeload.github.com/magic/log/tar.gz/b8faf6d74000cded90cf3e766c02747a45cb65ed"
+  resolved "https://codeload.github.com/magic/log/tar.gz/9d69e5838c3ecdfef2922f3c479427f84ef58920"
   dependencies:
     "@magic/types" "github:magic/types"
 
