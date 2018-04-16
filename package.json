@@ -6,21 +6,21 @@
   "bin": {
     "t": "src/bin/t.js",
     "unit": "src/bin/unit.js",
-    "coverage": "src/bin/coverage.js"
+    "coverage": "src/bin/coverage.js",
+    "format": "src/bin/format.js",
+    "f": "src/bin/format.js"
   },
   "scripts": {
     "start": "NODE_ENV=production ./src/bin/t.js",
     "test": "./src/bin/t.js",
     "test:multirun": "RUNS=10 ./src/bin/t.js",
-    "format": "format --write",
-    "format:check": "format --list-different"
+    "format": "./src/bin/format.js -w",
+    "format:check": "./src/bin/format.js"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
-  "devDependencies": {
-    "@magic/lint": "github:magic/lint"
-  },
   "dependencies": {
     "@magic/log": "github:magic/log",
-    "nyc": "11.6.0"
+    "nyc": "11.6.0",
+    "prettier": "1.11.1"
   }
 }

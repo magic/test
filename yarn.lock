@@ -2,12 +2,6 @@
 # yarn lockfile v1
 
 
-"@magic/lint@github:magic/lint":
-  version "0.0.1"
-  resolved "https://codeload.github.com/magic/lint/tar.gz/92d0362fdd33b8767a0cd4bb14c9deca4edb5c26"
-  dependencies:
-    prettier "1.11.1"
-
 "@magic/log@github:magic/log":
   version "0.0.1"
   resolved "https://codeload.github.com/magic/log/tar.gz/9d69e5838c3ecdfef2922f3c479427f84ef58920"
