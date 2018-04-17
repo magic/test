@@ -41,7 +41,12 @@ const getKey = (pkg, parent, name) => {
 
 const runTest = async test => {
   try {
-    const { fn, name, pkg, before, parent, expect = true, runs = 1 } = test
+    // could be undefined but set
+    if (!test.hasOwnProperty('expect')) {
+      test.expect = true
+    }
+
+    const { fn, name, pkg, before, parent, expect, runs = 1 } = test
 
     if (typeof fn !== 'function') {
       if (typeof test === 'object') {
