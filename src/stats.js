@@ -1,41 +1,5 @@
 const log = require('@magic/log')
-
-const storage = {
-  suites: {},
-  stats: {
-    all: 0,
-    pass: 0,
-    fail: 0,
-  },
-  pkg: '',
-}
-
-const set = (key, value) => {
-  if (storage[key]) {
-    storage[key] = Object.assign({}, storage[key], value)
-  }
-
-  storage[key] = value
-  return storage[key]
-}
-
-const get = key => storage[key]
-
-const add = (key, value) => {
-  const data = get(key)
-
-  Object.keys(value).forEach(k => {
-    if (typeof data === 'object') {
-      if (typeof data[k] === 'number' && typeof value[k] === 'number') {
-        data[k] += value[k]
-      }
-    }
-  })
-
-  storage[key] = data
-
-  return data
-}
+const storage = require('./storage')
 
 const test = t => {
   let stat = storage.suites[t.key]
@@ -122,9 +86,6 @@ const info = results => {
 }
 
 module.exports = {
-  add,
   info,
   test,
-  set,
-  get,
 }
