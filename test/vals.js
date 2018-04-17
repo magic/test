@@ -1,6 +1,7 @@
-const test = require('../src')
 const is = require('@magic/types')
 const log = require('@magic/log')
+
+const test = require('../src')
 const vals = require('../src/vals')
 
 const testVals = [
