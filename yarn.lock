@@ -4,13 +4,13 @@
 
 "@magic/log@github:magic/log":
   version "0.0.1"
-  resolved "https://codeload.github.com/magic/log/tar.gz/9d69e5838c3ecdfef2922f3c479427f84ef58920"
+  resolved "https://codeload.github.com/magic/log/tar.gz/504b3d0ce0454316bea46269a7a1dbb5a4c1bc97"
   dependencies:
     "@magic/types" "github:magic/types"
 
 "@magic/types@github:magic/types":
   version "0.0.1"
-  resolved "https://codeload.github.com/magic/types/tar.gz/3b4b58e185e9a721e14101f408547ac013437541"
+  resolved "https://codeload.github.com/magic/types/tar.gz/1b2ac0eb0d72f524ef4961d0d263ead0d11a40c7"
 
 align-text@^0.1.1, align-text@^0.1.3:
   version "0.1.4"
@@ -1278,9 +1278,9 @@ preserve@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/preserve/-/preserve-0.2.0.tgz#815ed1f6ebc65926f865b310c0713bcb3315ce4b"
 
-prettier@1.12.0:
-  version "1.12.0"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.12.0.tgz#d26fc5894b9230de97629b39cae225b503724ce8"
+prettier@1.12.1:
+  version "1.12.1"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.12.1.tgz#c1ad20e803e7749faf905a409d2367e06bbe7325"
 
 pseudomap@^1.0.2:
   version "1.0.2"

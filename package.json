@@ -20,7 +20,8 @@
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "dependencies": {
     "@magic/log": "github:magic/log",
+    "@magic/types": "github:magic/types",
     "nyc": "11.6.0",
-    "prettier": "1.12.0"
+    "prettier": "1.12.1"
   }
 }
