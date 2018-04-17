@@ -8,6 +8,8 @@ const storage = require('./storage')
 const structure = require('./structure')
 // export spec
 const spec = require('./spec')
+// format/prettier config
+const format = require('./format')
 
 const tests = () => ({
   vals,
@@ -15,6 +17,7 @@ const tests = () => ({
   spec,
   storage,
   structure,
+  format,
 })
 
 module.exports = tests
