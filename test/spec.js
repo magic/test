@@ -6,6 +6,7 @@ const fns = [
   { fn: () => test.run, expect: is.fn },
   { fn: () => test.promise, expect: is.fn },
   { fn: () => test.log, expect: is.fn },
+  { fn: () => test.storage, expect: is.obj },
   { fn: () => test.is.array, expect: is.fn },
 ]
 
