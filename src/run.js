@@ -40,7 +40,7 @@ const getKey = (pkg, parent, name) => {
 
 const runTest = async test => {
   try {
-    const { fn, expect, name, pkg, before, parent, runs = 1 } = test
+    const { fn, name, pkg, before, parent, expect = true, runs = 1 } = test
 
     if (typeof fn !== 'function') {
       if (typeof test === 'object') {
