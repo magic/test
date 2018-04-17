@@ -1,54 +1,66 @@
+const test = require('../src')
 const is = require('@magic/types')
+const log = require('@magic/log')
 const vals = require('../src/vals')
 
-const testVals = {
-  array: ['array', 'emptyarray'],
-  boolean: ['true', 'false'],
-  truthy: ['truthy'],
-  falsy: ['falsy'],
-  null: ['nil'],
-  string: ['emptystr', 'string', 'str'],
-  object: ['emptyobject', 'object', 'obj'],
-  function: ['func'],
-  number: ['number', 'num', 'int', 'float', 'time'],
-  float: ['float'],
-  int: ['int'],
-  mail: ['email'],
-  undefined: ['undefined', 'undef'],
-  date: ['date'],
-  error: ['error', 'err'],
-  rgb: ['rgb'],
-  rgba: ['rgba'],
-  hex3: ['hex3'],
-  hex6: ['hex6'],
-  hexa4: ['hexa4'],
-  hexa8: ['hexa8'],
-  regexp: ['regexp'],
-}
+const testVals = [
+  { fn: is.array, items: [vals.array, vals.emptyarray] },
+  { fn: is.boolean, items: [vals.true, vals.false] },
+  { fn: is.truthy, items: [vals.truthy] },
+  { fn: is.falsy, items: [vals.falsy] },
+  { fn: is.null, items: [vals.nil] },
+  { fn: is.string, items: [vals.emptystr, vals.string, vals.str] },
+  { fn: is.object, items: [vals.emptyobject, vals.object, vals.obj] },
+  { fn: is.function, items: [vals.func] },
+  {
+    fn: is.number,
+    items: [vals.number, vals.num, vals.int, vals.float, vals.time],
+  },
+  { fn: is.float, items: [vals.float] },
+  { fn: is.int, items: [vals.int] },
+  { fn: is.mail, items: [vals.email] },
+  { fn: is.undefined, items: [vals.undefined, vals.undef] },
+  { fn: is.date, items: [vals.date] },
+  { fn: is.error, items: [vals.error, vals.err] },
+  { fn: is.rgb, items: [vals.rgb] },
+  { fn: is.rgba, items: [vals.rgba] },
+  { fn: is.hex3, items: [vals.hex3] },
+  { fn: is.hex6, items: [vals.hex6] },
+  { fn: is.hexa4, items: [vals.hexa4] },
+  { fn: is.hexa8, items: [vals.hexa8] },
+  { fn: is.regexp, items: [vals.regexp] },
+]
 
 // flatten val array
-const flat = Object.values(testVals).reduce((glob = [], v) => glob.concat(v))
+let len = 0
+testVals.forEach(val => {
+  len += val.items.length
+})
 
-const compare = (fn, items) =>
-  items.some(
-    item =>
-      !is[fn](vals[item])
-        ? console.log('errored', { fn, items }) || false
-        : true,
-  )
+const compare = fn => item => {
+  if (!fn(item)) {
+    log.error('compare errored', { item })
+  }
 
-const equal = (fn, items) => () => compare(fn, items)
+  return fn(item)
+}
+
+const equal = ({ fn, compare, items }) => () => items.every(compare(fn))
+
+const createTest = ({ fn, items, compare }) => ({
+  fn: equal({ fn, items, compare }),
+  info: `test val types`,
+})
 
 // test every nested types array for equality with the other array elements
-const equalities = Object.entries(testVals).map(([fn, items]) => ({
-  fn: equal(fn, items),
-  info: `test function equality: ${items}`,
-}))
+const equalities = testVals.map(({ fn, items }) =>
+  createTest({ fn, items, compare }),
+)
 
 const fns = [
   {
-    fn: () => Object.keys(vals).filter(k => flat.indexOf(k) === -1),
-    expect: a => a.length === 0 || console.log('Missing Spec Tests', a),
+    fn: () => Object.keys(vals).length,
+    expect: a => a < len || console.log('Missing Spec Tests', a, len),
     info: 'Number of test functions is equal to lib functions',
   },
   ...equalities,
