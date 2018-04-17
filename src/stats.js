@@ -1,9 +1,10 @@
 const log = require('@magic/log')
-const storage = require('./storage')
+
+const { store } = require('./storage')
 
 const test = t => {
-  let stat = storage.suites[t.key]
-  let stats = storage.stats
+  let stat = store.suites[t.key]
+  let stats = store.stats
 
   if (!stat) {
     stat = {
@@ -28,18 +29,18 @@ const test = t => {
 
   stat.all += 1
   stats.all += 1
-  storage.suites[t.key] = stat
-  storage.stats = stats
+  store.suites[t.key] = stat
+  store.stats = stats
 }
 
 const printPercent = p =>
   p === 100 ? log.color('green', p) : log.color('red', p)
 
 const info = results => {
-  const suites = storage.suites
-  const suiteNames = Object.keys(storage.suites)
+  const suites = store.suites
+  const suiteNames = Object.keys(store.suites)
 
-  const pkg = storage.module
+  const pkg = store.module
 
   log(`###  Testing package: ${pkg}`)
 
@@ -69,7 +70,7 @@ const info = results => {
     log.info('--------------------------')
   })
 
-  const stats = storage.stats
+  const stats = store.stats
 
   suiteNames.forEach(suiteName => {
     const { pass, all } = suites[suiteName]

@@ -1,5 +1,6 @@
 const is = require('@magic/types')
-const s = {
+
+const store = {
   suites: {},
   stats: {
     all: 0,
@@ -9,29 +10,19 @@ const s = {
   pkg: '',
 }
 
-s.set = (key, value) => {
-  if (s[key]) {
-    s[key] = Object.assign({}, s[key], value)
+const set = (key, value) => {
+  if (store[key]) {
+    store[key] = Object.assign({}, store[key], value)
   }
 
-  s[key] = value
-  return s[key]
+  store[key] = value
+  return store[key]
 }
 
-s.get = key => s[key]
+const get = key => store[key]
 
-s.add = (key, value) => {
-  const data = get(key)
+store.set = set
+store.get = get
+store.store = store
 
-  Object.keys(value).forEach(k => {
-    if (is.obj(data) && is.num(data[k]) && isNum(value[k])) {
-      data[k] += value[k]
-    }
-  })
-
-  s[key] = data
-
-  return data
-}
-
-module.exports = s
+module.exports = store
