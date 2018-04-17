@@ -1,9 +1,12 @@
+const is = require('@magic/types')
+
 const argHandler = r => (...args) => {
-  args = args.filter(arg => typeof arg !== 'undefined' && arg !== null)
+  args = args.filter(arg => is.defined(arg) && !is.null(arg))
 
   if (args.length === 1) {
-    args = args[0]
+    return r(args[0])
   }
+
   r(args)
 }
 

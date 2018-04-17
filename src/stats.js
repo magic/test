@@ -1,6 +1,6 @@
 const log = require('@magic/log')
 
-const { store } = require('./storage')
+let { store } = require('./storage')
 
 const test = t => {
   let stat = store.suites[t.key]
@@ -31,6 +31,8 @@ const test = t => {
   stats.all += 1
   store.suites[t.key] = stat
   store.stats = stats
+
+  return stat
 }
 
 const printPercent = p =>
