@@ -4,13 +4,13 @@
 
 "@magic/log@github:magic/log":
   version "0.0.1"
-  resolved "https://codeload.github.com/magic/log/tar.gz/504b3d0ce0454316bea46269a7a1dbb5a4c1bc97"
+  resolved "https://codeload.github.com/magic/log/tar.gz/e905fc35034815ff99017868a31947c46a2836ce"
   dependencies:
     "@magic/types" "github:magic/types"
 
 "@magic/types@github:magic/types":
   version "0.0.1"
-  resolved "https://codeload.github.com/magic/types/tar.gz/1b2ac0eb0d72f524ef4961d0d263ead0d11a40c7"
+  resolved "https://codeload.github.com/magic/types/tar.gz/696166999e96799511746055861921664a251355"
 
 align-text@^0.1.1, align-text@^0.1.3:
   version "0.1.4"
