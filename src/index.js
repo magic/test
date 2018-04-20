@@ -2,7 +2,7 @@ const log = require('@magic/log')
 const is = require('@magic/types')
 
 const run = require('./run')
-const { promise } = require('./lib')
+const { promise, curry } = require('./lib')
 const storage = require('./storage')
 const vals = require('./vals')
 
@@ -19,5 +19,7 @@ run.is = is
 run.storage = storage
 
 run.vals = vals
+
+run.curry = curry
 
 module.exports = run

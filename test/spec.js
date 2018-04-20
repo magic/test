@@ -8,6 +8,7 @@ const fns = [
   { fn: () => test.log, expect: is.fn },
   { fn: () => test.storage, expect: is.obj },
   { fn: () => test.is.array, expect: is.fn },
+  { fn: () => test.curry, expect: is.fn },
 ]
 
 module.exports = fns
