@@ -74,7 +74,7 @@ const runTest = async test => {
     try {
       after = await before(test)
     } catch (e) {
-      log.error(e)
+      log.error('runTest: test.before', key, test.before, e)
     }
   }
 
@@ -93,7 +93,7 @@ const runTest = async test => {
     try {
       res = await fn()
     } catch (e) {
-      log.error(e)
+      log.error('runTest: test throws error', key, e)
     }
 
     if (is.function(expect)) {
@@ -106,7 +106,7 @@ const runTest = async test => {
         expString = cleanFunctionString(expect)
         pass = exp
       } catch (e) {
-        log.error(e)
+        log.error('runTest: expect throws error', key, e)
       }
     } else {
       exp = expect
@@ -129,7 +129,7 @@ const runTest = async test => {
     try {
       await after()
     } catch (e) {
-      log.error(e)
+      log.error('runTest: test.after throws error', key, e)
     }
   }
 
@@ -168,7 +168,7 @@ const runSuite = async suite => {
           const test = Object.assign({}, t, { name, key, parent, pkg })
           return runTest(test)
         } catch (e) {
-          log.error(e)
+          log.error('runSuite: runTest call errored', key, e)
         }
       }),
     )
