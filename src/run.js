@@ -99,6 +99,11 @@ const runTest = async test => {
 
     if (typeof expect === 'function') {
       try {
+        const combinedRes = [].concat(res)
+        if (combinedRes.length > 1) {
+          res = combinedRes
+        }
+
         exp = await expect(res)
         expString = cleanFunctionString(expect)
         pass = exp
