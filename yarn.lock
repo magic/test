@@ -10,7 +10,7 @@
 
 "@magic/types@github:magic/types":
   version "0.0.1"
-  resolved "https://codeload.github.com/magic/types/tar.gz/696166999e96799511746055861921664a251355"
+  resolved "https://codeload.github.com/magic/types/tar.gz/989ea41858202b311fe948db31e7ab237c4fad2d"
 
 align-text@^0.1.1, align-text@^0.1.3:
   version "0.1.4"
