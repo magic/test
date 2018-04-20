@@ -1,5 +1,6 @@
 const path = require('path')
 
+const is = require('@magic/types')
 const log = require('@magic/log')
 
 const stats = require('./stats')
@@ -40,98 +41,114 @@ const getKey = (pkg, parent, name) => {
 }
 
 const runTest = async test => {
-  try {
-    // could be undefined but set
-    if (!test.hasOwnProperty('expect')) {
-      test.expect = true
-    }
+  // could be undefined but set
+  if (!test.hasOwnProperty('expect')) {
+    test.expect = true
+  }
 
-    const { fn, name, pkg, before, parent, expect, runs = 1 } = test
+  const { fn, name, pkg, before, parent, expect, runs = 1 } = test
 
-    if (typeof fn !== 'function') {
-      if (typeof test === 'object') {
-        const testNames = Object.keys(test.tests)
-        return Promise.all(
-          testNames.map(async key =>
-            runSuite({
+  if (typeof fn !== 'function') {
+    if (is.object(test) && is.object(test.tests)) {
+      const testNames = Object.keys(test.tests)
+      return Promise.all(
+        testNames.map(async key => {
+          try {
+            await runSuite({
               parent: name,
               name: key,
               tests: test[key],
-            }),
-          ),
-        )
-      }
-
-      log.error('AAAAAAAAAAAAAAAAAAR')
-      log.error('runTest: test.fn is not a function', test)
+            })
+          } catch (e) {
+            log.error('Error in test suite', e)
+          }
+        }),
+      )
     }
 
-    let after
-    if (typeof before === 'function') {
+    log.error('AAAAAAAAAAAAAAAAAA')
+    log.error('runTest: test.fn is not a function', test)
+  }
+
+  let after
+  if (typeof before === 'function') {
+    try {
       after = await before(test)
+    } catch (e) {
+      log.error(e)
+    }
+  }
+
+  let result
+  let exp
+  let expString
+
+  const msg = cleanFunctionString(fn)
+
+  const key = getKey(pkg, parent, name)
+
+  let pass = false
+
+  let res
+  for (let i = 0; i < runs; i++) {
+    try {
+      res = await fn()
+    } catch (e) {
+      log.error(e)
     }
 
-    let result
-    let exp
-    let expString
-
-    const msg = cleanFunctionString(fn)
-
-    const key = getKey(pkg, parent, name)
-
-    let pass = false
-
-    let res
-    for (let i = 0; i < runs; i++) {
-      res = await fn()
-
-      if (typeof expect === 'function') {
+    if (typeof expect === 'function') {
+      try {
         exp = await expect(res)
         expString = cleanFunctionString(expect)
         pass = exp
-      } else {
-        exp = expect
-        expString = expect
-        pass = exp === res
+      } catch (e) {
+        log.error(e)
       }
-
-      if (!pass) {
-        result = res
-        break
-      }
-
-      // loop is done
-      if (i >= runs - 1) {
-        pass = true
-        result = res
-      }
+    } else {
+      exp = expect
+      expString = expect
+      pass = exp === res
     }
 
-    if (typeof after === 'function') {
+    if (!pass) {
+      result = res
+      break
+    }
+
+    // loop is done
+    if (i >= runs - 1) {
+      pass = true
+      result = res
+    }
+  }
+
+  if (typeof after === 'function') {
+    try {
       await after()
+    } catch (e) {
+      log.error(e)
     }
+  }
 
-    const stat = Object.assign({}, test, {
-      pkg,
-      key,
-      expect: exp,
-      pass,
-      msg,
-      result,
-      expString,
-    })
-    stats.test(stat)
+  const stat = Object.assign({}, test, {
+    pkg,
+    key,
+    expect: exp,
+    pass,
+    msg,
+    result,
+    expString,
+  })
+  stats.test(stat)
 
-    return {
-      result,
-      msg,
-      pass,
-      parent,
-      name,
-      expect: exp,
-    }
-  } catch (e) {
-    throw e
+  return {
+    result,
+    msg,
+    pass,
+    parent,
+    name,
+    expect: exp,
   }
 }
 
@@ -145,8 +162,12 @@ const runSuite = async suite => {
   if (Array.isArray(tests)) {
     results = await Promise.all(
       tests.map(async t => {
-        const test = Object.assign({}, t, { name, key, parent, pkg })
-        return runTest(test)
+        try {
+          const test = Object.assign({}, t, { name, key, parent, pkg })
+          return runTest(test)
+        } catch (e) {
+          log.error(e)
+        }
       }),
     )
   } else if (typeof tests === 'object' && tests !== null) {
