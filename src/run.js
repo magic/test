@@ -60,14 +60,13 @@ const runTest = async test => {
               tests: test[key],
             })
           } catch (e) {
-            log.error('Error in test suite', e)
+            log.error('Error in test suite', key, e)
           }
         }),
       )
     }
 
-    log.error('AAAAAAAAAAAAAAAAAA')
-    log.error('runTest: test.fn is not a function', test)
+    log.error('runTest: test.fn is not a function', key, test)
   }
 
   let after
@@ -103,7 +102,6 @@ const runTest = async test => {
         if (combinedRes.length > 1) {
           res = combinedRes
         }
-
         exp = await expect(res)
         expString = cleanFunctionString(expect)
         pass = exp
@@ -115,7 +113,6 @@ const runTest = async test => {
       expString = expect
       pass = exp === res
     }
-
     if (!pass) {
       result = res
       break

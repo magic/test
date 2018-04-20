@@ -59,9 +59,19 @@ const info = results => {
 
     tests.forEach(test => {
       if (test.pass) {
-        log.pass(test)
+        log.info(
+          log.color('green', '* pass:'),
+          test.msg,
+          'expected',
+          test.expString,
+        )
       } else {
-        log.fail(test)
+        log(
+          log.color('red', '* fail:'),
+          test.key.replace(/\./g, '/'),
+          `got \`${test.msg}\``,
+          `wanted: \`${test.expString}\``,
+        )
       }
 
       if (test.info) {
