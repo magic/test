@@ -1,9 +1,11 @@
+const is = require('@magic/types')
+
 const cleanFunctionString = fn => {
   if (!fn) {
     return false
   }
 
-  if (typeof fn !== 'function' && typeof fn !== 'string') {
+  if (!is.function(fn) && !is.string(fn)) {
     return fn
   }
 

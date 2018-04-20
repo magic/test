@@ -1,3 +1,5 @@
+const is = require('@magic/types')
+
 process.env.testVar = ''
 // test before function
 const before = t => {
@@ -40,7 +42,7 @@ const fns = {
     arr: [
       { fn: () => true, expect: true },
       { fn: () => false, expect: false },
-      { fn: () => ({}), expect: e => typeof e === 'object' },
+      { fn: () => ({}), expect: is.object },
     ],
   },
   testInvalidTests: [

@@ -48,7 +48,7 @@ const runTest = async test => {
 
   const { fn, name, pkg, before, parent, expect, runs = 1 } = test
 
-  if (typeof fn !== 'function') {
+  if (!is.function(fn)) {
     if (is.object(test) && is.object(test.tests)) {
       const testNames = Object.keys(test.tests)
       return Promise.all(
@@ -71,7 +71,7 @@ const runTest = async test => {
   }
 
   let after
-  if (typeof before === 'function') {
+  if (is.function(before)) {
     try {
       after = await before(test)
     } catch (e) {
@@ -97,7 +97,7 @@ const runTest = async test => {
       log.error(e)
     }
 
-    if (typeof expect === 'function') {
+    if (is.function(expect)) {
       try {
         const combinedRes = [].concat(res)
         if (combinedRes.length > 1) {
@@ -128,7 +128,7 @@ const runTest = async test => {
     }
   }
 
-  if (typeof after === 'function') {
+  if (is.function(after)) {
     try {
       await after()
     } catch (e) {
@@ -164,7 +164,7 @@ const runSuite = async suite => {
 
   // this is a single test, do not loop
   // is a list of unnamed tests
-  if (Array.isArray(tests)) {
+  if (is.array(tests)) {
     results = await Promise.all(
       tests.map(async t => {
         try {
@@ -175,9 +175,9 @@ const runSuite = async suite => {
         }
       }),
     )
-  } else if (typeof tests === 'object' && tests !== null) {
+  } else if (is.object(tests)) {
     // is an object expect to contain arrays of tests for modules
-    if (typeof tests.fn === 'function') {
+    if (is.function(tests.fn)) {
       if (getFNS().indexOf(name) === -1) {
         return
       }
@@ -212,11 +212,11 @@ const runSuite = async suite => {
 }
 
 const run = async tests => {
-  if (typeof tests === 'function') {
+  if (is.function(tests)) {
     tests = tests()
   }
 
-  if (typeof tests !== 'object') {
+  if (!is.object(tests)) {
     log.error('NO TEST SUITES', tests)
     return new Error('No Test Suites')
   }
