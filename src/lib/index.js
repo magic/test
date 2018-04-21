@@ -6,4 +6,5 @@ module.exports = {
   cleanFunctionString,
   promise,
   curry,
+  cleanError: require('./cleanError')
 }

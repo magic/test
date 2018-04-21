@@ -1,6 +1,6 @@
 const is = require('@magic/types')
 const log = require('@magic/log')
-const { cleanFunctionString } = require('../lib')
+const { cleanFunctionString, cleanError } = require('../lib')
 const stats = require('../stats')
 
 const getKey = (pkg, parent, name) => {
@@ -16,6 +16,7 @@ const getKey = (pkg, parent, name) => {
   }
   return key
 }
+
 
 const runTest = async test => {
   // could be undefined but set
@@ -37,7 +38,7 @@ const runTest = async test => {
               tests: test[key],
             })
           } catch (e) {
-            log.error('Error in test suite', key, e)
+            log.error('Error in runSuite', key, ...cleanError(e))
           }
         }),
       )
@@ -70,7 +71,7 @@ const runTest = async test => {
     try {
       res = await fn()
     } catch (e) {
-      log.error('runTest: test throws error', key, e)
+      log.error('runTest: test throws error', key, ...cleanError(e))
     }
 
     if (is.function(expect)) {
