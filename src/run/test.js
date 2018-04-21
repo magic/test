@@ -37,13 +37,13 @@ const runTest = async test => {
               tests: test[key],
             })
           } catch (e) {
-            log.error('Error in runSuite', key, ...cleanError(e))
+            log.error('Suite:', key, ...cleanError(e))
           }
         }),
       )
     }
 
-    log.error('runTest: test.fn is not a function', test.key, test.info || '')
+    log.error('test.fn is not a function', test.key, test.info || '')
   }
 
   let after
@@ -51,7 +51,7 @@ const runTest = async test => {
     try {
       after = await before(test)
     } catch (e) {
-      log.error('runTest: test.before', key, test.before, e)
+      log.error('test.before', key, test.before, e)
     }
   }
 
@@ -70,7 +70,7 @@ const runTest = async test => {
     try {
       res = await fn()
     } catch (e) {
-      log.error('runTest: test throws error', key, ...cleanError(e))
+      log.error('test.fn', key, ...cleanError(e))
     }
 
     if (is.function(expect)) {
@@ -83,7 +83,7 @@ const runTest = async test => {
         expString = cleanFunctionString(expect)
         pass = exp
       } catch (e) {
-        log.error('runTest: expect throws error', key, e)
+        log.error('test.expect', key, e)
       }
     } else {
       exp = expect
@@ -106,7 +106,7 @@ const runTest = async test => {
     try {
       await after()
     } catch (e) {
-      log.error('runTest: test.after throws error', key, e)
+      log.error('test.after', key, e)
     }
   }
 
