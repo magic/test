@@ -1,9 +1,6 @@
-const cleanFunctionString = require('./cleanFunctionString')
-const promise = require('./promise')
-const curry = require('./curry')
-
 module.exports = {
-  cleanFunctionString,
-  promise,
-  curry,
+  cleanFunctionString: require('./cleanFunctionString'),
+  promise: require('./promise'),
+  curry: require('./curry'),
+  expectedArguments: require('./expectedArguments'),
 }

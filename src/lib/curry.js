@@ -1,32 +1,31 @@
 const is = require('@magic/types')
 
+const expectedArguments = require('./expectedArguments')
+
 const invalidArgsMsg = 'curry expects a function as first or last argument'
 
-const curry = (fn, ...args) => {
-  if (!is.fn(fn)) {
-    const lastArg = args[args.length - 1]
-    if (is.fn(lastArg)) {
-      const oldFn = fn
-      fn = args.pop()
-      args = [].concat(oldFn, args)
+const curry = (...a) => {
+  const args = []
+  let fn
+  a.map(arg => {
+    if (is.fn(arg)) {
+      fn = arg
     }
+    else {
+      args.push(arg)
+    }
+  })
 
-    if (!is.fn(fn)) {
-      return new Error(invalidArgsMsg)
-    }
+  if (!is.fn(fn)) {
+    return new Error(invalidArgsMsg)
   }
 
-  return (...fnArgs) => {
-    const final = [...args, ...fnArgs]
+  const expectedArgs = expectedArguments(fn)
 
-    if (final.length === 0) {
-      return fn()
-    }
-    if (final.length === 1) {
-      return fn(final[0])
-    } else {
-      return fn(final)
-    }
+  if (args.length >= expectedArgs.length) {
+    return fn(...args)
+  } else {
+    return b => curry(fn, ...args, b)
   }
 }
 
