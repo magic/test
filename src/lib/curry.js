@@ -10,8 +10,7 @@ const curry = (...a) => {
   a.map(arg => {
     if (is.fn(arg)) {
       fn = arg
-    }
-    else {
+    } else {
       args.push(arg)
     }
   })
