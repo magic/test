@@ -4,7 +4,7 @@
 
 "@magic/log@github:magic/log":
   version "0.0.1"
-  resolved "https://codeload.github.com/magic/log/tar.gz/e905fc35034815ff99017868a31947c46a2836ce"
+  resolved "https://codeload.github.com/magic/log/tar.gz/c1007cdeea788d37546bab012f0997515b56d080"
   dependencies:
     "@magic/types" "github:magic/types"
 
