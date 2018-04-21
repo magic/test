@@ -14,9 +14,7 @@ const expected = {
 
 const lengthEqual = (a, b) => Object.keys(a).length === Object.keys(b).length
 
-const fns = [
+module.exports = [
   { fn: () => lengthEqual(format, expected) },
   { fn: () => Object.keys(format).every(k => format[k] === expected[k]) },
 ]
-
-module.exports = fns

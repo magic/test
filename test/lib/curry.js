@@ -5,7 +5,7 @@ const curry = require('../../src/lib/curry')
 const fn = v => v
 const add = (a, b, c) => a + b + c
 
-const fns = [
+module.exports = [
   { fn: () => curry(fn, 'test'), expect: 'test' },
   { fn: () => curry('test', (a, b, c) => a + b + c, 'test2'), expect: is.fn },
   { fn: () => curry('test', (a, b) => a + b, 'test2'), expect: 'testtest2' },
@@ -21,5 +21,3 @@ const fns = [
   { fn: () => curry(add, 1)(2)(3), expect: 6 },
   { fn: () => curry(add, 1)(2)(-3), expect: 0 },
 ]
-
-module.exports = fns

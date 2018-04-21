@@ -1,6 +1,6 @@
 const { cleanFunctionString } = require('../../src/lib')
 
-const fns = [
+module.exports = [
   { fn: () => cleanFunctionString(async () => true), expect: 'true' },
   { fn: () => cleanFunctionString(async t => true), expect: 'true' },
   { fn: () => cleanFunctionString(async t => true), expect: 'true' },
@@ -29,5 +29,3 @@ const fns = [
   { fn: () => cleanFunctionString(), expect: false },
   { fn: () => cleanFunctionString(1), expect: 1 },
 ]
-
-module.exports = fns

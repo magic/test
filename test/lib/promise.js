@@ -9,7 +9,7 @@ const fnWithCb = (err, arg, cb) => {
   cb(err, arg)
 }
 
-const fns = [
+module.exports = [
   { fn: promise(r => fnWithCb(null, 'arg', r)), expect: 'arg' },
   {
     fn: promise(r => fnWithCb(new Error('err'), 'arg', r)),
@@ -32,5 +32,3 @@ const fns = [
     expect: r => r.every(is.err),
   },
 ]
-
-module.exports = fns

@@ -11,7 +11,7 @@ const before = t => {
   }
 }
 
-const fns = {
+module.exports = {
   // test possible test structure
   before: [
     {
@@ -60,5 +60,3 @@ const fns = {
   suiteFn: { fn: () => true, expect: true },
   suiteEmpty: null,
 }
-
-module.exports = fns

@@ -4,7 +4,7 @@ const store = require('../src/storage')
 
 const before = () => () => store.set('key', undefined)
 
-const fns = [
+module.exports = [
   { fn: () => store === store.store, expect: true },
   { fn: () => store.set, expect: is.fn },
   { fn: () => store.get, expect: is.fn },
@@ -24,5 +24,3 @@ const fns = [
     expect: undefined,
   },
 ]
-
-module.exports = fns

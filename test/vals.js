@@ -58,7 +58,7 @@ const equalities = testVals.map(({ fn, items }) =>
   createTest({ fn, items, compare }),
 )
 
-const fns = [
+module.exports = [
   {
     fn: () => Object.keys(vals).length,
     expect: a => a < len || console.log('Missing Spec Tests', a, len),
@@ -66,5 +66,3 @@ const fns = [
   },
   ...equalities,
 ]
-
-module.exports = fns
