@@ -3,4 +3,5 @@ module.exports = {
   promise: require('./promise'),
   curry: require('./curry'),
   cleanError: require('./cleanError'),
+  deepMerge: require('./deepMerge')
 }
