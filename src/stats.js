@@ -1,10 +1,10 @@
 const log = require('@magic/log')
 
-let { store } = require('./storage')
+const store = require('./store')
 
 const test = t => {
-  let stat = store.suites[t.key]
-  let stats = store.stats
+  const suites = store.get('suites')
+  let stat = suites[t.key]
 
   if (!stat) {
     stat = {
@@ -21,16 +21,19 @@ const test = t => {
 
   if (t.pass) {
     stat.pass += 1
-    stats.pass += 1
   } else {
     stat.fail += 1
-    stats.fail += 1
   }
 
   stat.all += 1
-  stats.all += 1
-  store.suites[t.key] = stat
-  store.stats = stats
+
+  const data = {
+    suites: {
+      [t.key]: stat,
+    },
+  }
+
+  store.set(data)
 
   return stat
 }
@@ -39,15 +42,25 @@ const printPercent = p =>
   p === 100 ? log.color('green', p) : log.color('red', p)
 
 const info = results => {
-  const suites = store.suites
-  const suiteNames = Object.keys(store.suites)
+  const suites = store.get('suites')
+  const suiteNames = Object.keys(suites)
 
-  const pkg = store.module
+  const pkg = store.get('module')
 
   log(`###  Testing package: ${pkg}`)
 
+  const s = {
+    pass: 0,
+    all: 0,
+    fail: 0,
+  }
+
   suiteNames.forEach(suiteName => {
-    const { pass, all, tests } = suites[suiteName]
+    const { pass, all, fail, tests } = suites[suiteName]
+
+    s.pass += pass
+    s.all += all
+    s.fail += fail
 
     const percentage = pass / all * 100
 
@@ -82,23 +95,31 @@ const info = results => {
     log.info('--------------------------')
   })
 
-  const stats = store.stats
+  const st = {
+    pass: 0,
+    all: 0,
+    fail: 0,
+  }
 
   suiteNames.forEach(suiteName => {
-    const { pass, all } = suites[suiteName]
+    const { pass = 0, all = 0, fail = 0 } = suites[suiteName]
     const percentage = printPercent(pass / all * 100)
     log.info(`${suiteName} => Pass: ${pass}/${all} ${percentage}%`)
+    st.pass += pass
+    st.all += all
+    st.fail += fail
   })
 
-  const percentage = printPercent(stats.pass / stats.all * 100)
-  log(
-    `\n  Ran ${stats.all} tests. Passed ${stats.pass}/${
-      stats.all
-    } ${percentage}%`,
-  )
+  const percentage = printPercent(st.pass / st.all * 100)
+  log(`\n  Ran ${st.all} tests. Passed ${st.pass}/${st.all} ${percentage}%`)
+}
+
+const reset = () => {
+  store.reset()
 }
 
 module.exports = {
   info,
   test,
+  reset,
 }

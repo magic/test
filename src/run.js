@@ -4,7 +4,7 @@ const is = require('@magic/types')
 const log = require('@magic/log')
 
 const stats = require('./stats')
-const storage = require('./storage')
+const store = require('./store')
 
 const { cleanFunctionString } = require('./lib')
 
@@ -24,7 +24,7 @@ const run = async tests => {
 
   const pkg = require(path.join(process.cwd(), 'package.json'))
 
-  storage.set('module', pkg.name)
+  store.set({ module: pkg.name })
 
   await Promise.all(
     suiteNames.map(async name =>

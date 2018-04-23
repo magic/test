@@ -4,7 +4,7 @@ module.exports = {
   // library util functions
   lib: require('./lib'),
   // mem store for test stats
-  storage: require('./storage'),
+  store: require('./store'),
   // complicated test structure
   structure: require('./structure'),
   // export spec

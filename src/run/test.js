@@ -119,6 +119,7 @@ const runTest = async test => {
     result,
     expString,
   })
+
   stats.test(stat)
 
   return {

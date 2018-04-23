@@ -1,25 +1,14 @@
-const log = require('@magic/log')
-const is = require('@magic/types')
-
 const run = require('./run')
-const { promise, curry } = require('./lib')
-const storage = require('./storage')
-const vals = require('./vals')
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'test'
 
-run.run = run
-
-run.promise = promise
-
-run.log = log
-
-run.is = is
-
-run.storage = storage
-
-run.vals = vals
-
-run.curry = curry
-
-module.exports = run
+module.exports = Object.assign(run, {
+  run,
+  promise: require('./lib/promise'),
+  log: require('@magic/log'),
+  is: require('@magic/types'),
+  store: require('./store'),
+  vals: require('./vals'),
+  curry: require('./lib/curry'),
+  spec: require('./spec'),
+})
