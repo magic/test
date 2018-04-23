@@ -1,4 +1,7 @@
-const lib = (lib, spec, k) =>
+const is = require('@magic/types')
+const log = require('@magic/log')
+
+const testLib = (lib, spec, k) =>
   Object.entries(spec).filter(([name, fn]) => {
     if (is.array(fn)) {
       const [t, fns] = fn
@@ -11,6 +14,7 @@ const lib = (lib, spec, k) =>
     }
 
     const pass = fn(lib[name])
+
     if (!pass) {
       let err = `Missing lib function `
       if (k) {
@@ -23,14 +27,28 @@ const lib = (lib, spec, k) =>
     return !pass
   })
 
-const spec = (spec, lib, k) =>
+const testSpec = (spec, lib, k) =>
   Object.entries(lib).filter(([name, fn]) => {
     const specKeys = Object.keys(spec)
-
+    if (specKeys.indexOf(name) === -1) {
+      log.error('Missing spec value', name)
+    }
     return specKeys.indexOf(name) === -1
   })
 
+const tests = {
+  lib: (lib, spec) => ({
+    fn: () => testLib(lib, spec),
+    expect: is.len.eq(0),
+  }),
+  spec: (spec, lib) => ({
+    fn: () => testSpec(spec, lib),
+    expect: is.len.eq(0),
+  }),
+}
+
 module.exports = {
-  lib,
-  spec,
+  lib: testLib,
+  spec: testSpec,
+  tests,
 }

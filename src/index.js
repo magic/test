@@ -10,5 +10,5 @@ module.exports = Object.assign(run, {
   store: require('./store'),
   vals: require('./vals'),
   curry: require('./lib/curry'),
-  spec: require('./spec'),
+  version: require('./version'),
 })
