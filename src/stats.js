@@ -84,6 +84,7 @@ const info = results => {
           test.key.replace(/\./g, '/'),
           `got \`${test.msg}\``,
           `wanted: \`${test.expString}\``,
+          `\n info: ${test.info}`
         )
       }
 
