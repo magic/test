@@ -3,7 +3,7 @@ const format = require('../src/format')
 // do not change this object!
 const expected = {
   semi: false,
-  printWidth: 80,
+  printWidth: 100,
   tabWidth: 2,
   useTabs: false,
   singleQuote: true,
