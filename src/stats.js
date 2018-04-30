@@ -38,8 +38,7 @@ const test = t => {
   return stat
 }
 
-const printPercent = p =>
-  p === 100 ? log.color('green', p) : log.color('red', p)
+const printPercent = p => (p === 100 ? log.color('green', p) : log.color('red', p))
 
 const info = results => {
   const suites = store.get('suites')
@@ -65,26 +64,19 @@ const info = results => {
     const percentage = pass / all * 100
 
     log.info('\n')
-    log.info(
-      `--- ${suiteName}, Pass: ${pass}/${all} ${printPercent(percentage)}%`,
-    )
+    log.info(`--- ${suiteName}, Pass: ${pass}/${all} ${printPercent(percentage)}%`)
     log.info('')
 
     tests.forEach(test => {
       if (test.pass) {
-        log.info(
-          log.color('green', '* pass:'),
-          test.msg,
-          'expected',
-          test.expString,
-        )
+        log.info(log.color('green', '* pass:'), test.msg, 'expected', test.expString)
       } else {
         log(
           log.color('red', '* fail:'),
           test.key.replace(/\./g, '/'),
           `got \`${test.msg}\``,
           `wanted: \`${test.expString}\``,
-          test.info ? `\n info: ${test.info}` : ''
+          test.info ? `\n info: ${test.info}` : '',
         )
       }
 

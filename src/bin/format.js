@@ -17,24 +17,11 @@ let cfPath
 if (name === '@magic/test') {
   cfPath = path.join(process.cwd(), 'src', 'format', 'index.js')
 } else {
-  cfPath = path.join(
-    process.cwd(),
-    'node_modules',
-    '@magic',
-    'test',
-    'src',
-    'format',
-    'index.js',
-  )
+  cfPath = path.join(process.cwd(), 'node_modules', '@magic', 'test', 'src', 'format', 'index.js')
 }
 
 process.argv.push(cfPath)
 process.argv.push('{src,test}/**/*.js')
 
-const cliPath = path.join(
-  process.cwd(),
-  'node_modules',
-  'prettier',
-  'bin-prettier.js',
-)
+const cliPath = path.join(process.cwd(), 'node_modules', 'prettier', 'bin-prettier.js')
 require(cliPath)

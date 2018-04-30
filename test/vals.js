@@ -54,9 +54,7 @@ const createTest = ({ fn, items, compare }) => ({
 })
 
 // test every nested types array for equality with the other array elements
-const equalities = testVals.map(({ fn, items }) =>
-  createTest({ fn, items, compare }),
-)
+const equalities = testVals.map(({ fn, items }) => createTest({ fn, items, compare }))
 
 module.exports = [
   {
