@@ -68,15 +68,21 @@ const info = results => {
     log.info('')
 
     tests.forEach(test => {
-      if (test.pass) {
-        log.info(log.color('green', '* pass:'), test.msg, 'expected', test.expString)
+      const { pass, result, expString, key, msg, info } = test
+      if (pass) {
+        log.info(log.color('green', '* pass:'), 'got', result, 'expected', expString)
       } else {
         log(
           log.color('red', '* fail:'),
-          test.key.replace(/\./g, '/'),
-          `got \`${test.msg}\``,
-          `wanted: \`${test.expString}\``,
-          test.info ? `\n info: ${test.info}` : '',
+          key.replace(/\./g, '/'),
+          'executed: "',
+          msg,
+          '"\ngot: "',
+          result,
+          '"\nwanted: "',
+          test.expString,
+          test.info ? ['info:', test.info] : '',
+          '\n',
         )
       }
 
