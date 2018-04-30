@@ -12,8 +12,22 @@ const readRecursive = dir => {
 
   let tests = {}
 
+  // first resolve test/index.js, test/lib/index.js
+  // if they exist, we require them and expect willfull export structures.
+  const indexFilePath = path.join(testDir, 'index.js')
+
+  if (fs.existsSync(indexFilePath)) {
+    if (testDir === targetDir) {
+      //root
+      return require(indexFilePath)
+    } else if (testDir !== targetDir) {
+      return
+    }
+  }
+
+  // if dir/index.js does not exist, require all files and subdirectories of files
   fs.readdirSync(targetDir).forEach(file => {
-    if (file.indexOf('.') === 0) {
+    if (file.indexOf('.') === 0 || file === 'index.js') {
       return
     }
 
