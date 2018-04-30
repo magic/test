@@ -12,4 +12,5 @@ module.exports = Object.assign(run, {
   curry: require('./lib/curry'),
   version: require('./version'),
   mock: require('./mock'),
+  isProd: ['-p', '--prod', '--production'].some(t => process.argv.indexOf(t) > -1),
 })

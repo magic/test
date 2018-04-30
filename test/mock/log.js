@@ -1,6 +1,4 @@
-const { is, mock } = require('../../src')
-
-const isProd = ['-p', '--prod', '--production'].some(t => process.argv.indexOf(t) > -1)
+const { is, mock, isProd } = require('../../src')
 
 module.exports = [
   { fn: mock.log, expect: is.object },
