@@ -81,7 +81,7 @@ const info = results => {
           result,
           '"\nwanted: "',
           test.expString,
-          test.info ? ['info:', test.info] : '',
+          test.info ? `\ninfo: ${log.annotate(test.info)}` : '',
           '\n',
         )
       }
