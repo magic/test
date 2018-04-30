@@ -6,12 +6,22 @@ const stats = require('../stats')
 const getKey = (pkg, parent, name) => {
   let key = ''
   if (parent && parent !== pkg) {
-    key = `${pkg}.`
+    key = `${pkg}`
   }
   if (parent && parent !== name) {
-    key += `${parent}.`
+    if (parent.indexOf('/') !== 0 && parent !== pkg) {
+      parent = `.${parent}`
+    }
+    key += `${parent}`
   }
+
   if (name) {
+    if (parent && parent !== name && parent !== pkg && name.indexOf('/') !== 0) {
+      key += '#'
+    } else if (name.indexOf('/') !== 0) {
+      name = `/${name}`
+    }
+
     key += name
   }
   return key
@@ -25,16 +35,16 @@ const runTest = async test => {
 
   const { fn, name, pkg, before, parent, expect, runs = 1 } = test
 
-  if (!is.function(fn)) {
+  if (!test.hasOwnProperty('fn')) {
     if (is.object(test) && is.object(test.tests)) {
       const testNames = Object.keys(test.tests)
       return Promise.all(
-        testNames.map(async key => {
+        Object.entries(test.tests).map(async ([key, tests]) => {
           try {
             await runSuite({
               parent: name,
               name: key,
-              tests: test[key],
+              tests,
             })
           } catch (e) {
             log.error('Suite:', key, ...cleanError(e))
@@ -68,7 +78,13 @@ const runTest = async test => {
   let res
   for (let i = 0; i < runs; i++) {
     try {
-      res = await fn()
+      if (is.function(fn)) {
+        res = await fn()
+      } else if (is.promise(fn)) {
+        res = await fn
+      } else {
+        res = fn
+      }
     } catch (e) {
       log.error('test.fn', key, ...cleanError(e))
     }
@@ -81,10 +97,14 @@ const runTest = async test => {
         }
         exp = await expect(res)
         expString = cleanFunctionString(expect)
-        pass = exp
+        pass = (exp === true && res !== true) || exp === res
       } catch (e) {
         log.error('test.expect', key, e)
       }
+    } else if (is.promise(expect)) {
+      exp = await expect
+      expString = expect
+      pass = exp === res
     } else {
       exp = expect
       expString = expect
