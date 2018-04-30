@@ -28,9 +28,16 @@ const runSuite = async suite => {
 
   // this is a single test, do not loop
   // is a list of unnamed tests
-  if (is.array(tests)) {
+  if (tests && (is.array(tests) || is.function(tests.beforeAll))) {
+    const resolvedTests = is.function(tests.beforeAll) ? tests.tests : tests
+
+    let afterAll
+    if (is.function(tests.beforeAll)) {
+      afterAll = await tests.beforeAll()
+    }
+
     results = await Promise.all(
-      tests.map(async t => {
+      resolvedTests.map(async t => {
         try {
           const test = Object.assign({}, t, { name, key, parent, pkg })
           return runTest(test)
@@ -39,6 +46,14 @@ const runSuite = async suite => {
         }
       }),
     )
+
+    if (is.function(afterAll)) {
+      afterAll()
+    }
+
+    if (is.function(tests.afterAll)) {
+      tests.afterAll()
+    }
   } else if (is.object(tests)) {
     // is an object expect to contain arrays of tests for modules
     if (is.function(tests.fn)) {

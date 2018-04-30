@@ -11,4 +11,6 @@ module.exports = {
   spec: require('./spec'),
   // format/prettier config
   format: require('./format'),
+  // test suite beforeAll/afterAll tests
+  beforeAll: require('./beforeAll'),
 }
