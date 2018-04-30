@@ -97,7 +97,11 @@ const runTest = async test => {
         }
         exp = await expect(res)
         expString = cleanFunctionString(expect)
-        pass = (exp === true && res !== true) || exp === res
+        if (res !== true) {
+          pass = exp === res || exp === true
+        } else {
+          pass = res === exp
+        }
       } catch (e) {
         log.error('test.expect', key, e)
       }
