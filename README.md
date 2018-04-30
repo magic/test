@@ -262,46 +262,9 @@ without dependencies. it is included in this library.
 
 #### cli
 
-First create test file:
-```javascript
-  // test/index.js
-  module.exports = {
-    lib: [
-      { fn: () => true, expect: true, info: 'Expect true to be true' }
-    ]
-  }
-```
+##### package.json (recommended):
+Add the magic/test bin scripts to package.json
 
-Then either use test globally:
-```bash
-  npm i -g magic/test
-
-  // run tests in production mode
-  t -p
-  t --prod
-  t --production
-  test --p
-  test --prod
-  test --production
-
-  // run tests in verbose mode
-  t
-  test
-
-  // check formatting using prettier but do not write
-  // prettier --list-different
-  f
-  format
-
-  // format files using prettier
-  // prettier --write
-  f -w
-  format -w
-
-```
-
-
-#### package.json:
 ```json
 {
   "scripts": {
@@ -315,6 +278,41 @@ Then either use test globally:
   }
 }
 ```
+
+then use the npm run scripts
+```bash
+  npm test
+  npm run coverage
+  npm run format
+  npm run format:check
+```
+
+##### Globally (not recommended):
+you can of course install this library globally,
+but the recommendation is to add the dependency and scripts to the package.json file.
+
+this both explains to everyone that your app has this dependencies
+and keeps your bash free of clutter
+
+```bash
+  npm i -g magic/test
+
+  // run tests in production mode
+  t -p
+
+  // run tests in verbose mode
+  t
+
+  // check formatting using prettier but do not write
+  // prettier --list-different
+  f
+
+  // format files using prettier
+  // prettier --write
+  f -w
+
+```
+
 
 This library tests itself, have a look at [the tests](https://github.com/magic/test/tree/master/test)
 
