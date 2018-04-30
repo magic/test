@@ -1,3 +1,5 @@
+const is = require('@magic/types')
+
 const format = require('../src/format')
 
 // do not change this object!
@@ -12,9 +14,7 @@ const expected = {
   arrowParens: 'avoid',
 }
 
-const lengthEqual = (a, b) => Object.keys(a).length === Object.keys(b).length
-
 module.exports = [
-  { fn: () => lengthEqual(format, expected) },
+  { fn: () => is.len.equal(format, expected) },
   { fn: () => Object.keys(format).every(k => format[k] === expected[k]) },
 ]
