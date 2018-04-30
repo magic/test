@@ -11,4 +11,5 @@ module.exports = Object.assign(run, {
   vals: require('./vals'),
   curry: require('./lib/curry'),
   version: require('./version'),
+  mock: require('./mock'),
 })
