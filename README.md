@@ -11,8 +11,9 @@ very simple tests.
 @magic/log and @magic/types have no dependencies.
 
 #### quick start:
+be in a nodejs project.
 ```bash
-// be in a nodejs project. no @ before magic!
+  #no @ before magic!
   npm i --save-dev magic/test
 
   mkdir test  
@@ -26,32 +27,114 @@ create test/index.js
 ```
 
 edit package.json:
-```json
+```json5
 {
   "scripts": {
-    "test": "t -p",
-    "coverage": "t",
-    "format": "f -w",
-    "format:check": "f"
+    "test": "t -p", // quick test, only failing tests log
+    "coverage": "t", // get full test output and coverage reports
+    "format": "f -w", // format using prettier and write changes to files
+    "format:check": "f" // check format using prettier
   },
 }
-
 ```
 
+run the test:
+```bash
+  npm test
+```
 
+example output:
+(failing tests will print, passing tests are silent)
+```
+###  Testing package: @magic/test
+
+Ran 2 tests. Passed 1/2 50%
+```
+
+run coverage reports and get full test report including from passing tests:
+```bash
+  npm run coverage
+```
 
 #### test files:
 
 ##### filesystem based naming
 
-you will get much better error messages if your src and test directories have the same structure.
+* **expectations for optimal test messages:**
+* src and test directories have the same structure and files.
+* tests one src file per test file.
+* tests one function per suite
+* tests one feature per test
 
-you will get much better error messages if you are only testing one feature per test.
+##### structure:
 
-##### single test
+###### Filesystem based naming
+the following directory structure:
+```
+./test/
+  ./suite1.js
+  ./suite2.js
+```
+
+has the same result as exporting the following from ./test/index.js
+```javascript
+  const suite1 = require('./suite1')
+  const suite2 = require('./suite2')
+
+  module.exports = {
+    suite1,
+    suite2,
+  }
+```
+
+###### Manual Names
+
+if we export an object, we get named suites without corresponding file structure
 
 ```javascript
-  module.exports = { fn: () => true, expect: true, info: 'expect true to be true' }
+  module.exports {
+    suite1: [ // suites are just arrays of tests
+      { fn: false, expect: false, info: 'tests are objects with fn, expect and info fields' },
+      { fn: true, info: 'if the result is true, expect can be omitted' },
+    ],
+    suite2: [],
+  }
+```
+
+
+##### single test, literal value, function or promise
+
+```javascript
+  module.exports = { fn: true, expect: true, info: 'expect true to be true' }
+
+  // expect: true is the default and can be omitted
+  module.exports = { fn: true, info: 'expect true to be true' }
+
+  // if fn is a function expect is the returned value of the function
+  module.exports = { fn: () => false, expect: false, info: 'expect true to be true' }
+
+  // if expect is a function the return value of the test get passed to it
+  module.exports = { fn: false, expect: t => t === false, info: 'expect true to be true' }
+
+  // if fn is a promise the resolved value will be returned
+  module.exports = { fn: new Promise(r => r(true)), expect: true, info: 'expect true to be true' }
+
+  // if expects is a promise it will resolve before being compared to the fn return value
+  module.exports = { fn: true, expect: new Promise(r => r(true)), info: 'expect true to be true' }
+
+  // callback functions can be tested easily too:
+  const { promise } = require('@magic/test')
+  const fnWithCallback = (err, arg, cb) => cb(err, arg)
+  module.exports = { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect: 'arg' }
+
+  // types can be compared using @magic/types
+  const { is } = require('@magic/test')
+  module.exports = { fn: true, expect: is.boolean, info: 'magic/types are awesome' }
+
+  // caveat:
+  // if you want to test if a function is a function, you need to wrap the function
+  const fnToTest = () => {}
+  module.exports = { fn: () => fnToTest, expect: is.function, info: 'magic/types are awesome' }
 ```
 
 ##### multiple tests
