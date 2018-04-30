@@ -89,34 +89,35 @@ const runTest = async test => {
       log.error('test.fn', key, ...cleanError(e))
     }
 
-    if (is.function(expect)) {
-      try {
-        const combinedRes = [].concat(res)
-        if (combinedRes.length > 1) {
-          res = combinedRes
-        }
-        exp = await expect(res)
-        expString = cleanFunctionString(expect)
-        if (res !== true) {
-          pass = exp === res || exp === true
-        } else {
-          pass = res === exp
-        }
-      } catch (e) {
-        log.error('test.expect', key, e)
+    try {
+      if (is.function(expect)) {
+          const combinedRes = [].concat(res)
+          if (combinedRes.length > 1) {
+            res = combinedRes
+          }
+          exp = await expect(res)
+          expString = cleanFunctionString(expect)
+          if (res !== true) {
+            pass = exp === res || exp === true
+          } else {
+            pass = res === exp
+          }
+
+      } else if (is.promise(expect)) {
+        exp = await expect
+        expString = expect
+        pass = exp === res
+      } else {
+        exp = expect
+        expString = expect
+        pass = exp === res
       }
-    } else if (is.promise(expect)) {
-      exp = await expect
-      expString = expect
-      pass = exp === res
-    } else {
-      exp = expect
-      expString = expect
-      pass = exp === res
-    }
-    if (!pass) {
-      result = res
-      break
+      if (!pass) {
+        result = res
+        break
+      }
+    } catch (e) {
+      log.error('test.expect', key, e)
     }
 
     // loop is done
