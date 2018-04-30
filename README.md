@@ -87,6 +87,10 @@ has the same result as exporting the following from ./test/index.js
   }
 ```
 
+##### Important
+if test/index.js exists, no other files will be loaded.
+if test/lib/index.js exists, no other files from that subdirectory will be loaded.
+
 ###### Manual Names
 
 if we export an object, we get named suites without corresponding file structure
