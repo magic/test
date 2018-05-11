@@ -1,5 +1,5 @@
-const is = require('@magic/types')
-const log = require('@magic/log')
+import is from '@magic/types'
+import log from '@magic/log'
 
 const testLib = (lib, spec, k) =>
   Object.entries(spec).filter(([name, fn]) => {
@@ -47,7 +47,7 @@ const tests = {
   }),
 }
 
-module.exports = {
+export default {
   lib: testLib,
   spec: testSpec,
   tests,

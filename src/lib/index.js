@@ -1,7 +1,7 @@
-module.exports = {
-  cleanFunctionString: require('./cleanFunctionString'),
-  promise: require('./promise'),
-  curry: require('./curry'),
-  cleanError: require('./cleanError'),
-  deepMerge: require('./deepMerge'),
+export default {
+  cleanFunctionString: import('./cleanFunctionString'),
+  promise: import('./promise'),
+  curry: import('./curry'),
+  cleanError: import('./cleanError'),
+  deepMerge: import('./deepMerge'),
 }

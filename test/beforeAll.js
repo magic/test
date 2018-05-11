@@ -1,10 +1,10 @@
-const is = require('@magic/types')
+import is from '@magic/types'
 
-const test = require('../src')
+import test from '../src'
 
 // This test can not make sure that both afterAll functions actually get executed.
 
-module.exports = {
+export default {
   beforeAll: () => {
     global.beforeAll = 'beforeAll'
     global.testing = true

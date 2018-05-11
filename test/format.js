@@ -1,6 +1,6 @@
-const is = require('@magic/types')
+import is from '@magic/types'
 
-const format = require('../src/format')
+import format from '../src/format'
 
 // do not change this object!
 const expected = {
@@ -14,7 +14,7 @@ const expected = {
   arrowParens: 'avoid',
 }
 
-module.exports = [
+export default [
   { fn: () => is.len.equal(format, expected) },
   { fn: () => Object.keys(format).every(k => format[k] === expected[k]) },
 ]

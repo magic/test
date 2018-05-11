@@ -1,8 +1,8 @@
-const is = require('@magic/types')
+import is from '@magic/types'
 
-const expectedArguments = require('../../src/lib/expectedArguments')
+import expectedArguments from '../../src/lib/expectedArguments'
 
-module.exports = [
+export default [
   { fn: () => expectedArguments(() => {}), expect: is.array },
   { fn: () => expectedArguments(() => {}), expect: is.empty },
   { fn: () => expectedArguments(a => {}), expect: is.array },

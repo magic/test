@@ -1,4 +1,4 @@
-const is = require('@magic/types')
+import is from '@magic/types'
 
 const expectedArguments = fn => {
   if (!is.function(fn)) {
@@ -27,4 +27,4 @@ const expectedArguments = fn => {
   return expected.split(',')
 }
 
-module.exports = expectedArguments
+export default expectedArguments

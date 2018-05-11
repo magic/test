@@ -4,4 +4,4 @@ const cleanError = e => {
   return stack
 }
 
-module.exports = cleanError
+export default cleanError

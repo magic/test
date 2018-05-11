@@ -1,8 +1,8 @@
-const is = require('@magic/types')
-const log = require('@magic/log')
+import is from '@magic/types'
+import log from '@magic/log'
 
-const test = require('../src')
-const vals = require('../src/vals')
+import test from '../src'
+import vals from '../src/vals'
 
 const testVals = [
   { fn: is.array, items: [vals.array, vals.emptyarray] },
@@ -56,7 +56,7 @@ const createTest = ({ fn, items, compare }) => ({
 // test every nested types array for equality with the other array elements
 const equalities = testVals.map(({ fn, items }) => createTest({ fn, items, compare }))
 
-module.exports = [
+export default [
   {
     fn: () => Object.keys(vals).length,
     expect: a => a < len || console.log('Missing Spec Tests', a, len),

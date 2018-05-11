@@ -1,6 +1,6 @@
-const { is, mock, isNodeProd } = require('../../src')
+import { is, mock, isNodeProd } from '../../src'
 
-module.exports = [
+export default [
   { fn: mock.log, expect: is.object },
   { fn: mock.log.log('test'), expect: isNodeProd() ? false : true },
   { fn: mock.log.warn('test'), expect: isNodeProd() ? false : true },

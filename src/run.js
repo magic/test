@@ -1,14 +1,14 @@
-const path = require('path')
+import path from 'path'
 
-const is = require('@magic/types')
-const log = require('@magic/log')
+import is from '@magic/types'
+import log from '@magic/log'
 
-const stats = require('./stats')
-const store = require('./store')
+import stats from './stats'
+import store from './store'
 
-const { cleanFunctionString } = require('./lib')
+import { cleanFunctionString } from './lib'
 
-const runSuite = require('./run/suite')
+import runSuite from './run/suite'
 
 const run = async tests => {
   if (is.function(tests)) {
@@ -22,7 +22,7 @@ const run = async tests => {
 
   const suiteNames = Object.keys(tests)
 
-  const pkg = require(path.join(process.cwd(), 'package.json'))
+  import pkg from path.join(process.cwd(), 'package.json')
 
   store.set({ module: pkg.name })
 
@@ -40,4 +40,4 @@ const run = async tests => {
   stats.info()
 }
 
-module.exports = run
+export default run

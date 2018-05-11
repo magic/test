@@ -1,6 +1,6 @@
-const is = require('@magic/types')
+import is from '@magic/types'
 
-const expectedArguments = require('./expectedArguments')
+import expectedArguments from './expectedArguments'
 
 const invalidArgsMsg = 'curry expects a function as first or last argument'
 
@@ -28,4 +28,4 @@ const curry = (...a) => {
   }
 }
 
-module.exports = curry
+export default curry

@@ -1,11 +1,11 @@
-const is = require('@magic/types')
+import is from '@magic/types'
 
-const curry = require('../../src/lib/curry')
+import curry from '../../src/lib/curry'
 
 const fn = v => v
 const add = (a, b, c) => a + b + c
 
-module.exports = [
+export default [
   { fn: () => curry(fn, 'test'), expect: 'test' },
   { fn: () => curry('test', (a, b, c) => a + b + c, 'test2'), expect: is.fn },
   { fn: () => curry('test', (a, b) => a + b, 'test2'), expect: 'testtest2' },

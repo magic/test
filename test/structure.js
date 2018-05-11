@@ -1,6 +1,6 @@
-const is = require('@magic/types')
+import is from '@magic/types'
 
-const { promise } = require('../src')
+import { promise } from '../src'
 
 process.env.testVar = ''
 // test before function
@@ -15,7 +15,7 @@ const before = t => {
 
 const cbFn = (e, a, cb) => cb(e, a)
 
-module.exports = {
+export default {
   // test possible test structure
   before: [
     {

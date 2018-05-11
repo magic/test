@@ -1,6 +1,6 @@
-const is = require('@magic/types')
+import is from '@magic/types'
 
-const { promise } = require('../../src')
+import { promise } from '../../src'
 
 const fnWithCb = (err = null, arg, cb) => {
   if (is.str(err)) {
@@ -9,7 +9,7 @@ const fnWithCb = (err = null, arg, cb) => {
   cb(err, arg)
 }
 
-module.exports = [
+export default [
   { fn: promise(r => fnWithCb(null, 'arg', r)), expect: 'arg', info: 'can handle return values' },
   {
     fn: promise(r => fnWithCb(new Error('err'), 'arg', r)),

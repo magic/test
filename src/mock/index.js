@@ -1,3 +1,3 @@
-module.exports = {
-  log: require('./log'),
+export default {
+  log: import('./log'),
 }

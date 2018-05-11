@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-const path = require('path')
+import path from 'path'
 
 const cwd = process.cwd()
 const nodeModules = path.join(cwd, 'node_modules')
 
-const { name } = require(path.join(cwd, 'package.json'))
+import { name } from path.join(cwd, 'package.json')
 
 const cliPath = path.join(nodeModules, 'nyc', 'bin', 'nyc.js')
 
@@ -21,4 +21,4 @@ if (name === '@magic/test') {
 }
 
 process.argv.push(cmd)
-require(cliPath)
+import(cliPath)

@@ -1,5 +1,5 @@
-const is = require('@magic/types')
-const deepMerge = require('./lib/deepMerge')
+import is from '@magic/types'
+import deepMerge from './lib/deepMerge'
 
 const defaultState = {
   suites: {},
@@ -29,4 +29,4 @@ const store = {
   get: key => (is.defined(key) ? store.state[key] : store.state),
 }
 
-module.exports = store
+export default store

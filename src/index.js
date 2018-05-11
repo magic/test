@@ -1,19 +1,19 @@
-const run = require('./run')
+import run from './run'
 
-const { isProd, isNodeProd } = require('./env')
+import { isProd, isNodeProd } from './env'
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'test'
 
-module.exports = Object.assign(run, {
+export default Object.assign(run, {
   run,
-  promise: require('./lib/promise'),
-  log: require('@magic/log'),
-  is: require('@magic/types'),
-  store: require('./store'),
-  vals: require('./vals'),
-  curry: require('./lib/curry'),
-  version: require('./version'),
-  mock: require('./mock'),
+  promise: import('./lib/promise'),
+  log: import('@magic/log'),
+  is: import('@magic/types'),
+  store: import('./store'),
+  vals: import('./vals'),
+  curry: import('./lib/curry'),
+  version: import('./version'),
+  mock: import('./mock'),
   isNodeProd,
   isProd,
 })

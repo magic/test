@@ -1,10 +1,10 @@
-const is = require('@magic/types')
+import is from '@magic/types'
 
-const { cleanError } = require('../../src/lib')
+import { cleanError } from '../../src/lib'
 
 const error = new Error('testerror')
 
-module.exports = [
+export default [
   { fn: () => cleanError(error), expect: is.array },
   { fn: () => cleanError(error), expect: is.len.eq(2) },
   {

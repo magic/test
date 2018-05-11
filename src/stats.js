@@ -1,6 +1,6 @@
-const log = require('@magic/log')
+import log from '@magic/log'
 
-const store = require('./store')
+import store from './store'
 
 const test = t => {
   const suites = store.get('suites')
@@ -117,7 +117,7 @@ const reset = () => {
   store.reset()
 }
 
-module.exports = {
+export default {
   info,
   test,
   reset,

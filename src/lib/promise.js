@@ -1,4 +1,4 @@
-const is = require('@magic/types')
+import is from '@magic/types'
 
 const argHandler = r => (...args) => {
   args = args.filter(arg => is.defined(arg) && !is.null(arg))
@@ -12,4 +12,4 @@ const argHandler = r => (...args) => {
 
 const promise = fn => () => new Promise(r => fn(argHandler(r)))
 
-module.exports = promise
+export default promise

@@ -1,10 +1,10 @@
-const is = require('@magic/types')
+import is from '@magic/types'
 
-const store = require('../src/store')
+import store from '../src/store'
 
 const before = () => () => store.set({ key: undefined })
 
-module.exports = [
+export default [
   { fn: () => store.set, expect: is.fn },
   { fn: () => store.get, expect: is.fn },
   { fn: () => store.get('suites'), expect: is.obj },

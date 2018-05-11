@@ -1,11 +1,11 @@
-const fs = require('fs')
-const path = require('path')
+import fs from 'fs'
+import path from 'path'
 
-const run = require('../run')
-const stats = require('../stats')
+import run from '../run'
+import stats from '../stats'
 
 const testDir = path.join(process.cwd(), 'test')
-const tests = require(testDir)
+import tests from testDir
 
 const watcher = dir => (type, file) => {
   console.log({ type, file, tests })
@@ -22,4 +22,4 @@ const fsWatch = dir => fs.watch(dir, { recursive: true }, watcher(dir))
 
 const init = dirs => dirs.map(fsWatch)
 
-module.exports = init
+export default init

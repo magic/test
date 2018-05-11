@@ -1,7 +1,7 @@
-const is = require('@magic/types')
-const log = require('@magic/log')
-const { cleanFunctionString, cleanError } = require('../lib')
-const stats = require('../stats')
+import is from '@magic/types'
+import log from '@magic/log'
+import { cleanFunctionString, cleanError } from '../lib'
+import stats from '../stats'
 
 const getKey = (pkg, parent, name) => {
   let key = ''
@@ -157,4 +157,4 @@ const runTest = async test => {
   }
 }
 
-module.exports = runTest
+export default runTest

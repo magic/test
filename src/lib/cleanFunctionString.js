@@ -1,4 +1,4 @@
-const is = require('@magic/types')
+import is from '@magic/types'
 
 const cleanFunctionString = fn => {
   if (!fn) {
@@ -22,4 +22,4 @@ const cleanFunctionString = fn => {
     .replace('() => ', '')
 }
 
-module.exports = cleanFunctionString
+export default cleanFunctionString

@@ -1,7 +1,7 @@
-const test = require('../src')
-const is = require('@magic/types')
+import test from '../src'
+import is from '@magic/types'
 
-module.exports = [
+export default [
   { fn: () => test, expect: is.fn },
   { fn: () => test.run, expect: is.fn },
   { fn: () => test.promise, expect: is.fn },

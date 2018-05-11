@@ -11,7 +11,7 @@ if (prod) {
 }
 
 if (process.env.NODE_ENV === 'production') {
-  require('./unit')
+  import('./unit')
 } else {
-  require('./coverage')
+  import('./coverage')
 }

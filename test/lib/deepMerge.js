@@ -1,6 +1,6 @@
-const is = require('@magic/types')
+import is from '@magic/types'
 
-const deepMerge = require('../../src/lib/deepMerge')
+import deepMerge from '../../src/lib/deepMerge'
 
 const deep1 = {
   t: {
@@ -16,7 +16,7 @@ const deep2 = {
   },
 }
 
-module.exports = [
+export default [
   { fn: () => deepMerge({ t: 't' }, { t2: 't' }), expect: is.obj },
   { fn: () => deepMerge({ t: 't' }, { t2: 't' }), expect: is.len.eq(2) },
   { fn: () => deepMerge({ t: 't' }, { t: 't' }), expect: is.len.eq(1) },

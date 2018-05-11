@@ -1,4 +1,4 @@
-const is = require('@magic/types')
+import is from '@magic/types'
 
 const isMergeableObject = e => is.object(e) && !is.date(e) && !is.regExp(e)
 
@@ -38,4 +38,4 @@ const deepmerge = (a, b) => {
   return [a, b]
 }
 
-module.exports = deepmerge
+export default deepmerge

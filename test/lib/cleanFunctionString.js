@@ -1,6 +1,6 @@
-const { cleanFunctionString } = require('../../src/lib')
+import { cleanFunctionString } from '../../src/lib'
 
-module.exports = [
+export default [
   { fn: () => cleanFunctionString(async () => true), expect: 'true' },
   { fn: () => cleanFunctionString(async t => true), expect: 'true' },
   { fn: () => cleanFunctionString(async t => true), expect: 'true' },

@@ -1,7 +1,7 @@
-const is = require('@magic/types')
-const log = require('@magic/log')
+import is from '@magic/types'
+import log from '@magic/log'
 
-const runTest = require('./test')
+import runTest from './test'
 
 const getFNS = () => {
   let { FN = '' } = process.env
@@ -91,4 +91,4 @@ const runSuite = async suite => {
   }
 }
 
-module.exports = runSuite
+export default runSuite

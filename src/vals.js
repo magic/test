@@ -35,4 +35,4 @@ const vals = {
   regexp: /test/,
 }
 
-module.exports = vals
+export default vals
