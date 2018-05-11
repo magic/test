@@ -10,8 +10,9 @@ if (prod) {
   process.env.NODE_ENV = 'production'
 }
 
+console.log('t')
 if (process.env.NODE_ENV === 'production') {
-  import('./unit')
+  import('./unit.mjs')
 } else {
-  import('./coverage')
+  // import('./coverage')
 }

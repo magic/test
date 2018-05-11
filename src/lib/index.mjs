@@ -1,0 +1,5 @@
+export { cleanFunctionString } from './cleanFunctionString'
+export { promise } from './promise'
+export { curry } from './curry'
+export { cleanError } from './cleanError'
+export { deepMerge } from './deepMerge'

@@ -1,6 +1,6 @@
 // collection of javascript types to test anything against
 
-const vals = {
+export const vals = {
   array: ['test'],
   true: true,
   false: false,

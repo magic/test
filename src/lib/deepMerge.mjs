@@ -14,14 +14,14 @@ const mergeObject = (a, b) => {
     if (!isMergeableObject(a[key]) || !b[key]) {
       destination[key] = a[key]
     } else {
-      destination[key] = deepmerge(b[key], a[key])
+      destination[key] = deepMerge(b[key], a[key])
     }
   })
 
   return destination
 }
 
-const deepmerge = (a, b) => {
+export const deepMerge = (a, b) => {
   const aIsArray = is.array(a)
   const bIsArray = is.array(b)
   const typesMisMatch = aIsArray !== bIsArray
@@ -38,4 +38,4 @@ const deepmerge = (a, b) => {
   return [a, b]
 }
 
-export default deepmerge
+export default deepMerge

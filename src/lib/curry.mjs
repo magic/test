@@ -4,7 +4,7 @@ import expectedArguments from './expectedArguments'
 
 const invalidArgsMsg = 'curry expects a function as first or last argument'
 
-const curry = (...a) => {
+export const curry = (...a) => {
   const args = []
   let fn
   a.map(arg => {

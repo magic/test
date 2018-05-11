@@ -10,6 +10,6 @@ const argHandler = r => (...args) => {
   r(args)
 }
 
-const promise = fn => () => new Promise(r => fn(argHandler(r)))
+export const promise = fn => () => new Promise(r => fn(argHandler(r)))
 
 export default promise

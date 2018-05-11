@@ -8,5 +8,5 @@ cons.error({ isNodeProd  })
 export default {
   log: (...args) => isNodeProd() && cons.log(...args) || false,
   warn: (...args) => log.info(args),
-  error: (...args) => cons.error(...args),
+  error: (...args) => cons.error(...args) || true,
 }

@@ -10,7 +10,7 @@ import { cleanFunctionString } from './lib'
 
 import runSuite from './run/suite'
 
-const run = async tests => {
+export const run = async tests => {
   if (is.function(tests)) {
     tests = tests()
   }
@@ -22,17 +22,16 @@ const run = async tests => {
 
   const suiteNames = Object.keys(tests)
 
-  import pkg from path.join(process.cwd(), 'package.json')
-
-  store.set({ module: pkg.name })
+  const pkg = await import(path.join(process.cwd(), 'package.json'))
+  store.set({ module: pkg.default.name })
 
   await Promise.all(
     suiteNames.map(async name =>
-      runSuite({
+      await runSuite({
         pkg: pkg.name,
         parent: pkg.name,
         name,
-        tests: tests[name],
+        tests: await tests[name],
       }),
     ),
   )

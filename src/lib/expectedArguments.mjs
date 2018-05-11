@@ -1,6 +1,6 @@
 import is from '@magic/types'
 
-const expectedArguments = fn => {
+export const expectedArguments = fn => {
   if (!is.function(fn)) {
     return []
   }

@@ -1,6 +1,6 @@
 import is from '@magic/types'
 
-const cleanFunctionString = fn => {
+export const cleanFunctionString = fn => {
   if (!fn) {
     return false
   }

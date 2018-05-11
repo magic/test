@@ -1,10 +1,11 @@
-#!/usr/bin/env node
 import path from 'path'
 import fs from 'fs'
 
 import log from '@magic/log'
 
 import run from '../run'
+
+process.env.TEST_ENV = process.env.TEST_ENV || 'development'
 
 const readRecursive = dir => {
   const testDir = path.join(process.cwd(), 'test')
@@ -52,7 +53,6 @@ const tests = readRecursive()
 
 if (!tests) {
   log.error('NO tests specified')
-  return
+} else {
+  run(tests)
 }
-
-run(tests)

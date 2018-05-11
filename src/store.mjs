@@ -11,7 +11,7 @@ const defaultState = {
   pkg: '',
 }
 
-const store = {
+export const store = {
   state: Object.assign({}, defaultState),
   set: val => {
     const entries = Object.entries(val)

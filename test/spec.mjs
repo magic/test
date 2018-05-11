@@ -1,8 +1,8 @@
-import test from '../src'
+import run, * as test from '../src'
 import is from '@magic/types'
 
 export default [
-  { fn: () => test, expect: is.fn },
+  { fn: () => run, expect: is.fn },
   { fn: () => test.run, expect: is.fn },
   { fn: () => test.promise, expect: is.fn },
   { fn: () => test.log, expect: is.fn },

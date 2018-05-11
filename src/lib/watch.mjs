@@ -20,6 +20,6 @@ const watcher = dir => (type, file) => {
 
 const fsWatch = dir => fs.watch(dir, { recursive: true }, watcher(dir))
 
-const init = dirs => dirs.map(fsWatch)
+export const init = dirs => dirs.map(fsWatch)
 
 export default init
