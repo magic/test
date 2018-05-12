@@ -20,7 +20,7 @@
   "dependencies": {
     "@magic/log": "github:magic/log",
     "@magic/types": "github:magic/types",
-    "nyc": "11.7.1",
+    "nyc": "11.7.3",
     "prettier": "1.12.1"
   },
   "nyc": {
