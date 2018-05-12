@@ -2,20 +2,19 @@
   "name": "@magic/test",
   "version": "0.0.1",
   "description": "declarative testing library",
-  "main": "src/index.js",
-  "bin": {
-    "t": "src/bin/t.js",
-    "unit": "src/bin/unit.js",
-    "coverage": "src/bin/coverage.js",
-    "format": "src/bin/format.js",
-    "f": "src/bin/format.js"
-  },
+  "main": "src/index.mjs",
   "scripts": {
     "start": "./src/bin/t.js -p",
     "test": "./src/bin/t.js",
     "test:multirun": "RUNS=10 ./src/bin/t.js -p",
-    "format": "./src/bin/format.js -w",
-    "format:check": "./src/bin/format.js"
+    "format": "./src/bin/f.js -w",
+    "format:check": "./src/bin/f.js"
+  },
+  "bin": {
+    "t": "src/bin/t.js",
+    "test": "src/bin/t.js",
+    "format": "src/bin/f.js",
+    "f": "src/bin/f.js"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "dependencies": {
@@ -23,5 +22,10 @@
     "@magic/types": "github:magic/types",
     "nyc": "11.7.1",
     "prettier": "1.12.1"
+  },
+  "nyc": {
+    "extension": [
+      ".mjs"
+    ]
   }
 }
