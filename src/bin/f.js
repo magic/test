@@ -21,5 +21,4 @@ process.argv.push('--config')
 process.argv.push(configFile)
 process.argv.push('{src,test}/**/*.{js,mjs}')
 
-console.log(process.argv)
 require(cliPath)
