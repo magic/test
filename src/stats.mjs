@@ -63,14 +63,18 @@ const info = results => {
 
     const percentage = pass / all * 100
 
-    log.info('\n')
-    log.info(`--- ${suiteName}, Pass: ${pass}/${all} ${printPercent(percentage)}%`)
-    log.info('')
+    if (percentage < 100 || process.env.VERBOSE) {
+      log.info('\n')
+      log.info(`--- ${suiteName}, Pass: ${pass}/${all} ${printPercent(percentage)}%`)
+      log.info('')
+    }
 
     tests.forEach(test => {
       const { pass, result, expString, key, msg, info } = test
       if (pass) {
-        log.info(log.color('green', '* pass:'), 'got', result, 'expected', expString)
+        if (process.env.VERBOSE) {
+          log.info(log.color('green', '* pass:'), 'got', result, 'expected', expString)
+        }
       } else {
         log(
           log.color('red', '* fail:'),
@@ -84,14 +88,16 @@ const info = results => {
           test.info ? `\ninfo: ${log.annotate(test.info)}` : '',
           '\n',
         )
+        if (test.info) {
+          log.annotate(test.info)
+        }
       }
 
-      if (test.info) {
-        log.annotate(test.info)
-      }
     })
 
-    log.info('--------------------------')
+    if (process.env.VERBOSE) {
+      log.info('--------------------------')
+    }
   })
 
   const st = {

@@ -1,5 +1,3 @@
-process.env.NODE_ENV = process.env.NODE_ENV || 'development'
-
 import runner from './run'
 import logger from '@magic/log'
 import types from '@magic/types'

@@ -18,10 +18,10 @@ const testLib = (lib, spec, k) =>
     if (!pass) {
       let err = `Missing lib function `
       if (k) {
-        err = `${err}${k}.`
+        err += `${k}.`
       }
 
-      err = `${err}${name}`
+      err += name
       log.error(err)
     }
     return !pass

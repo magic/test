@@ -1,4 +1,5 @@
 import path from 'path'
+import fs from 'fs'
 
 import is from '@magic/types'
 import log from '@magic/log'
@@ -22,8 +23,9 @@ export const run = async tests => {
 
   const suiteNames = Object.keys(tests)
 
-  const pkg = await import(path.join(process.cwd(), 'package.json'))
-  store.set({ module: pkg.default.name })
+  const pkgPath = path.join(process.cwd(), 'package.json')
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'))
+  store.set({ module: pkg.name })
 
   await Promise.all(
     suiteNames.map(async name =>

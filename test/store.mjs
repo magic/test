@@ -14,9 +14,7 @@ export default [
     fn: () => store.set({ key: 'value' }),
     expect: () => store.get('key') === 'value',
     before,
+    info: 'keys can be set',
   },
-  {
-    fn: () => store.get('key'),
-    expect: undefined,
-  },
+  { fn: () => store.get('key'), expect: undefined, info: 'unset keys return undefined' },
 ]
