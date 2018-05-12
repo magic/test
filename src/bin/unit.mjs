@@ -73,7 +73,6 @@ const runAwait = async () => {
   if (!tests) {
     log.error('NO tests specified')
   } else {
-    console.dir(tests)
     await run(tests)
   }
 }
