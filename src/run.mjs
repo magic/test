@@ -28,13 +28,14 @@ export const run = async tests => {
   store.set({ module: pkg.name })
 
   await Promise.all(
-    suiteNames.map(async name =>
-      await runSuite({
-        pkg: pkg.name,
-        parent: pkg.name,
-        name,
-        tests: await tests[name],
-      }),
+    suiteNames.map(
+      async name =>
+        await runSuite({
+          pkg: pkg.name,
+          parent: pkg.name,
+          name,
+          tests: await tests[name],
+        }),
     ),
   )
 

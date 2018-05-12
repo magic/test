@@ -92,7 +92,6 @@ const info = results => {
           log.annotate(test.info)
         }
       }
-
     })
 
     if (process.env.VERBOSE) {

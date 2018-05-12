@@ -14,4 +14,4 @@ export { curry } from './lib/curry'
 // export * as version from './version'
 export { mock } from './mock'
 
-export  default run
+export default run

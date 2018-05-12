@@ -5,9 +5,9 @@ import run from '../run'
 import stats from '../stats'
 
 const testDir = path.join(process.cwd(), 'test')
-import tests from testDir
 
-const watcher = dir => (type, file) => {
+const watcher = dir => async (type, file) => {
+  const tests = await import(testDir)
   console.log({ type, file, tests })
   file = file.replace('.js', '')
   stats.reset()

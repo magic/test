@@ -1,7 +1,7 @@
-import { default as generate } from 'babel-generator';
-import { default as _ } from 'lodash';
-import fs from 'fs';
-import parser from 'babylon';
+import { default as generate } from 'babel-generator'
+import { default as _ } from 'lodash'
+import fs from 'fs'
+import parser from 'babylon'
 
 export const parseCode = source => parser.parse(source, { sourceType: 'module' })
 
@@ -37,7 +37,7 @@ export const toPlainObjectRecursive = obj => {
 
 export const generateCode = tree => {
   const { code } = generate.default(tree, {
-    comments: false
+    comments: false,
   })
 
   return code
@@ -46,8 +46,8 @@ export const generateCode = tree => {
 export const toLCOV = coverageReport => {
   const report = ['SF:source.js']
   Object.entries(coverageReport.c).forEach(([statementId, counter]) => {
-    const { line } = coverageReport.statementMap[statementId].start;
-    report.push(`DA:${ line },${ counter }`)
+    const { line } = coverageReport.statementMap[statementId].start
+    report.push(`DA:${line},${counter}`)
   })
   report.push('end_of_record')
   return report.join('\n')

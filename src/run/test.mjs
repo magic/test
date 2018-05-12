@@ -91,18 +91,17 @@ const runTest = async test => {
 
     try {
       if (is.function(expect)) {
-          const combinedRes = [].concat(res)
-          if (combinedRes.length > 1) {
-            res = combinedRes
-          }
-          exp = await expect(res)
-          expString = cleanFunctionString(expect)
-          if (res !== true) {
-            pass = exp === res || exp === true
-          } else {
-            pass = res === exp
-          }
-
+        const combinedRes = [].concat(res)
+        if (combinedRes.length > 1) {
+          res = combinedRes
+        }
+        exp = await expect(res)
+        expString = cleanFunctionString(expect)
+        if (res !== true) {
+          pass = exp === res || exp === true
+        } else {
+          pass = res === exp
+        }
       } else if (is.promise(expect)) {
         exp = await expect
         expString = expect

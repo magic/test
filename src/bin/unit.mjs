@@ -41,26 +41,28 @@ const readRecursive = async dir => {
 
   // if dir/index.js does not exist, import all files and subdirectories of files
   const subDirs = await readdir(testTargetDir)
-  await Promise.all(subDirs.map(async file => {
-    if (file.indexOf('.') === 0) {
-      return
-    }
-
-    const testFilePath = path.join(testTargetDir, file)
-    const stats = await stat(testFilePath)
-
-    if (stats.isDirectory()) {
-      const addTests = await readRecursive(dir ? path.join(dir, file) : file)
-      tests = {
-        ...tests,
-        ...addTests,
+  await Promise.all(
+    subDirs.map(async file => {
+      if (file.indexOf('.') === 0) {
+        return
       }
-    } else if (stats.isFile()) {
-      const fileP = testFilePath.replace(testDir, '')
 
-      tests[fileP] = import(testFilePath)
-    }
-  }))
+      const testFilePath = path.join(testTargetDir, file)
+      const stats = await stat(testFilePath)
+
+      if (stats.isDirectory()) {
+        const addTests = await readRecursive(dir ? path.join(dir, file) : file)
+        tests = {
+          ...tests,
+          ...addTests,
+        }
+      } else if (stats.isFile()) {
+        const fileP = testFilePath.replace(testDir, '')
+
+        tests[fileP] = import(testFilePath)
+      }
+    }),
+  )
 
   return tests
 }
