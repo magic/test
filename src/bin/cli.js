@@ -7,7 +7,6 @@ const log = require('@magic/log')
 const exec = promisify(cp.exec)
 
 const run = async cmd => {
-  console.log({ cmd })
   const { stdout, stderr } = await exec(cmd)
   if (stderr.length) {
     const errors = stderr.split('\n')
