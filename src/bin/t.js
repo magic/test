@@ -7,7 +7,7 @@ const run = require('./cli')
 
 let unitPath = path.join(process.cwd(), 'src', 'bin', 'unit.mjs')
 if (!fs.existsSync(unitPath)) {
-  unitPath = path.join(process.cwd(), 'node_modules', '.bin', 'unit.mjs')
+  unitPath = path.join(process.cwd(), 'node_modules', '@magic', 'test', 'src', 'bin', 'unit.mjs')
 }
 
 run(`node --experimental-modules ${unitPath}`)
