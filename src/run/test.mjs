@@ -61,7 +61,7 @@ const runTest = async test => {
     try {
       after = await before(test)
     } catch (e) {
-      log.error('test.before', key, test.before, e)
+      log.error('test.before', test.before, e)
     }
   }
 
@@ -99,19 +99,22 @@ const runTest = async test => {
         expString = cleanFunctionString(expect)
         if (res !== true) {
           pass = exp === res || exp === true
-        } else {
-          pass = res === exp
         }
       } else if (is.promise(expect)) {
         exp = await expect
         expString = expect
-        pass = exp === res
       } else {
         exp = expect
         expString = expect
-        pass = exp === res
       }
+
       if (!pass) {
+        if (exp && res && typeof res.toString === 'function' && typeof exp.toString === 'function') {
+          pass = exp.toString() === res.toString()
+        }
+
+        pass = exp === res
+
         result = res
         break
       }
