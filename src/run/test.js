@@ -109,7 +109,7 @@ const runTest = async test => {
       }
 
       if (!pass) {
-        if (exp && res && typeof exp.toString === 'function' && res.toString === 'function') {
+        if (exp && res && typeof exp.toString === 'function' && typeof res.toString === 'function') {
           pass = exp.toString() === res.toString()
         } else {
           pass = exp === res
