@@ -21,7 +21,7 @@ if (name === '@magic/test') {
 }
 
 process.argv.push(cfPath)
-process.argv.push('{src,test}/**/*.js')
+process.argv.push('{src,test,lib,bin}/**/*.js')
 
 const cliPath = path.join(process.cwd(), 'node_modules', 'prettier', 'bin-prettier.js')
 require(cliPath)
