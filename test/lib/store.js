@@ -1,6 +1,6 @@
 const is = require('@magic/types')
 
-const store = require('../src/store')
+const store = require('../../src/lib/store')
 
 const before = () => () => store.set({ key: undefined })
 

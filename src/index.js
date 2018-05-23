@@ -1,19 +1,18 @@
 const run = require('./run')
 
-const { isProd, isNodeProd } = require('./env')
+const { curry, env, mock, promise, store, vals, version } = require('./lib')
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'test'
 
 module.exports = Object.assign(run, {
-  run,
-  promise: require('./lib/promise'),
+  curry,
+  env,
   log: require('@magic/log'),
   is: require('@magic/types'),
-  store: require('./store'),
-  vals: require('./vals'),
-  curry: require('./lib/curry'),
-  version: require('./version'),
-  mock: require('./mock'),
-  isNodeProd,
-  isProd,
+  mock,
+  promise,
+  run,
+  store,
+  vals,
+  version,
 })

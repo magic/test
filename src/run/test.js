@@ -1,7 +1,7 @@
 const is = require('@magic/types')
 const log = require('@magic/log')
-const { cleanFunctionString, cleanError } = require('../lib')
-const stats = require('../stats')
+
+const { cleanError, cleanFunctionString, stats } = require('../lib')
 
 const getKey = (pkg, parent, name) => {
   let key = ''
@@ -91,15 +91,15 @@ const runTest = async test => {
 
     try {
       if (is.function(expect)) {
-          const combinedRes = [].concat(res)
-          if (combinedRes.length > 1) {
-            res = combinedRes
-          }
-          exp = await expect(res)
-          expString = cleanFunctionString(expect)
-          if (res !== true) {
-            pass = exp === res || exp === true
-          }
+        const combinedRes = [].concat(res)
+        if (combinedRes.length > 1) {
+          res = combinedRes
+        }
+        exp = await expect(res)
+        expString = cleanFunctionString(expect)
+        if (res !== true) {
+          pass = exp === res || exp === true
+        }
       } else if (is.promise(expect)) {
         exp = await expect
         expString = expect
@@ -109,7 +109,12 @@ const runTest = async test => {
       }
 
       if (!pass) {
-        if (exp && res && typeof exp.toString === 'function' && typeof res.toString === 'function') {
+        if (
+          exp &&
+          res &&
+          typeof exp.toString === 'function' &&
+          typeof res.toString === 'function'
+        ) {
           pass = exp.toString() === res.toString()
         } else {
           pass = exp === res

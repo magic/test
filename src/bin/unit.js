@@ -1,12 +1,19 @@
 #!/usr/bin/env node
 const path = require('path')
-const fs = require('fs')
+const nfs = require('fs')
+const util = require('util')
 
 const log = require('@magic/log')
 
 const run = require('../run')
 
-const readRecursive = dir => {
+const fs = {
+  exists: util.promisify(nfs.exists),
+  readdir: util.promisify(nfs.readdir),
+  stat: util.promisify(nfs.stat),
+}
+
+const readRecursive = async dir => {
   const testDir = path.join(process.cwd(), 'test')
   const targetDir = !dir ? testDir : path.join(testDir, dir)
 
@@ -16,7 +23,7 @@ const readRecursive = dir => {
   // if they exist, we require them and expect willfull export structures.
   const indexFilePath = path.join(testDir, 'index.js')
 
-  if (fs.existsSync(indexFilePath)) {
+  if (await fs.exists(indexFilePath)) {
     if (testDir === targetDir) {
       //root
       return require(indexFilePath)
@@ -26,33 +33,43 @@ const readRecursive = dir => {
   }
 
   // if dir/index.js does not exist, require all files and subdirectories of files
-  fs.readdirSync(targetDir).forEach(file => {
-    if (file.indexOf('.') === 0 || file === 'index.js') {
-      return
-    }
+  const files = await fs.readdir(targetDir)
 
-    const filePath = path.join(targetDir, file)
-    const stat = fs.statSync(filePath)
-
-    if (stat.isDirectory()) {
-      tests = {
-        ...tests,
-        ...readRecursive(dir ? path.join(dir, file) : file),
+  await Promise.all(
+    files.map(async file => {
+      if (file.indexOf('.') === 0 || file === 'index.js') {
+        return
       }
-    } else if (stat.isFile()) {
-      const fileP = filePath.replace(testDir, '')
-      tests[fileP] = require(filePath)
-    }
-  })
+
+      const filePath = path.join(targetDir, file)
+      const stat = await fs.stat(filePath)
+
+      if (stat.isDirectory()) {
+        const deepTests = await readRecursive(dir ? path.join(dir, file) : file)
+
+        tests = {
+          ...tests,
+          ...deepTests,
+        }
+      } else if (stat.isFile()) {
+        const fileP = filePath.replace(testDir, '')
+        tests[fileP] = require(filePath)
+      }
+    }),
+  )
 
   return tests
 }
 
-const tests = readRecursive()
+const init = async () => {
+  const tests = await readRecursive()
 
-if (!tests) {
-  log.error('NO tests specified')
-  return
+  if (!tests) {
+    log.error('NO tests specified')
+    return
+  }
+
+  run(tests)
 }
 
-run(tests)
+init()

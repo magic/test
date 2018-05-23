@@ -3,10 +3,7 @@ const path = require('path')
 const is = require('@magic/types')
 const log = require('@magic/log')
 
-const stats = require('./stats')
-const store = require('./store')
-
-const { cleanFunctionString } = require('./lib')
+const { stats, store, cleanFunctionString } = require('./lib')
 
 const runSuite = require('./run/suite')
 

@@ -1,7 +1,7 @@
 const log = require('@magic/log')
 
-const { isVerbose } = require('./env')
 const store = require('./store')
+const env = require('./env')
 
 const test = t => {
   const suites = store.get('suites')
@@ -64,7 +64,7 @@ const info = results => {
 
     const percentage = pass / all * 100
 
-    if (isVerbose() || percentage < 100) {
+    if (env.isVerbose() || percentage < 100) {
       log.info('\n')
       log.info(`--- ${suiteName}, Pass: ${pass}/${all} ${printPercent(percentage)}%`)
       log.info('')
@@ -73,7 +73,7 @@ const info = results => {
     tests.forEach(test => {
       const { pass, result, expString, key, msg, info } = test
       if (pass) {
-        if (isVerbose()) {
+        if (env.isVerbose()) {
           log.info(log.color('green', '* pass:'), 'got', result, 'expected', expString)
         }
       } else {
@@ -91,12 +91,12 @@ const info = results => {
         )
       }
 
-      if ((!pass || isVerbose()) && test.info) {
+      if ((!pass || env.isVerbose()) && test.info) {
         log.annotate(test.info)
       }
     })
 
-    if (isVerbose() || percentage < 100) {
+    if (env.isVerbose() || percentage < 100) {
       log.info('--------------------------')
     }
   })

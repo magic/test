@@ -1,5 +1,5 @@
 const is = require('@magic/types')
-const deepMerge = require('./lib/deepMerge')
+const deepMerge = require('./deepMerge')
 
 const defaultState = {
   suites: {},

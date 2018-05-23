@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 
 const run = require('../run')
-const stats = require('../stats')
+const stats = require('./stats')
 
 const testDir = path.join(process.cwd(), 'test')
 const tests = require(testDir)
