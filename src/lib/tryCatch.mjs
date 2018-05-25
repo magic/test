@@ -1,10 +1,10 @@
-export const tryCatch = (fn, ...args) => () => {
+export const tryCatch = (fn, ...args) => async () => {
   try {
     if (args.length === 0) {
-      return fn()
+      return await fn()
     }
-    return fn(...args)
-  } catch(e) {
+    return await fn(...args)
+  } catch (e) {
     return e
   }
 }
