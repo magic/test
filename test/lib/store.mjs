@@ -1,6 +1,6 @@
 import is from '@magic/types'
 
-import store from '../src/store'
+import { store } from '../../src/lib'
 
 const before = () => () => store.set({ key: undefined })
 

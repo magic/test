@@ -4,10 +4,7 @@ import fs from 'fs'
 import is from '@magic/types'
 import log from '@magic/log'
 
-import stats from './stats'
-import store from './store'
-
-import { cleanFunctionString } from './lib'
+import { store, stats, cleanFunctionString } from './lib'
 
 import runSuite from './run/suite'
 

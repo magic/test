@@ -1,8 +1,7 @@
 import is from '@magic/types'
 import log from '@magic/log'
 
-import test from '../src'
-import vals from '../src/vals'
+import { vals } from '../../src/lib'
 
 const testVals = [
   { fn: is.array, items: [vals.array, vals.emptyarray] },

@@ -4,7 +4,7 @@ import fs from 'fs'
 
 import log from '@magic/log'
 
-import run from '../run'
+import run from '../index'
 
 const testArgv = (...args) => args.some(arg => process.argv.indexOf(arg) > -1)
 

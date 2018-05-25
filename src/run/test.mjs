@@ -1,7 +1,6 @@
 import is from '@magic/types'
 import log from '@magic/log'
-import { cleanFunctionString, cleanError } from '../lib'
-import stats from '../stats'
+import { cleanFunctionString, cleanError, stats } from '../lib'
 
 const getKey = (pkg, parent, name) => {
   let key = ''

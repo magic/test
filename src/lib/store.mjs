@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import deepMerge from './lib/deepMerge'
+import { deepMerge } from './deepMerge'
 
 const defaultState = {
   suites: {},

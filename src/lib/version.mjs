@@ -47,8 +47,10 @@ const tests = {
   }),
 }
 
-export default {
+export const version = {
   lib: testLib,
   spec: testSpec,
   tests,
 }
+
+export default version
