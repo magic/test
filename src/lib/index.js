@@ -10,4 +10,5 @@ module.exports = {
   store: require('./store'),
   vals: require('./vals'),
   version: require('./version'),
+  tryCatch: require('./tryCatch'),
 }

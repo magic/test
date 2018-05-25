@@ -1,6 +1,6 @@
 const run = require('./run')
 
-const { curry, env, mock, promise, store, vals, version } = require('./lib')
+const { curry, env, mock, promise, store, vals, version, tryCatch } = require('./lib')
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'test'
 
@@ -15,4 +15,5 @@ module.exports = Object.assign(run, {
   store,
   vals,
   version,
+  tryCatch,
 })
