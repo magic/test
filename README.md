@@ -1,8 +1,14 @@
 # @magic/test
 
-very simple tests.
+very simple tests with lots of utility.
 
-#### Dependencies:
+
+* [dependencies](#dependencies)
+* [install](#install)
+* [usage](#usage)
+*
+
+#### dependencies:
 * [@magic/log](https://github.com/magic/log): console.log wrapper with loglevels
 * [@magic/types](https://github.com/magic/types): type checking library
 * [nyc](https://www.npmjs.com/package/nyc): code coverage
@@ -10,7 +16,7 @@ very simple tests.
 
 @magic/log and @magic/types have no dependencies.
 
-#### quick start:
+#### <a name="install"></a>Getting started
 be in a nodejs project.
 ```bash
   #no @ before magic!
@@ -21,11 +27,16 @@ be in a nodejs project.
 
 create test/index.js
 ```javascript
+  const yourTest = require('../path/to/your/file.js')
+
   module.exports = [
     { fn: () => true, expect: true, info: 'true is true' },
+    // note that the function will be called automagically
+    { fn: yourTest, expect: true, info: 'hope this will work ;)'}
   ]
 ```
 
+###### npm run scripts
 edit package.json:
 ```json5
 {
@@ -34,8 +45,16 @@ edit package.json:
     "coverage": "t", // get full test output and coverage reports
     "format": "f -w", // format using prettier and write changes to files
     "format:check": "f" // check format using prettier
-  },
+  }
 }
+
+repeated for easy copy pasting (without comments):
+  "scripts": {
+    "test": "t -p",
+    "coverage": "t",
+    "format": "f -w",
+    "format:check": "f"
+  }
 ```
 
 run the test:
@@ -94,7 +113,6 @@ if test/lib/index.js exists, no other files from that subdirectory will be loade
 ###### Manual Names
 
 if we export an object, we get named suites without corresponding file structure
-
 ```javascript
   module.exports {
     suite1: [ // suites are just arrays of tests
@@ -163,19 +181,22 @@ if we export an object, we get named suites without corresponding file structure
 
 ##### callback functions
 ```javascript
-  const { promise } = require('@magic/test')
+  const { promise, is } = require('@magic/test')
 
   const fnWithCallback = (err, arg, cb) => cb(err, arg)
 
-  module.exports: [
-      {
-        fn: promise(cb => fnWithCallback(null, true, cb)),
-        expect: true
-        info: 'handle nodejs callback functions'}
-    ],
-
-  }
-
+  module.exports = [
+    {
+      fn: promise(cb => fnWithCallback(null, true, cb)),
+      expect: true
+      info: 'handle callback functions',
+    },
+    {
+      fn: promise(cb => fnWithCallback(new Error('oops'), true, cb)),
+      expect: is.error,
+      info: 'handle callback function error',
+    },
+  ]
 ```
 
 ##### run functions before and/or after individual test
@@ -228,7 +249,7 @@ if we export an object, we get named suites without corresponding file structure
 
 ##### types
 [@magic/types](https://github.com/magic/types)
-is a fully featured and throughly tested type library
+is a fully featured and thoroughly tested type library
 without dependencies. it is included in this library.
 ```javascript
   const { is } = require('@magic/test')
@@ -238,6 +259,33 @@ without dependencies. it is included in this library.
     { fn: () => 'string', expect: is.length.equal(6), info: 'test length of returned value' },
     { fn: () => [1, 2, 3], expect: is.deep.equal([1, 2, 3]), info: 'deep compare values' },
     // ... see the @magic/types library for a full list of functions
+  ]
+```
+
+###### curry
+Currying can be used to split the arguments of a function into multiple nested functions.
+This helps if you have a function with complicated arguments that you just want to quickly shim.
+```javascript
+  const { curry } = require('@magic/test')
+  const expect = (a, b) => console.log(a, b) && return b
+  const curried = curry(expect)
+
+  { fn: true, expect: curried('shimmed_value'), info: 'expect will be called with a and b' }
+```
+
+###### vals
+exports some javascript types. more to come. will sometime in the future be the base of a fuzzer.
+
+###### tryCatch
+allows to catch and test functions without handling the error
+```javascript
+  const { is, tryCatch } = require('@magic/test')
+  const throwing = () => throw new Error('oops')
+  const healthy = () => true
+
+  module.exports = [
+    { fn: tryCatch(throwing()), expect: is.error, info: 'function throws an error' },
+    { fn: tryCatch(healthy()), expect: true, info: 'function does not throw' },
   ]
 ```
 
