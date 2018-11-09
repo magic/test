@@ -2,7 +2,8 @@ language: cpp
 
 os:
   - linux
-  - osx
+  # not yet, test on mac os x directly.
+  # - osx
 
 env:
   matrix:
