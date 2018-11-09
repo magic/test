@@ -7,7 +7,7 @@
     "t": "src/bin/t.js",
     "f": "src/bin/format.js",
     "calls": "src/bin/coveralls.js",
-    "nyc": "node_modules/nyc/bin/nyc"
+    "nyc": "nyc"
   },
   "scripts": {
     "start": "t -p",
