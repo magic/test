@@ -19,7 +19,7 @@ install:
   - npm link
 
 script:
-  - node ./src/bin/t.js
+  - npm test
 
 after_success:
   - npm run calls
