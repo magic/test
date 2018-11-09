@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const path = require('path')
 
 const cwd = process.cwd()
@@ -15,7 +16,7 @@ let cmd
 if (name === '@magic/test') {
   cmd = path.join(cwd, 'src', 'bin', 'unit.js')
 } else {
-  cmd = path.join(cwd, 'node_modules', '.bin', 'unit')
+  cmd = path.join(cwd, 'node_modules', '@magic', 'test', 'src', 'bin', 'unit')
 }
 
 process.argv.push(cmd)

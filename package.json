@@ -5,11 +5,9 @@
   "main": "src/index.js",
   "bin": {
     "t": "src/bin/t.js",
-    "unit": "src/bin/unit.js",
-    "coverage": "src/bin/coverage.js",
-    "format": "src/bin/format.js",
     "f": "src/bin/format.js",
-    "calls": "src/bin/coveralls.js"
+    "calls": "src/bin/coveralls.js",
+    "nyc": "node_modules/.bin/nyc"
   },
   "scripts": {
     "start": "t -p",
