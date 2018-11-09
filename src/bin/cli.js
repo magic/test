@@ -35,9 +35,11 @@ const cli = args => {
 
   process.argv = [process.argv[0], process.argv[1], ...append]
 
-  args.env.filter(([argv, env]) => process.argv.indexOf(argv) > -1).map(([argv, env, set]) => {
-    process.env[env] = set
-  })
+  args.env
+    .filter(([argv, env]) => process.argv.indexOf(argv) > -1)
+    .map(([argv, env, set]) => {
+      process.env[env] = set
+    })
 
   return append.join(' ')
 }

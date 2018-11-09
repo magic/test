@@ -62,7 +62,7 @@ const info = results => {
     s.all += all
     s.fail += fail
 
-    const percentage = pass / all * 100
+    const percentage = (pass / all) * 100
 
     if (env.isVerbose() || percentage < 100) {
       log.info('\n')
@@ -109,14 +109,14 @@ const info = results => {
 
   suiteNames.forEach(suiteName => {
     const { pass = 0, all = 0, fail = 0 } = suites[suiteName]
-    const percentage = printPercent(pass / all * 100)
+    const percentage = printPercent((pass / all) * 100)
     log.info(`${suiteName} => Pass: ${pass}/${all} ${percentage}%`)
     st.pass += pass
     st.all += all
     st.fail += fail
   })
 
-  const percentage = printPercent(st.pass / st.all * 100)
+  const percentage = printPercent((st.pass / st.all) * 100)
   log(`\n  Ran ${st.all} tests. Passed ${st.pass}/${st.all} ${percentage}%`)
 }
 
