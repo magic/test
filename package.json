@@ -8,15 +8,15 @@
     "unit": "src/bin/unit.js",
     "coverage": "src/bin/coverage.js",
     "format": "src/bin/format.js",
-    "f": "src/bin/format.js"
+    "f": "src/bin/format.js",
+    "coveralls": "src/bin/coveralls.js"
   },
   "scripts": {
-    "start": "./src/bin/t.js -p",
-    "test": "node ./src/bin/t.js",
-    "test:multirun": "RUNS=10 ./src/bin/t.js -p",
-    "format": "./src/bin/format.js -w",
-    "format:check": "./src/bin/format.js",
-    "coveralls": "./src/bin/coveralls.js"
+    "start": "t -p",
+    "test": "t",
+    "format": "f -w",
+    "format:check": "f",
+    "coveralls": "coveralls"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "dependencies": {
