@@ -6,6 +6,7 @@ const util = require('util')
 const log = require('@magic/log')
 
 const run = require('../run')
+const stringEndsWith = require('../lib/stringEndsWith')
 
 const fs = {
   exists: util.promisify(nfs.exists),
@@ -37,7 +38,8 @@ const readRecursive = async dir => {
 
   await Promise.all(
     files.map(async file => {
-      if (file.indexOf('.') === 0 || file === 'index.js') {
+      if (file.indexOf('.') === 0) {
+        // bail early if this is an index.js file or the file is a dotfile
         return
       }
 
@@ -52,6 +54,15 @@ const readRecursive = async dir => {
           ...deepTests,
         }
       } else if (stat.isFile()) {
+        if (!stringEndsWith(file, 'js') && !stringEndsWith(file, 'mjs')) {
+          // bail early if not js
+          return
+        }
+        if (await fs.exists(path.join(targetDir, 'index.js')) && file !== 'index.js') {
+          // bail early if directory contains index.js file
+          return
+        }
+
         const fileP = filePath.replace(testDir, '')
         tests[fileP] = require(filePath)
       }
