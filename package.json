@@ -1,7 +1,7 @@
 {
   "name": "@magic/test",
   "version": "0.0.1",
-  "description": "declarative testing library",
+  "description": "simple yet powerful unit testing library",
   "main": "src/index.js",
   "bin": {
     "t": "src/bin/t.js",
@@ -15,7 +15,8 @@
     "test": "./src/bin/t.js",
     "test:multirun": "RUNS=10 ./src/bin/t.js -p",
     "format": "./src/bin/format.js -w",
-    "format:check": "./src/bin/format.js"
+    "format:check": "./src/bin/format.js",
+    "coveralls": "./src/bin/coveralls.js"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "dependencies": {
