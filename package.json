@@ -9,14 +9,14 @@
     "coverage": "src/bin/coverage.js",
     "format": "src/bin/format.js",
     "f": "src/bin/format.js",
-    "coveralls": "src/bin/coveralls.js"
+    "calls": "src/bin/coveralls.js"
   },
   "scripts": {
     "start": "t -p",
     "test": "t",
     "format": "f -w",
     "format:check": "f",
-    "coveralls": "coveralls"
+    "calls": "calls"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "dependencies": {
