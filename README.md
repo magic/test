@@ -7,9 +7,6 @@ simple tests with lots of utility.
 [![Windows Build Status][appveyor-image]][appveyor-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
 
-0.23.5 on npm will be the first stable version
-
-** travis shows that osx is not testing at all. will have access to a mac soon. **
 
 * [dependencies](#dependencies)
 * [install](#install)
@@ -177,12 +174,18 @@ module.exports = [
     expect: is.length.equal(6),
     info: 'test length of returned value'
   },
+  // !!! Testing for deep equality. simple.
   {
     fn: () => [1, 2, 3],
     expect: is.deep.equal([1, 2, 3]),
-    info: 'deep compare values',
+    info: 'deep compare arrays/objects for equality',
   },
-  ]
+  {
+    fn: () => { key: 1 },
+    expect: is.deep.different({ value: 1 }),
+    info: 'deep compare arrays/objects for difference',
+  },
+]
 ```
 
 ###### caveat:
