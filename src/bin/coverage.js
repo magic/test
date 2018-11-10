@@ -16,4 +16,4 @@ if (name === '@magic/test') {
   cmd = path.join(cwd, 'node_modules', '@magic', 'test', 'src', 'bin', 'unit.js')
 }
 
-exec(`${cliPath} -a node ${cmd}`, (...a) => console.log(a.join(' ')))
+exec(`${cliPath} --colors -a node ${cmd}`, (...a) => console.log(a.join(' ')))
