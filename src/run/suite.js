@@ -27,6 +27,10 @@ const runSuite = async suite => {
   let results
 
   if (is.empty(tests)) {
+    if (name.indexOf('index.js') > -1) {
+      // we assume the user wants to keep us from indexing this directory.
+      return
+    }
     const errHeader = 'Error running Suite:'
     const errMsg = 'invalid/missing tests'
     const err = [errHeader, suite, errMsg]
