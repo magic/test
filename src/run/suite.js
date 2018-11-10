@@ -26,18 +26,18 @@ const runSuite = async suite => {
 
   let results
 
-  // this is a single test, do not loop
-  // is a list of unnamed tests
-  if (tests && (is.array(tests) || is.function(tests.beforeAll))) {
-    const resolvedTests = is.function(tests.beforeAll) ? tests.tests : tests
+  if (is.empty(tests)) {
+    const errHeader = 'Error running Suite:'
+    const errMsg = 'invalid/missing tests'
+    const err = [errHeader, suite, errMsg]
+    log.error(errHeader, suite, errMsg)
+    return new Error(`${errHeader} ${suite.parent}/${suite.name} ${errMsg}`)
+  }
 
-    let afterAll
-    if (is.function(tests.beforeAll)) {
-      afterAll = await tests.beforeAll()
-    }
-
+  if (is.array(tests)) {
+    // gather the test results by running each of the tests
     results = await Promise.all(
-      resolvedTests.map(async t => {
+      tests.map(async t => {
         try {
           const test = Object.assign({}, t, { name, key, parent, pkg })
           return runTest(test)
@@ -46,16 +46,8 @@ const runSuite = async suite => {
         }
       }),
     )
-
-    if (is.function(afterAll)) {
-      afterAll()
-    }
-
-    if (is.function(tests.afterAll)) {
-      tests.afterAll()
-    }
   } else if (is.object(tests)) {
-    // is an object expect to contain arrays of tests for modules
+    // is an object expected to contain arrays of tests for modules
     if (is.function(tests.fn)) {
       const fns = getFNS()
       if (fns.indexOf(name) === -1) {
@@ -65,6 +57,14 @@ const runSuite = async suite => {
       const test = Object.assign({}, tests, { name, key, parent, pkg })
       return runTest(test)
     }
+
+    // execute beforeAll if it exists.
+    // cache afterAll callback function if it gets returned by beforeAll
+    let afterAll
+    if (is.function(tests.beforeAll)) {
+      afterAll = await tests.beforeAll()
+    }
+
 
     const suiteNames = Object.keys(tests)
 
@@ -81,12 +81,17 @@ const runSuite = async suite => {
         return suite
       }),
     )
-  } else {
-    const errHeader = 'Error running Suite:'
-    const errMsg = 'invalid/missing tests'
-    const err = [errHeader, suite, errMsg]
-    log.error(errHeader, suite, errMsg)
-    return new Error(`${errHeader} ${suite.parent}/${suite.name} ${errMsg}`)
+
+    // if beforeAll returned a function, we execute it here
+    if (is.function(afterAll)) {
+      afterAll()
+    }
+
+    // if the module.exports of the suite includes the afterAll key,
+    // we execute this function last.
+    if (is.function(tests.afterAll)) {
+      tests.afterAll()
+    }
   }
 
   return {
