@@ -1,8 +1,5 @@
-#!/usr/bin/env node
-
-const { exec } = require('child_process')
 const path = require('path')
-
+const { exec } = require('child_process')
 const cwd = process.cwd()
 const nodeModules = path.join(cwd, 'node_modules')
 
@@ -19,15 +16,4 @@ if (name === '@magic/test') {
   cmd = path.join(cwd, 'node_modules', '@magic', 'test', 'src', 'bin', 'unit.js')
 }
 
-const argv = []
-// get unit.js instrumented through nyc by passing it as argv
-argv.push(cmd)
-
-// process all src files
-if (argv.indexOf('-a') === -1) {
-  argv.push('-a')
-}
-
-const nycCMD = `${cliPath} ${argv.join(' ')}`
-console.log('exec', nycCMD)
-exec(nycCMD, (...a) => console.log(a.join(' ')))
+exec(`${cliPath} -a node ${cmd}`, (...a) => console.log(a.join(' ')))

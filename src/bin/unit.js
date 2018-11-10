@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 const path = require('path')
 const nfs = require('fs')
 const util = require('util')

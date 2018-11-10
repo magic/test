@@ -1,6 +1,6 @@
 const is = require('@magic/types')
 
-const { promise } = require('../src')
+const { promise, tryCatch } = require('../src')
 
 process.env.testVar = ''
 // test before function
@@ -98,5 +98,5 @@ module.exports = {
     },
   ],
   suiteFn: { fn: () => true, expect: true },
-  suiteEmpty: null,
+  suiteEmpty_ExpectingErrorInLog: null,
 }
