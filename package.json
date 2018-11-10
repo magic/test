@@ -6,8 +6,7 @@
   "bin": {
     "t": "src/bin/t.js",
     "f": "src/bin/format.js",
-    "calls": "src/bin/coveralls.js",
-    "nyc": "nyc"
+    "calls": "src/bin/coveralls.js"
   },
   "scripts": {
     "start": "t -p",
