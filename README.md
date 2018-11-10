@@ -7,7 +7,9 @@ simple tests with lots of utility.
 [![Windows Build Status][appveyor-image]][appveyor-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
 
-0.23.5 is the first stable version
+0.23.5 on npm will be the first stable version
+
+** travis shows that osx is not testing at all. will have access to a mac soon. **
 
 * [dependencies](#dependencies)
 * [install](#install)
@@ -15,16 +17,17 @@ simple tests with lots of utility.
 * [usage](#usage)
 * [data/fs driven test suites](#test-suites)
 * [writing tests](#tests)
-  * [types](#tests-types)
+  * [js types](#tests-types)
   * [multiple tests in one file](#tests-multiple)
   * [promises](#tests-promises)
   * [callback functions](#tests-cb)
   * [run function before / after individual tests](#tests-hooks)
-  * [run function before / after full suite of tests](#tests-suite-hooks)
+  * [run function before / after suite of tests](#tests-suite-hooks)
 * [utility functions](#lib)
   * [curry](#lib-curry)
   * [vals](#lib-vals)
   * [tryCatch](#lib-trycatch)
+  * [promises](#lib-promises)
 * [Cli / Js Api Usage](#usage)
   * [js api](#usage-js)
   * [cli](#usage-cli)
@@ -211,8 +214,9 @@ module.exports = {
 const { promise, is } = require('@magic/test')
 
 module.exports = [
+  // kinda clumsy, but works. until you try handling errors.
   {
-    fn: new Promise(r => setTimeOut(() => r(true), 2000)),
+    fn: new Promise(cb => setTimeOut(() => cb(true), 2000)),
     expect: true,
     info: 'handle promises',
   },
@@ -277,7 +281,8 @@ module.exports = [
 ##### <a name="tests-suite-hooks"></a>run functions before and/or after a suite of tests
 ```javascript
 const afterAll = () => {
-  global.testing = 'Test has finished, cleanup.'
+  // Test has finished, cleanup.'
+  global.testing = undefined
 }
 
 const beforeAll = () => {
@@ -293,6 +298,8 @@ module.exports = [
     fn: () => { global.testing = 'changed in test' },
     // if beforeAll returns a function, it will execute after the test suite.
     beforeAll,
+    // this is optional and can be omitted if beforeall returns a function.
+    // in this example, afterAll will trigger twice.
     afterAll,
     expect: () => global.testing === 'changed in test',
   },
@@ -321,16 +328,45 @@ module.exports = {
 ###### <a name="lib-vals"></a> vals
 exports some javascript types. more to come. will sometime in the future be the base of a fuzzer.
 
+##### <a name="lib-promises"></a>promises
+Helper function to wrap nodejs callback functions and promises with ease.
+Handles the try/catch steps internally and returns a resolved or rejected promise.
+
+```javascript
+const { promise, is } = require('@magic/test')
+
+module.exports = [
+  {
+    fn: promise(cb => setTimeOut(() => cb(null, true), 200)),
+    expect: true,
+    info: 'handle promises in a nice way',
+  },
+  {
+    fn: promise(cb => setTimeOut(() => cb(new Error('error')), 200)),
+    expect: is.error,
+    info: 'handle promise errors in a nice way',
+  },
+]
+```
+
 ###### <a name="lib-trycatch"></a> tryCatch
-allows to catch and test functions without handling the error
+allows to catch and test functions without bubbling the errors up into the runtime
 ```javascript
 const { is, tryCatch } = require('@magic/test')
 const throwing = () => throw new Error('oops')
 const healthy = () => true
 
 module.exports = [
-  { fn: tryCatch(throwing()), expect: is.error, info: 'function throws an error' },
-  { fn: tryCatch(healthy()), expect: true, info: 'function does not throw' },
+  {
+    fn: tryCatch(throwing()),
+    expect: is.error,
+    info: 'function throws an error',
+  },
+  {
+    fn: tryCatch(healthy()),
+    expect: true,
+    info: 'function does not throw'
+  },
 ]
 ```
 
