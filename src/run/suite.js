@@ -82,8 +82,11 @@ const runSuite = async suite => {
       }),
     )
   } else {
-    log.error('runSuite:', 'invalid tests', tests)
-    return new Error('Invalid tests')
+    const errHeader = 'Error running Suite:'
+    const errMsg = 'invalid/missing tests'
+    const err = [errHeader, suite, errMsg]
+    log.error(errHeader, suite, errMsg)
+    return new Error(`${errHeader} ${suite.parent}/${suite.name} ${errMsg}`)
   }
 
   return {
