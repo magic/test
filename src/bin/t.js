@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+const path = require('path')
+const { exec } = require('child_process')
 const { cli } = require('./cli')
 
 // const hlp = ['-h', '--help']
@@ -36,7 +38,7 @@ const argv = cli({
 })
 
 if (process.env.NODE_ENV === 'production') {
-  require('./unit')
+  exec(path.join(__dirname, 'unit.js'), (...a) => console.log(a.join(' ')))
 } else {
-  require('./coverage')
+  exec(path.join(__dirname, 'coverage.js'), (...a) => console.log(a.join(' ')))
 }
