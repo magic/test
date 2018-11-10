@@ -6,15 +6,8 @@ const cwd = process.cwd()
 const { name } = require(path.join(cwd, 'package.json'))
 
 const nodeModules = path.join(cwd, 'node_modules')
-const nycPathPart = path.join('.bin', 'nyc')
 
-let nycCliPath
-if (name === '@magic/test') {
-  nycCliPath = path.join(nodeModules, nycPathPart)
-} else {
-  nycCliPath = path.join(nodeModules, '@magic', 'test', 'node_modules', nycPathPart)
-}
-
+const nycCliPath = path.join(nodeModules, '.bin', 'nyc')
 const coverallsPath = path.join(nodeModules, 'coveralls', 'bin', 'coveralls.js')
 
 const cmd = `${nycCliPath} report --reporter=text-lcov | ${coverallsPath}`
