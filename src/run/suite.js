@@ -88,13 +88,13 @@ const runSuite = async suite => {
 
     // if beforeAll returned a function, we execute it here
     if (is.function(afterAll)) {
-      afterAll()
+      await afterAll()
     }
 
     // if the module.exports of the suite includes the afterAll key,
     // we execute this function last.
     if (is.function(tests.afterAll)) {
-      tests.afterAll()
+      await tests.afterAll()
     }
   }
 
