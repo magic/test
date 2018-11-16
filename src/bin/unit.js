@@ -21,22 +21,17 @@ const readRecursive = async dir => {
 
   // first resolve test/index.js, test/lib/index.js
   // if they exist, we require them and expect willfull export structures.
-  const indexFilePath = path.join(testDir, 'index.js')
+  const indexFilePath = path.join(targetDir, 'index.js')
 
   if (await fs.exists(indexFilePath)) {
-    if (testDir === targetDir) {
-      //root
-      return require(indexFilePath)
-    } else if (testDir !== targetDir) {
-      return
-    }
-  }
+    const fileP = indexFilePath.replace(testDir, '')
+    tests[fileP] = require(indexFilePath)
+  } else {
 
-  // if dir/index.js does not exist, require all files and subdirectories of files
-  const files = await fs.readdir(targetDir)
+    // if dir/index.js does not exist, require all files and subdirectories of files
+    const files = await fs.readdir(targetDir)
 
-  await Promise.all(
-    files.map(async file => {
+    await Promise.all(files.map(async file => {
       if (file.indexOf('.') === 0) {
         // bail early if this is an index.js file or the file is a dotfile
         return
@@ -65,8 +60,8 @@ const readRecursive = async dir => {
         const fileP = filePath.replace(testDir, '')
         tests[fileP] = require(filePath)
       }
-    }),
-  )
+    }))
+  }
 
   return tests
 }
