@@ -52,10 +52,6 @@ const readRecursive = async dir => {
           // bail early if not js
           return
         }
-        if ((await fs.exists(path.join(targetDir, 'index.js'))) && file !== 'index.js') {
-          // bail early if directory contains index.js file
-          return
-        }
 
         const fileP = filePath.replace(testDir, '')
         tests[fileP] = require(filePath)
