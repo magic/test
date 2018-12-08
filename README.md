@@ -1,5 +1,7 @@
 # @magic/test
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/magic/test.svg)](https://greenkeeper.io/)
+
 simple tests with lots of utility.
 
 [![NPM version][npm-image]][npm-url]
