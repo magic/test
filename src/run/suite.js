@@ -10,10 +10,10 @@ const getFNS = () => {
     return FN
   }
 
-  if (FN.indexOf(' ') > -1) {
+  if (FN.includes(' ')) {
     FN = FN.split(' ')
 
-    if (FN.indexOf(',') > -1) {
+    if (FN.includes(',')) {
       FN = FN.split(',')
     }
   }
@@ -27,7 +27,7 @@ const runSuite = async suite => {
   let results
 
   if (is.empty(tests)) {
-    if (name.indexOf('index.js') > -1) {
+    if (name.includes('index.js')) {
       // we assume the user wants to keep us from indexing this directory.
       return
     }
@@ -54,7 +54,7 @@ const runSuite = async suite => {
     // is an object expected to contain arrays of tests for modules
     if (is.function(tests.fn)) {
       const fns = getFNS()
-      if (fns.indexOf(name) === -1) {
+      if (fns.includes(name)) {
         return
       }
 

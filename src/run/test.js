@@ -9,16 +9,16 @@ const getKey = (pkg, parent, name) => {
     key = `${pkg}`
   }
   if (parent && parent !== name) {
-    if (parent.indexOf('/') !== 0 && parent !== pkg) {
+    if (!parent.startsWith('/') && parent !== pkg) {
       parent = `.${parent}`
     }
     key += `${parent}`
   }
 
   if (name) {
-    if (parent && parent !== name && parent !== pkg && name.indexOf('/') !== 0) {
+    if (parent && parent !== name && parent !== pkg && !name.startsWith('/')) {
       key += '#'
-    } else if (name.indexOf('/') !== 0) {
+    } else if (!name.startsWith('/')) {
       name = `/${name}`
     }
 

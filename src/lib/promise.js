@@ -10,6 +10,7 @@ const argHandler = r => (...args) => {
   r(args)
 }
 
+// investigate argument passing
 const promise = fn => () => new Promise(r => fn(argHandler(r)))
 
 module.exports = promise

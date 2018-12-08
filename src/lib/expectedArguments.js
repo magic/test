@@ -8,7 +8,7 @@ const expectedArguments = fn => {
   const fnStr = fn.toString()
   let expected
 
-  if (fnStr.indexOf('(') === -1 && fnStr.indexOf('=>') > -1) {
+  if (!fnStr.includes('(') && fnStr.includes('=>')) {
     expected = fnStr.split('=>')[0]
   } else {
     const start = fnStr.indexOf('(') + 1
@@ -17,7 +17,7 @@ const expectedArguments = fn => {
   }
 
   if (!expected) {
-    if (fnStr.indexOf('=>') > -1) {
+    if (fnStr.includes('=>')) {
       expected = fnStr.split('=>')[0]
     }
 

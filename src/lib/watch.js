@@ -8,7 +8,6 @@ const testDir = path.join(process.cwd(), 'test')
 const tests = require(testDir)
 
 const watcher = dir => (type, file) => {
-  console.log({ type, file, tests })
   file = file.replace('.js', '')
   stats.reset()
   if (tests[file]) {

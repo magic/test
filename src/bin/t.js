@@ -3,10 +3,10 @@
 const { cli } = require('./cli')
 
 // const hlp = ['-h', '--help']
-// const help = hlp.some(p => process.argv.indexOf(p) > -1)
+// const help = hlp.some(p => process.argv.includes(p))
 //
 // const ps = ['-p', '--prod', '--production']
-// const prod = ps.some(p => process.argv.indexOf(p) > -1)
+// const prod = ps.some(p => process.argv.includes(p))
 
 const help = `
   @magic/test t

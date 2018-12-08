@@ -16,7 +16,7 @@ const test = t => {
     }
   }
 
-  if (stat.tests.indexOf(t) === -1) {
+  if (!stat.tests.includes(t)) {
     stat.tests.push(t)
   }
 

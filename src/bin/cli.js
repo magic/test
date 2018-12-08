@@ -19,7 +19,7 @@ const cli = args => {
   args.env = args.env || []
 
   if (args.help && args.help.length) {
-    if (['-h', '--h', '--help'].some(arg => process.argv.indexOf(arg) > -1)) {
+    if (['-h', '--h', '--help'].some(arg => process.argv.includes(arg))) {
       console.log(args.help)
       process.exit()
     }
@@ -36,7 +36,7 @@ const cli = args => {
   process.argv = [process.argv[0], process.argv[1], ...append]
 
   args.env
-    .filter(([argv, env]) => process.argv.indexOf(argv) > -1)
+    .filter(([argv, env]) => process.argv.includes(argv))
     .map(([argv, env, set]) => {
       process.env[env] = set
     })

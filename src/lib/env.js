@@ -1,6 +1,6 @@
 const isNodeProd = () => process.env.NODE_ENV === 'production'
-const isProd = () => process.argv.indexOf('-p') > -1
-const isVerbose = () => process.argv.indexOf('-l') > -1
+const isProd = () => process.argv.includes('-p')
+const isVerbose = () => process.argv.includes('-l')
 
 module.exports = {
   isNodeProd,

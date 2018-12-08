@@ -30,10 +30,10 @@ const testLib = (lib, spec, k) =>
 const testSpec = (spec, lib, k) =>
   Object.entries(lib).filter(([name, fn]) => {
     const specKeys = Object.keys(spec)
-    if (specKeys.indexOf(name) === -1) {
+    if (!specKeys.includes(name)) {
       log.error('Missing spec value', name)
     }
-    return specKeys.indexOf(name) === -1
+    return !specKeys.includes(name)
   })
 
 const tests = {
