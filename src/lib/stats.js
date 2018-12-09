@@ -3,18 +3,16 @@ const log = require('@magic/log')
 const store = require('./store')
 const env = require('./env')
 
+const defaultStats = {
+  pass: 0,
+  fail: 0,
+  all: 0,
+  tests: [],
+}
+
 const test = t => {
   const suites = store.get('suites')
-  let stat = suites[t.key]
-
-  if (!stat) {
-    stat = {
-      pass: 0,
-      fail: 0,
-      all: 0,
-      tests: [],
-    }
-  }
+  const stat = { ...defaultStats, ...suites[t.key] }
 
   if (!stat.tests.includes(t)) {
     stat.tests.push(t)
@@ -118,6 +116,7 @@ const info = results => {
 
   const percentage = printPercent((st.pass / st.all) * 100)
   log(`\n  Ran ${st.all} tests. Passed ${st.pass}/${st.all} ${percentage}%`)
+  return true
 }
 
 const reset = () => {
