@@ -1,13 +1,12 @@
 # @magic/test
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/magic/test.svg)](https://greenkeeper.io/)
-
 simple tests with lots of utility.
 
 [![NPM version][npm-image]][npm-url]
 [![Linux Build Status][travis-image]][travis-url]
 [![Windows Build Status][appveyor-image]][appveyor-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
+[![Greenkeeper badge](https://badges.greenkeeper.io/magic/test.svg)](https://greenkeeper.io/)
 
 
 * [dependencies](#dependencies)
