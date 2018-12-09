@@ -20,17 +20,3 @@ module.exports = [
   { fn: () => test.vals, expect: is.obj },
   { fn: () => test.version, expect: is.obj },
 ]
-
-// module.exports = Object.assign(run, {
-//   run,
-//   curry: require('./lib/curry'),
-//   is: require('@magic/types'),
-//   isNodeProd,
-//   isProd,
-//   log: require('@magic/log'),
-//   mock: require('./mock'),
-//   promise: require('./lib/promise'),
-//   store: require('./store'),
-//   vals: require('./vals'),
-//   version: require('./version'),
-// })
