@@ -6,15 +6,13 @@ const runTest = require('./test')
 const getFNS = () => {
   let { FN = '' } = process.env
 
-  if (!FN) {
-    return FN
-  }
+  if (FN) {
+    if (FN.includes(' ')) {
+      FN = FN.split(' ')
 
-  if (FN.includes(' ')) {
-    FN = FN.split(' ')
-
-    if (FN.includes(',')) {
-      FN = FN.split(',')
+      if (FN.includes(',')) {
+        FN = FN.split(',')
+      }
     }
   }
 
@@ -54,7 +52,7 @@ const runSuite = async suite => {
     // is an object expected to contain arrays of tests for modules
     if (is.function(tests.fn)) {
       const fns = getFNS()
-      if (fns.includes(name)) {
+      if (!fns.includes(name)) {
         return
       }
 
