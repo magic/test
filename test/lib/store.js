@@ -16,6 +16,11 @@ module.exports = [
     expect: () => store.get('key') === 'value',
     before,
   },
-  { fn: () => store.get('key2'), expect: is.undefined, before, info: 'store.get(key) returns undefined' },
+  {
+    fn: () => store.get('key2'),
+    expect: is.undefined,
+    before,
+    info: 'store.get(key) returns undefined',
+  },
   { fn: () => store.get(), expect: is.object, info: 'store.get() returns object' },
 ]

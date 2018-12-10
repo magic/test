@@ -26,36 +26,37 @@ const readRecursive = async dir => {
     const fileP = indexFilePath.replace(testDir, '')
     tests[fileP] = require(indexFilePath)
   } else {
-
     // if dir/index.js does not exist, require all files and subdirectories of files
     const files = await fs.readdir(targetDir)
 
-    await Promise.all(files.map(async file => {
-      if (file.startsWith('.')) {
-        // bail early if this is an index.js file or the file is a dotfile
-        return
-      }
-
-      const filePath = path.join(targetDir, file)
-      const stat = await fs.stat(filePath)
-
-      if (stat.isDirectory()) {
-        const deepTests = await readRecursive(dir ? path.join(dir, file) : file)
-
-        tests = {
-          ...tests,
-          ...deepTests,
-        }
-      } else if (stat.isFile()) {
-        if (!file.endsWith('js') && !file.endsWith('mjs')) {
-          // bail early if not js
+    await Promise.all(
+      files.map(async file => {
+        if (file.startsWith('.')) {
+          // bail early if this is an index.js file or the file is a dotfile
           return
         }
 
-        const fileP = filePath.replace(testDir, '')
-        tests[fileP] = require(filePath)
-      }
-    }))
+        const filePath = path.join(targetDir, file)
+        const stat = await fs.stat(filePath)
+
+        if (stat.isDirectory()) {
+          const deepTests = await readRecursive(dir ? path.join(dir, file) : file)
+
+          tests = {
+            ...tests,
+            ...deepTests,
+          }
+        } else if (stat.isFile()) {
+          if (!file.endsWith('js') && !file.endsWith('mjs')) {
+            // bail early if not js
+            return
+          }
+
+          const fileP = filePath.replace(testDir, '')
+          tests[fileP] = require(filePath)
+        }
+      }),
+    )
   }
 
   return tests

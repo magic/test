@@ -69,7 +69,6 @@ const runSuite = async suite => {
       afterAll = await tests.beforeAll()
     }
 
-
     const suiteNames = Object.keys(tests)
 
     results = await Promise.all(
