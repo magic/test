@@ -1,9 +1,10 @@
 const path = require('path')
+const pkg = require(path.join(process.cwd(), 'package.json'))
 
 const is = require('@magic/types')
 const log = require('@magic/log')
 
-const { stats, store, cleanFunctionString } = require('./lib')
+const { stats, store } = require('./lib')
 
 const runSuite = require('./run/suite')
 
@@ -18,8 +19,6 @@ const run = async tests => {
   }
 
   const suiteNames = Object.keys(tests)
-
-  const pkg = require(path.join(process.cwd(), 'package.json'))
 
   store.set({ module: pkg.name })
 
