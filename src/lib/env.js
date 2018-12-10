@@ -1,9 +1,7 @@
-const isNodeProd = () => process.env.NODE_ENV === 'production'
-const isProd = () => process.argv.includes('-p')
-const isVerbose = () => process.argv.includes('-l')
-
+// exporting functions instead of booleans
+// to enable tests that change the env
 module.exports = {
-  isNodeProd,
-  isProd,
-  isVerbose,
+  isNodeProd: () => process.env.NODE_ENV === 'production',
+  isProd: () => process.argv.includes('-p'),
+  isVerbose: () => process.argv.includes('-l'),
 }
