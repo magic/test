@@ -15,6 +15,9 @@
     "format:check": "f",
     "calls": "calls"
   },
+  "files": [
+    "src"
+  ],
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "dependencies": {
     "@magic/log": "github:magic/log",
