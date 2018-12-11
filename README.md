@@ -6,6 +6,7 @@ simple tests with lots of utility.
 [![Linux Build Status][travis-image]][travis-url]
 [![Windows Build Status][appveyor-image]][appveyor-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
+[![Greenkeeper badge](https://badges.greenkeeper.io/magic/test.svg)](https://greenkeeper.io/)
 
 
 * [dependencies](#dependencies)
