@@ -20,7 +20,7 @@
   ],
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "dependencies": {
-    "@magic/log": "github:magic/log",
+    "@magic/log": "0.0.1",
     "@magic/types": "0.0.1",
     "coveralls": "3.0.2",
     "nyc": "13.1.0",
