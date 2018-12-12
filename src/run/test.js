@@ -48,6 +48,7 @@ const runTest = async test => {
             })
           } catch (e) {
             log.error('Suite:', key, ...cleanError(e))
+            process.exit(1)
           }
         }),
       )
@@ -62,6 +63,7 @@ const runTest = async test => {
       after = await before(test)
     } catch (e) {
       log.error('test.before', test.before, e)
+      process.exit(1)
     }
   }
 
@@ -87,6 +89,7 @@ const runTest = async test => {
       }
     } catch (e) {
       log.error('test.fn', key, ...cleanError(e))
+      process.exit(1)
     }
 
     try {
@@ -126,6 +129,7 @@ const runTest = async test => {
       }
     } catch (e) {
       log.error('test.expect', key, e)
+      process.exit(1)
     }
 
     // loop is done
@@ -140,6 +144,7 @@ const runTest = async test => {
       await after()
     } catch (e) {
       log.error('test.after', key, e)
+      process.exit(1)
     }
   }
 
