@@ -45,7 +45,7 @@ be in a nodejs project.
 #no @ before magic!
 npm i --save-dev magic/test
 
-mkdir test  
+mkdir test
 ```
 
 create test/index.js
