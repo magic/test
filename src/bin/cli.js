@@ -3,7 +3,7 @@ const replaceArgv = args => {
   args
     .map(arg => ({ arg, idx: process.argv.indexOf(arg) }))
     .filter(({ idx }) => idx > -1)
-    .map(({ arg, idx }, id) => {
+    .map((_, id) => {
       if (id === 0) {
         argv = args[args.length - 1]
       }
