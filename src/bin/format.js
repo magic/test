@@ -24,6 +24,18 @@ const argv = cli({
   options: [['-w', '--w', '--write'], ['-l', '--list', '--list-different']],
   default: ['--list-different'],
   append: ['--config', configPath, '**/*.js'],
+  help: `
+
+    f -  format js code using prettier
+
+    usage:
+    magic [TASKS]...
+
+    available tasks:
+    -w --write - lint and write files
+    -l --list  - only show differences *default
+    -h --help  - this help text
+  `,
 })
 
 const cliFile = 'prettier'
