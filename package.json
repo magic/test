@@ -9,10 +9,10 @@
     "calls": "src/bin/coveralls.js"
   },
   "scripts": {
-    "start": "t -p",
-    "test": "t",
-    "format": "f -w",
-    "format:check": "f",
+    "start": "src/bin/t.js -p",
+    "test": "src/bin/t.js",
+    "format": "src/bin/format.js -w",
+    "format:check": "src/bin/format.js",
     "calls": "calls"
   },
   "files": [
