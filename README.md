@@ -42,8 +42,7 @@ simple tests with lots of utility.
 #### <a name="install"></a>Getting started
 be in a nodejs project.
 ```bash
-#no @ before magic!
-npm i --save-dev magic/test
+npm i --save-dev @magic/test
 
 mkdir test
 ```
