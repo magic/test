@@ -148,6 +148,15 @@ const runTest = async test => {
     }
   }
 
+  if (is.function(test.after)) {
+    try {
+      await test.after()
+    } catch (e) {
+      log.error('test.after', key, e)
+      process.exit(1)
+    }
+  }
+
   const stat = Object.assign({}, test, {
     pkg,
     key,
