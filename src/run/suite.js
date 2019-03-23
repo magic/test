@@ -31,8 +31,7 @@ const runSuite = async suite => {
     }
     const errHeader = 'Error running Suite:'
     const errMsg = 'invalid/missing tests'
-    const err = [errHeader, suite, errMsg]
-    log.error(errHeader, suite, errMsg)
+    log.error(errHeader, `${suite.parent}/${suite.name}`, errMsg)
     return new Error(`${errHeader} ${suite.parent}/${suite.name} ${errMsg}`)
   }
 
