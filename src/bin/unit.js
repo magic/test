@@ -18,7 +18,7 @@ const readRecursive = async dir => {
 
   let tests = {}
 
-  // first resolve test/index.js, test/lib/index.js
+  // first resolve test/{dir/?}index.js
   // if they exist, we require them and expect export structures to be user defined.
   const indexFilePath = path.join(targetDir, 'index.js')
 
