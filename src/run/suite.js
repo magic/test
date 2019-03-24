@@ -31,16 +31,24 @@ const runSuite = async suite => {
     }
     const errHeader = 'Error running Suite:'
     const errMsg = 'invalid/missing tests'
-    log.error(errHeader, `${suite.parent}/${suite.name}`, errMsg)
+    log.error(errHeader, suite, errMsg)
     return new Error(`${errHeader} ${suite.parent}/${suite.name} ${errMsg}`)
   }
+
+  // execute beforeAll if it exists.
+  // cache afterAll callback function if it gets returned by beforeAll
+  let afterAll
+  if (is.function(tests.beforeAll)) {
+    afterAll = await tests.beforeAll()
+  }
+
 
   if (is.array(tests)) {
     // gather the test results by running each of the tests
     results = await Promise.all(
       tests.map(async t => {
         try {
-          const test = Object.assign({}, t, { name, key, parent, pkg })
+          const test = Object.assign({}, t, { name, parent, pkg })
           return runTest(test)
         } catch (e) {
           log.error('runSuite: runTest call errored', suite, e)
@@ -55,15 +63,8 @@ const runSuite = async suite => {
         return
       }
 
-      const test = Object.assign({}, tests, { name, key, parent, pkg })
+      const test = Object.assign({}, tests, { name, parent, pkg })
       return runTest(test)
-    }
-
-    // execute beforeAll if it exists.
-    // cache afterAll callback function if it gets returned by beforeAll
-    let afterAll
-    if (is.function(tests.beforeAll)) {
-      afterAll = await tests.beforeAll()
     }
 
     const suiteNames = Object.keys(tests)
@@ -81,21 +82,22 @@ const runSuite = async suite => {
         return suite
       }),
     )
-
-    // if beforeAll returned a function, we execute it here
-    if (is.function(afterAll)) {
-      await afterAll()
-    }
-
-    // if the module.exports of the suite includes the afterAll key,
-    // we execute this function last.
-    if (is.function(tests.afterAll)) {
-      await tests.afterAll()
-    }
   }
 
+  // if beforeAll returned a function, we execute it here
+  if (is.function(afterAll)) {
+    await afterAll()
+  }
+
+  // if the module.exports of the suite includes the afterAll key,
+  // we execute this function last.
+  if (is.function(tests.afterAll)) {
+    await tests.afterAll()
+  }
+
+
   return {
-    [key]: results,
+    [name]: results,
   }
 }
 

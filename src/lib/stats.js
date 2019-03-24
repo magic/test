@@ -12,29 +12,29 @@ const defaultStats = {
 
 const test = t => {
   const suites = store.get('suites')
-  const stat = { ...defaultStats, ...suites[t.key] }
+  const suite = { ...defaultStats, ...suites[t.key] }
 
-  if (!stat.tests.includes(t)) {
-    stat.tests.push(t)
+  if (!suite.tests.includes(t)) {
+    suite.tests.push(t)
   }
 
   if (t.pass) {
-    stat.pass += 1
+    suite.pass += 1
   } else {
-    stat.fail += 1
+    suite.fail += 1
   }
 
-  stat.all += 1
+  suite.all += 1
+
+  suites[t.key] = suite
 
   const data = {
-    suites: {
-      [t.key]: stat,
-    },
+    suites,
   }
 
   store.set(data)
 
-  return stat
+  return suite
 }
 
 const printPercent = p => (p === 100 ? log.color('green', p) : log.color('red', p))
@@ -70,6 +70,12 @@ const info = results => {
 
     tests.forEach(test => {
       const { pass, result, expString, key, msg, info } = test
+
+      // dirty workaround for now, all suites get all tests passed in test() above
+      if (key !== suiteName) {
+        return
+      }
+
       if (pass) {
         if (env.isVerbose()) {
           log.info(log.color('green', '* pass:'), 'got', result, 'expected', expString)
@@ -78,15 +84,10 @@ const info = results => {
         log(
           log.color('red', '* fail:'),
           key.replace(/\./g, '/'),
-          'executed: "',
-          msg,
-          '"\ngot: "',
-          result,
-          '"\nwanted: "',
-          test.expString,
-          '"',
-          test.info ? `\ninfo: ${log.paint('grey', test.info)}` : '',
-          '\n',
+          `executed: "${msg}"\n`,
+          `got: "${result}"\n`,
+          `wanted: "${expString}"\n`,
+          info ? `info: ${log.paint('grey', info)}\n` : '',
         )
       }
     })
@@ -104,15 +105,22 @@ const info = results => {
 
   suiteNames.forEach(suiteName => {
     const { pass = 0, all = 0, fail = 0 } = suites[suiteName]
-    const percentage = printPercent((pass / all) * 100)
-    log.info(`${suiteName} => Pass: ${pass}/${all} ${percentage}%`)
+    const passPercent = (pass / all) * 100
+    const percentage = printPercent(passPercent)
+
+    const logOutput = `${suiteName} => Pass: ${pass}/${all} ${percentage}%`
+    if (passPercent === 100) {
+      log.info(logOutput)
+    } else {
+      log.warn(logOutput)
+    }
     st.pass += pass
     st.all += all
     st.fail += fail
   })
 
   const percentage = printPercent((st.pass / st.all) * 100)
-  log(`\n  Ran ${st.all} tests. Passed ${st.pass}/${st.all} ${percentage}%`)
+  log(`Ran ${st.all} tests. Passed ${st.pass}/${st.all} ${percentage}%\n`)
   return true
 }
 
