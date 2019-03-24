@@ -84,13 +84,10 @@ const info = results => {
           result,
           '"\nwanted: "',
           test.expString,
-          test.info ? `\ninfo: ${log.annotate(test.info)}` : '',
+          '"',
+          test.info ? `\ninfo: ${log.paint('grey', test.info)}` : '',
           '\n',
         )
-      }
-
-      if ((!pass || env.isVerbose()) && test.info) {
-        log.annotate(test.info)
       }
     })
 
