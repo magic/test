@@ -23,7 +23,7 @@
     "@magic/log": "0.0.2",
     "@magic/types": "0.0.3",
     "coveralls": "3.0.3",
-    "nyc": "13.3.0",
+    "nyc": "14.0.0",
     "prettier": "1.17.0"
   }
 }
