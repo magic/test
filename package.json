@@ -8,8 +8,19 @@
     "f": "src/bin/format.js",
     "calls": "src/bin/coveralls.js"
   },
+  "contributors": [
+    {
+      "name": "jascha ehrenreich",
+      "github": "jaeh"
+    }
+  ],
   "scripts": {
     "start": "node src/bin/t.js -p",
+    "build": "NODE_ENV=production magic build",
+    "prod": "NODE_ENV=production magic build serve",
+    "clean": "magic clean",
+    "serve": "magic serve",
+    "dev": "magic dev",
     "test": "node src/bin/t.js",
     "format": "node src/bin/format.js -w",
     "format:check": "node src/bin/format.js",
@@ -23,7 +34,11 @@
     "@magic/log": "0.0.2",
     "@magic/types": "0.0.3",
     "coveralls": "3.0.3",
+    "hyperapp": "1.2.9",
     "nyc": "14.0.0",
     "prettier": "1.17.0"
+  },
+  "devDependencies": {
+    "@magic/core": "github:magic/core"
   }
 }
