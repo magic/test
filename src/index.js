@@ -1,5 +1,6 @@
 const run = require('./run')
 
+const { h, app } = require('hyperapp')
 const { curry, env, mock, promise, store, vals, version, tryCatch } = require('./lib')
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'test'
@@ -16,4 +17,6 @@ module.exports = Object.assign(run, {
   vals,
   version,
   tryCatch,
+  h, // hyperapp rendering function
+  app, // hyperapp app wrapper
 })
