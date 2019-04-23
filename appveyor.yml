@@ -21,7 +21,8 @@ install:
 cache:
   # local npm modules
   - 'node_modules -> package.json'
-  - '%APPDATA%\npm-cache'               # npm cache
+  # npm cache
+  - '%APPDATA%\npm-cache'
 
 build: off
 
