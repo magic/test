@@ -10,6 +10,7 @@ module.exports = Object.assign(run, {
   env,
   log: require('@magic/log'),
   is: require('@magic/types'),
+  deep: require('@magic/deep'),
   mock,
   promise,
   run,
