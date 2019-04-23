@@ -1,5 +1,5 @@
 const { exec } = require('child_process')
-const os = require('os')
+// const os = require('os')
 
 const is = require('@magic/types')
 
@@ -71,11 +71,12 @@ const cli = args => {
 }
 
 cli.spawn = (cmd, args = []) => {
-  if (os.type() === 'Windows_NT') {
-    cmd = `node ${cmd}`
-  }
+  // if (os.type() === 'Windows_NT') {
+  //   cmd = `node ${cmd}`
+  // }
+  args = args.join(' ')
 
-  const res = exec(cmd, args)
+  const res = exec(`${cmd} ${args}`)
 
   res.stdout.pipe(process.stdout)
   res.stderr.pipe(process.stderr)
