@@ -2,6 +2,7 @@ const is = require('@magic/types')
 const log = require('@magic/log')
 
 const runTest = require('./test')
+// const { stats } = require('../lib')
 
 const getFNS = () => {
   let { FN = '' } = process.env
@@ -20,7 +21,9 @@ const getFNS = () => {
 }
 
 const runSuite = async suite => {
-  const { parent, name, key, tests, pkg } = suite
+  const { parent, name, tests, pkg } = suite
+
+  // const startTime = new Date().getTime()
 
   let results
 
@@ -41,7 +44,6 @@ const runSuite = async suite => {
   if (is.function(tests.beforeAll)) {
     afterAll = await tests.beforeAll()
   }
-
 
   if (is.array(tests)) {
     // gather the test results by running each of the tests
@@ -95,6 +97,8 @@ const runSuite = async suite => {
     await tests.afterAll()
   }
 
+  // const endTime = new Date().getTime()
+  // stats.suite({ ...suite, duration: endTime - startTime })
 
   return {
     [name]: results,
