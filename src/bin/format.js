@@ -85,7 +85,7 @@ const findFiles = async ({ include, exclude, fileTypes }) => {
         let dirContent = await fs.readdir(dir)
         dirContent = dirContent
           .filter(file => !file.startsWith('.'))
-          .filter(file => !exclude.some(e => file.startsWith(e)))
+          .filter(file => !exclude.some(e => file === e || `${file}/`.startsWith(`${e}/`)))
           .filter(file => !file.includes('.') || fileTypes.some(ft => file.endsWith(ft)))
 
         files = await Promise.all(
