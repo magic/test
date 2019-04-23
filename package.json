@@ -39,6 +39,7 @@
     "prettier": "1.17.0"
   },
   "devDependencies": {
+    "@magic-modules/gitbadges": "github:magic-modules/gitbadges",
     "@magic/core": "github:magic/core"
   }
 }
