@@ -1,6 +1,6 @@
 {
   "name": "@magic/test",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "simple yet powerful unit testing library",
   "main": "src/index.js",
   "bin": {
