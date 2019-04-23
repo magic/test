@@ -39,7 +39,7 @@ const test = t => {
 
 const printPercent = p => (p === 100 ? log.color('green', p) : log.color('red', p))
 
-const info = results => {
+const info = () => {
   const suites = store.get('suites')
   const suiteNames = Object.keys(suites)
 
