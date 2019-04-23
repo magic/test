@@ -1,4 +1,4 @@
-const { spawn } = require('child_process')
+const { exec } = require('child_process')
 const os = require('os')
 
 const is = require('@magic/types')
@@ -75,7 +75,7 @@ cli.spawn = (cmd, args = []) => {
     cmd = `node ${cmd}`
   }
 
-  const res = spawn(cmd, args)
+  const res = exec(cmd, args)
 
   res.stdout.pipe(process.stdout)
   res.stderr.pipe(process.stderr)
