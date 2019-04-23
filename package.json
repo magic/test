@@ -31,7 +31,6 @@
   ],
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "dependencies": {
-    "@magic-modules/pre": "github:magic-modules/pre",
     "@magic/log": "0.0.2",
     "@magic/types": "0.0.3",
     "coveralls": "3.0.3",
@@ -41,6 +40,8 @@
   },
   "devDependencies": {
     "@magic-modules/gitbadges": "github:magic-modules/gitbadges",
+    "@magic-modules/pre": "github:magic-modules/pre",
+    "@magic-themes/docs": "github:magic-themes/docs",
     "@magic/core": "github:magic/core"
   }
 }
