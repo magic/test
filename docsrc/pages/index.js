@@ -7,19 +7,24 @@ module.exports = () => [
     appveyor: 'jaeh/test',
   }),
 
-  h2('dependencies'),
-  p([ Link({ to: 'https://github.com/magic/log'}, '@magic/log'), ': console.log wrapper with loglevels' ]),
-  p([ Link({ to: 'https://github.com/magic/types' }, '@magic/types'), ': type checking library']),
-  p([ Link({ to: 'https://www.npmjs.com/package/nyc' }, 'nyc'), ': code coverage']),
-  p([ Link({ to: 'https://www.npmjs.com/package/prettier' }, 'prettier'), ': code formatting']),
+  h2({ id: 'dependencies' }, 'dependencies'),
+  p([
+    Link({ to: 'https://github.com/magic/log' }, '@magic/log'),
+    ': console.log wrapper with loglevels',
+  ]),
+  p([Link({ to: 'https://github.com/magic/types' }, '@magic/types'), ': type checking library']),
+  p([Link({ to: 'https://www.npmjs.com/package/nyc' }, 'nyc'), ': code coverage']),
+  p([Link({ to: 'https://www.npmjs.com/package/prettier' }, 'prettier'), ': code formatting']),
 
   p('@magic/log and @magic/types have no dependencies.'),
 
-  h2({ id: 'install' }, 'Getting started'),
+  h2({ id: 'getting-started' }, 'Getting started'),
   p('be in a nodejs project.'),
+
+  h3({ id: 'install' }, 'install'),
   Pre.View('npm i --save-dev @magic/test'),
 
-Pre.View(`
+  Pre.View(`
 // create test/functionName.js
 const yourTest = require('../path/to/your/file.js')
 
@@ -29,7 +34,7 @@ module.exports = [
   { fn: yourTest, expect: true, info: 'hope this will work ;)'}
 ]`),
 
-  h3({ id: "npm-scripts" }, 'npm run scripts'),
+  h3({ id: 'npm-scripts' }, 'npm run scripts'),
   p('edit package.json'),
   Pre.View(`
 {
@@ -40,7 +45,7 @@ module.exports = [
     "format:check": "f" // check format using prettier
   }
 }`),
-// repeated for easy copy pasting (without comments):
+  // repeated for easy copy pasting (without comments):
   Pre.View(`
   "scripts": {
     "test": "t -p",
@@ -49,7 +54,7 @@ module.exports = [
     "format:check": "f"
   }`),
 
-  h3('quick tests (without coverage)'),
+  h3({ id: 'quick-tests' }, 'quick tests (without coverage)'),
   Pre.View(`
 // run the tests:
 npm test
@@ -60,7 +65,7 @@ npm test
 // ### Testing package: @magic/test
 // Ran 2 tests. Passed 2/2 100%`),
 
-  h3('coverage'),
+  h3({ id: 'coverage' }, 'coverage'),
   p('run coverage reports and get full test report including from passing tests'),
   Pre.View('npm run coverage'),
 
@@ -71,8 +76,7 @@ npm test
   p('tests one function per suite'),
   p('tests one feature per test'),
 
-
-  h4('Filesystem based naming'),
+  h4({ id: 'test-suites-fs' }, 'Filesystem based naming'),
   p('the following directory structure:'),
   Pre.View(`
 ./test/
@@ -81,7 +85,7 @@ npm test
 
   p('yields the same result as exporting the following from ./test/index.js'),
 
-  h4('Data driven naming'),
+  h4({ id: 'test-suites-data' }, 'Data driven naming'),
   Pre.View(`
 const suite1 = require('./suite1')
 const suite2 = require('./suite2')
@@ -121,10 +125,13 @@ const fnWithCallback = (err, arg, cb) => cb(err, arg)
 module.exports = { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect: 'arg' }`),
 
   h4({ id: 'tests-types' }, 'testing types'),
-  p(['types can be compared using ', Link({ to: 'https://github.com/magic/types' }, '@magic/types')]),
+  p([
+    'types can be compared using ',
+    Link({ to: 'https://github.com/magic/types' }, '@magic/types'),
+  ]),
   p([
     '@magic/types is a richly featured and thoroughly tested type library without dependencies.',
-    ' it is exported from this library for convenience.'
+    ' it is exported from this library for convenience.',
   ]),
 
   Pre.View(`
@@ -166,7 +173,7 @@ module.exports = {
   info: 'function is a function',
 }`),
 
-Pre.View(`
+  Pre.View(`
 // will not work as expected and instead call fnToTest
 module.exports = {
   fn: fnToTest,
@@ -185,7 +192,7 @@ module.exports = {
   ]
 }`),
 
-h3({ id: 'tests-promises' }, 'promises'),
+  h3({ id: 'tests-promises' }, 'promises'),
   Pre.View(`
 const { promise, is } = require('@magic/test')
 
@@ -209,7 +216,7 @@ module.exports = [
   },
 ]`),
 
-h3({ id: 'tests-cb' }, 'callback functions'),
+  h3({ id: 'tests-cb' }, 'callback functions'),
   Pre.View(`
 const { promise, is } = require('@magic/test')
 
@@ -228,7 +235,7 @@ module.exports = [
   },
 ]`),
 
-h3({ id: 'tests-hooks' }, 'run functions before and/or after individual test'),
+  h3({ id: 'tests-hooks' }, 'run functions before and/or after individual test'),
   Pre.View(`
 const after = () => {
   global.testing = 'Test has finished, cleanup.'
@@ -252,7 +259,7 @@ module.exports = [
   },
 ]`),
 
-h3({ id: 'tests-suite-hooks' }, 'run functions before and/or after a suite of tests'),
+  h3({ id: 'tests-suite-hooks' }, 'run functions before and/or after a suite of tests'),
   Pre.View(`
 const afterAll = () => {
   // Test has finished, cleanup.'
@@ -279,12 +286,16 @@ module.exports = [
   },
 ]`),
 
-h2({ id: 'lib' }, 'Utility Belt'),
-p('@magic/test exports some utility functions that make working with complex test workflows simpler.'),
+  h2({ id: 'lib' }, 'Utility Belt'),
+  p(
+    '@magic/test exports some utility functions that make working with complex test workflows simpler.',
+  ),
 
-h4({ id: "lib-curry" }, 'curry'),
-p('Currying can be used to split the arguments of a function into multiple nested functions.'),
-p('This helps if you have a function with complicated arguments that you just want to quickly shim.'),
+  h4({ id: 'lib-curry' }, 'curry'),
+  p('Currying can be used to split the arguments of a function into multiple nested functions.'),
+  p(
+    'This helps if you have a function with complicated arguments that you just want to quickly shim.',
+  ),
 
   Pre.View(`
 const { curry } = require('@magic/test')
@@ -299,12 +310,14 @@ module.exports = {
 }
 `),
 
-h4({ id: 'lib-vals' }, 'vals'),
-p('exports some javascript types. more to come. will sometime in the future be the base of a fuzzer.'),
+  h4({ id: 'lib-vals' }, 'vals'),
+  p(
+    'exports some javascript types. more to come. will sometime in the future be the base of a fuzzer.',
+  ),
 
-h3({ id: 'lib-promises' }, 'promises'),
-p('Helper function to wrap nodejs callback functions and promises with ease.'),
-p('Handles the try/catch steps internally and returns a resolved or rejected promise.'),
+  h3({ id: 'lib-promises' }, 'promises'),
+  p('Helper function to wrap nodejs callback functions and promises with ease.'),
+  p('Handles the try/catch steps internally and returns a resolved or rejected promise.'),
 
   Pre.View(`
 const { promise, is } = require('@magic/test')
@@ -391,7 +404,7 @@ npm run format:check`),
 
   p([
     'this both explains to everyone that your app has this dependencies',
-    ' and keeps your bash free of clutter'
+    ' and keeps your bash free of clutter',
   ]),
 
   Pre.View(`
@@ -416,6 +429,7 @@ f -w`),
     Link({ to: 'https://github.com/magic/test/tree/master/test' }, 'the tests'),
   ]),
 
-  p('Checkout [@magic/types](https://github.com/magic/types) and the other magic libraries for more test examples.'),
-
+  p(
+    'Checkout [@magic/types](https://github.com/magic/types) and the other magic libraries for more test examples.',
+  ),
 ]
