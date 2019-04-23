@@ -17,7 +17,7 @@ const cbFn = (e, a, cb) => cb(e, a)
 
 module.exports = {
   // test possible test structure
-  before: [
+  runBefore: [
     {
       fn: () => true,
       before,
@@ -25,7 +25,7 @@ module.exports = {
       info: 'Test before function by setting process.env.testVar',
     },
   ],
-  after: [
+  runAfter: [
     {
       fn: async () => new Promise(r => setTimeout(r, 10)),
       expect: () => !process.env.testVar,
