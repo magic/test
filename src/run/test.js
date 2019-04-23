@@ -28,7 +28,7 @@ const getKey = (pkg, parent, name) => {
 }
 
 const runTest = async test => {
-  // could be undefined but set
+  // could be undefined, we expect true to provide a default
   if (!test.hasOwnProperty('expect')) {
     test.expect = true
   }
