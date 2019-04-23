@@ -1,5 +1,7 @@
+const { spawn } = require('child_process')
+const os = require('os')
+
 const is = require('@magic/types')
-const { spawn, exec } = require('child_process')
 
 const parseArgv = ({ options }) => {
   let lastArg
@@ -69,7 +71,10 @@ const cli = args => {
 }
 
 cli.spawn = (cmd, args = []) => {
-  // cmd = [cmd, ...args].join(' ')
+  if (os.type() === 'Windows_NT') {
+    cmd = `node ${cmd}`
+  }
+
   const res = spawn(cmd, args)
 
   res.stdout.pipe(process.stdout)
