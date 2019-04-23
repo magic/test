@@ -344,7 +344,7 @@ module.exports = [
 
   h2({ id: 'usage' }, 'Usage'),
 
-  h2({ id: 'usage-js' }, 'js api:'),
+  h3({ id: 'usage-js' }, 'js api:'),
 
   Pre.View(`
 // test/index.js
