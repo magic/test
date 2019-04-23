@@ -1,50 +1,81 @@
-const replaceArgv = args => {
-  let argv
-  args
-    .map(arg => ({ arg, idx: process.argv.indexOf(arg) }))
-    .filter(({ idx }) => idx > -1)
-    .map((_, id) => {
-      if (id === 0) {
-        argv = args[args.length - 1]
-      }
-    })
+const is = require('@magic/types')
+const { spawn, exec } = require('child_process')
 
-  return argv
+const parseArgv = ({ options }) => {
+  let lastArg
+  const args = {}
+  // map over argv, find arguments and values.
+  // arguments are all strings starting with a -,
+  // values are all strings between strings starting with a -.
+  process.argv.forEach(arg => {
+    if (arg.startsWith('-')) {
+      let matchedArg
+      options.forEach(option => {
+        if (is.array(option)) {
+          if (option.some(opt => opt === arg)) {
+            matchedArg = option[0]
+          }
+        } else if (option === arg) {
+          matchedArg = option
+        }
+      })
+      lastArg = matchedArg
+      args[lastArg] = []
+    } else {
+      if (lastArg) {
+        args[lastArg].push(arg)
+      }
+    }
+  })
+
+  return args
 }
 
 const cli = args => {
-  args.options = args.options || []
-  args.default = args.default || []
-  args.append = args.append || []
-  args.env = args.env || []
+  const {
+    options = [],
+    default: def = [],
+    append = [],
+    env = [],
+    help = 'this cli has no help text specified. if it would, we would show it now.',
+  } = args
 
-  if (args.help && args.help.length) {
-    if (['-h', '--h', '--help'].some(arg => process.argv.includes(arg))) {
-      console.log(args.help)
-      process.exit()
-    }
+  if (['-h', '--h', '--help'].some(arg => process.argv.includes(arg))) {
+    console.log(help)
+    process.exit()
   }
 
-  let mapped = args.options.map(replaceArgv).filter(a => a)
-
-  if (mapped.length === 0 && args.default && args.default.length > 0) {
-    mapped = args.default
-  }
-
-  const append = [...mapped, ...args.append]
-
-  process.argv = [process.argv[0], process.argv[1], ...append]
-
-  args.env
-    .filter(([argv, env]) => process.argv.includes(argv))
-    .map(([argv, env, set]) => {
-      process.env[env] = set
+  // set env depending on env argv switches (-p and -d)
+  env
+    .filter(([argv]) => argv.some(a => process.argv.includes(a)))
+    .map(([_, envName, envValue]) => {
+      process.env[envName] = envValue
     })
 
-  return append.join(' ')
+  let matched = parseArgv({ options })
+
+  if (!is.empty(def) && is.empty(matched)) {
+    Object.entries(def).forEach(([k, v]) => {
+      matched[k] = v
+    })
+  }
+  if (!is.empty(append)) {
+    Object.entries(append).forEach(([k, v]) => {
+      matched[k] = v
+    })
+  }
+
+  return matched
 }
 
-module.exports = {
-  cli,
-  replaceArgv,
+cli.spawn = (cmd, args = []) => {
+  // cmd = [cmd, ...args].join(' ')
+  const res = spawn(cmd, args)
+
+  res.stdout.pipe(process.stdout)
+  res.stderr.pipe(process.stderr)
+
+  return res
 }
+
+module.exports = cli

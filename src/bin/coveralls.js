@@ -11,6 +11,4 @@ const nycCliPath = path.join(nodeModules, '.bin', 'nyc')
 const coverallsPath = path.join(nodeModules, 'coveralls', 'bin', 'coveralls.js')
 
 const cmd = `${nycCliPath} report --reporter=text-lcov | ${coverallsPath}`
-const cb = (...a) => console.log(...a)
-console.log({ cmd })
-exec(cmd, cb)
+exec(cmd, console.log)

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { cli } = require('./cli')
+const cli = require('./cli')
 
 // const hlp = ['-h', '--help']
 // const help = hlp.some(p => process.argv.includes(p))
@@ -30,13 +30,18 @@ const help = `
 `
 
 const argv = cli({
-  options: [['--production', '--prod', '-p'], ['--verbose', '--loud', '-l']],
-  env: [['-p', 'NODE_ENV', 'production']],
+  options: [
+    ['--production', '--prod', '--p', '-p'],
+    ['--verbose', '--loud', '--l', '-l'],
+    ['--include', '--inc', '--i', '-i'],
+    ['--exclude', '--e', '-e'],
+  ],
+  env: [[['--production', '--prod', '--p', '-p'], 'NODE_ENV', 'production']],
   help,
 })
 
 if (process.env.NODE_ENV === 'production') {
   require('./unit')
 } else {
-  require('./coverage')
+  require('./coverage')(argv)
 }

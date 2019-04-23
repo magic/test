@@ -22,8 +22,8 @@
     "serve": "magic serve",
     "dev": "magic dev",
     "test": "node src/bin/t.js --exclude docs docsrc",
-    "format": "node src/bin/format.js -w",
-    "format:check": "node src/bin/format.js",
+    "format": "node src/bin/format.js -w --exclude docs",
+    "format:check": "node src/bin/format.js --exclude docs",
     "calls": "calls"
   },
   "files": [
