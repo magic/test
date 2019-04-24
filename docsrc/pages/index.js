@@ -13,6 +13,7 @@ module.exports = () => [
     ': console.log wrapper with loglevels',
   ]),
   p([Link({ to: 'https://github.com/magic/types' }, '@magic/types'), ': type checking library']),
+  p([Link({ to: 'https://github.com/magic/deep' }, '@magic/deep'), ': deeply compare and manipulate arrays and objects']),
   p([Link({ to: 'https://www.npmjs.com/package/nyc' }, 'nyc'), ': code coverage']),
   p([Link({ to: 'https://www.npmjs.com/package/prettier' }, 'prettier'), ': code formatting']),
 
@@ -166,12 +167,19 @@ module.exports = [
 const { is } = require('@magic/test')
 
 const fnToTest = () => {}
-module.exports = {
-  // will work as expected
-  fn: () => fnToTest,
-  expect: is.function,
-  info: 'function is a function',
-}`),
+// both the tests will work as expected
+module.exports = [
+  {
+    fn: () => fnToTest,
+    expect: is.function,
+    info: 'function is a function',
+  },
+  {
+    fn: is.fn(fnToTest), // returns true
+    // we do not set expect: true, since that is the default
+    info: 'function is a function',
+  },
+]`),
 
   Pre.View(`
 // will not work as expected and instead call fnToTest
