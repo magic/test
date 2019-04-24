@@ -6,7 +6,7 @@ simple tests with lots of utility.
 [![Linux Build Status][travis-image]][travis-url]
 [![Windows Build Status][appveyor-image]][appveyor-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
-[![Greenkeeper badge](https://badges.greenkeeper.io/magic/test.svg)](https://greenkeeper.io/)
+[![Greenkeeper badge][greenkeeper-image]][greenkeeper-url]
 
 
 * [dependencies](#dependencies)
@@ -457,3 +457,5 @@ and the other magic libraries for more test examples.
 [appveyor-url]: https://ci.appveyor.com/project/jaeh/test/branch/master
 [coveralls-image]: https://coveralls.io/repos/github/magic/test/badge.svg
 [coveralls-url]: https://coveralls.io/github/magic/test
+[greenkeeper-image]: https://badges.greenkeeper.io/magic/test.svg
+[greenkeeper-url]: https://greenkeeper.io
