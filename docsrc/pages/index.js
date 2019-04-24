@@ -46,7 +46,7 @@ module.exports = [
     "format:check": "f" // check format using prettier
   }
 }`),
-  // repeated for easy copy pasting (without comments):
+  p('repeated for easy copy pasting (without comments)'),
   Pre.View(`
   "scripts": {
     "test": "t -p",
