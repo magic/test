@@ -13,7 +13,10 @@ module.exports = () => [
     ': console.log wrapper with loglevels',
   ]),
   p([Link({ to: 'https://github.com/magic/types' }, '@magic/types'), ': type checking library']),
-  p([Link({ to: 'https://github.com/magic/deep' }, '@magic/deep'), ': deeply compare and manipulate arrays and objects']),
+  p([
+    Link({ to: 'https://github.com/magic/deep' }, '@magic/deep'),
+    ': deeply compare and manipulate arrays and objects',
+  ]),
   p([Link({ to: 'https://www.npmjs.com/package/nyc' }, 'nyc'), ': code coverage']),
   p([Link({ to: 'https://www.npmjs.com/package/prettier' }, 'prettier'), ': code formatting']),
 
