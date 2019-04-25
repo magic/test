@@ -7,6 +7,20 @@ simple tests with lots of utility.
 [![Windows Build Status][appveyor-image]][appveyor-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
 [![Greenkeeper badge][greenkeeper-image]][greenkeeper-url]
+[![Known Vulnerabilities][snyk-image]][snyk-url]
+
+[npm-image]: https://img.shields.io/npm/v/@magic/test.svg
+[npm-url]: https://www.npmjs.com/package/@magic/test
+[travis-image]: https://api.travis-ci.org/magic/test.svg?branch=master
+[travis-url]: https://travis-ci.org/magic/test
+[appveyor-image]: https://img.shields.io/appveyor/ci/jaeh/test/master.svg
+[appveyor-url]: https://ci.appveyor.com/project/jaeh/test/branch/master
+[coveralls-image]: https://coveralls.io/repos/github/magic/test/badge.svg
+[coveralls-url]: https://coveralls.io/github/magic/test
+[greenkeeper-image]: https://badges.greenkeeper.io/magic/test.svg
+[greenkeeper-url]: https://badges.greenkeeper.io/magic/test.svg
+[snyk-image]: https://snyk.io/test/github/magic/test/badge.svg
+[snyk-url]: https://snyk.io/test/github/magic/test
 
 
 * [dependencies](#dependencies)
@@ -448,14 +462,3 @@ This library tests itself, have a look at [the tests](https://github.com/magic/t
 
 Checkout [@magic/types](https://github.com/magic/types)
 and the other magic libraries for more test examples.
-
-[npm-image]: https://img.shields.io/npm/v/@magic/test.svg
-[npm-url]: https://www.npmjs.com/package/@magic/test
-[travis-image]: https://api.travis-ci.org/magic/test.svg?branch=master
-[travis-url]: https://travis-ci.org/magic/test
-[appveyor-image]: https://img.shields.io/appveyor/ci/jaeh/test/master.svg
-[appveyor-url]: https://ci.appveyor.com/project/jaeh/test/branch/master
-[coveralls-image]: https://coveralls.io/repos/github/magic/test/badge.svg
-[coveralls-url]: https://coveralls.io/github/magic/test
-[greenkeeper-image]: https://badges.greenkeeper.io/magic/test.svg
-[greenkeeper-url]: https://greenkeeper.io
