@@ -3,12 +3,10 @@
 const path = require('path')
 const is = require('@magic/types')
 const deep = require('@magic/deep')
-const cli = require('./cli')
+const cli = require('@magic/cli')
 
 const fso = require('fs')
 const util = require('util')
-
-const prettier = require('prettier')
 
 const { name } = require(path.join(process.cwd(), 'package.json'))
 
@@ -27,47 +25,11 @@ if (name === '@magic/test') {
   )
 }
 
-const config = require(configPath)
-
 const fs = {
   readdir: util.promisify(fso.readdir),
   stat: util.promisify(fso.stat),
   readFile: util.promisify(fso.readFile),
 }
-
-const mapArgv = argv => {
-  const arr = []
-
-  Object.entries(argv).forEach(([key, val]) => {
-    arr.push(`--${key}`)
-    if (!is.empty(val)) {
-      arr.push(val)
-    }
-  })
-
-  return deep.flatten(arr)
-}
-
-const argv = cli({
-  options: [
-    ['--write', '--w', '-w'],
-    ['-l', '--list', '--list-different'],
-    ['--exclude', '--e', '-e'],
-    ['--file-types', '--fileTypes'],
-  ],
-  default: { '--list-different': [] },
-  help: `
-    f -  format js code using prettier
-
-    usage:
-    magic [TASKS]...
-
-    available tasks:
-    -w --write - lint and write files
-    -l --list  - only show differences *default
-    -h --help  - this help text
-  `,
-})
 
 const cliFile = 'prettier'
 const cmd = path.join(process.cwd(), 'node_modules', 'prettier', `bin-${cliFile}.js`)
@@ -105,7 +67,22 @@ const findFiles = async ({ include, exclude, fileTypes }) => {
 }
 
 const init = async () => {
-  const argvKeys = Object.keys(argv)
+  const { argv } = cli({
+    options: [
+      ['--write', '--w', '-w'],
+      ['-l', '--list', '--list-different'],
+      ['--exclude', '--e', '-e'],
+      ['--file-types', '--fileTypes'],
+    ],
+    default: { '--list-different': [] },
+    help: {
+      name: '@magic/test f',
+      header: 'format js code using prettier',
+      example: `
+  f     - only --list-different files
+  f -w  - overwrite files in place`,
+    },
+  })
 
   let include = ''
   if (argv['--include']) {
@@ -137,7 +114,7 @@ const init = async () => {
 
   let args = []
 
-  const write = argv.hasOwnProperty('--write')
+  const write = argv['--write']
   if (write) {
     args.push('--write')
   }

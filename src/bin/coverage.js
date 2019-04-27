@@ -1,5 +1,5 @@
 const path = require('path')
-const cli = require('./cli')
+const cli = require('@magic/cli')
 
 const cwd = process.cwd()
 const nodeModules = path.join(cwd, 'node_modules')
