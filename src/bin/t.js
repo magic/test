@@ -2,12 +2,6 @@
 
 const cli = require('@magic/cli')
 
-// const hlp = ['-h', '--help']
-// const help = hlp.some(p => process.argv.includes(p))
-//
-// const ps = ['-p', '--prod', '--production']
-// const prod = ps.some(p => process.argv.includes(p))
-
 const help = {
   name: '@magic/test t',
   header: `
@@ -26,7 +20,7 @@ npm example:
 }`,
 }
 
-const argv = cli({
+const { argv } = cli({
   options: [
     ['--verbose', '--loud', '--l', '-l'],
     ['--include', '--inc', '--i', '-i'],
