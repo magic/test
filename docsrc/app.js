@@ -7,10 +7,10 @@ module.exports = {
         to: '/#getting-started',
         text: 'getting started',
         items: [
-          { to: '/#install', text: 'install' },
-          { to: '/#npm-scripts', text: 'npm scripts' },
-          { to: '/#quick-tests', text: 'quick tests' },
-          { to: '/#coverage', text: 'coverage' },
+          { to: '/#getting-started-install', text: 'install' },
+          { to: '/#getting-started-npm-scripts', text: 'npm scripts' },
+          { to: '/#getting-started-quick-tests', text: 'quick tests' },
+          { to: '/#getting-started-coverage', text: 'coverage' },
         ],
       },
       {

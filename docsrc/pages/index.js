@@ -25,7 +25,7 @@ module.exports = () => [
   h2({ id: 'getting-started' }, 'Getting started'),
   p('be in a nodejs project.'),
 
-  h3({ id: 'install' }, 'install'),
+  h3({ id: 'getting-started-install' }, 'install'),
   Pre.View('npm i --save-dev @magic/test'),
 
   Pre.View(`
@@ -38,7 +38,7 @@ module.exports = [
   { fn: yourTest, expect: true, info: 'hope this will work ;)'}
 ]`),
 
-  h3({ id: 'npm-scripts' }, 'npm run scripts'),
+  h3({ id: 'getting-started-npm-scripts' }, 'npm run scripts'),
   p('edit package.json'),
   Pre.View(`
 {
@@ -58,7 +58,7 @@ module.exports = [
     "format:check": "f"
   }`),
 
-  h3({ id: 'quick-tests' }, 'quick tests (without coverage)'),
+  h3({ id: 'getting-started-quick-tests' }, 'quick tests (without coverage)'),
   Pre.View(`
 // run the tests:
 npm test
@@ -69,7 +69,7 @@ npm test
 // ### Testing package: @magic/test
 // Ran 2 tests. Passed 2/2 100%`),
 
-  h3({ id: 'coverage' }, 'coverage'),
+  h3({ id: 'getting-started-coverage' }, 'coverage'),
   p('run coverage reports and get full test report including from passing tests'),
   Pre.View('npm run coverage'),
 
