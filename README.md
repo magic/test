@@ -13,8 +13,8 @@ simple tests with lots of utility.
 [npm-url]: https://www.npmjs.com/package/@magic/test
 [travis-image]: https://api.travis-ci.org/magic/test.svg?branch=master
 [travis-url]: https://travis-ci.org/magic/test
-[appveyor-image]: https://img.shields.io/appveyor/ci/jaeh/test/master.svg
-[appveyor-url]: https://ci.appveyor.com/project/jaeh/test/branch/master
+[appveyor-image]: https://img.shields.io/appveyor/ci/magic/test/master.svg
+[appveyor-url]: https://ci.appveyor.com/project/magic/test/branch/master
 [coveralls-image]: https://coveralls.io/repos/github/magic/test/badge.svg
 [coveralls-url]: https://coveralls.io/github/magic/test
 [greenkeeper-image]: https://badges.greenkeeper.io/magic/test.svg
