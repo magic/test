@@ -26,9 +26,9 @@ module.exports = () => [
   p('be in a nodejs project.'),
 
   h3({ id: 'getting-started-install' }, 'install'),
-  Pre.View('npm i --save-dev @magic/test'),
+  Pre('npm i --save-dev @magic/test'),
 
-  Pre.View(`
+  Pre(`
 // create test/functionName.js
 const yourTest = require('../path/to/your/file.js')
 
@@ -40,7 +40,7 @@ module.exports = [
 
   h3({ id: 'getting-started-npm-scripts' }, 'npm run scripts'),
   p('edit package.json'),
-  Pre.View(`
+  Pre(`
 {
   "scripts": {
     "test": "t -p", // quick test, only failing tests log
@@ -50,7 +50,7 @@ module.exports = [
   }
 }`),
   p('repeated for easy copy pasting (without comments)'),
-  Pre.View(`
+  Pre(`
   "scripts": {
     "test": "t -p",
     "coverage": "t",
@@ -59,7 +59,7 @@ module.exports = [
   }`),
 
   h3({ id: 'getting-started-quick-tests' }, 'quick tests (without coverage)'),
-  Pre.View(`
+  Pre(`
 // run the tests:
 npm test
 
@@ -71,7 +71,7 @@ npm test
 
   h3({ id: 'getting-started-coverage' }, 'coverage'),
   p('run coverage reports and get full test report including from passing tests'),
-  Pre.View('npm run coverage'),
+  Pre('npm run coverage'),
 
   h3({ id: 'test-suites' }, 'data/fs driven test suite creation:'),
   h4('expectations for optimal test messages:'),
@@ -82,7 +82,7 @@ npm test
 
   h4({ id: 'test-suites-fs' }, 'Filesystem based naming'),
   p('the following directory structure:'),
-  Pre.View(`
+  Pre(`
 ./test/
   ./suite1.js
   ./suite2.js`),
@@ -90,7 +90,7 @@ npm test
   p('yields the same result as exporting the following from ./test/index.js'),
 
   h4({ id: 'test-suites-data' }, 'Data driven naming'),
-  Pre.View(`
+  Pre(`
 const suite1 = require('./suite1')
 const suite2 = require('./suite2')
 
@@ -105,7 +105,7 @@ module.exports = {
 
   h3({ id: 'tests' }, 'single test, literal value, function or promise'),
 
-  Pre.View(`
+  Pre(`
 module.exports = { fn: true, expect: true, info: 'expect true to be true' }
 
 // expect: true is the default and can be omitted
@@ -138,7 +138,7 @@ module.exports = { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect
     ' it is exported from this library for convenience.',
   ]),
 
-  Pre.View(`
+  Pre(`
 const { is } = require('@magic/test')
 module.exports = [
   { fn: () => 'string',
@@ -166,7 +166,7 @@ module.exports = [
   h4('caveat:'),
   p('if you want to test if a function is a function, you need to wrap the function'),
 
-  Pre.View(`
+  Pre(`
 const { is } = require('@magic/test')
 
 const fnToTest = () => {}
@@ -184,7 +184,7 @@ module.exports = [
   },
 ]`),
 
-  Pre.View(`
+  Pre(`
 // will not work as expected and instead call fnToTest
 module.exports = {
   fn: fnToTest,
@@ -195,7 +195,7 @@ module.exports = {
   h3({ id: 'tests-multiple' }, ' multiple tests'),
   p('multiple tests can be created by exporting an array of single test objects.'),
 
-  Pre.View(`
+  Pre(`
 module.exports = {
   multipleTests: [
     { fn: () => true, expect: true, info: 'expect true to be true' },
@@ -204,7 +204,7 @@ module.exports = {
 }`),
 
   h3({ id: 'tests-promises' }, 'promises'),
-  Pre.View(`
+  Pre(`
 const { promise, is } = require('@magic/test')
 
 module.exports = [
@@ -228,7 +228,7 @@ module.exports = [
 ]`),
 
   h3({ id: 'tests-cb' }, 'callback functions'),
-  Pre.View(`
+  Pre(`
 const { promise, is } = require('@magic/test')
 
 const fnWithCallback = (err, arg, cb) => cb(err, arg)
@@ -247,7 +247,7 @@ module.exports = [
 ]`),
 
   h3({ id: 'tests-hooks' }, 'run functions before and/or after individual test'),
-  Pre.View(`
+  Pre(`
 const after = () => {
   global.testing = 'Test has finished, cleanup.'
 }
@@ -271,7 +271,7 @@ module.exports = [
 ]`),
 
   h3({ id: 'tests-suite-hooks' }, 'run functions before and/or after a suite of tests'),
-  Pre.View(`
+  Pre(`
 const afterAll = () => {
   // Test has finished, cleanup.'
   global.testing = undefined
@@ -308,7 +308,7 @@ module.exports = [
     'This helps if you have a function with complicated arguments that you just want to quickly shim.',
   ),
 
-  Pre.View(`
+  Pre(`
 const { curry } = require('@magic/test')
 const compare = (a, b) => a === b
 const curried = curry(compare)
@@ -330,7 +330,7 @@ module.exports = {
   p('Helper function to wrap nodejs callback functions and promises with ease.'),
   p('Handles the try/catch steps internally and returns a resolved or rejected promise.'),
 
-  Pre.View(`
+  Pre(`
 const { promise, is } = require('@magic/test')
 
 module.exports = [
@@ -348,7 +348,7 @@ module.exports = [
 
   h4({ id: 'lib-trycatch' }, 'tryCatch'),
   p('allows to test functions without bubbling the errors up into the runtime'),
-  Pre.View(`
+  Pre(`
 const { is, tryCatch } = require('@magic/test')
 const throwing = () => throw new Error('oops')
 const healthy = () => true
@@ -370,7 +370,7 @@ module.exports = [
 
   h3({ id: 'usage-js' }, 'js api:'),
 
-  Pre.View(`
+  Pre(`
 // test/index.js
 const run = require('@magic/test')
 
@@ -387,7 +387,7 @@ run(tests)`),
   h3('package.json (recommended)'),
   p('Add the magic/test bin scripts to package.json'),
 
-  Pre.View(`
+  Pre(`
 {
   "scripts": {
     "test": "t -p",
@@ -401,7 +401,7 @@ run(tests)`),
 }`),
 
   p('then use the npm run scripts'),
-  Pre.View(`
+  Pre(`
 npm test
 npm run coverage
 npm run format
@@ -418,7 +418,7 @@ npm run format:check`),
     ' and keeps your bash free of clutter',
   ]),
 
-  Pre.View(`
+  Pre(`
 npm i -g magic/test
 
 // run tests in production mode
