@@ -3,6 +3,7 @@
   "version": "0.0.12",
   "description": "simple yet powerful unit testing library",
   "main": "src/index.js",
+  "module": "src/index.mjs",
   "bin": {
     "t": "src/bin/t.js",
     "f": "src/bin/format.js",
@@ -31,19 +32,26 @@
   ],
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "dependencies": {
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
+    "@babel/preset-env": "^7.4.4",
     "@magic/cli": "0.0.1",
     "@magic/deep": "0.0.1",
     "@magic/log": "0.0.2",
     "@magic/types": "0.0.4",
     "coveralls": "3.0.3",
+    "esm": "^3.2.22",
     "hyperapp": "1.2.9",
     "nyc": "14.1.0",
     "prettier": "1.17.0"
   },
   "devDependencies": {
+    "@babel/node": "^7.2.2",
+    "@babel/plugin-transform-modules-commonjs": "^7.4.4",
     "@magic-modules/git-badges": "github:magic-modules/git-badges",
     "@magic-modules/pre": "github:magic-modules/pre",
     "@magic-themes/docs": "github:magic-themes/docs",
-    "@magic/core": "github:magic/core"
+    "@magic/core": "github:magic/core",
+    "babel-plugin-istanbul": "^5.1.4",
+    "isparta": "^4.1.1"
   }
 }

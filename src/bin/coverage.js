@@ -7,9 +7,9 @@ const { name } = require(path.join(cwd, 'package.json'))
 
 // find clipaths
 let cliPath = path.join(nodeModules, '.bin', 'nyc')
-let cmd = path.join(cwd, 'node_modules', '@magic', 'test', 'src', 'bin', 'unit.js')
+let cmd = path.join(cwd, 'node_modules', '@magic', 'test', 'src', 'bin', 'unit.mjs')
 if (name === '@magic/test') {
-  cmd = path.join(cwd, 'src', 'bin', 'unit.js')
+  cmd = path.join(cwd, 'src', 'bin', 'unit.mjs')
 }
 
 const init = argv => {
@@ -21,10 +21,10 @@ const init = argv => {
         'coverage/**',
         'packages/*/test/**',
         'test/**',
-        'test{,-*}.js',
-        '**/*{.,-}test.js',
+        'test{,-*}.*',
+        '**/*{.,-}test.*',
         '**/__tests__/**',
-        '**/{ava,babel,jest,nyc,rollup,webpack}.config.js',
+        '**/{ava,babel,jest,nyc,rollup,webpack}.config.*',
         ...argv['--exclude'],
       ]),
     )
@@ -34,11 +34,18 @@ const init = argv => {
     })
   }
 
+
   args.push('-a')
+  args.push('--extension .mjs')
+  args.push('--es-modules')
 
   args.push('node')
+  args.push('--experimental-modules')
+  args.push(`--loader ${path.join(__dirname, 'loader.mjs')}`)
   args.push(cmd)
+  console.log(cliPath, args)
 
   cli.spawn(cliPath, args)
 }
+
 module.exports = init

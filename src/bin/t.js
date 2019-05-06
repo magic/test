@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 
 const cli = require('@magic/cli')
+const path = require('path')
+
+const cwd = process.cwd()
+const { name } = require(path.join(cwd, 'package.json'))
 
 const help = {
   name: '@magic/test t',
@@ -30,8 +34,14 @@ const { argv } = cli({
   help,
 })
 
+let binPath = path.join(cwd, 'node_modules', '@magic', 'test', 'src', 'bin')
+if (name === '@magic/test') {
+  binPath = path.join(cwd, 'src', 'bin')
+}
+
 if (process.env.NODE_ENV === 'production') {
-  require('./unit')
+  const cmd = path.join(binPath, 'unit.mjs')
+  cli.spawn(`node --experimental-modules ${cmd}`)
 } else {
   require('./coverage')(argv)
 }
