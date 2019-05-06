@@ -58,8 +58,8 @@ const readRecursive = async dir => {
         }
       } else if (stats.isFile()) {
         const fileP = testFilePath.replace(testDir, '')
-
-        tests[fileP] = import(testFilePath)
+        const test = await import(testFilePath)
+        tests[fileP] = test
       }
     }),
   )
