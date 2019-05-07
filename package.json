@@ -33,7 +33,7 @@
   "dependencies": {
     "@magic/cli": "0.0.1",
     "@magic/deep": "0.0.1",
-    "@magic/log": "0.0.2",
+    "@magic/log": "0.0.3",
     "@magic/types": "0.0.4",
     "coveralls": "3.0.3",
     "hyperapp": "1.2.9",
