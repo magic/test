@@ -19,7 +19,7 @@ module.exports = () => [
 
   p('@magic/log and @magic/types have no dependencies.'),
 
-  h2({ id: 'getting-started' }, 'Getting started'),
+  h2({ id: 'getting-started' }, 'getting started'),
   p('be in a nodejs project.'),
 
   h3({ id: 'getting-started-install' }, 'install'),
