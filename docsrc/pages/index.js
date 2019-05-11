@@ -2,10 +2,7 @@ module.exports = () => [
   h1('@magic/test'),
   p('simple tests with lots of utility.'),
 
-  GitBadges({
-    project: 'magic/test',
-    appveyor: 'jaeh/test',
-  }),
+  GitBadges('magic/test'),
 
   h2({ id: 'dependencies' }, 'dependencies'),
   p([
