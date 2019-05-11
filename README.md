@@ -2,6 +2,8 @@
 
 simple tests with lots of utility.
 
+[html docs](https://magic.github.io/test)
+
 [![NPM version][npm-image]][npm-url]
 [![Linux Build Status][travis-image]][travis-url]
 [![Windows Build Status][appveyor-image]][appveyor-url]
