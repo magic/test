@@ -39,9 +39,9 @@ if (name === '@magic/test') {
   binPath = path.join(cwd, 'src', 'bin')
 }
 
+const cmd = path.join(binPath, 'unit.mjs')
 if (process.env.NODE_ENV === 'production') {
-  const cmd = path.join(binPath, 'unit.mjs')
   cli.spawn(`node --experimental-modules ${cmd}`)
 } else {
-  cli.spawn(`node --experimental-modules ${cmd}`)
+  cli.spawn(`node_modules/.bin/c8 -n src node --experimental-modules ${cmd}`)
 }
