@@ -43,5 +43,5 @@ if (process.env.NODE_ENV === 'production') {
   const cmd = path.join(binPath, 'unit.mjs')
   cli.spawn(`node --experimental-modules ${cmd}`)
 } else {
-  require('./coverage')(argv)
+  cli.spawn(`node --experimental-modules ${cmd}`)
 }

@@ -2,7 +2,7 @@
   "name": "@magic/test",
   "version": "0.0.12",
   "description": "simple yet powerful unit testing library",
-  "main": "src/index.js",
+  "main": "src/index.mjs",
   "module": "src/index.mjs",
   "bin": {
     "t": "src/bin/t.js",
@@ -22,7 +22,7 @@
     "clean": "magic clean",
     "serve": "magic serve",
     "dev": "magic dev",
-    "test": "node src/bin/t.js --exclude docs docsrc",
+    "test": "c8 -n src node --experimental-modules src/bin/unit.mjs --exclude docs docsrc",
     "format": "node src/bin/format.js -w --exclude docs",
     "format:check": "node src/bin/format.js --exclude docs",
     "calls": "calls"
@@ -38,10 +38,10 @@
     "@magic/deep": "0.0.1",
     "@magic/log": "0.0.2",
     "@magic/types": "0.0.4",
+    "c8": "^4.1.5",
     "coveralls": "3.0.3",
     "esm": "^3.2.22",
     "hyperapp": "1.2.9",
-    "nyc": "14.1.0",
     "prettier": "1.17.0"
   },
   "devDependencies": {
