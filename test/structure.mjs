@@ -101,6 +101,4 @@
 //   suiteEmpty_ExpectingErrorInLog: null,
 // }
 
-export default [
-  { fn: true }
-]
+export default [{ fn: true }]

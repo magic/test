@@ -1,3 +1,1 @@
-export default [
-  { fn: true, expect: true, },
-]
+export default [{ fn: true, expect: true }]

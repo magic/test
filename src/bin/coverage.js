@@ -34,7 +34,6 @@ const init = argv => {
     })
   }
 
-
   args.push('-a')
   args.push('--extension .mjs')
   args.push('--es-modules')
