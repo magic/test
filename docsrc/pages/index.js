@@ -2,6 +2,10 @@ module.exports = () => [
   h1('@magic/test'),
   p('simple tests with lots of utility.'),
 
+  h3('docs are outdated, @magic/test has been rewritten to use es6 modules.'),
+  p('to install out the commonjs version'),
+  Pre('npm install @magic/test@0.0.23-cjs'),
+
   GitBadges('magic/test'),
 
   h2({ id: 'dependencies' }, 'dependencies'),

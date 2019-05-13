@@ -2,6 +2,12 @@
 
 simple tests with lots of utility.
 
+### docs are outdated. 
+
+use .mjs files and import/export instead of (common)js require and module.exports.
+docs will be updated soon, but thats the "only" change
+
+
 [html docs](https://magic.github.io/test)
 
 [![NPM version][npm-image]][npm-url]
