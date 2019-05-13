@@ -2,6 +2,8 @@
 
 simple tests with lots of utility.
 
+[html docs](https://magic.github.io/test)
+
 [![NPM version][npm-image]][npm-url]
 [![Linux Build Status][travis-image]][travis-url]
 [![Windows Build Status][appveyor-image]][appveyor-url]
@@ -53,7 +55,7 @@ simple tests with lots of utility.
 
 @magic/log and @magic/types have no dependencies.
 
-#### <a name="install"></a>Getting started
+#### <a name="install"></a>getting started
 be in a nodejs project.
 ```bash
 npm i --save-dev @magic/test
