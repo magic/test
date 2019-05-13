@@ -1,6 +1,6 @@
 {
   "name": "@magic/test",
-  "version": "0.0.12",
+  "version": "0.0.23",
   "description": "simple yet powerful unit testing library",
   "main": "src/index.mjs",
   "module": "src/index.mjs",
