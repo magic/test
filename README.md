@@ -470,3 +470,8 @@ This library tests itself, have a look at [the tests](https://github.com/magic/t
 
 Checkout [@magic/types](https://github.com/magic/types)
 and the other magic libraries for more test examples.
+
+### Changelog
+
+#### 0.1.0
+use esmodules instead of commonjs.
