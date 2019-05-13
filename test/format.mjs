@@ -1,6 +1,6 @@
 import is from '@magic/types'
 
-import format from '../src/format/index.mjs'
+import format from '../src/format/index.json'
 
 // do not change this object!
 const expected = {

@@ -12,7 +12,7 @@ const { name } = require(path.join(process.cwd(), 'package.json'))
 
 let configPath
 if (name === '@magic/test') {
-  configPath = path.join(process.cwd(), 'src', 'format', 'index.js')
+  configPath = path.join(process.cwd(), 'src', 'format', 'index.json')
 } else {
   configPath = path.join(
     process.cwd(),
@@ -21,7 +21,7 @@ if (name === '@magic/test') {
     'test',
     'src',
     'format',
-    'index.js',
+    'index.json',
   )
 }
 
