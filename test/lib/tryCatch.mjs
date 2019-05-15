@@ -14,7 +14,11 @@ export default [
     expect: is.error,
     info: 'errors get caught',
   },
-  { fn: tryCatch(() => true), expect: true, info: 'returns function result on non-error' },
+  {
+    fn: tryCatch(() => true),
+    expect: true,
+    info: 'returns function result on non-error',
+  },
   {
     fn: tryCatch((...a) => a, 1, 2, 3),
     expect: is.deep.equal([1, 2, 3]),
@@ -22,7 +26,11 @@ export default [
   },
   { fn: tryCatch(promise, true), expect: true, info: 'can try promises' },
   { fn: tryCatch(promise), expect: is.error, info: 'can catch promises' },
-  { fn: tryCatch(async arg => await arg, 'pass'), expect: 'pass', info: 'can try async await' },
+  {
+    fn: tryCatch(async arg => await arg, 'pass'),
+    expect: 'pass',
+    info: 'can try async await',
+  },
   {
     fn: tryCatch(async arg => await arg, new Error('test')),
     expect: is.error,

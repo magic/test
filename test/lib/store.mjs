@@ -8,9 +8,21 @@ export default [
   { fn: () => store.set, expect: is.fn, info: 'store.set is a function' },
   { fn: () => store.get, expect: is.fn, info: 'store.get is a function' },
   { fn: () => store.state, expect: is.obj, info: 'store.state is an objectn' },
-  { fn: () => store.get('suites'), expect: is.obj, info: 'suites are collected in an object' },
-  { fn: () => store.get('module'), expect: '@magic/test', info: 'module @magic/test exists' },
-  { fn: () => store.get('stats'), expect: is.obj, info: 'stats are collected in an object' },
+  {
+    fn: () => store.get('suites'),
+    expect: is.obj,
+    info: 'suites are collected in an object',
+  },
+  {
+    fn: () => store.get('module'),
+    expect: '@magic/test',
+    info: 'module @magic/test exists',
+  },
+  {
+    fn: () => store.get('stats'),
+    expect: is.obj,
+    info: 'stats are collected in an object',
+  },
   {
     fn: () => store.set({ key: 'value' }),
     expect: () => store.get('key') === 'value',
@@ -22,5 +34,9 @@ export default [
     before,
     info: 'store.get(key) returns undefined',
   },
-  { fn: () => store.get(), expect: is.object, info: 'store.get() returns object' },
+  {
+    fn: () => store.get(),
+    expect: is.object,
+    info: 'store.get() returns object',
+  },
 ]

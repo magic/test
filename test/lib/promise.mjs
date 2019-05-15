@@ -10,7 +10,11 @@ const fnWithCb = (err = null, arg, cb) => {
 }
 
 export default [
-  { fn: promise(r => fnWithCb(null, 'arg', r)), expect: 'arg', info: 'can handle return values' },
+  {
+    fn: promise(r => fnWithCb(null, 'arg', r)),
+    expect: 'arg',
+    info: 'can handle return values',
+  },
   {
     fn: promise(r => fnWithCb(new Error('err'), 'arg', r)),
     expect: ([e]) => is.err(e),

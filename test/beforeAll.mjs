@@ -16,7 +16,11 @@ export default {
     }
   },
   tests: [
-    { fn: () => global.testing, expect: true, info: 'BeforeAll handler sets global true' },
+    {
+      fn: () => global.testing,
+      expect: true,
+      info: 'BeforeAll handler sets global true',
+    },
     {
       fn: () => global.logs,
       expect: undefined,
