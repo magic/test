@@ -16,13 +16,13 @@
     }
   ],
   "scripts": {
-    "start": "node src/bin/t.js -p",
+    "start": "src/bin/t.js -p",
     "build": "NODE_ENV=production magic build",
     "prod": "NODE_ENV=production magic build serve",
     "clean": "magic clean",
     "serve": "magic serve",
     "dev": "magic dev",
-    "test": "c8 -n src node --experimental-modules src/bin/unit.mjs --exclude docs docsrc",
+    "test": "src/bin/t.js",
     "format": "src/bin/format.js -w --exclude docs",
     "format:check": "node src/bin/format.js --exclude docs",
     "calls": "calls"
