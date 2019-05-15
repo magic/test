@@ -475,3 +475,6 @@ and the other magic libraries for more test examples.
 
 #### 0.1.0
 use esmodules instead of commonjs.
+
+#### 0.1.1
+rework of bin scripts and update dependencies to esmodules
