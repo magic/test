@@ -2,9 +2,28 @@ import path from 'path'
 import nfs from 'fs'
 import util from 'util'
 
-import { default as log } from '@magic/log'
+import { cli } from '@magic/cli/src/index.mjs'
+import log from '@magic/log'
 
 import run from '../run.mjs'
+
+const help = {
+  name: '@magic/test t',
+  header: `
+simple unit testing. runs all tests found in {cwd}/test
+see https://github.com/magic/test for info`,
+  example: `
+Usage:
+t -p => run quick tests
+t    => run slow tests with coverage through nyc
+t -h => this help text
+
+npm example:
+"scripts": {
+  "test": "t -p",
+  "cover": "t"
+}`,
+}
 
 const fs = {
   exists: util.promisify(nfs.exists),
@@ -64,6 +83,16 @@ const readRecursive = async dir => {
 }
 
 const init = async () => {
+  const { argv } = cli({
+    options: [
+      ['--verbose', '--loud', '--l', '-l'],
+      ['--include', '--inc', '--i', '-i'],
+      ['--exclude', '--e', '-e'],
+    ],
+    env: [[['--production', '--prod', '--p', '-p'], 'NODE_ENV', 'production']],
+    help,
+  })
+
   const tests = await readRecursive()
 
   if (!tests) {
