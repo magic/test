@@ -29,8 +29,14 @@ module.exports = {
           { to: '-multiple', text: 'multiple tests in one file' },
           { to: '-promises', text: 'promises' },
           { to: '-cb', text: 'callback functions' },
-          { to: '-hooks', text: 'run function before / after individual tests' },
-          { to: '-suite-hooks', text: 'run function before / after suite of tests' },
+          {
+            to: '-hooks',
+            text: 'run function before / after individual tests',
+          },
+          {
+            to: '-suite-hooks',
+            text: 'run function before / after suite of tests',
+          },
         ],
       },
       {
