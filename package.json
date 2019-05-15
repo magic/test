@@ -23,7 +23,7 @@
     "serve": "magic serve",
     "dev": "magic dev",
     "test": "c8 -n src node --experimental-modules src/bin/unit.mjs --exclude docs docsrc",
-    "format": "node src/bin/format.js -w --exclude docs",
+    "format": "src/bin/format.js -w --exclude docs",
     "format:check": "node src/bin/format.js --exclude docs",
     "calls": "calls"
   },
@@ -32,14 +32,14 @@
   ],
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "dependencies": {
-    "@magic/cli": "0.0.1",
+    "@magic/cli": "0.0.2",
     "@magic/deep": "0.0.1",
-    "@magic/log": "0.0.3",
-    "@magic/types": "0.0.5",
+    "@magic/log": "0.1.0",
+    "@magic/types": "0.1.1",
     "c8": "4.1.5",
     "coveralls": "3.0.3",
     "hyperapp": "1.2.9",
-    "prettier": "1.17.0"
+    "prettier": "1.17.1"
   },
   "devDependencies": {
     "@magic-modules/git-badges": "github:magic-modules/git-badges",
