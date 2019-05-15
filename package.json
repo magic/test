@@ -1,7 +1,10 @@
 {
   "name": "@magic/test",
   "version": "0.1.1",
+  "author": "Wizards & Witches",
   "description": "simple yet powerful unit testing library",
+  "license": "AGPL-3.0",
+  "homepage": "https://magic.github.io/test",
   "main": "src/index.mjs",
   "module": "src/index.mjs",
   "bin": {
@@ -9,12 +12,6 @@
     "f": "src/bin/format.js",
     "calls": "src/bin/coveralls.js"
   },
-  "contributors": [
-    {
-      "name": "jascha ehrenreich",
-      "github": "jaeh"
-    }
-  ],
   "scripts": {
     "start": "src/bin/t.js -p",
     "build": "NODE_ENV=production magic build",
@@ -30,7 +27,13 @@
   "files": [
     "src"
   ],
-  "author": "Jascha Ehrenreich <jascha@jaeh.at>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/magic/test.git"
+  },
+  "bugs": {
+    "url": "https://github.com/magic/test/issues"
+  },
   "dependencies": {
     "@magic/cli": "0.0.2",
     "@magic/deep": "0.0.1",
@@ -46,5 +49,11 @@
     "@magic-modules/pre": "github:magic-modules/pre",
     "@magic-themes/docs": "github:magic-themes/docs",
     "@magic/core": "github:magic/core"
-  }
+  },
+  "contributors": [
+    {
+      "name": "jascha ehrenreich",
+      "github": "jaeh"
+    }
+  ]
 }
