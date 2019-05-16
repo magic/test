@@ -486,4 +486,7 @@ cli now works on windows again (actually, this version is broken on all platform
 cli now works everywhere
 
 #### 0.1.4
-npm run scripts of magic/test itself can be run on windows.
+npm run scripts of @magic/test itself can be run on windows.
+
+#### 0.1.5
+use ecmascript version of @magic/deep
