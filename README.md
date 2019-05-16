@@ -478,3 +478,6 @@ use esmodules instead of commonjs.
 
 #### 0.1.1
 rework of bin scripts and update dependencies to esmodules
+
+#### 0.1.2
+cli now works on windows again
