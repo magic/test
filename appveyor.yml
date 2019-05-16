@@ -15,6 +15,7 @@ matrix:
 install:
   # Build
   - npm install
+  - npm link
   - npm test
 
 cache:
