@@ -480,4 +480,10 @@ use esmodules instead of commonjs.
 rework of bin scripts and update dependencies to esmodules
 
 #### 0.1.2
-cli now works on windows again
+cli now works on windows again (actually, this version is broken on all platforms.)
+
+#### 0.1.3
+cli now works everywhere
+
+#### 0.1.4
+npm run scripts of magic/test itself can be run on windows.
