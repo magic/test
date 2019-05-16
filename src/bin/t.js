@@ -14,4 +14,4 @@ if (name === '@magic/test') {
 const cmd = path.join(binPath, 'unit.mjs')
 const argv = ['-n', 'src', 'node', '--experimental-json-modules', '--experimental-modules', cmd]
 
-spawn(argv, path.join(cwd, 'node_modules', '.bin', 'c8')
+spawn(argv, path.join(cwd, 'node_modules', '.bin', 'c8'))
