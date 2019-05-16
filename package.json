@@ -39,7 +39,7 @@
     "@magic/cli": "0.0.2",
     "@magic/deep": "0.0.1",
     "@magic/log": "0.1.0",
-    "@magic/types": "0.1.1",
+    "@magic/types": "0.1.2",
     "c8": "4.1.5",
     "coveralls": "3.0.3",
     "hyperapp": "1.2.9",
