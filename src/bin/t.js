@@ -10,7 +10,6 @@ const { name } = require(path.join(cwd, 'package.json'))
 let binPath = path.join(cwd, 'node_modules', '@magic', 'test', 'src', 'bin')
 if (name === '@magic/test') {
   binPath = path.join(cwd, 'src', 'bin')
-
 }
 
 const cmd = path.join(binPath, 'unit.mjs')
@@ -18,6 +17,4 @@ const argv = ['-n', 'src', 'node', '--experimental-json-modules', '--experimenta
 
 const c8Path = path.join(cwd, 'node_modules', 'c8', 'bin', 'c8.js')
 
-console.log('spawning c8', c8Path, fs.readdirSync(path.join(cwd, 'node_modules', 'c8', 'bin')))
-
-spawn(argv, c8Path)
+spawn(argv, `node ${c8Path}`)
