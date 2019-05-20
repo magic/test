@@ -107,10 +107,8 @@ init()
 
 process
   .on('unhandledRejection', error => {
-    log.error('unhandledRejection', error)
-    process.exit(1)
+    throw error
   })
   .on('uncaughtException', error => {
-    log.error('uncaughtException', error)
-    process.exit(1)
+    throw error
   })
