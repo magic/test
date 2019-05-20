@@ -1,27 +1,12 @@
-module.exports = () => [
+export const View = () => [
   h1('@magic/test'),
-  p('simple tests with lots of utility.'),
+  p('simple tests with lots of utility. ecmascript modules only.'),
 
-  h3('docs are outdated, @magic/test has been rewritten to use es6 modules.'),
-  p('to install out the commonjs version'),
-  Pre('npm install @magic/test@0.0.23-cjs'),
+  p('runs ecmascript module tests without transpilation.'),
+
+  p('unbelievably fast.'),
 
   GitBadges('magic/test'),
-
-  h2({ id: 'dependencies' }, 'dependencies'),
-  p([
-    Link({ to: 'https://github.com/magic/log' }, '@magic/log'),
-    ': console.log wrapper with loglevels',
-  ]),
-  p([Link({ to: 'https://github.com/magic/types' }, '@magic/types'), ': type checking library']),
-  p([
-    Link({ to: 'https://github.com/magic/deep' }, '@magic/deep'),
-    ': deeply compare and manipulate arrays and objects',
-  ]),
-  p([Link({ to: 'https://www.npmjs.com/package/nyc' }, 'nyc'), ': code coverage']),
-  p([Link({ to: 'https://www.npmjs.com/package/prettier' }, 'prettier'), ': code formatting']),
-
-  p('@magic/log and @magic/types have no dependencies.'),
 
   h2({ id: 'getting-started' }, 'getting started'),
   p('be in a nodejs project.'),
@@ -30,12 +15,12 @@ module.exports = () => [
   Pre('npm i --save-dev @magic/test'),
 
   Pre(`
-// create test/functionName.js
-const yourTest = require('../path/to/your/file.js')
+// create test/functionName.mjs
+import yourTest from '../path/to/your/file.mjs'
 
-module.exports = [
+export default [
   { fn: () => true, expect: true, info: 'true is true' },
-  // note that the function will be called automagically
+  // note that the yourTest function will be called automagically
   { fn: yourTest, expect: true, info: 'hope this will work ;)'}
 ]`),
 
@@ -71,8 +56,11 @@ npm test
 // Ran 2 tests. Passed 2/2 100%`),
 
   h3({ id: 'getting-started-coverage' }, 'coverage'),
-  p('run coverage reports and get full test report including from passing tests'),
-  Pre('npm run coverage'),
+  p([
+    '@magic/test will automagically generate coverage reports.',
+    ' it is so fast creating them that we decided to leave them on by default.',
+    ' if you have more than 20.000 tests to run contact us, we will add a switch to turn them of.'
+  ]),
 
   h3({ id: 'test-suites' }, 'data/fs driven test suite creation:'),
   h4('expectations for optimal test messages:'),
@@ -85,49 +73,51 @@ npm test
   p('the following directory structure:'),
   Pre(`
 ./test/
-  ./suite1.js
-  ./suite2.js`),
+  ./suite1.mjs
+  ./suite2.mjs`),
 
-  p('yields the same result as exporting the following from ./test/index.js'),
+  p('yields the same result as exporting the following from ./test/index.mjs'),
 
   h4({ id: 'test-suites-data' }, 'Data driven naming'),
   Pre(`
-const suite1 = require('./suite1')
-const suite2 = require('./suite2')
+import suite1 from './suite1'
+import suite2 from './suite2'
 
-module.exports = {
+export default {
   suite1,
   suite2,
 }`),
 
   h3('Important - File mappings'),
-  p('if test/index.js exists, no other files will be loaded.'),
-  p('if test/lib/index.js exists, no other files from that subdirectory will be loaded.'),
+  p('if test/index.mjs exists, no other files will be loaded.'),
+  p('if test/lib/index.mjs exists, no other files from that subdirectory will be loaded.'),
 
   h3({ id: 'tests' }, 'single test, literal value, function or promise'),
 
   Pre(`
-module.exports = { fn: true, expect: true, info: 'expect true to be true' }
+export default { fn: true, expect: true, info: 'expect true to be true' }
 
 // expect: true is the default and can be omitted
-module.exports = { fn: true, info: 'expect true to be true' }
+export default { fn: true, info: 'expect true to be true' }
 
 // if fn is a function expect is the returned value of the function
-module.exports = { fn: () => false, expect: false, info: 'expect true to be true' }
+export default { fn: () => false, expect: false, info: 'expect true to be true' }
 
 // if expect is a function the return value of the test get passed to it
-module.exports = { fn: false, expect: t => t === false, info: 'expect true to be true' }
+export default { fn: false, expect: t => t === false, info: 'expect true to be true' }
 
 // if fn is a promise the resolved value will be returned
-module.exports = { fn: new Promise(r => r(true)), expect: true, info: 'expect true to be true' }
+export default { fn: new Promise(r => r(true)), expect: true, info: 'expect true to be true' }
 
 // if expects is a promise it will resolve before being compared to the fn return value
-module.exports = { fn: true, expect: new Promise(r => r(true)), info: 'expect true to be true' }
+export default { fn: true, expect: new Promise(r => r(true)), info: 'expect true to be true' }
 
 // callback functions can be tested easily too:
-const { promise } = require('@magic/test')
+import { promise } from '@magic/test'
+
 const fnWithCallback = (err, arg, cb) => cb(err, arg)
-module.exports = { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect: 'arg' }`),
+
+export default { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect: 'arg' }`),
 
   h4({ id: 'tests-types' }, 'testing types'),
   p([
@@ -140,8 +130,9 @@ module.exports = { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect
   ]),
 
   Pre(`
-const { is } = require('@magic/test')
-module.exports = [
+import { is } from '@magic/test'
+
+export default [
   { fn: () => 'string',
     expect: is.string,
     info: 'test if a function returns a string'
@@ -165,14 +156,18 @@ module.exports = [
 ]`),
 
   h4('caveat:'),
-  p('if you want to test if a function is a function, you need to wrap the function'),
+  p([
+    'if you want to test if a function is a function, you need to wrap the function in a function.',
+    ' this is because functions passed to fn get executed automatically.'
+  ]),
 
   Pre(`
-const { is } = require('@magic/test')
+import { is } from '@magic/test'
 
 const fnToTest = () => {}
+
 // both the tests will work as expected
-module.exports = [
+export default [
   {
     fn: () => fnToTest,
     expect: is.function,
@@ -187,7 +182,7 @@ module.exports = [
 
   Pre(`
 // will not work as expected and instead call fnToTest
-module.exports = {
+export default {
   fn: fnToTest,
   expect: is.function,
   info: 'function is a function',
@@ -197,18 +192,26 @@ module.exports = {
   p('multiple tests can be created by exporting an array of single test objects.'),
 
   Pre(`
-module.exports = {
+export default {
   multipleTests: [
     { fn: () => true, expect: true, info: 'expect true to be true' },
     { fn: () => false, expect: false, info: 'expect false to be false' },
   ]
 }`),
 
+  p('multiple tests can also be created by exporting an array of tests.'),
+
+  Pre(`
+  export default [
+    { fn: () => true, expect: true, info: 'expect true to be true' },
+    { fn: () => false, expect: false, info: 'expect false to be false' },
+  ]`),
+
   h3({ id: 'tests-promises' }, 'promises'),
   Pre(`
-const { promise, is } = require('@magic/test')
+import { promise, is } from '@magic/test'
 
-module.exports = [
+export default [
   // kinda clumsy, but works. until you try handling errors.
   {
     fn: new Promise(cb => setTimeOut(() => cb(true), 2000)),
@@ -230,11 +233,11 @@ module.exports = [
 
   h3({ id: 'tests-cb' }, 'callback functions'),
   Pre(`
-const { promise, is } = require('@magic/test')
+import { promise, is } from '@magic/test'
 
 const fnWithCallback = (err, arg, cb) => cb(err, arg)
 
-module.exports = [
+export default [
   {
     fn: promise(cb => fnWithCallback(null, true, cb)),
     expect: true
@@ -261,7 +264,7 @@ const before = () => {
   return after
 }
 
-module.exports = [
+export default [
   {
     fn: () => { global.testing = 'changed in test' },
     // if before returns a function, it will execute after the test.
@@ -286,7 +289,7 @@ const beforeAll = () => {
   return afterAll
 }
 
-module.exports = [
+export default [
   {
     fn: () => { global.testing = 'changed in test' },
     // if beforeAll returns a function, it will execute after the test suite.
@@ -305,17 +308,19 @@ module.exports = [
 
   h4({ id: 'lib-curry' }, 'curry'),
   p('Currying can be used to split the arguments of a function into multiple nested functions.'),
-  p(
-    'This helps if you have a function with complicated arguments that you just want to quickly shim.',
-  ),
+  p([
+    'This helps if you have a function with complicated arguments',
+    ' that you just want to quickly shim.',
+  ]),
 
   Pre(`
-const { curry } = require('@magic/test')
+import { curry } from '@magic/test'
+
 const compare = (a, b) => a === b
 const curried = curry(compare)
 const shimmed = curried('shimmed_value')
 
-module.exports = {
+export default {
   fn: shimmed('shimmed_value'),
   expect: true,
   info: 'expect will be called with a and b and a will equal b',
@@ -323,18 +328,19 @@ module.exports = {
 `),
 
   h4({ id: 'lib-vals' }, 'vals'),
-  p(
-    'exports some javascript types. more to come. will sometime in the future be the base of a fuzzer.',
-  ),
+  p([
+    'exports some javascript types. more to come.',
+    ' will sometime in the future be the base of a fuzzer.',
+  ]),
 
   h3({ id: 'lib-promises' }, 'promises'),
   p('Helper function to wrap nodejs callback functions and promises with ease.'),
   p('Handles the try/catch steps internally and returns a resolved or rejected promise.'),
 
   Pre(`
-const { promise, is } = require('@magic/test')
+import { promise, is } from '@magic/test'
 
-module.exports = [
+export default [
   {
     fn: promise(cb => setTimeOut(() => cb(null, true), 200)),
     expect: true,
@@ -350,11 +356,12 @@ module.exports = [
   h4({ id: 'lib-trycatch' }, 'tryCatch'),
   p('allows to test functions without bubbling the errors up into the runtime'),
   Pre(`
-const { is, tryCatch } = require('@magic/test')
+import { is, tryCatch } from '@magic/test'
+
 const throwing = () => throw new Error('oops')
 const healthy = () => true
 
-module.exports = [
+export default [
   {
     fn: tryCatch(throwing()),
     expect: is.error,
@@ -369,11 +376,11 @@ module.exports = [
 
   h2({ id: 'usage' }, 'Usage'),
 
-  h3({ id: 'usage-js' }, 'js api:'),
+  h3({ id: 'usage-js' }, 'mjs api:'),
 
   Pre(`
-// test/index.js
-const run = require('@magic/test')
+// test/index.mjs
+import run from '@magic/test'
 
 const tests = {
   lib: [
@@ -415,8 +422,8 @@ npm run format:check`),
   ]),
 
   p([
-    'this both explains to everyone that your app has this dependencies',
-    ' and keeps your bash free of clutter',
+    'this both explains to everyone that your app has these dependencies',
+    ' as well as keeping your bash free of clutter',
   ]),
 
   Pre(`

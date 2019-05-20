@@ -2,11 +2,9 @@
 
 simple tests with lots of utility.
 
-### docs are outdated. 
+test your ecmascript module files without transpiling either your codebase nor the tests.
 
-use .mjs files and import/export instead of (common)js require and module.exports.
-docs will be updated soon, but thats the "only" change
-
+incredibly fast.
 
 [html docs](https://magic.github.io/test)
 
@@ -71,9 +69,9 @@ mkdir test
 
 create test/index.js
 ```javascript
-const yourTest = require('../path/to/your/file.js')
+import yourTest from '../path/to/your/file.js'
 
-module.exports = [
+export default [
   { fn: () => true, expect: true, info: 'true is true' },
   // note that the function will be called automagically
   { fn: yourTest, expect: true, info: 'hope this will work ;)'}
@@ -139,10 +137,10 @@ has the same result as exporting the following from ./test/index.js
 
 ###### Data driven naming
 ```javascript
-const suite1 = require('./suite1')
-const suite2 = require('./suite2')
+import suite1 from './suite1'
+import suite2 from './suite2'
 
-module.exports = {
+export default {
   suite1,
   suite2,
 }
@@ -156,27 +154,27 @@ if test/lib/index.js exists, no other files from that subdirectory will be loade
 ##### <a name="tests"></a>single test, literal value, function or promise
 
 ```javascript
-module.exports = { fn: true, expect: true, info: 'expect true to be true' }
+export default { fn: true, expect: true, info: 'expect true to be true' }
 
 // expect: true is the default and can be omitted
-module.exports = { fn: true, info: 'expect true to be true' }
+export default { fn: true, info: 'expect true to be true' }
 
 // if fn is a function expect is the returned value of the function
-module.exports = { fn: () => false, expect: false, info: 'expect true to be true' }
+export default { fn: () => false, expect: false, info: 'expect true to be true' }
 
 // if expect is a function the return value of the test get passed to it
-module.exports = { fn: false, expect: t => t === false, info: 'expect true to be true' }
+export default { fn: false, expect: t => t === false, info: 'expect true to be true' }
 
 // if fn is a promise the resolved value will be returned
-module.exports = { fn: new Promise(r => r(true)), expect: true, info: 'expect true to be true' }
+export default { fn: new Promise(r => r(true)), expect: true, info: 'expect true to be true' }
 
 // if expects is a promise it will resolve before being compared to the fn return value
-module.exports = { fn: true, expect: new Promise(r => r(true)), info: 'expect true to be true' }
+export default { fn: true, expect: new Promise(r => r(true)), info: 'expect true to be true' }
 
 // callback functions can be tested easily too:
-const { promise } = require('@magic/test')
+import { promise } from '@magic/test'
 const fnWithCallback = (err, arg, cb) => cb(err, arg)
-module.exports = { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect: 'arg' }
+export default { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect: 'arg' }
 ```
 
 ###### <a name="tests-types"></a> testing types
@@ -185,8 +183,8 @@ types can be compared using [@magic/types](https://github.com/magic/types)
 without dependencies. it is exported from this library for convenience.
 
 ```javascript
-const { is } = require('@magic/test')
-module.exports = [
+import { is } from '@magic/test'
+export default [
   { fn: () => 'string',
     expect: is.string,
     info: 'test if a function returns a string'
@@ -213,9 +211,9 @@ module.exports = [
 ###### caveat:
 if you want to test if a function is a function, you need to wrap the function
 ```javascript
-const { is } = require('@magic/test')
+import { is } from '@magic/test'
 const fnToTest = () => {}
-module.exports = {
+export default {
   fn: () => fnToTest,
   expect: is.function,
   info: 'function is a function',
@@ -226,7 +224,7 @@ module.exports = {
 multiple tests can be created by exporting an array of single test objects.
 
 ```javascript
-module.exports = {
+export default {
   multipleTests: [
     { fn: () => true, expect: true, info: 'expect true to be true' },
     { fn: () => false, expect: false, info: 'expect false to be false' },
@@ -236,9 +234,9 @@ module.exports = {
 
 ##### <a name="tests-promises"></a>promises
 ```javascript
-const { promise, is } = require('@magic/test')
+import { promise, is } from '@magic/test'
 
-module.exports = [
+export default [
   // kinda clumsy, but works. until you try handling errors.
   {
     fn: new Promise(cb => setTimeOut(() => cb(true), 2000)),
@@ -261,11 +259,11 @@ module.exports = [
 
 ##### <a name="tests-cb"></a>callback functions
 ```javascript
-const { promise, is } = require('@magic/test')
+import { promise, is } from '@magic/test'
 
 const fnWithCallback = (err, arg, cb) => cb(err, arg)
 
-module.exports = [
+export default [
   {
     fn: promise(cb => fnWithCallback(null, true, cb)),
     expect: true
@@ -293,7 +291,7 @@ const before = () => {
   return after
 }
 
-module.exports = [
+export default [
   {
     fn: () => { global.testing = 'changed in test' },
     // if before returns a function, it will execute after the test.
@@ -318,7 +316,7 @@ const beforeAll = () => {
   return afterAll
 }
 
-module.exports = [
+export default [
   {
     fn: () => { global.testing = 'changed in test' },
     // if beforeAll returns a function, it will execute after the test suite.
@@ -338,12 +336,13 @@ Currying can be used to split the arguments of a function into multiple nested f
 This helps if you have a function with complicated arguments that you just want to quickly shim.
 
 ```javascript
-const { curry } = require('@magic/test')
+import { curry } from '@magic/test'
+
 const compare = (a, b) => a === b
 const curried = curry(compare)
 const shimmed = curried('shimmed_value')
 
-module.exports = {
+export default {
   fn: shimmed('shimmed_value'),
   expect: true,
   info: 'expect will be called with a and b and a will equal b',
@@ -358,9 +357,9 @@ Helper function to wrap nodejs callback functions and promises with ease.
 Handles the try/catch steps internally and returns a resolved or rejected promise.
 
 ```javascript
-const { promise, is } = require('@magic/test')
+import { promise, is } from '@magic/test'
 
-module.exports = [
+export default [
   {
     fn: promise(cb => setTimeOut(() => cb(null, true), 200)),
     expect: true,
@@ -377,11 +376,11 @@ module.exports = [
 ###### <a name="lib-trycatch"></a> tryCatch
 allows to catch and test functions without bubbling the errors up into the runtime
 ```javascript
-const { is, tryCatch } = require('@magic/test')
+import { is, tryCatch } from '@magic/test'
 const throwing = () => throw new Error('oops')
 const healthy = () => true
 
-module.exports = [
+export default [
   {
     fn: tryCatch(throwing()),
     expect: is.error,
@@ -402,7 +401,7 @@ module.exports = [
 ```javascript
 // test/index.js
 
-const run = require('@magic/test')
+import run from '@magic/test'
 
 const tests = {
   lib: [
@@ -490,3 +489,6 @@ npm run scripts of @magic/test itself can be run on windows.
 
 #### 0.1.5
 use ecmascript version of @magic/deep
+
+#### 0.1.6
+update this readme and html docs
