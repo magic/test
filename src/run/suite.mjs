@@ -28,7 +28,7 @@ const runSuite = async suite => {
   let results
 
   if (is.empty(tests)) {
-    if (name.includes('index.js')) {
+    if (name.includes('index.mjs')) {
       // we assume the user wants to keep us from indexing this directory.
       return
     }
