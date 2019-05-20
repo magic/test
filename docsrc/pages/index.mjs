@@ -59,7 +59,7 @@ npm test
   p([
     '@magic/test will automagically generate coverage reports.',
     ' it is so fast creating them that we decided to leave them on by default.',
-    ' if you have more than 20.000 tests to run contact us, we will add a switch to turn them of.'
+    ' if you have more than 20.000 tests to run contact us, we will add a switch to turn them of.',
   ]),
 
   h3({ id: 'test-suites' }, 'data/fs driven test suite creation:'),
@@ -158,7 +158,7 @@ export default [
   h4('caveat:'),
   p([
     'if you want to test if a function is a function, you need to wrap the function in a function.',
-    ' this is because functions passed to fn get executed automatically.'
+    ' this is because functions passed to fn get executed automatically.',
   ]),
 
   Pre(`
