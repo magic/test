@@ -491,4 +491,6 @@ npm run scripts of @magic/test itself can be run on windows.
 use ecmascript version of @magic/deep
 
 #### 0.1.6
-update this readme and html docs
+update this readme and html docs.
+
+tests should always process.exit(1) if they errored.
