@@ -13,7 +13,7 @@ if (name === '@magic/test') {
 }
 
 const cmd = path.join(binPath, 'unit.mjs')
-const argv = ['-n', 'src', 'node', '--experimental-modules', cmd]
+const argv = ['-n', 'src', 'node', '--experimental-modules', '--experimental-json-modules', cmd]
 
 const isWin = process.platform === 'win32'
 
