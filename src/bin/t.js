@@ -21,7 +21,7 @@ let argv = ['--experimental-modules', '--experimental-json-modules', binFile]
 if (!process.argv.includes('-p')) {
   let c8Cmd = 'c8'
   if (isWin) {
-    c8Cmd = 'c8.binFile'
+    c8Cmd = 'c8.cmd'
   }
   cmd = path.join(cwd, 'node_modules', '.bin', c8Cmd)
   argv = ['-n', 'src', 'node', ...argv]
