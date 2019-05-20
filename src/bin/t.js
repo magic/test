@@ -12,15 +12,19 @@ if (name === '@magic/test') {
   binPath = path.join(cwd, 'src', 'bin')
 }
 
-const cmd = path.join(binPath, 'unit.mjs')
-const argv = ['-n', 'src', 'node', '--experimental-modules', '--experimental-json-modules', cmd]
+const binFile = path.join(binPath, 'unit.mjs')
 
 const isWin = process.platform === 'win32'
 
-let c8Cmd = 'c8'
-if (isWin) {
-  c8Cmd = 'c8.cmd'
+let cmd = 'node'
+let argv = ['--experimental-modules', '--experimental-json-modules', binFile]
+if (!process.argv.includes('-p')) {
+  let c8Cmd = 'c8'
+  if (isWin) {
+    c8Cmd = 'c8.binFile'
+  }
+  cmd = path.join(cwd, 'node_modules', '.bin', c8Cmd)
+  argv = ['-n', 'src', 'node', ...argv]
 }
-const c8Path = path.join(cwd, 'node_modules', '.bin', c8Cmd)
 
-spawn(argv, c8Path)
+spawn(argv, cmd)
