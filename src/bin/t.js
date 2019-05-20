@@ -17,4 +17,6 @@ const argv = ['-n', 'src', 'node', '--experimental-json-modules', '--experimenta
 
 const c8Path = path.join(cwd, 'node_modules', 'c8', 'bin', 'c8.js')
 
-spawn(argv, `node ${c8Path}`)
+console.log(fs.readdirSync(path.join(cwd, 'node_modules', '.bin')))
+
+spawn(argv, c8Path)
