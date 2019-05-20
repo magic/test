@@ -13,7 +13,7 @@ if (name === '@magic/test') {
 }
 
 const cmd = path.join(binPath, 'unit.mjs')
-const argv = ['-n', 'src', 'node', '--experimental-json-modules', '--experimental-modules', cmd]
+const argv = ['-n', 'src', 'node', '--experimental-modules', cmd]
 
 const isWin = process.platform === "win32";
 
@@ -22,5 +22,7 @@ if (isWin) {
   c8Cmd = 'c8.cmd'
 }
 const c8Path = path.join(cwd, 'node_modules', '.bin', c8Cmd)
+
+
 
 spawn(argv, c8Path)
