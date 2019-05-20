@@ -15,8 +15,6 @@ if (name === '@magic/test') {
 const cmd = path.join(binPath, 'unit.mjs')
 const argv = ['-n', 'src', 'node', '--experimental-json-modules', '--experimental-modules', cmd]
 
-const c8Path = path.join(cwd, 'node_modules', 'c8', 'bin', 'c8.js')
-
-console.log(fs.readdirSync(path.join(cwd, 'node_modules', '.bin')))
+const c8Path = path.join(cwd, 'node_modules', '.bin', 'c8')
 
 spawn(argv, c8Path)
