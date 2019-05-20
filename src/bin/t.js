@@ -2,6 +2,7 @@
 
 const path = require('path')
 const spawn = require('@magic/cli')
+const fs = require('fs')
 
 const cwd = process.cwd()
 const { name } = require(path.join(cwd, 'package.json'))
@@ -17,6 +18,6 @@ const argv = ['-n', 'src', 'node', '--experimental-json-modules', '--experimenta
 
 const c8Path = path.join(cwd, 'node_modules', 'c8', 'bin', 'c8.js')
 
-console.log('spawning c8', c8Path)
+console.log('spawning c8', c8Path, fs.readDirSync(path.join(cwd, 'node_modules')))
 
 spawn(argv, c8Path)
