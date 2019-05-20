@@ -16,13 +16,12 @@ export const isDev = process.env.NODE_ENV === 'development'
 export const run = runIt
 export default runIt
 
-
 process
-.on('unhandledRejection', error => {
-  log.error(error)
-  process.exit(1)
-})
-.on('uncaughtException', error => {
-  log.error(error)
-  process.exit(1)
-})
+  .on('unhandledRejection', error => {
+    log.error(error)
+    process.exit(1)
+  })
+  .on('uncaughtException', error => {
+    log.error(error)
+    process.exit(1)
+  })

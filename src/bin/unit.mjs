@@ -106,11 +106,9 @@ const init = async () => {
 init()
 
 process
-.on('unhandledRejection', error => {
-  log.error('unhandledRejection', error)
-  process.exit(1)
-})
-.on('uncaughtException', error => {
-  log.error('uncaughtException', error)
-  process.exit(1)
-})
+  .on('unhandledRejection', error => {
+    throw error
+  })
+  .on('uncaughtException', error => {
+    throw error
+  })

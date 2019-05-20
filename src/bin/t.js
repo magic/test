@@ -2,6 +2,7 @@
 
 const path = require('path')
 const spawn = require('@magic/cli')
+const fs = require('fs')
 
 const cwd = process.cwd()
 const { name } = require(path.join(cwd, 'package.json'))
@@ -9,14 +10,17 @@ const { name } = require(path.join(cwd, 'package.json'))
 let binPath = path.join(cwd, 'node_modules', '@magic', 'test', 'src', 'bin')
 if (name === '@magic/test') {
   binPath = path.join(cwd, 'src', 'bin')
-
 }
 
 const cmd = path.join(binPath, 'unit.mjs')
-const argv = ['-n', 'src', 'node', '--experimental-json-modules', '--experimental-modules', cmd]
+const argv = ['-n', 'src', 'node', '--experimental-modules', '--experimental-json-modules', cmd]
 
-const c8Path = path.join(cwd, 'node_modules', 'c8', 'bin', 'c8.js')
+const isWin = process.platform === 'win32'
 
-console.log('spawning c8', c8Path)
+let c8Cmd = 'c8'
+if (isWin) {
+  c8Cmd = 'c8.cmd'
+}
+const c8Path = path.join(cwd, 'node_modules', '.bin', c8Cmd)
 
 spawn(argv, c8Path)
