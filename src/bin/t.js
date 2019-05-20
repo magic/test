@@ -2,7 +2,6 @@
 
 const path = require('path')
 const spawn = require('@magic/cli')
-const fs = require('fs')
 
 const cwd = process.cwd()
 const { name } = require(path.join(cwd, 'package.json'))
