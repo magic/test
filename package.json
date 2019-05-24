@@ -1,6 +1,6 @@
 {
   "name": "@magic/test",
-  "version": "0.1.6",
+  "version": "0.1.8",
   "author": "Wizards & Witches",
   "description": "simple yet powerful unit testing library",
   "license": "AGPL-3.0",
@@ -10,7 +10,8 @@
   "type": "module",
   "bin": {
     "t": "src/bin/t.js",
-    "f": "src/bin/format.js"
+    "f": "src/bin/format.js",
+    "calls": "src/bin/calls.js"
   },
   "scripts": {
     "start": "node src/bin/t.js -p",
@@ -22,7 +23,10 @@
     "test": "node src/bin/t.js",
     "format": "node src/bin/format.js -w --exclude docs",
     "format:check": "node src/bin/format.js --exclude docs",
-    "coveralls": "coveralls"
+    "calls": "calls"
+  },
+  "engines": {
+    "node": ">=12.2.0"
   },
   "files": [
     "src"
@@ -35,11 +39,11 @@
     "url": "https://github.com/magic/test/issues"
   },
   "dependencies": {
-    "@magic/cli": "0.0.3",
+    "@magic/cli": "0.0.4",
     "@magic/deep": "0.1.0",
     "@magic/log": "0.1.0",
     "@magic/types": "0.1.2",
-    "c8": "4.1.5",
+    "c8": "5.0.1",
     "coveralls": "3.0.3",
     "hyperapp": "1.2.9",
     "prettier": "1.17.1"

@@ -42,12 +42,8 @@ const readRecursive = async dir => {
   const indexFilePath = path.join(targetDir, 'index.mjs')
 
   if (await fs.exists(indexFilePath)) {
-    try {
-      const fileP = indexFilePath.replace(testDir, '')
-      tests[fileP] = await import(indexFilePath)
-    } catch(e) {
-      console.log(e)
-    }
+    const fileP = indexFilePath.replace(testDir, '')
+    tests[fileP] = await import(indexFilePath)
   } else {
     // if dir/index.mjs does not exist, require all files and subdirectories of files
     const files = await fs.readdir(targetDir)
@@ -58,8 +54,6 @@ const readRecursive = async dir => {
         .map(async file => {
           const filePath = path.join(targetDir, file)
           const stat = await fs.stat(filePath)
-
-          console.log(filePath, stat.isDirectory())
 
           if (stat.isDirectory()) {
             const deepTests = await readRecursive(dir ? path.join(dir, file) : file)
@@ -77,12 +71,13 @@ const readRecursive = async dir => {
             try {
               const fileP = filePath.replace(testDir, '')
               let test = await import(filePath)
+              console.log(filePath, test)
               if (test.default) {
                 test = test.default
               }
               tests[fileP] = test
             } catch(e) {
-		console.log(e)
+              console.log(e)
             }
           }
         }),
