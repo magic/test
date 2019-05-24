@@ -57,9 +57,7 @@ npm test
 
   h3({ id: 'getting-started-coverage' }, 'coverage'),
   p([
-    '@magic/test will automagically generate coverage reports.',
-    ' it is so fast creating them that we decided to leave them on by default.',
-    ' if you have more than 20.000 tests to run contact us, we will add a switch to turn them of.',
+    '@magic/test will automagically generate coverage reports if it is not called with the -p flag.',
   ]),
 
   h3({ id: 'test-suites' }, 'data/fs driven test suite creation:'),
