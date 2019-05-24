@@ -494,3 +494,8 @@ use ecmascript version of @magic/deep
 update this readme and html docs.
 
 tests should always process.exit(1) if they errored.
+
+#### 0.1.7
+readded calls npm run script
+updated c8
+
