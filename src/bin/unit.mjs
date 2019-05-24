@@ -70,8 +70,9 @@ const readRecursive = async dir => {
 
             try {
               const fileP = filePath.replace(testDir, '')
+              console.log({filePath})
               let test = await import(filePath)
-              console.log(filePath, test)
+              console.log({test})
               if (test.default) {
                 test = test.default
               }
