@@ -499,3 +499,5 @@ tests should always process.exit(1) if they errored.
 readded calls npm run script
 updated c8
 
+#### 0.1.8
+update @magic/cli
