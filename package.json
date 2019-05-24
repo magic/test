@@ -24,6 +24,9 @@
     "format:check": "node src/bin/format.js --exclude docs",
     "coveralls": "coveralls"
   },
+  "engines": {
+    "node": ">=12.2.0"
+  },
   "files": [
     "src"
   ],
