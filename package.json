@@ -10,7 +10,8 @@
   "type": "module",
   "bin": {
     "t": "src/bin/t.js",
-    "f": "src/bin/format.js"
+    "f": "src/bin/format.js",
+    "calls": "src/bin/calls.js"
   },
   "scripts": {
     "start": "node src/bin/t.js -p",
@@ -22,7 +23,7 @@
     "test": "node src/bin/t.js",
     "format": "node src/bin/format.js -w --exclude docs",
     "format:check": "node src/bin/format.js --exclude docs",
-    "coveralls": "coveralls"
+    "calls": "calls"
   },
   "engines": {
     "node": ">=12.2.0"
