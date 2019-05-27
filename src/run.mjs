@@ -17,6 +17,16 @@ const run = async tests => {
     return new Error('No Test Suites')
   }
 
+  const beforeAll = tests['/beforeAll.mjs']
+  let afterAll = tests['/afterAll.mjs'] ? [tests['/afterAll.mjs']] : []
+
+  delete tests['/beforeAll.mjs']
+  delete tests['/afterAll.mjs']
+
+  if (is.fn(beforeAll)) {
+    afterAll.push(await beforeAll(tests))
+  }
+
   const suiteNames = Object.keys(tests)
 
   const { default: pkg } = await import(path.join(process.cwd(), 'package.json'))
@@ -32,6 +42,10 @@ const run = async tests => {
       }),
     ),
   )
+
+  if (afterAll) {
+    await Promise.all(afterAll.filter(is.fn).map(fn => fn(tests)))
+  }
 
   stats.info()
 }

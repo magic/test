@@ -1,5 +1,3 @@
-import is from '@magic/types'
-
 // This test can not make sure that both afterAll functions actually get executed.
 export default {
   beforeAll: () => {
