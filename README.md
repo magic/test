@@ -501,3 +501,9 @@ updated c8
 
 #### 0.1.8
 update @magic/cli
+
+#### 0.1.9
+* test/beforeAll.mjs gets loaded separately if it exists and executed before all tests
+* test/afterAll.mjs gets loaded separately if it exists and executed after all tests
+* if the function exported from test/beforeAll.mjs returns another function, 
+  this function will also be executed after all tests
