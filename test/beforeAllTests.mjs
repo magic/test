@@ -28,6 +28,6 @@ export default {
       fn: () => global.before,
       expect: true,
       info: 'test/beforeAll.mjs file gets executed before other tests.',
-    }
+    },
   ],
 }

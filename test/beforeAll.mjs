@@ -1,4 +1,4 @@
-export default (tests) => {
+export default tests => {
   global.before = true
   global.tests = tests
 
