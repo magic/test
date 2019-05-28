@@ -24,5 +24,10 @@ export default {
       expect: undefined,
       info: 'Undefined globals are undefined and not true',
     },
+    {
+      fn: () => global.before,
+      expect: true,
+      info: 'test/beforeAll.mjs file gets executed before other tests.',
+    }
   ],
 }
