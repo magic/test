@@ -57,5 +57,6 @@ export const state = {
         { to: '-global', text: 'npm i -g' },
       ],
     },
+    { to: '/changelog/', text: 'changelog' },
   ],
 }
