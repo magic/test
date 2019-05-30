@@ -1,7 +1,6 @@
 export const state = {
   logotext: '@magic/test',
   menu: [
-    { to: '/#dependencies', text: 'dependencies' },
     {
       to: '/#getting-started',
       text: 'getting started',
@@ -57,6 +56,6 @@ export const state = {
         { to: '-global', text: 'npm i -g' },
       ],
     },
-    { to: '/changelog/', text: 'changelog' },
+    { to: '/#changelog', text: 'changelog' },
   ],
 }
