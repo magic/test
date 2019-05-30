@@ -489,4 +489,5 @@ f -w`),
     ' this function will be executed after all tests,',
     ' additionally to any functions exported from test/afterAll.mjs.',
   ]),
+  p('export hyperapp beta.18'),
 ]
