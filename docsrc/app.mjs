@@ -1,4 +1,11 @@
 export const state = {
+  title: '@magic/test',
+  description: [
+    'simple tests with lots of utility. ecmascript modules only.',
+    'runs ecmascript module tests without transpilation.',
+    'unbelievably fast.',
+  ],
+
   logotext: '@magic/test',
   menu: [
     {

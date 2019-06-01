@@ -1,10 +1,7 @@
-export const View = () => [
-  h1('@magic/test'),
-  p('simple tests with lots of utility. ecmascript modules only.'),
+export const View = state => [
+  h1(state.title),
 
-  p('runs ecmascript module tests without transpilation.'),
-
-  p('unbelievably fast.'),
+  state.description.map(d => p(d)),
 
   GitBadges('magic/test'),
 
@@ -490,4 +487,6 @@ f -w`),
     ' additionally to any functions exported from test/afterAll.mjs.',
   ]),
   p('export hyperapp beta.18'),
+
+  LightSwitch(state),
 ]
