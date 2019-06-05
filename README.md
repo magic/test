@@ -505,6 +505,9 @@ update @magic/cli
 #### 0.1.9
 * test/beforeAll.mjs gets loaded separately if it exists and executed before all tests
 * test/afterAll.mjs gets loaded separately if it exists and executed after all tests
-* if the function exported from test/beforeAll.mjs returns another function, 
+* if the function exported from test/beforeAll.mjs returns another function,
   this function will also be executed after all tests
 * export hyperapp beta 18
+
+#### 0.1.10
+* node 12.4.0 does not use --experimental-json-modules flag. removed it in 12.4+.

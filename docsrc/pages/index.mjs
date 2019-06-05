@@ -488,5 +488,9 @@ f -w`),
   ]),
   p('export hyperapp beta.18'),
 
+
+  h3('0.1.10'),
+  p('node 12.4.0 does not use --experimental-json-modules flag. removed it in 12.4+.'),
+
   LightSwitch(state),
 ]
