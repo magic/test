@@ -1,6 +1,7 @@
 export { default as log } from '@magic/log'
 export { default as is } from '@magic/types'
 export { default as deep } from '@magic/deep'
+export { default as css } from '@magic/css'
 
 import runIt from './run.mjs'
 
