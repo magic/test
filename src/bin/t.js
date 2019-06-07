@@ -18,7 +18,10 @@ const isWin = process.platform === 'win32'
 let cmd = 'node'
 let argv = ['--experimental-modules', binFile]
 
-const [major, minor] = process.version.substring(1).split('.').map(n => parseInt(n))
+const [major, minor] = process.version
+  .substring(1)
+  .split('.')
+  .map(n => parseInt(n))
 if (major <= 12 && minor < 4) {
   argv = ['--experimental-json-modules', ...argv]
 }
