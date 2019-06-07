@@ -348,6 +348,14 @@ export default [
   },
 ]`),
 
+
+h3({ id: "lib-css" }, 'css'),
+p([
+  'exports ',
+  Link({ to: 'https://github.com/magic/css' }, '@magic/css'),
+  ' which allows parsing and stringification of css-in-js objects.',
+]),
+
   h4({ id: 'lib-trycatch' }, 'tryCatch'),
   p('allows to test functions without bubbling the errors up into the runtime'),
   Pre(`
@@ -488,9 +496,12 @@ f -w`),
   ]),
   p('export hyperapp beta.18'),
 
-
   h3('0.1.10'),
   p('node 12.4.0 does not use --experimental-json-modules flag. removed it in 12.4+.'),
+
+  h3('0.1.11'),
+  p('update prettier, coveralls'),
+  p('add @magic/css and export it for css testing'),
 
   LightSwitch(state),
 ]

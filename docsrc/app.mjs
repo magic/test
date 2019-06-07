@@ -56,7 +56,7 @@ export const state = {
     },
     {
       to: '/#usage',
-      text: 'Cli / Js Api Usage',
+      text: 'usage',
       items: [
         { to: '-js', text: 'js api' },
         { to: '-cli', text: 'cli' },

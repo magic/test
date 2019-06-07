@@ -28,8 +28,6 @@ incredibly fast.
 [snyk-image]: https://snyk.io/test/github/magic/test/badge.svg
 [snyk-url]: https://snyk.io/test/github/magic/test
 
-
-* [dependencies](#dependencies)
 * [install](#install)
 * [npm scripts](#npm-scripts)
 * [usage](#usage)
@@ -44,20 +42,14 @@ incredibly fast.
 * [utility functions](#lib)
   * [curry](#lib-curry)
   * [vals](#lib-vals)
-  * [tryCatch](#lib-trycatch)
   * [promises](#lib-promises)
+  * [css](#lib-css)
+  * [tryCatch](#lib-trycatch)
 * [Cli / Js Api Usage](#usage)
   * [js api](#usage-js)
   * [cli](#usage-cli)
   * [npm i -g](#usage-global)
 
-#### dependencies:
-* [@magic/log](https://github.com/magic/log): console.log wrapper with loglevels
-* [@magic/types](https://github.com/magic/types): type checking library
-* [nyc](https://www.npmjs.com/package/nyc): code coverage
-* [prettier](https://www.npmjs.com/package/prettier): code formatting
-
-@magic/log and @magic/types have no dependencies.
 
 #### <a name="install"></a>getting started
 be in a nodejs project.
@@ -373,6 +365,10 @@ export default [
 ]
 ```
 
+##### <a name="lib-css"></a>css
+exports [@magic/css](https://github.com/magic/css)
+which allows parsing and stringification of css-in-js objects.
+
 ###### <a name="lib-trycatch"></a> tryCatch
 allows to catch and test functions without bubbling the errors up into the runtime
 ```javascript
@@ -511,3 +507,7 @@ update @magic/cli
 
 #### 0.1.10
 * node 12.4.0 does not use --experimental-json-modules flag. removed it in 12.4+.
+
+#### 0.1.11
+* update prettier, coveralls
+* add and export @magic/css to test css validity
