@@ -68,12 +68,17 @@ const readRecursive = async dir => {
               return
             }
 
-            const fileP = filePath.replace(testDir, '')
-            let test = await import(filePath)
-            if (test.default) {
-              test = test.default
+            if (await fs.exists(filePath)) {
+              let test = await import(filePath)
+              if (test.default) {
+                test = test.default
+              }
+
+              const fileP = filePath.replace(testDir, '')
+              tests[fileP] = test
+            } else {
+              log.error('file not found', filePath)
             }
-            tests[fileP] = test
           }
         }),
     )
