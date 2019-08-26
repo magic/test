@@ -508,5 +508,8 @@ f -w`),
   h3('0.1.13'),
   p('tests now work on windows (again)'),
 
+  h3('0.1.14'),
+  p('tests on windows now support index.mjs files'),
+
   LightSwitch(state),
 ]
