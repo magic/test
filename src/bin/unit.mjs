@@ -39,10 +39,13 @@ const readRecursive = async dir => {
 
   // first resolve test/{dir/?}index.mjs
   // if they exist, we require them and expect export structures to be user defined.
-  const indexFilePath = path.join(targetDir, 'index.mjs')
+  let indexFilePath = path.join(targetDir, 'index.mjs')
 
   if (await fs.exists(indexFilePath)) {
     const fileP = indexFilePath.replace(testDir, '')
+    if (path.sep === '\\') {
+      indexFilePath = 'file:\\\\\\' + indexFilePath
+    }
     tests[fileP] = await import(indexFilePath)
   } else {
     // if dir/index.mjs does not exist, require all files and subdirectories of files
