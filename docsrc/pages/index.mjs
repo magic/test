@@ -348,13 +348,12 @@ export default [
   },
 ]`),
 
-
-h3({ id: "lib-css" }, 'css'),
-p([
-  'exports ',
-  Link({ to: 'https://github.com/magic/css' }, '@magic/css'),
-  ' which allows parsing and stringification of css-in-js objects.',
-]),
+  h3({ id: 'lib-css' }, 'css'),
+  p([
+    'exports ',
+    Link({ to: 'https://github.com/magic/css' }, '@magic/css'),
+    ' which allows parsing and stringification of css-in-js objects.',
+  ]),
 
   h4({ id: 'lib-trycatch' }, 'tryCatch'),
   p('allows to test functions without bubbling the errors up into the runtime'),
