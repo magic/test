@@ -503,5 +503,11 @@ f -w`),
   p('update prettier, coveralls'),
   p('add @magic/css and export it for css testing'),
 
+  h3('0.1.12'),
+  p('update dependencies'),
+
+  h3('0.1.13'),
+  p('tests now work on windows (again)'),
+
   LightSwitch(state),
 ]

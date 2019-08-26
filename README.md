@@ -511,3 +511,9 @@ update @magic/cli
 #### 0.1.11
 * update prettier, coveralls
 * add and export @magic/css to test css validity
+
+#### 0.1.12
+* update dependencies
+
+#### 0.1.13
+* windows support is back
