@@ -52,7 +52,7 @@ const readRecursive = async dir => {
       files
         .filter(f => !f.startsWith('.'))
         .map(async file => {
-          const filePath = path.join(targetDir, file)
+          let filePath = path.join(targetDir, file)
           const stat = await fs.stat(filePath)
 
           if (stat.isDirectory()) {
@@ -68,17 +68,21 @@ const readRecursive = async dir => {
               return
             }
 
-            if (await fs.exists(filePath)) {
-              let test = await import(filePath)
-              if (test.default) {
-                test = test.default
-              }
+            let fileP = filePath.replace(testDir, '')
+            const exists = await fs.exists(filePath)
 
-              const fileP = filePath.replace(testDir, '')
-              tests[fileP] = test
-            } else {
-              log.error('file not found', filePath)
+            // windows fix
+            if (path.sep === '\\') {
+              filePath = 'file:\\\\\\' + filePath
+              fileP = `/${fileP.substr(1)}`
             }
+
+            let test = await import(filePath)
+
+            if (test.default) {
+              test = test.default
+            }
+            tests[fileP] = test
           }
         }),
     )

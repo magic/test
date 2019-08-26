@@ -29,7 +29,12 @@ const run = async tests => {
 
   const suiteNames = Object.keys(tests)
 
-  const { default: pkg } = await import(path.join(process.cwd(), 'package.json'))
+  let packagePath = path.join(process.cwd(), 'package.json')
+  if (path.sep === '\\') {
+    packagePath = 'file:\\\\\\' + packagePath
+  }
+
+  const { default: pkg } = await import(packagePath)
   store.set({ module: pkg.name })
 
   await Promise.all(
