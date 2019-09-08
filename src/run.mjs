@@ -23,6 +23,7 @@ const run = async tests => {
   delete tests['/beforeAll.mjs']
   delete tests['/afterAll.mjs']
 
+  // execute beforeall and save the result in the afterAll array for later
   if (is.fn(beforeAll)) {
     afterAll.push(await beforeAll(tests))
   }

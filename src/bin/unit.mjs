@@ -42,6 +42,7 @@ const readRecursive = async dir => {
   let indexFilePath = path.join(targetDir, 'index.mjs')
 
   if (await fs.exists(indexFilePath)) {
+    // if index.mjs exists, we will simply import it as is and do no recursion.
     const fileP = indexFilePath.replace(testDir, '')
     if (path.sep === '\\') {
       indexFilePath = 'file:\\\\\\' + indexFilePath
@@ -51,6 +52,7 @@ const readRecursive = async dir => {
     // if dir/index.mjs does not exist, require all files and subdirectories of files
     const files = await fs.readdir(targetDir)
 
+    // recursively find all files and push them into tests object
     await Promise.all(
       files
         .filter(f => !f.startsWith('.'))
@@ -72,7 +74,6 @@ const readRecursive = async dir => {
             }
 
             let fileP = filePath.replace(testDir, '')
-            const exists = await fs.exists(filePath)
 
             // windows fix
             if (path.sep === '\\') {
@@ -82,9 +83,11 @@ const readRecursive = async dir => {
 
             let test = await import(filePath)
 
+            // catch es6 export default
             if (test.default) {
               test = test.default
             }
+            // write current file to tests cache
             tests[fileP] = test
           }
         }),
@@ -95,7 +98,7 @@ const readRecursive = async dir => {
 }
 
 const init = async () => {
-  const { argv } = cli({
+  cli({
     options: [
       ['--verbose', '--loud', '--l', '-l'],
       ['--include', '--inc', '--i', '-i'],
