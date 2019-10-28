@@ -521,3 +521,5 @@ update @magic/cli
 #### 0.1.14
 * windows support now supports index.mjs files that provide test structure
 
+#### 0.1.15
+* update dependencies

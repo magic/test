@@ -511,5 +511,8 @@ f -w`),
   h3('0.1.14'),
   p('tests on windows now support index.mjs files'),
 
+  h3('0.1.15'),
+  p('update dependencies'),
+
   LightSwitch(state),
 ]
