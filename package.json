@@ -5,9 +5,7 @@
   "description": "simple yet powerful unit testing library",
   "license": "AGPL-3.0",
   "homepage": "https://magic.github.io/test",
-  "main": "src/index.mjs",
   "module": "src/index.mjs",
-  "type": "module",
   "bin": {
     "t": "src/bin/t.js",
     "f": "src/bin/format.js",
