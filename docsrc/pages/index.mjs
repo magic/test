@@ -514,5 +514,8 @@ f -w`),
   h3('0.1.15'),
   p('update dependencies'),
 
+  h3('0.1.16'),
+  p('update @magic/cli for node 13 support.'),
+
   LightSwitch(state),
 ]
