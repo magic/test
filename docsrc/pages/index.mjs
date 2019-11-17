@@ -517,5 +517,8 @@ f -w`),
   h3('0.1.16'),
   p('update @magic/cli for node 13 support.'),
 
+  h3('0.1.17'),
+  p('make coverage work in node 13'),
+
   LightSwitch(state),
 ]

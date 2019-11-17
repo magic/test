@@ -526,3 +526,6 @@ update @magic/cli
 
 #### 0.1.16
 * update @magic/cli for node 13 support.
+
+#### 0.1.17
+* add node 13 json support for coverage reports.
