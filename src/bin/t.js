@@ -16,15 +16,7 @@ const binFile = path.join(binPath, 'unit.mjs')
 const isWin = process.platform === 'win32'
 
 let cmd = 'node'
-let argv = ['--experimental-modules', binFile]
-
-const [major, minor] = process.version
-  .substring(1)
-  .split('.')
-  .map(n => parseInt(n))
-if (major <= 12 && minor < 4) {
-  argv = ['--experimental-json-modules', ...argv]
-}
+let argv = ['--experimental-modules', '--experimental-json-modules', binFile]
 
 if (!process.argv.includes('-p')) {
   let c8Cmd = 'c8'
