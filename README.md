@@ -533,3 +533,6 @@ update @magic/cli
 #### 0.1.18
 * update dependencies
 * require node 12.13.0
+
+#### 0.1.19
+* update dependencies

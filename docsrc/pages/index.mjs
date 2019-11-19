@@ -521,8 +521,11 @@ f -w`),
   p('make coverage work in node 13'),
 
   h3('0.1.18'),
-  p('update deps'),
+  p('update dependencies'),
   p('bump required node version to 12.13.0'),
+
+  h3('0.1.19'),
+  p('update dependencies'),
 
   LightSwitch(state),
 ]
