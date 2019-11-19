@@ -536,3 +536,6 @@ update @magic/cli
 
 #### 0.1.19
 * update dependencies
+
+#### 0.1.20
+* update broken dependencies

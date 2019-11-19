@@ -527,5 +527,8 @@ f -w`),
   h3('0.1.19'),
   p('update dependencies'),
 
+  h3('0.1.20'),
+  p('update broken depdencies'),
+
   LightSwitch(state),
 ]
