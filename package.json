@@ -44,7 +44,7 @@
     "@magic/log": "0.1.1",
     "@magic/types": "0.1.2",
     "c8": "6.0.1",
-    "coveralls": "3.0.7",
+    "coveralls": "3.0.8",
     "hyperapp": "github:magic/hyperapp",
     "prettier": "1.19.1"
   },
