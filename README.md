@@ -539,3 +539,6 @@ update @magic/cli
 
 #### 0.1.20
 * update broken dependencies
+
+#### 0.1.21
+* update @magic/cli to allow default args
