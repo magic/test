@@ -17,7 +17,7 @@ incredibly fast.
 
 [npm-image]: https://img.shields.io/npm/v/@magic/test.svg
 [npm-url]: https://www.npmjs.com/package/@magic/test
-[travis-image]: https://api.travis-ci.com/magic/test.svg?branch=master
+[travis-image]: https://img.shields.io/travis/com/magic/test/master
 [travis-url]: https://travis-ci.com/magic/test
 [appveyor-image]: https://img.shields.io/appveyor/ci/magic/test/master.svg
 [appveyor-url]: https://ci.appveyor.com/project/magic/test/branch/master
