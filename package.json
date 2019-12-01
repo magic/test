@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@magic/cli": "0.0.8",
-    "@magic/css": "0.7.4",
+    "@magic/css": "0.7.5",
     "@magic/deep": "0.1.0",
     "@magic/log": "0.1.1",
     "@magic/types": "0.1.2",
