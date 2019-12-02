@@ -15,13 +15,16 @@ export const store = {
   set: val => {
     Object.entries(val).forEach(([key, val]) => {
       if (is.object(val)) {
-        store.state[key] = Object.assign({}, store.state[key], val)
+        store.state[key] = { ...store.state[key], ...val }
       } else {
         store.state[key] = val
       }
     })
   },
-  get: key => (is.defined(key) ? store.state[key] : store.state),
+  get: key => (key ? store.state[key] : store.state),
+  reset: () => {
+    this.state = {}
+  },
 }
 
 export default store
