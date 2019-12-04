@@ -533,5 +533,8 @@ f -w`),
   h3('0.1.21'),
   p('update @magic/cli to allow default args'),
 
+  h3('0.1.22'),
+  p('update dependencies'),
+
   LightSwitch(state),
 ]
