@@ -5,7 +5,7 @@ export { default as css } from '@magic/css'
 
 import runIt from './run.mjs'
 
-export * from 'hyperapp'
+export * from '@magic/hyperapp'
 export { curry, env, mock, promise, store, vals, version, tryCatch } from './lib/index.mjs'
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'test'

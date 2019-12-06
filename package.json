@@ -41,19 +41,19 @@
     "@magic/cli": "0.0.10",
     "@magic/css": "0.7.5",
     "@magic/deep": "0.1.0",
+    "@magic/hyperapp": "2.0.3",
     "@magic/log": "0.1.2",
     "@magic/types": "0.1.2",
     "c8": "6.0.1",
     "coveralls": "3.0.9",
-    "hyperapp": "github:magic/hyperapp",
     "prettier": "1.19.1"
   },
   "devDependencies": {
-    "@magic-modules/git-badges": "github:magic-modules/git-badges",
-    "@magic-modules/light-switch": "github:magic-modules/light-switch",
-    "@magic-modules/pre": "github:magic-modules/pre",
-    "@magic-themes/docs": "github:magic-themes/docs",
-    "@magic/core": "github:magic/core"
+    "@magic-modules/git-badges": "0.0.1",
+    "@magic-modules/light-switch": "0.0.1",
+    "@magic-modules/pre": "0.0.1",
+    "@magic-themes/docs": "0.0.1",
+    "@magic/core": "0.0.1"
   },
   "contributors": [
     {
