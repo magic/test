@@ -536,5 +536,8 @@ f -w`),
   h3('0.1.22'),
   p('update dependencies'),
 
+  h3('0.1.23'),
+  p('use @magic npm packages instead of github'),
+
   LightSwitch(state),
 ]
