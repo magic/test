@@ -539,5 +539,8 @@ f -w`),
   h3('0.1.23'),
   p('use @magic npm packages instead of github'),
 
+  h3('0.1.24 - unreleased'),
+  p('update @magic/css'),
+
   LightSwitch(state),
 ]

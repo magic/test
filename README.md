@@ -548,3 +548,7 @@ update @magic/cli
 
 #### 0.1.23
 * update @magic dependencies to use npm packages instead of github
+
+#### 0.1.24 (unreleased)
+update @magic/css
+
