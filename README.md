@@ -551,4 +551,5 @@ update @magic/cli
 
 #### 0.1.24 (unreleased)
 update @magic/css
+update c8
 
