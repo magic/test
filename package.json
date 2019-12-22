@@ -44,7 +44,7 @@
     "@magic/hyperapp": "2.0.3",
     "@magic/log": "0.1.2",
     "@magic/types": "0.1.2",
-    "c8": "6.0.1",
+    "c8": "7.0.0",
     "coveralls": "3.0.9",
     "prettier": "1.19.1"
   },
