@@ -4,4 +4,5 @@ export default {
   WEB_ROOT: '/test/',
   URL: 'magic.github.io/test',
   THEME: 'docs',
+  HOIST: 'Gdpr',
 }
