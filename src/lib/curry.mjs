@@ -3,6 +3,7 @@ import is from '@magic/types'
 import expectedArguments from './expectedArguments.mjs'
 
 const invalidArgsMsg = 'curry expects a function as first or last argument'
+const tooManyArgsMsg = 'too many arguments passed to curried function'
 
 export const curry = (...a) => {
   const args = []
@@ -16,13 +17,15 @@ export const curry = (...a) => {
   })
 
   if (!is.fn(fn)) {
-    return new Error(invalidArgsMsg)
+    throw Error(invalidArgsMsg)
   }
 
   const expectedArgs = expectedArguments(fn)
 
-  if (args.length >= expectedArgs.length) {
+  if (args.length === expectedArgs.length) {
     return fn(...args)
+  } else if (args.length > expectedArgs.length) {
+    throw new Error(tooManyArgsMsg)
   } else {
     return b => curry(fn, ...args, b)
   }
