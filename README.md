@@ -554,4 +554,7 @@ update @magic/css
 update c8
 
 #### 0.1.25 - unreleased
+currying now throws errors instead of returning them.
+
+#### 0.1.26 - unreleased
 ...
