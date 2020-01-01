@@ -550,11 +550,12 @@ update @magic/cli
 * update @magic dependencies to use npm packages instead of github
 
 #### 0.1.24 
-update @magic/css
-update c8
+* update @magic/css
+* update c8
 
 #### 0.1.25 - unreleased
 currying now throws errors instead of returning them.
 
 #### 0.1.26 - unreleased
+* update @magic/css
 ...
