@@ -140,6 +140,7 @@ export default {
 
 ##### Important
 if test/index.js exists, no other files will be loaded.
+
 if test/lib/index.js exists, no other files from that subdirectory will be loaded.
 
 
@@ -171,8 +172,11 @@ export default { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect: 
 
 ###### <a name="tests-types"></a> testing types
 types can be compared using [@magic/types](https://github.com/magic/types)
-@magic/types is a richly featured and thoroughly tested type library
-without dependencies. it is exported from this library for convenience.
+
+@magic/types is a full featured and thoroughly tested type library
+without dependencies.
+
+it is exported from this library for convenience.
 
 ```javascript
 import { is } from '@magic/test'
@@ -487,13 +491,12 @@ npm run scripts of @magic/test itself can be run on windows.
 use ecmascript version of @magic/deep
 
 #### 0.1.6
-update this readme and html docs.
-
-tests should always process.exit(1) if they errored.
+* update this readme and html docs.
+* tests should always process.exit(1) if they errored.
 
 #### 0.1.7
-readded calls npm run script
-updated c8
+* readded calls npm run script
+* updated c8
 
 #### 0.1.8
 update @magic/cli
@@ -502,54 +505,54 @@ update @magic/cli
 * test/beforeAll.mjs gets loaded separately if it exists and executed before all tests
 * test/afterAll.mjs gets loaded separately if it exists and executed after all tests
 * if the function exported from test/beforeAll.mjs returns another function,
-  this function will also be executed after all tests
+  this returned function will also be executed after all tests
 * export hyperapp beta 18
 
 #### 0.1.10
-* node 12.4.0 does not use --experimental-json-modules flag. removed it in 12.4+.
+node 12.4.0 does not use --experimental-json-modules flag. removed it in 12.4+.
 
 #### 0.1.11
 * update prettier, coveralls
 * add and export @magic/css to test css validity
 
 #### 0.1.12
-* update dependencies
+update dependencies
 
 #### 0.1.13
-* windows support is back
+windows support is back
 
 #### 0.1.14
-* windows support now supports index.mjs files that provide test structure
+windows support now supports index.mjs files that provide test structure
 
 #### 0.1.15
-* update dependencies
+update dependencies
 
 #### 0.1.16
-* update @magic/cli for node 13 support.
+update @magic/cli for node 13 support.
 
 #### 0.1.17
-* add node 13 json support for coverage reports.
+add node 13 json support for coverage reports.
 
 #### 0.1.18
 * update dependencies
 * require node 12.13.0
 
 #### 0.1.19
-* update dependencies
+update dependencies
 
 #### 0.1.20
-* update broken dependencies
+update broken dependencies
 
 #### 0.1.21
-* update @magic/cli to allow default args
+update @magic/cli to allow default args
 
 #### 0.1.22
-* update dependencies
+update dependencies
 
 #### 0.1.23
-* update @magic dependencies to use npm packages instead of github
+update @magic dependencies to use npm packages instead of github
 
-#### 0.1.24 
+#### 0.1.24
 * update @magic/css
 * update c8
 
