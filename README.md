@@ -557,8 +557,9 @@ update @magic dependencies to use npm packages instead of github
 * update c8
 
 #### 0.1.25 - unreleased
-currying now throws errors instead of returning them.
+* currying now throws errors instead of returning them.
+* update @magic/css
+* update @magic/types which now uses @magic/deep for is.deep.eq and is.deep.diff
 
 #### 0.1.26 - unreleased
-* update @magic/css
 ...
