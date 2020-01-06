@@ -77,8 +77,6 @@ edit package.json:
   "scripts": {
     "test": "t -p", // quick test, only failing tests log
     "coverage": "t", // get full test output and coverage reports
-    "format": "f -w", // format using prettier and write changes to files
-    "format:check": "f" // check format using prettier
   }
 }
 
@@ -86,8 +84,6 @@ repeated for easy copy pasting (without comments):
   "scripts": {
     "test": "t -p",
     "coverage": "t",
-    "format": "f -w",
-    "format:check": "f"
   }
 ```
 
@@ -422,8 +418,6 @@ Add the magic/test bin scripts to package.json
   "scripts": {
     "test": "t -p",
     "coverage": "t",
-    "format": "f -w",
-    "format:check": "f"
   },
   "devDependencies": {
     "@magic/test": "github:magic/test"
@@ -435,8 +429,6 @@ then use the npm run scripts
 ```bash
   npm test
   npm run coverage
-  npm run format
-  npm run format:check
 ```
 
 ##### <a name="usage-global"></a>Globally (not recommended):
@@ -454,15 +446,6 @@ and keeps your bash free of clutter
 
   // run tests in verbose mode
   t
-
-  // check formatting using prettier but do not write
-  // prettier --list-different
-  f
-
-  // format files using prettier
-  // prettier --write
-  f -w
-
 ```
 
 This library tests itself, have a look at [the tests](https://github.com/magic/test/tree/master/test)
