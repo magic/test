@@ -56,7 +56,7 @@
     "@magic-modules/pre": "0.0.2",
     "@magic-themes/docs": "0.0.3",
     "@magic/core": "0.0.18",
-    "@magic/format": "0.0.3"
+    "@magic/format": "0.0.4"
   },
   "contributors": [
     {
