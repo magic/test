@@ -1,8 +1,8 @@
 # @magic/test
 
-simple tests with lots of utility.
+declaratively test your ecmascript module files
 
-test your ecmascript module files without transpiling either your codebase nor the tests.
+no transpiling of either your codebase nor the tests.
 
 incredibly fast.
 
