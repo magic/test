@@ -41,11 +41,11 @@
   "dependencies": {
     "@magic/cli": "0.0.12",
     "@magic/css": "0.7.8",
-    "@magic/deep": "0.1.1",
+    "@magic/deep": "0.1.2",
     "@magic/fs": "0.0.1",
     "@magic/hyperapp": "2.0.3",
-    "@magic/log": "0.1.2",
-    "@magic/types": "0.1.6",
+    "@magic/log": "0.1.3",
+    "@magic/types": "0.1.7",
     "c8": "7.0.0",
     "coveralls": "3.0.9"
   },
