@@ -2,6 +2,7 @@ import path from 'path'
 
 import is from '@magic/types'
 import log from '@magic/log'
+import fs from '@magic/fs'
 
 import { stats, store } from './lib/index.mjs'
 
@@ -35,14 +36,15 @@ const run = async tests => {
     packagePath = 'file:\\\\\\' + packagePath
   }
 
-  const { default: pkg } = await import(packagePath)
-  store.set({ module: pkg.name })
+  const content = await fs.readFile(packagePath, 'utf8')
+  const { name } = JSON.parse(content)
+  store.set({ module: name })
 
   await Promise.all(
     suiteNames.map(async name =>
       runSuite({
-        pkg: pkg.name,
-        parent: pkg.name,
+        pkg: name,
+        parent: name,
         name,
         tests: tests[name],
       }),
