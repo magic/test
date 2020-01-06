@@ -13,7 +13,7 @@
     "calls": "src/bin/calls.mjs"
   },
   "scripts": {
-    "start": "node src/bin/t.mjs",
+    "start": "node src/bin/t.mjs -p",
     "build": "NODE_ENV=production magic build",
     "prod": "NODE_ENV=production magic build serve",
     "clean": "magic clean",
