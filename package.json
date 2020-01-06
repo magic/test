@@ -45,7 +45,7 @@
     "@magic/fs": "0.0.1",
     "@magic/hyperapp": "2.0.3",
     "@magic/log": "0.1.2",
-    "@magic/types": "0.1.4",
+    "@magic/types": "0.1.5",
     "c8": "7.0.0",
     "coveralls": "3.0.9"
   },
