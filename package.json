@@ -20,7 +20,9 @@
     "serve": "magic serve",
     "dev": "magic dev",
     "test": "node src/bin/t.mjs",
-    "calls": "node src/bin/calls.mjs"
+    "calls": "node src/bin/calls.mjs",
+    "format": "f -w --exclude docs",
+    "format:check": "f --exclude docs"
   },
   "engines": {
     "node": ">=12.13.0"
@@ -53,7 +55,8 @@
     "@magic-modules/light-switch": "0.0.3",
     "@magic-modules/pre": "0.0.2",
     "@magic-themes/docs": "0.0.2",
-    "@magic/core": "0.0.14"
+    "@magic/core": "0.0.14",
+    "@magic/format": "0.0.1"
   },
   "contributors": [
     {
