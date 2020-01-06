@@ -10,7 +10,6 @@ const cwd = process.cwd()
 const run = async () => {
   const res = cli({
     options: [
-      ['--help', '-h'],
       ['--verbose', '--loud', '--l', '-l'],
       ['--include', '--inc', '--i', '-i'],
       ['--exclude', '--e', '-e'],
