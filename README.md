@@ -547,5 +547,8 @@ update @magic dependencies to use npm packages instead of github
 #### 0.1.26
 remove commonjs support. node 13+ required. awesome.
 
-#### 0.1.27 - unreleased
+#### 0.1.27
+remove prettier from deps
+
+#### 0.1.28 - unreleased
 ...
