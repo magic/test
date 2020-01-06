@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@magic/cli": "0.0.12",
-    "@magic/css": "0.7.8",
+    "@magic/css": "0.7.9",
     "@magic/deep": "0.1.2",
     "@magic/fs": "0.0.1",
     "@magic/hyperapp": "2.0.3",
