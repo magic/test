@@ -545,7 +545,7 @@ update @magic dependencies to use npm packages instead of github
 * update @magic/types which now uses @magic/deep for is.deep.eq and is.deep.diff
 
 #### 0.1.26
-no commonjs support. node 13+ required. awesome.
+remove commonjs support. node 13+ required. awesome.
 
 #### 0.1.27 - unreleased
 ...
