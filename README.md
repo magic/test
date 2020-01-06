@@ -550,8 +550,9 @@ remove commonjs support. node 13+ required. awesome.
 #### 0.1.27
 remove prettier from deps
 
-#### 0.1.28 - unreleased
+#### 0.1.28
 * package: engineStrict: true
+* update cli: missing @magic/cases dependency
 
 #### 0.1.29 - unreleased
 ...
