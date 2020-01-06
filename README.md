@@ -551,4 +551,7 @@ remove commonjs support. node 13+ required. awesome.
 remove prettier from deps
 
 #### 0.1.28 - unreleased
+* package: engineStrict: true
+
+#### 0.1.29 - unreleased
 ...
