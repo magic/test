@@ -555,4 +555,7 @@ remove prettier from deps
 * update cli: missing @magic/cases dependency
 
 #### 0.1.29 - unreleased
+help shows up for clis without commands, but only if requested using --help
+
+#### 0.1.30 - unreleased
 ...
