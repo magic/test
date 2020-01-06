@@ -39,13 +39,13 @@
     "url": "https://github.com/magic/test/issues"
   },
   "dependencies": {
-    "@magic/cli": "0.0.11",
+    "@magic/cli": "0.0.12",
     "@magic/css": "0.7.8",
     "@magic/deep": "0.1.1",
     "@magic/fs": "0.0.1",
     "@magic/hyperapp": "2.0.3",
     "@magic/log": "0.1.2",
-    "@magic/types": "0.1.4",
+    "@magic/types": "0.1.6",
     "c8": "7.0.0",
     "coveralls": "3.0.9"
   },
