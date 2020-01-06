@@ -1,35 +1,13 @@
+#!/usr/bin/env node
+
 import path from 'path'
-import nfs from 'fs'
+import fs from '@magic/fs'
 import util from 'util'
 
-import { cli } from '@magic/cli/src/index.mjs'
+import { cli } from '@magic/cli'
 import log from '@magic/log'
 
 import run from '../run.mjs'
-
-const help = {
-  name: '@magic/test t',
-  header: `
-simple unit testing. runs all tests found in {cwd}/test
-see https://github.com/magic/test for info`,
-  example: `
-Usage:
-t -p => run quick tests
-t    => run slow tests with coverage through nyc
-t -h => this help text
-
-npm example:
-"scripts": {
-  "test": "t -p",
-  "cover": "t"
-}`,
-}
-
-const fs = {
-  exists: util.promisify(nfs.exists),
-  readdir: util.promisify(nfs.readdir),
-  stat: util.promisify(nfs.stat),
-}
 
 const readRecursive = async dir => {
   const testDir = path.join(process.cwd(), 'test')
@@ -105,7 +83,26 @@ const init = async () => {
       ['--exclude', '--e', '-e'],
     ],
     env: [[['--production', '--prod', '--p', '-p'], 'NODE_ENV', 'production']],
-    help,
+    help: {
+      name: '@magic/test t',
+      header: `
+simple unit testing. runs all tests found in {cwd}/test
+see https://github.com/magic/test for info
+`.trim(),
+
+      example: `
+Usage:
+t -p => run quick tests
+t    => run slow tests with coverage through nyc
+t -h => this help text
+
+npm example:
+"scripts": {
+  "test": "t -p",
+  "cover": "t"
+}
+`.trim(),
+    },
   })
 
   const tests = await readRecursive()

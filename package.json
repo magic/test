@@ -13,16 +13,14 @@
     "calls": "src/bin/calls.js"
   },
   "scripts": {
-    "start": "node src/bin/t.js -p",
+    "start": "node src/bin/t.mjs",
     "build": "NODE_ENV=production magic build",
     "prod": "NODE_ENV=production magic build serve",
     "clean": "magic clean",
     "serve": "magic serve",
     "dev": "magic dev",
-    "test": "node src/bin/t.js",
-    "format": "node src/bin/format.js -w --exclude docs",
-    "format:check": "node src/bin/format.js --exclude docs",
-    "calls": "calls"
+    "test": "node src/bin/t.mjs",
+    "calls": "node src/bin/calls.mjs"
   },
   "engines": {
     "node": ">=12.13.0"
