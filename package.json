@@ -25,7 +25,7 @@
     "format:check": "f --exclude docs"
   },
   "engines": {
-    "node": ">=12.13.0"
+    "node": ">=13.5.0"
   },
   "files": [
     "src"
