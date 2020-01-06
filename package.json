@@ -8,9 +8,9 @@
   "main": "src/index.mjs",
   "module": "src/index.mjs",
   "bin": {
-    "t": "src/bin/t.js",
-    "f": "src/bin/format.js",
-    "calls": "src/bin/calls.js"
+    "t": "src/bin/t.mjs",
+    "magic-test": "src/bin/t.mjs",
+    "calls": "src/bin/calls.mjs"
   },
   "scripts": {
     "start": "node src/bin/t.mjs",
