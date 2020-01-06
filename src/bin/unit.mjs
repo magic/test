@@ -4,7 +4,6 @@ import path from 'path'
 import fs from '@magic/fs'
 import util from 'util'
 
-import { cli } from '@magic/cli'
 import log from '@magic/log'
 
 import run from '../run.mjs'
@@ -76,35 +75,6 @@ const readRecursive = async dir => {
 }
 
 const init = async () => {
-  cli({
-    options: [
-      ['--verbose', '--loud', '--l', '-l'],
-      ['--include', '--inc', '--i', '-i'],
-      ['--exclude', '--e', '-e'],
-    ],
-    env: [[['--production', '--prod', '--p', '-p'], 'NODE_ENV', 'production']],
-    help: {
-      name: '@magic/test t',
-      header: `
-simple unit testing. runs all tests found in {cwd}/test
-see https://github.com/magic/test for info
-`.trim(),
-
-      example: `
-Usage:
-t -p => run quick tests
-t    => run slow tests with coverage through nyc
-t -h => this help text
-
-npm example:
-"scripts": {
-  "test": "t -p",
-  "cover": "t"
-}
-`.trim(),
-    },
-  })
-
   const tests = await readRecursive()
 
   if (!tests) {

@@ -8,6 +8,42 @@ import cli from '@magic/cli'
 const cwd = process.cwd()
 
 const run = async () => {
+  const res = cli({
+    options: [
+      ['--help', '-h'],
+      ['--verbose', '--loud', '--l', '-l'],
+      ['--include', '--inc', '--i', '-i'],
+      ['--exclude', '--e', '-e'],
+    ],
+    env: [[['--production', '--prod', '--p', '-p'], 'NODE_ENV', 'production']],
+    help: {
+      name: '@magic/test t',
+      options: {
+        '--help': 'this help text',
+        '--verbose': 'more output',
+        '--include': 'files to include in coverage',
+        '--exclude': 'files to exclude from coverage',
+      },
+      header: `
+simple unit testing. runs all tests found in {cwd}/test
+see https://github.com/magic/test for info
+`.trim(),
+
+      example: `
+Usage:
+t -p => run quick tests
+t    => run slow tests with coverage through nyc
+t -h => this help text
+
+npm example:
+"scripts": {
+  "test": "t -p",
+  "cover": "t"
+}
+`.trim(),
+    },
+  })
+
   const pkgPath = path.join(cwd, 'package.json')
   const content = await fs.readFile(pkgPath)
   const { name } = JSON.parse(content)
@@ -24,13 +60,20 @@ const run = async () => {
   let cmd = 'node'
   let argv = [binFile]
 
-  if (!process.argv.includes('-p')) {
+  if (process.argv.length > 2) {
+    const [_1, _2, ...argvs] = process.argv
+    argv = [...argv, ...argvs]
+  }
+
+  const { include = ['src'] } = res.args
+
+  if (process.env.NODE_ENV !== 'production') {
     let c8Cmd = 'c8'
     if (isWin) {
       c8Cmd += '.cmd'
     }
     cmd = path.join(cwd, 'node_modules', '.bin', c8Cmd)
-    argv = ['--include', 'src', ...argv]
+    argv = ['--all', '--include', ...include, ...argv]
   }
 
   cli.exec(cmd, argv)
