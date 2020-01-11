@@ -557,5 +557,9 @@ remove prettier from deps
 #### 0.1.29
 help text can show up when --help is used
 
-#### 0.1.30 - unreleased
+#### 0.1.30
+export @magic/fs
+
+#### 0.1.31 - unreleased
 ...
+
