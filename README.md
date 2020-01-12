@@ -560,6 +560,9 @@ help text can show up when --help is used
 #### 0.1.30
 export @magic/fs
 
-#### 0.1.31 - unreleased
+#### 0.1.31
+update dependencies
+
+#### 0.1.32 - unreleased
 ...
 
