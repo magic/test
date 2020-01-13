@@ -32,9 +32,6 @@ const run = async tests => {
   const suiteNames = Object.keys(tests)
 
   let packagePath = path.join(process.cwd(), 'package.json')
-  if (path.sep === '\\') {
-    packagePath = 'file:\\\\\\' + packagePath
-  }
 
   const content = await fs.readFile(packagePath, 'utf8')
   const { name } = JSON.parse(content)
