@@ -564,7 +564,8 @@ export @magic/fs
 update dependencies
 
 #### 0.1.32
-tests now work on windows \o/
+* tests now work on windows \o/
+* uncaught errors will cause tests to fail with process.exit(1)
 
 #### 0.1.33 - unreleased
 ...
