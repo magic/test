@@ -563,6 +563,9 @@ export @magic/fs
 #### 0.1.31
 update dependencies
 
-#### 0.1.32 - unreleased
+#### 0.1.32
+tests now work on windows \o/
+
+#### 0.1.33 - unreleased
 ...
 
