@@ -5,6 +5,7 @@ import fs from '@magic/fs'
 import util from 'util'
 
 import log from '@magic/log'
+import is from '@magic/types'
 
 import run from '../run.mjs'
 
@@ -87,10 +88,18 @@ const init = async () => {
 
 init()
 
-process
-  .on('unhandledRejection', error => {
-    throw error
-  })
-  .on('uncaughtException', error => {
-    throw error
-  })
+const handleError = error => {
+  if (is.string(error)) {
+    error = new Error(error)
+  }
+
+  log.error(error.name, error.message)
+  const stack = error.stack
+    .replace(error.name, '')
+    .replace(error.message, '')
+
+  log.warn('stacktrace', stack)
+  process.exit(1)
+}
+
+process.on('unhandledRejection', handleError).on('uncaughtException', handleError)
