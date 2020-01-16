@@ -567,6 +567,10 @@ update dependencies
 * tests now work on windows \o/
 * uncaught errors will cause tests to fail with process.exit(1)
 
-#### 0.1.33 - unreleased
+#### 0.1.33
+update exported dependencies
+
+
+#### 0.1.34 --- unreleased
 ...
 
