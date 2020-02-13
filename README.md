@@ -573,5 +573,9 @@ update exported dependencies
 #### 0.1.34
 fix: c8 needs "report" command now
 
-#### 0.1.35 --- unreleased
+#### 0.1.35
+* fix: c8 errored if coverage dir did not exist
+* update dependencies
+
+#### 0.1.36 - unreleased
 ...
