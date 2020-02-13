@@ -570,7 +570,8 @@ update dependencies
 #### 0.1.33
 update exported dependencies
 
+#### 0.1.34
+fix: c8 needs "report" command now
 
-#### 0.1.34 --- unreleased
+#### 0.1.35 --- unreleased
 ...
-
