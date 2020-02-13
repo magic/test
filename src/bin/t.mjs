@@ -72,10 +72,10 @@ npm example:
       c8Cmd += '.cmd'
     }
     cmd = path.join(cwd, 'node_modules', '.bin', c8Cmd)
-    argv = ['--all', '--include', ...include, ...argv]
+    argv = ['report', '--all', '--include', ...include, ...argv]
   }
 
-  cli.exec(cmd, argv)
+  cli.spawn(cmd, argv)
 }
 
 run()
