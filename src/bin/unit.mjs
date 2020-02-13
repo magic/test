@@ -94,9 +94,7 @@ const handleError = error => {
   }
 
   log.error(error.name, error.message)
-  const stack = error.stack
-    .replace(error.name, '')
-    .replace(error.message, '')
+  const stack = error.stack.replace(error.name, '').replace(error.message, '')
 
   log.warn('stacktrace', stack)
   process.exit(1)
