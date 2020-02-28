@@ -56,14 +56,24 @@ const run = async () => {
   const isWin = process.platform === 'win32'
 
   let cmd = 'node'
-  let argv = [binFile]
+  let argv = []
+
+  const { include = ['src'], exclude = ['.tmp'] } = res.args
+
+  exclude.forEach(ex => {
+    argv = ['--exclude', ex, ...argv]
+  })
+
+  include.forEach(inc => {
+    argv = ['--include', inc, ...argv]
+  })
+
+  argv.push(binFile)
 
   if (process.argv.length > 2) {
     const [_1, _2, ...argvs] = process.argv
     argv = [...argv, ...argvs]
   }
-
-  const { include = ['src'] } = res.args
 
   if (process.env.NODE_ENV !== 'production') {
     let c8Cmd = 'c8'
@@ -72,7 +82,7 @@ const run = async () => {
     }
 
     cmd = path.join(cwd, 'node_modules', '.bin', c8Cmd)
-    argv = [...argv, '--all', '--include', ...include]
+    argv = ['--all', ...argv]
   }
 
   await cli.spawn(cmd, argv)
