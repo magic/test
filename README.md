@@ -577,5 +577,8 @@ fix: c8 needs "report" command now
 * fix: c8 errored if coverage dir did not exist
 * update dependencies
 
-#### 0.1.36 - unreleased
+#### 0.1.36
+c8: --exclude, --include and --all get applied correctly.
+
+#### 0.1.37 - unreleased
 ...
