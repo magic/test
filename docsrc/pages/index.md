@@ -1,17 +1,19 @@
-export const View = state => [
-  h1(state.title),
+# ${title}
 
-  state.description.map(d => p(d)),
+${state.description}
 
-  GitBadges('magic/test'),
 
-  h2({ id: 'getting-started' }, 'getting started'),
-  p('be in a nodejs project.'),
+<GitBadges>@magic/test</GitBadges>
 
-  h3({ id: 'getting-started-install' }, 'install'),
-  Pre('npm i --save-dev --save-exact @magic/test'),
+## getting started
 
-  Pre(`
+be in a nodejs project.
+
+### #getting-started- install
+
+`npm i --save-dev --save-exact @magic/test`
+
+```
 // create test/functionName.mjs
 import yourTest from '../path/to/your/file.mjs'
 
@@ -19,26 +21,36 @@ export default [
   { fn: () => true, expect: true, info: 'true is true' },
   // note that the yourTest function will be called automagically
   { fn: yourTest, expect: true, info: 'hope this will work ;)'}
-]`),
+]
+```
 
-  h3({ id: 'getting-started-npm-scripts' }, 'npm run scripts'),
-  p('edit package.json'),
-  Pre(`
+### #getting-started- npm scripts
+
+edit package.json
+
+```
 {
   "scripts": {
     "test": "t -p", // quick test, only failing tests log
     "coverage": "t", // get full test output and coverage reports
   }
-}`),
-  p('repeated for easy copy pasting (without comments)'),
-  Pre(`
+}
+```
+
+repeated for easy copy pasting (without comments)
+
+```
   "scripts": {
     "test": "t -p",
     "coverage": "t",
-  }`),
+  }
+```
 
-  h3({ id: 'getting-started-quick-tests' }, 'quick tests (without coverage)'),
-  Pre(`
+### #getting-started- quick tests
+
+without coverage
+
+```
 // run the tests:
 npm test
 
@@ -46,46 +58,55 @@ npm test
 // (failing tests will print, passing tests are silent)
 
 // ### Testing package: @magic/test
-// Ran 2 tests. Passed 2/2 100%`),
+// Ran 2 tests. Passed 2/2 100%
+```
 
-  h3({ id: 'getting-started-coverage' }, 'coverage'),
-  p([
-    '@magic/test will automagically generate coverage reports if it is not called with the -p flag.',
-  ]),
+### #getting-started- coverage
 
-  h3({ id: 'test-suites' }, 'data/fs driven test suite creation:'),
-  h4('expectations for optimal test messages:'),
-  p('src and test directories have the same structure and files'),
-  p('tests one src file per test file'),
-  p('tests one function per suite'),
-  p('tests one feature per test'),
+@magic/test will automagically generate coverage reports if it is not called with the -p flag.
 
-  h4({ id: 'test-suites-fs' }, 'Filesystem based naming'),
-  p('the following directory structure:'),
-  Pre(`
+### #test-suites data/fs driven test suite creation:
+
+#### expectations for optimal test messages:'),
+
+src and test directories have the same structure and files
+tests one src file per test file
+tests one function per suite
+tests one feature per test
+
+#### #test-suites-fs Filesystem based naming
+
+the following directory structure:
+
+```
 ./test/
   ./suite1.mjs
-  ./suite2.mjs`),
+  ./suite2.mjs
+```
 
-  p('yields the same result as exporting the following from ./test/index.mjs'),
+yields the same result as exporting the following from ./test/index.mjs
 
-  h4({ id: 'test-suites-data' }, 'Data driven naming'),
-  Pre(`
+#### #test-suites-data Data driven naming
+
+```
 import suite1 from './suite1'
 import suite2 from './suite2'
 
 export default {
   suite1,
   suite2,
-}`),
+}
+```
 
-  h3('Important - File mappings'),
-  p('if test/index.mjs exists, no other files will be loaded.'),
-  p('if test/lib/index.mjs exists, no other files from that subdirectory will be loaded.'),
+### Important - File mappings
 
-  h3({ id: 'tests' }, 'single test, literal value, function or promise'),
+if test/index.mjs exists, no other files will be loaded.
+if test/lib/index.mjs exists, no other files from that subdirectory will be loaded.
 
-  Pre(`
+### #tests single test
+literal value, function or promise
+
+```
 export default { fn: true, expect: true, info: 'expect true to be true' }
 
 // expect: true is the default and can be omitted
@@ -108,19 +129,19 @@ import { promise } from '@magic/test'
 
 const fnWithCallback = (err, arg, cb) => cb(err, arg)
 
-export default { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect: 'arg' }`),
+export default { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect: "arg" }
 
-  h4({ id: 'tests-types' }, 'testing types'),
-  p([
-    'types can be compared using ',
-    Link({ to: 'https://github.com/magic/types' }, '@magic/types'),
-  ]),
-  p([
-    '@magic/types is a richly featured and thoroughly tested type library without dependencies.',
-    ' it is exported from this library for convenience.',
-  ]),
+```
 
-  Pre(`
+#### #tests-types testing types
+
+
+types can be compared using [@magic/types](https://github.com/magic/types)
+
+@magic/types is a richly featured and thoroughly tested type library without dependencies.
+it is exported from this library for convenience.
+
+```
 import { is } from '@magic/test'
 
 export default [
@@ -144,15 +165,15 @@ export default [
     expect: is.deep.different({ value: 1 }),
     info: 'deep compare arrays/objects for difference',
   },
-]`),
+]
+```
 
-  h4('caveat:'),
-  p([
-    'if you want to test if a function is a function, you need to wrap the function in a function.',
-    ' this is because functions passed to fn get executed automatically.',
-  ]),
+#### caveat:
 
-  Pre(`
+if you want to test if a function is a function, you need to wrap the function in a function.
+this is because functions passed to fn get executed automatically.
+
+```
 import { is } from '@magic/test'
 
 const fnToTest = () => {}
@@ -169,37 +190,44 @@ export default [
     // we do not set expect: true, since that is the default
     info: 'function is a function',
   },
-]`),
+]
+```
 
-  Pre(`
+```
 // will not work as expected and instead call fnToTest
 export default {
   fn: fnToTest,
   expect: is.function,
   info: 'function is a function',
-}`),
+}
+```
 
-  h3({ id: 'tests-multiple' }, ' multiple tests'),
-  p('multiple tests can be created by exporting an array of single test objects.'),
 
-  Pre(`
+### #tests-multiple multiple tests
+
+multiple tests can be created by exporting an array of single test objects.
+
+```
 export default {
   multipleTests: [
     { fn: () => true, expect: true, info: 'expect true to be true' },
     { fn: () => false, expect: false, info: 'expect false to be false' },
   ]
-}`),
+}
+```
 
-  p('multiple tests can also be created by exporting an array of tests.'),
+multiple tests can also be created by exporting an array of tests.
 
-  Pre(`
+```
   export default [
     { fn: () => true, expect: true, info: 'expect true to be true' },
     { fn: () => false, expect: false, info: 'expect false to be false' },
-  ]`),
+  ]
+```
 
-  h3({ id: 'tests-promises' }, 'promises'),
-  Pre(`
+### #tests- promises
+
+```
 import { promise, is } from '@magic/test'
 
 export default [
@@ -220,10 +248,12 @@ export default [
     expect: is.error,
     info: 'handle promise errors in a nice way',
   },
-]`),
+]
+```
 
-  h3({ id: 'tests-cb' }, 'callback functions'),
-  Pre(`
+### #tests-cb callback functions
+
+```
 import { promise, is } from '@magic/test'
 
 const fnWithCallback = (err, arg, cb) => cb(err, arg)
@@ -239,10 +269,14 @@ export default [
     expect: is.error,
     info: 'handle callback function error as promise',
   },
-]`),
+]
+```
 
-  h3({ id: 'tests-hooks' }, 'run functions before and/or after individual test'),
-  Pre(`
+### #tests- hooks
+
+run functions before and/or after individual test
+
+```
 const after = () => {
   global.testing = 'Test has finished, cleanup.'
 }
@@ -263,10 +297,14 @@ export default [
     after,
     expect: () => global.testing === 'changed in test',
   },
-]`),
+]
+```
 
-  h3({ id: 'tests-suite-hooks' }, 'run functions before and/or after a suite of tests'),
-  Pre(`
+### #tests- suite hooks
+
+run functions before and/or after a suite of tests
+
+```
 const afterAll = () => {
   // Test has finished, cleanup.'
   global.testing = undefined
@@ -290,21 +328,21 @@ export default [
     afterAll,
     expect: () => global.testing === 'changed in test',
   },
-]`),
+]
+```
 
-  h2({ id: 'lib' }, 'Utility Belt'),
-  p(
-    '@magic/test exports some utility functions that make working with complex test workflows simpler.',
-  ),
+## #lib Utility Belt
 
-  h4({ id: 'lib-curry' }, 'curry'),
-  p('Currying can be used to split the arguments of a function into multiple nested functions.'),
-  p([
-    'This helps if you have a function with complicated arguments',
-    ' that you just want to quickly shim.',
-  ]),
+@magic/test exports some utility functions that make working with complex test workflows simpler.
 
-  Pre(`
+#### #lib- curry
+
+Currying can be used to split the arguments of a function into multiple nested functions.
+
+This helps if you have a function with complicated arguments
+that you just want to quickly shim.
+
+```
 import { curry } from '@magic/test'
 
 const compare = (a, b) => a === b
@@ -316,19 +354,19 @@ export default {
   expect: true,
   info: 'expect will be called with a and b and a will equal b',
 }
-`),
+```
 
-  h4({ id: 'lib-vals' }, 'vals'),
-  p([
-    'exports some javascript types. more to come.',
-    ' will sometime in the future be the base of a fuzzer.',
-  ]),
+#### #lib- vals
 
-  h3({ id: 'lib-promises' }, 'promises'),
-  p('Helper function to wrap nodejs callback functions and promises with ease.'),
-  p('Handles the try/catch steps internally and returns a resolved or rejected promise.'),
+exports some javascript types. more to come.
+will sometime in the future be the base of a fuzzer.
 
-  Pre(`
+### #lib- promises
+
+Helper function to wrap nodejs callback functions and promises with ease.'
+Handle the try/catch steps internally and return a resolved or rejected promise.'
+
+```
 import { promise, is } from '@magic/test'
 
 export default [
@@ -342,18 +380,20 @@ export default [
     expect: is.error,
     info: 'handle promise errors in a nice way',
   },
-]`),
+]
+```
 
-  h3({ id: 'lib-css' }, 'css'),
-  p([
-    'exports ',
-    Link({ to: 'https://github.com/magic/css' }, '@magic/css'),
-    ' which allows parsing and stringification of css-in-js objects.',
-  ]),
+### #lib- css
 
-  h4({ id: 'lib-trycatch' }, 'tryCatch'),
-  p('allows to test functions without bubbling the errors up into the runtime'),
-  Pre(`
+exports [@magic/css](https://github.com/magic/css),
+which allows parsing and stringification of css-in-js objects.
+
+
+#### #lib- trycatch
+
+allows to test functions without bubbling the errors up into the runtime
+
+```
 import { is, tryCatch } from '@magic/test'
 
 const throwing = () => throw new Error('oops')
@@ -370,13 +410,15 @@ export default [
     expect: true,
     info: 'function does not throw'
   },
-]`),
+]
+```
 
-  h2({ id: 'usage' }, 'Usage'),
+## usage
 
-  h3({ id: 'usage-js' }, 'mjs api:'),
 
-  Pre(`
+### #usage- js
+
+```
 // test/index.mjs
 import run from '@magic/test'
 
@@ -386,14 +428,16 @@ const tests = {
   ],
 }
 
-run(tests)`),
+run(tests)
+```
 
-  h2({ id: 'usage-cli' }, 'cli'),
+## #usage- cli
 
-  h3('package.json (recommended)'),
-  p('Add the magic/test bin scripts to package.json'),
+### package.json (recommended)
 
-  Pre(`
+add the magic/test bin scripts to package.json
+
+```
 {
   "scripts": {
     "test": "t -p",
@@ -402,26 +446,26 @@ run(tests)`),
   "devDependencies": {
     "@magic/test": "github:magic/test"
   }
-}`),
+}
+```
 
-  p('then use the npm run scripts'),
-  Pre(`
+then use the npm run scripts
+
+```
 npm test
 npm run coverage
-  `),
+```
 
-  h3({ id: 'usage-global' }, 'Globally (not recommended):'),
-  p([
-    'you can install this library globally',
-    ' but the recommendation is to add the dependency and scripts to the package.json file.',
-  ]),
+### #usage-global Globally (not recommended):
 
-  p([
-    'this both explains to everyone that your app has these dependencies',
-    ' as well as keeping your bash free of clutter',
-  ]),
+you can install this library globally,
+but the recommendation is to add the dependency and scripts to the package.json file.
 
-  Pre(`
+
+this both explains to everyone that your app has these dependencies
+as well as keeping your bash free of clutter
+
+```
 npm i -g @magic/test
 
 // run tests in production mode
@@ -429,14 +473,10 @@ t -p
 
 // run tests and get coverage in verbose mode
 t
-  `),
+```
 
-  p([
-    'This library tests itself, have a look at ',
-    Link({ to: 'https://github.com/magic/test/tree/master/test' }, 'the tests'),
-  ]),
 
-  p(
-    'Checkout [@magic/types](https://github.com/magic/types) and the other magic libraries for more test examples.',
-  ),
-]
+This library tests itself, have a look at [the tests](https://github.com/magic/test/tree/master/test)
+
+Checkout [@magic/types](https://github.com/magic/types/tree/master/test)
+and the other magic libraries for more test examples.

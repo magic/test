@@ -50,8 +50,9 @@ export const state = {
       items: [
         { to: '-curry', text: 'curry' },
         { to: '-vals', text: 'vals' },
-        { to: '-trycatch', text: 'tryCatch' },
         { to: '-promises', text: 'promises' },
+        { to: '-css', text: 'css' },
+        { to: '-trycatch', text: 'tryCatch' },
       ],
     },
     {
@@ -63,6 +64,5 @@ export const state = {
         { to: '-global', text: 'npm i -g' },
       ],
     },
-    { to: '/#changelog', text: 'changelog' },
   ],
 }
