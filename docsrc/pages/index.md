@@ -67,7 +67,7 @@ npm test
 
 ### #test-suites data/fs driven test suite creation:
 
-#### expectations for optimal test messages:'),
+#### expectations for optimal test messages:
 
 src and test directories have the same structure and files
 tests one src file per test file
