@@ -586,5 +586,8 @@ fix: arguments for both node and c8 tests work. broken in 0.1.36
 #### 0.1.38 
 update dependencies, minimist sec issue.
 
-#### 0.1.39 - unreleased
+#### 0.1.39 
+update coveralls, still minimist issue above.
+
+##### 0.1.40 - unreleased
 ...
