@@ -592,5 +592,8 @@ update coveralls, fix minimist issue above.
 ##### 0.1.40 
 update dependencies
 
-##### 0.1.41 - unreleased
+##### 0.1.41 
+update dependencies
+
+##### 0.1.42 - unreleased
 ...
