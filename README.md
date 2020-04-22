@@ -595,5 +595,8 @@ update dependencies
 ##### 0.1.41 
 update dependencies
 
-##### 0.1.42 - unreleased
+##### 0.1.42 
+update dependencies
+
+##### 0.1.43 - unreleased
 ...
