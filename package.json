@@ -47,7 +47,7 @@
     "@magic/log": "0.1.4",
     "@magic/types": "0.1.11",
     "c8": "7.1.0",
-    "coveralls": "3.0.13"
+    "coveralls": "3.0.14"
   },
   "devDependencies": {
     "@magic-modules/gdpr": "0.0.15",
