@@ -583,20 +583,23 @@ c8: --exclude, --include and --all get applied correctly.
 #### 0.1.37
 fix: arguments for both node and c8 tests work. broken in 0.1.36
 
-#### 0.1.38 
+#### 0.1.38
 update dependencies, minimist sec issue.
 
-#### 0.1.39 
+#### 0.1.39
 update coveralls, fix minimist issue above.
 
-##### 0.1.40 
+##### 0.1.40
 update dependencies
 
-##### 0.1.41 
+##### 0.1.41
 update dependencies
 
-##### 0.1.42 
+##### 0.1.42
 update dependencies
 
-##### 0.1.43 - unreleased
+##### 0.1.43
+update dependencies
+
+##### 0.1.44 - unreleased
 ...
