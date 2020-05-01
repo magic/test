@@ -46,7 +46,7 @@
     "@magic/hyperapp": "2.0.3",
     "@magic/log": "0.1.4",
     "@magic/types": "0.1.11",
-    "c8": "7.1.0",
+    "c8": "github:bcoe/c8#d021d334bda954dc9b04758c580df02f85924c35",
     "coveralls": "3.1.0"
   },
   "devDependencies": {
