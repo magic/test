@@ -602,7 +602,10 @@ update dependencies
 update dependencies
 
 ##### 0.1.44
+update dependencies
+
+##### 0.1.45
 security fix: update dependencies, yargs-parser.
 
-##### 0.1.45 - unreleased
+##### 0.1.46 - unreleased
 ...
