@@ -607,5 +607,8 @@ update dependencies
 ##### 0.1.45
 security fix: update dependencies, yargs-parser.
 
-##### 0.1.46 - unreleased
+##### 0.1.46
+update @magic/css
+
+##### 0.1.47 - unreleased
 ...
