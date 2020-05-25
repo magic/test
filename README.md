@@ -617,5 +617,8 @@ update c8, yargs-parser
 bump required node version to 14.2.0
 update dependencies
 
-##### 0.1.49 - unreleased
+##### 0.1.49 
+update @magic/css
+
+##### 0.1.50 - unreleased
 ...
