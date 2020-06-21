@@ -620,9 +620,12 @@ update dependencies
 ##### 0.1.49
 update @magic/css
 
-##### 0.1.50 
+##### 0.1.50
 * remove @magic/css export
 * update c8
 
 ##### 0.1.51 - unreleased
+* update dependencies
+
+##### 0.1.52 - unreleased
 ...
