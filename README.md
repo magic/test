@@ -627,5 +627,9 @@ update @magic/css
 ##### 0.1.51
 * update dependencies
 
-##### 0.1.52 - unreleased
+##### 0.1.52
+* update dependencies
+* remove hyperapp from exports.
+
+##### 0.1.53 - unreleased
 ...
