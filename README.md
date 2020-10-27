@@ -643,5 +643,8 @@ update dependencies
 ##### 0.1.56
 update dependencies
 
-##### 0.1.57 - unreleased
+##### 0.1.57
+update dependencies
+
+##### 0.1.58 - unreleased
 ...
