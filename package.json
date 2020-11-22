@@ -39,7 +39,7 @@
     "url": "https://github.com/magic/test/issues"
   },
   "dependencies": {
-    "@magic/cli": "0.0.29",
+    "@magic/cli": "0.0.30",
     "@magic/deep": "0.1.4",
     "@magic/fs": "0.0.9",
     "@magic/log": "0.1.7",
