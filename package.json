@@ -44,7 +44,7 @@
     "@magic/fs": "0.0.9",
     "@magic/log": "0.1.7",
     "@magic/types": "0.1.13",
-    "c8": "7.3.5",
+    "c8": "7.4.0",
     "coveralls": "3.1.0"
   },
   "devDependencies": {
