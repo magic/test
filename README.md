@@ -655,5 +655,9 @@ update dependencies
 ##### 0.1.59
 update dependencies
 
-##### 0.1.60 - unreleased
+##### 0.1.60
+* bump required node version to 14.15.4
+* update dependencies
+
+##### 0.1.61 - unreleased
 ...
