@@ -24,11 +24,11 @@ export default [
     info: 'Also works with spread arguments',
   },
   {
-    fn: () => expectedArguments(function(a, b, c) {}),
+    fn: () => expectedArguments(function (a, b, c) {}),
     expect: is.len.eq(3),
   },
   {
-    fn: () => expectedArguments(function() {}),
+    fn: () => expectedArguments(function () {}),
     expect: is.empty,
   },
 ]

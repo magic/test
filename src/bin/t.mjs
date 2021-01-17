@@ -61,18 +61,16 @@ const run = async () => {
   const { include = ['src'], exclude = ['.tmp'] } = res.args
 
   if (process.env.NODE_ENV === 'production') {
-
   }
 
   if (process.env.NODE_ENV !== 'production') {
     exclude.forEach(ex => {
-        argv = ['--exclude', ex, ...argv]
+      argv = ['--exclude', ex, ...argv]
     })
 
     include.forEach(inc => {
       argv = ['--include', inc, ...argv]
     })
-
   }
 
   argv.push(binFile)
