@@ -44,7 +44,7 @@
     "@magic/fs": "0.0.10",
     "@magic/log": "0.1.8",
     "@magic/types": "0.1.14",
-    "c8": "7.4.0",
+    "c8": "7.5.0",
     "coveralls": "3.1.0"
   },
   "devDependencies": {
@@ -53,7 +53,7 @@
     "@magic-modules/no-spy": "0.0.6",
     "@magic-modules/pre": "0.0.10",
     "@magic-themes/docs": "0.0.12",
-    "@magic/core": "0.0.101",
+    "@magic/core": "0.0.103",
     "@magic/format": "0.0.21"
   },
   "contributors": [
