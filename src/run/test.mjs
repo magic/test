@@ -1,5 +1,6 @@
 import is from '@magic/types'
 import { default as log } from '@magic/log'
+import tags from '@magic/tags'
 
 import { cleanError, cleanFunctionString, stats } from '../lib/index.mjs'
 
@@ -33,7 +34,7 @@ const runTest = async test => {
     test.expect = true
   }
 
-  const { fn, name, pkg, before, parent, expect, runs = 1 } = test
+  const { fn, name, pkg, before, html, parent, expect, runs = 1 } = test
 
   if (!test.hasOwnProperty('fn')) {
     if (is.object(test) && is.object(test.tests)) {
@@ -55,6 +56,12 @@ const runTest = async test => {
     }
 
     log.error('test.fn is not a function', test.key, test.info || '')
+  }
+
+  if (html) {
+    tags.map(tag => {
+      global[tag] = (...args) => [tag, ...args]
+    })
   }
 
   let after
