@@ -39,6 +39,7 @@ incredibly fast.
   * [callback functions](#tests-cb)
   * [run function before / after individual tests](#tests-hooks)
   * [run function before / after suite of tests](#tests-suite-hooks)
+  * [test @magic-modules](#tests-magic-modules)
 * [utility functions](#lib)
   * [curry](#lib-curry)
   * [vals](#lib-vals)
@@ -318,6 +319,17 @@ export default [
     afterAll,
     expect: () => global.testing === 'changed in test',
   },
+```
+
+##### <a name="tests-magic-modules"></a>test @magic-modules
+
+@magic-modules assume all html tags to be globally defined.
+to create those globals for your test and check if a @magic-module returns the correct markup, just add an html: true flag to the test:
+
+```javascript
+export default [
+  { fn: () => i('testing'), expect: ['i', 'testing'], info: '@magic/test can now test html' },
+]
 ```
 
 #### <a name="lib">Utility Belt
