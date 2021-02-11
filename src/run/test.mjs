@@ -62,6 +62,8 @@ const runTest = async test => {
     tags.map(tag => {
       global[tag] = (...args) => [tag, ...args]
     })
+
+    global.CHECK_PROPS = () => {}
   }
 
   let after
