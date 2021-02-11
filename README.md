@@ -662,5 +662,9 @@ update dependencies
 ##### 0.1.61 
 update dependencies
 
-##### 0.1.62 - unreleased
+##### 0.1.62 
+* add html flag to tests, now @magic-modules can be tested \o/
+* update dependencies
+
+##### 0.1.63 - unreleased
 ...
