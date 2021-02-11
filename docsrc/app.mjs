@@ -44,6 +44,10 @@ export const state = {
           to: '-suite-hooks',
           text: 'run function before / after suite of tests',
         },
+        {
+          to: '-magic-modules',
+          text: 'test @magic-modules',
+        },
       ],
     },
     {

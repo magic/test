@@ -331,6 +331,33 @@ export default [
 ]
 ```
 
+### #tests- magic modules
+
+@magic-modules assume all html tags to be globally defined.
+to create those globals for your test and check if a @magic-module returns the correct markup, just add an html: true flag to the test:
+
+```
+const expect = [
+  'i',
+  [
+    { class: 'testing' },
+    'testing',
+  ],
+]
+
+const props = { class: 'testing' }
+
+export default [
+  // note that fn is a wrapped function, we can not call i directly as we could other functions
+  {
+    fn: () => i(props, 'testing'),
+    expect,
+    info: 'magic/test can now test html',
+  },
+]
+```
+
+
 ## #lib Utility Belt
 
 @magic/test exports some utility functions that make working with complex test workflows simpler.
