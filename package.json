@@ -41,7 +41,7 @@
   "dependencies": {
     "@magic/cli": "0.0.31",
     "@magic/deep": "0.1.5",
-    "@magic/fs": "0.0.10",
+    "@magic/fs": "0.0.11",
     "@magic/log": "0.1.8",
     "@magic/tags": "0.0.6",
     "@magic/types": "0.1.14",
