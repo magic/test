@@ -681,5 +681,8 @@ update dependencies
 ##### 0.1.63
 update dependencies (c8)
 
-##### 0.1.64 - unreleased
+##### 0.1.64
+update dependencies (@magic/fs)
+
+##### 0.1.65 - unreleased
 ...
