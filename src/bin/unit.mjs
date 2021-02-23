@@ -2,7 +2,6 @@
 
 import path from 'path'
 import fs from '@magic/fs'
-import util from 'util'
 
 import log from '@magic/log'
 import is from '@magic/types'
