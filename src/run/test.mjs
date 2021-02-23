@@ -2,31 +2,7 @@ import is from '@magic/types'
 import { default as log } from '@magic/log'
 import tags from '@magic/tags'
 
-import { cleanError, cleanFunctionString, stats } from '../lib/index.mjs'
-
-const getKey = (pkg, parent, name) => {
-  let key = ''
-  if (parent && parent !== pkg) {
-    key = `${pkg}`
-  }
-  if (parent && parent !== name) {
-    if (!parent.startsWith('/') && parent !== pkg) {
-      parent = `.${parent}`
-    }
-    key += `${parent}`
-  }
-
-  if (name) {
-    if (parent && parent !== name && parent !== pkg && !name.startsWith('/')) {
-      key += '#'
-    } else if (!name.startsWith('/')) {
-      name = `/${name}`
-    }
-
-    key += name
-  }
-  return key
-}
+import { cleanError, cleanFunctionString, getTestKey, stats } from '../lib/index.mjs'
 
 const runTest = async test => {
   // could be undefined, we expect true to provide a default
@@ -63,7 +39,7 @@ const runTest = async test => {
       global[tag] = (...args) => [tag, ...args]
     })
 
-    global.CHECK_PROPS = () => {}
+    global.CHECK_PROPS = () => { }
   }
 
   let after
@@ -82,7 +58,7 @@ const runTest = async test => {
 
   const msg = cleanFunctionString(fn)
 
-  const key = getKey(pkg, parent, name)
+  const key = getTestKey(pkg, parent, name)
 
   let pass = false
 
