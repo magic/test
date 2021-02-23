@@ -124,7 +124,11 @@ const runTest = async test => {
         if (exp && res && is.function(exp.toString) && is.function(res.toString)) {
           pass = exp.toString() === res.toString()
         } else {
-          pass = exp === res
+          if (exp === res) {
+            pass = true
+          } else if (is.deep.equal(exp, res)) {
+            pass = true
+          }
         }
       }
       if (!pass) {
