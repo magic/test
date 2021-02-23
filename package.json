@@ -40,10 +40,10 @@
   },
   "dependencies": {
     "@magic/cli": "0.0.31",
+    "@magic/core": "0.0.109",
     "@magic/deep": "0.1.5",
     "@magic/fs": "0.0.11",
     "@magic/log": "0.1.8",
-    "@magic/tags": "0.0.6",
     "@magic/types": "0.1.14",
     "c8": "7.6.0",
     "coveralls": "3.1.0"
@@ -54,7 +54,6 @@
     "@magic-modules/no-spy": "0.0.6",
     "@magic-modules/pre": "0.0.10",
     "@magic-themes/docs": "0.0.13",
-    "@magic/core": "0.0.107",
     "@magic/format": "0.0.22"
   },
   "contributors": [
