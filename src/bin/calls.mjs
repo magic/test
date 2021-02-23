@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import child_process from 'child_process'
 import path from 'path'
 
 import coveralls from 'coveralls'
