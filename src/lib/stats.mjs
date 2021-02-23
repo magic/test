@@ -85,8 +85,8 @@ export const info = () => {
           log.color('red', '* fail:'),
           key.replace(/\./g, '/'),
           `executed: "${msg}"\n`,
-          `got: "${result}"\n`,
-          `wanted: "${expString}"\n`,
+          `got: "${JSON.stringify(result, null, 2)}"\n`,
+          `wanted: "${JSON.stringify(expString, null, 2)}"\n`,
           info ? `info: ${log.paint('grey', info)}\n` : '',
         )
       }
