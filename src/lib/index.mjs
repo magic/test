@@ -1,7 +1,6 @@
 export { cleanError } from './cleanError.mjs'
 export { cleanFunctionString } from './cleanFunctionString.mjs'
 export { curry } from './curry.mjs'
-// export { deepMerge } from './deepMerge.mjs'
 export * from './env.mjs'
 export { promise } from './promise.mjs'
 export { stats } from './stats.mjs'
