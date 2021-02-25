@@ -2,6 +2,7 @@ import { default as log } from '@magic/log'
 
 import store from './store.mjs'
 import { env } from './env.mjs'
+import { is } from '../index.mjs'
 
 const defaultStats = {
   pass: 0,
@@ -81,12 +82,26 @@ export const info = () => {
           log.info(log.color('green', '* pass:'), 'got', result, 'expected', expString)
         }
       } else {
+        const stringify = object => {
+          if (is.function(object)) {
+            return object.toString()
+          } else if (is.objectNative(object)) {
+            Object.entries(object).map(([k, v]) => {
+              object[k] = stringify(v)
+            })
+          } else if (is.array(object)) {
+            object = object.map(stringify)
+          }
+
+          return object
+        }
+
         log(
           log.color('red', '* fail:'),
           key.replace(/\./g, '/'),
           `executed: "${msg}"\n`,
-          `got: "${JSON.stringify(result, null, 2)}"\n`,
-          `wanted: "${JSON.stringify(expString, null, 2)}"\n`,
+          `got: "${JSON.stringify(stringify(result), null, 2)}"\n`,
+          `wanted: "${JSON.stringify(stringify(expString), null, 2)}"\n`,
           info ? `info: ${log.paint('grey', info)}\n` : '',
         )
       }
