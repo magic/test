@@ -8,7 +8,9 @@ import { stats, store } from './lib/index.mjs'
 
 import runSuite from './run/suite.mjs'
 
-const run = async tests => {
+const cwd = process.cwd()
+
+export const run = async tests => {
   if (is.function(tests)) {
     tests = tests()
   }
@@ -31,7 +33,7 @@ const run = async tests => {
 
   const suiteNames = Object.keys(tests)
 
-  let packagePath = path.join(process.cwd(), 'package.json')
+  let packagePath = path.join(cwd, 'package.json')
 
   const content = await fs.readFile(packagePath, 'utf8')
   const { name } = JSON.parse(content)
@@ -54,5 +56,3 @@ const run = async tests => {
 
   stats.info()
 }
-
-export default run
