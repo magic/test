@@ -39,7 +39,7 @@ const runTest = async test => {
       global[tag] = (...args) => [tag, ...args]
     })
 
-    global.CHECK_PROPS = () => { }
+    global.CHECK_PROPS = () => {}
   }
 
   let after
