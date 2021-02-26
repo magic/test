@@ -3,6 +3,8 @@ import path from 'path'
 import is from '@magic/types'
 import log from '@magic/log'
 import fs from '@magic/fs'
+import cases from '@magic/cases'
+import { renderToString } from '@magic/core'
 
 const cwd = process.cwd()
 
@@ -33,43 +35,24 @@ export const maybeInjectMagic = async () => {
     global.modules = app.modules
     global.actions = app.actions
     global.effects = app.effects
+    global.lib = app.lib
+    global.helpers = app.helpers
+    global.subscriptions = app.subscriptions
 
-    // Object.entries(app).map(([k, v]) => {
-    //   global[k] = v
-    // })
+    global.lib = Object.fromEntries(
+      Object.entries(app.lib).map(([k, v]) => {
+        return [cases.camel(k), `lib.${cases.camel(k)}`]
+      }),
+    )
 
-    const cleanUpAst = ast => {
-      if (is.array(ast)) {
-        return ast.map(cleanUpAst)
-      }
-
-      if (ast.name) {
-        if (is.empty(ast.props) && is.empty(ast.children)) {
-          return ast.name
-        }
-
-        const result = [ast.name]
-
-        if (!is.empty(ast.props)) {
-          result.push(ast.props)
-        }
-
-        if (!is.empty(ast.children)) {
-          result.push(ast.children.map(cleanUpAst))
-        }
-
-        return result
-      } else {
-        return ast
-      }
-    }
+    const renderString = fn => (...args) =>
+      renderToString(fn(...args))
+        .replace(/&lt;/gim, '<')
+        .replace(/&gt;/gim, '>')
+        .replace(/&quot;/gim, '"')
 
     Object.entries(modules).map(([key, fn]) => {
-      global[key] = (...args) => {
-        const ast = fn(...args)
-
-        return cleanUpAst(ast)
-      }
+      global[key] = renderString(fn)
     })
   }
 }
