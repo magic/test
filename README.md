@@ -684,5 +684,9 @@ update dependencies (c8)
 ##### 0.1.64
 update dependencies (@magic/fs)
 
-##### 0.1.65 - unreleased
+##### 0.1.65
+* update dependencies
+* testing of @magic-modules is now built in
+
+##### 0.1.66 - unreleased
 ...
