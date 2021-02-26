@@ -34,14 +34,6 @@ const runTest = async test => {
     log.error('test.fn is not a function', test.key, test.info || '')
   }
 
-  if (html) {
-    tags.map(tag => {
-      global[tag] = (...args) => [tag, ...args]
-    })
-
-    global.CHECK_PROPS = () => {}
-  }
-
   let after
   if (is.function(before)) {
     try {
