@@ -686,7 +686,8 @@ update dependencies (@magic/fs)
 
 ##### 0.1.65
 * update dependencies
-* testing of @magic-modules is now built in
+* testing of @magic-modules is now built in.
+  if @magic/core is installed, the tests will "just work" and return html for @magic-modules
 
 ##### 0.1.66 - unreleased
 ...
