@@ -69,10 +69,10 @@ npm test
 
 #### expectations for optimal test messages:
 
-src and test directories have the same structure and files
-tests one src file per test file
-tests one function per suite
-tests one feature per test
+* src and test directories have the same directory structure and filenames
+* tests one src file per test file
+* tests one function per test suite
+* tests one feature per test unit
 
 #### #test-suites-fs Filesystem based naming
 
