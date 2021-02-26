@@ -1,11 +1,11 @@
 export default [
   {
-    fn: () => i(['testing', p('testing')]),
+    fn: i(['testing', p('testing')]),
     expect: '<i>testing<p>testing</p></i>',
     info: 'html i is defined',
   },
   {
-    fn: () => i({ class: 'testing' }, 'testing'),
+    fn: i({ class: 'testing' }, 'testing'),
     expect: '<i class="testing">testing</i>',
     info: '@magic/test can now test html',
   },
