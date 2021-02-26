@@ -1,16 +1,17 @@
-const html = true
-
 export default [
   {
     fn: () => i(['testing', p('testing')]),
-    expect: ['i', ['testing', ['p', 'testing']]],
+    expect: '<i>testing<p>testing</p></i>',
     info: 'html i is defined',
-    html,
   },
   {
     fn: () => i({ class: 'testing' }, 'testing'),
-    expect: ['i', { class: 'testing' }, 'testing'],
+    expect: '<i class="testing">testing</i>',
     info: '@magic/test can now test html',
-    html,
+  },
+  {
+    fn: Link({ to: '/testing' }),
+    expect: '<a href="/testing">/testing</a>',
+    info: '@magic builtin modules also work',
   },
 ]
