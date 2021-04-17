@@ -7,6 +7,7 @@
   "homepage": "https://magic.github.io/test",
   "main": "src/index.mjs",
   "module": "src/index.mjs",
+  "type": "module",
   "bin": {
     "t": "src/bin/t.mjs",
     "magic-test": "src/bin/t.mjs",
