@@ -1,6 +1,5 @@
 import is from '@magic/types'
 import { default as log } from '@magic/log'
-import tags from '@magic/tags'
 
 import { cleanError, cleanFunctionString, getTestKey, stats } from '../lib/index.mjs'
 
