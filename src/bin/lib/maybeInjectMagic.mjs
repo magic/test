@@ -1,5 +1,6 @@
 import path from 'path'
 
+import is from '@magic/types'
 import log from '@magic/log'
 import fs from '@magic/fs'
 import cases from '@magic/cases'
@@ -11,18 +12,18 @@ export const maybeInjectMagic = async () => {
   let config
   let importRoot = path.join('@magic', 'core', 'src')
 
-  try {
-    const pkg = await fs.readFile(path.join(cwd, 'package.json'))
-    const { name } = JSON.parse(pkg)
-    if (name === '@magic/core') {
-      importRoot = path.join(cwd, 'src')
-    }
-
-    const { runConfig } = await import(`${importRoot}/config.mjs`)
-    config = await runConfig()
-  } catch (e) {
-    log.error(e)
+  const pkg = await fs.readFile(path.join(cwd, 'package.json'))
+  const { name } = JSON.parse(pkg)
+  if (name === '@magic/core') {
+    importRoot = path.join(cwd, 'src')
   }
+
+  const { runConfig } = await import(`${importRoot}/config.mjs`)
+
+  // bail early if magic is not setup
+  try {
+    config = await runConfig()
+  } catch (e) { }
 
   if (config) {
     const { default: runApp } = await import(`${importRoot}/modules/app.mjs`)
