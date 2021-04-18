@@ -1,7 +1,5 @@
 import path from 'path'
 
-import is from '@magic/types'
-import log from '@magic/log'
 import fs from '@magic/fs'
 import cases from '@magic/cases'
 import { renderToString } from '@magic/core'
