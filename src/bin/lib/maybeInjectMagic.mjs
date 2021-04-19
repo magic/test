@@ -20,7 +20,7 @@ export const maybeInjectMagic = async () => {
 
   // bail early if magic is not setup
   try {
-    config = await runConfig()
+    config = await runConfig({ silent: true })
   } catch (e) { }
 
   if (config) {
