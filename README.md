@@ -698,5 +698,8 @@ update dependencies (@magic/fs)
 ##### 0.1.68
 update @magic/core to fix tests if magic.js does not exist
 
-##### 0.1.69 - unreleased
+##### 0.1.69
+import of magic config should work on windows
+
+##### 0.1.70 - unreleased
 ...
