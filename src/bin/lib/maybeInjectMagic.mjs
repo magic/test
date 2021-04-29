@@ -13,7 +13,7 @@ export const maybeInjectMagic = async () => {
   const pkg = await fs.readFile(path.join(cwd, 'package.json'))
   const { name } = JSON.parse(pkg)
   if (name === '@magic/core') {
-    importRoot = path.join(cwd, 'src')
+    importRoot = cwd + '/src'
   }
 
   const { runConfig } = await import(`${importRoot}/config.mjs`)
