@@ -21,7 +21,7 @@ export const maybeInjectMagic = async () => {
   // bail early if magic is not setup
   try {
     config = await runConfig({ silent: true })
-  } catch (e) { }
+  } catch (e) {}
 
   if (config) {
     const { default: runApp } = await import(`${importRoot}/modules/app.mjs`)
