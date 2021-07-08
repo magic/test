@@ -55,7 +55,7 @@
     "@magic-modules/no-spy": "0.0.6",
     "@magic-modules/pre": "0.0.10",
     "@magic-themes/docs": "0.0.13",
-    "@magic/format": "0.0.23"
+    "@magic/format": "0.0.24"
   },
   "contributors": [
     {
