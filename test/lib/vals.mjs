@@ -45,7 +45,10 @@ const compare = fn => item => {
   return fn(item)
 }
 
-const equal = ({ fn, compare, items }) => () => items.every(compare(fn))
+const equal =
+  ({ fn, compare, items }) =>
+  () =>
+    items.every(compare(fn))
 
 const createTest = ({ fn, items, compare }) => ({
   fn: equal({ fn, items, compare }),

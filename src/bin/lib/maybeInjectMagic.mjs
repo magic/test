@@ -43,11 +43,13 @@ export const maybeInjectMagic = async () => {
       }),
     )
 
-    const renderString = fn => (...args) =>
-      renderToString(fn(...args))
-        .replace(/&lt;/gim, '<')
-        .replace(/&gt;/gim, '>')
-        .replace(/&quot;/gim, '"')
+    const renderString =
+      fn =>
+      (...args) =>
+        renderToString(fn(...args))
+          .replace(/&lt;/gim, '<')
+          .replace(/&gt;/gim, '>')
+          .replace(/&quot;/gim, '"')
 
     Object.entries(modules).map(([key, fn]) => {
       global[key] = renderString(fn)
