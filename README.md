@@ -643,7 +643,7 @@ update @magic/css
 * update dependencies
 * remove hyperapp from exports.
 
-##### 0.1.53 
+##### 0.1.53
 update dependencies
 
 ##### 0.1.54
@@ -671,10 +671,10 @@ update dependencies
 * bump required node version to 14.15.4
 * update dependencies
 
-##### 0.1.61 
+##### 0.1.61
 update dependencies
 
-##### 0.1.62 
+##### 0.1.62
 * add html flag to tests, now @magic-modules can be tested \o/
 * update dependencies
 
@@ -704,5 +704,8 @@ import of magic config should work on windows
 ##### 0.1.70
 update dependencies
 
-##### 0.1.71 - unreleased
+##### 0.1.71
+update dependencies
+
+##### 0.1.72 - unreleased
 ...
