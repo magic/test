@@ -148,7 +148,7 @@ export default { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect: 
 
   p([
     '@magic/types is a richly featured and thoroughly tested type library without dependencies.',
-    ' it is exported from this library for convenience.'
+    ' it is exported from this library for convenience.',
   ]),
 
   Pre(`
@@ -400,7 +400,7 @@ export default {
 
   p([
     'exports some javascript types. more to come.',
-    ' will sometime in the future be the base of a fuzzer.'
+    ' will sometime in the future be the base of a fuzzer.',
   ]),
 
   h3({ id: 'lib-promises' }, 'promises'),
@@ -502,7 +502,7 @@ npm run coverage
 
   p([
     'you can install this library globally,',
-    ' but the recommendation is to add the dependency and scripts to the package.json file.'
+    ' but the recommendation is to add the dependency and scripts to the package.json file.',
   ]),
 
   p([
