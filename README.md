@@ -710,5 +710,8 @@ update dependencies
 ##### 0.1.72
 update @magic/types and intermediate deps to avoid circular dependency
 
-###### 0.1.73 - unreleased
+##### 0.1.73
+update dependencies
+
+##### 0.1.74 - unreleased
 ...
