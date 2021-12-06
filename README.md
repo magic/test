@@ -722,5 +722,8 @@ update dependencies
 ##### 0.1.76
 update dependencies
 
-##### 0.1.77 - unreleased
+##### 0.1.77
+update dependencies
+
+##### 0.1.78 - unreleased
 ...
