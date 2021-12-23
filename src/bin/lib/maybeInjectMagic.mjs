@@ -1,13 +1,12 @@
 import path from 'path'
 
-import fs from '@magic/fs'
 import cases from '@magic/cases'
-import { renderToString } from '@magic/core'
+import fs from '@magic/fs'
+import log from '@magic/log'
 
 const cwd = process.cwd()
 
 export const maybeInjectMagic = async () => {
-  let config
   let importRoot = path.join('@magic', 'core', 'src')
 
   const pkg = await fs.readFile(path.join(cwd, 'package.json'))
@@ -16,12 +15,30 @@ export const maybeInjectMagic = async () => {
     importRoot = cwd + '/src'
   }
 
-  const { runConfig } = await import(`${importRoot}/config.mjs`)
+  let config
+  let renderToString
 
   // bail early if magic is not setup
   try {
+    const core = await import('@magic/core')
+    renderToString = core.renderToString
+
+    const { runConfig } = await import(`${importRoot}/config.mjs`)
     config = await runConfig({ silent: true })
-  } catch (e) {}
+  } catch (e) {
+    if (e.code !== 'ERR_MODULE_NOT_FOUND') {
+      log.error(e)
+      return
+    }
+  }
+
+  if (!renderToString) {
+    log.error(
+      'E_NO_INSTALL',
+      'maybeInjectMagic: @magic/core import failed. please run "npm install --save-exact @magic/core".',
+    )
+    process.exit(1)
+  }
 
   if (config) {
     const { default: runApp } = await import(`${importRoot}/modules/app.mjs`)
