@@ -5,6 +5,8 @@ import path from 'path'
 import cli from '@magic/cli'
 import fs from '@magic/fs'
 
+import { isProd } from '../index.mjs'
+
 const cwd = process.cwd()
 const res = cli({
   options: [
@@ -60,10 +62,7 @@ const run = async () => {
 
   const { include = ['src'], exclude = ['.tmp'] } = res.args
 
-  if (process.env.NODE_ENV === 'production') {
-  }
-
-  if (process.env.NODE_ENV !== 'production') {
+  if (!isProd) {
     exclude.forEach(ex => {
       argv = ['--exclude', ex, ...argv]
     })
@@ -80,7 +79,7 @@ const run = async () => {
     argv = [...argv, ...argvs]
   }
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (!isProd) {
     let c8Cmd = 'c8'
     if (isWin) {
       c8Cmd += '.cmd'
