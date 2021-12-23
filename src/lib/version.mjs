@@ -1,56 +1,55 @@
+import deep from '@magic/deep'
 import is from '@magic/types'
-import { default as log } from '@magic/log'
 
-export const testLib = (lib, spec, k) =>
-  Object.entries(spec).filter(([name, fn]) => {
-    if (is.array(fn)) {
-      const [t, fns] = fn
-      if (!t(lib[name])) {
-        return false
+export const test = (lib = {}, spec = {}, parent = '') => {
+  return Object.entries(lib).map(([ name, subLib ]) => {
+    const fullName = `${parent ? `${parent}.` : ''}${name}`
+    const subSpec = spec[ name ]
+
+    if (!subSpec) {
+      return [ {
+        fn: false, info: `Spec missing for ${fullName}`
+      } ]
+    }
+
+    if (is.array(subSpec)) {
+      const [ parentType, subSpecChildren ] = subSpec
+
+      const fn = is[ parentType ]
+
+      if (!is.fn(fn)) {
+        return [ { fn: false, info: `Spec for ${fullName} is wrong, got: ${parentType}, but @magic/types does not have it.` } ]
       }
 
-      const entries = testLib(lib[name], fns, name)
-      return entries.length
-    }
+      const subTests = test(subLib, subSpecChildren, `${parent}${name}`)
 
-    const pass = fn(lib[name])
-
-    if (!pass) {
-      let err = `Missing lib function `
-      if (k) {
-        err = `${err}${k}.`
+      return [
+        { fn: fn(subLib), info: `Spec for ${fullName} is wrong, got ${parentType}, type is ${typeof subLib}` },
+        // recursive for all children missing
+        ...subTests,
+      ]
+    } else if (is.string(subSpec)) {
+      if (subSpec === 'obj' || subSpec === 'object') {
+        return [
+          { fn: false, info: `Spec for ${fullName} specifies object, but no children defined. change to an array [parentType, { subName: subType }]` }
+        ]
       }
 
-      err = `${err}${name}`
-      log.error(err)
-    }
-    return !pass
-  })
+      const fn = is[ subSpec ]
 
-export const testSpec = (spec, lib, k) =>
-  Object.entries(lib).filter(([name, fn]) => {
-    const specKeys = Object.keys(spec)
-    if (!specKeys.includes(name)) {
-      log.error('Missing spec value', name)
-    }
-    return !specKeys.includes(name)
-  })
+      if (!is.fn(fn)) {
+        return [ { fn: false, info: `Spec for ${fullName} is wrong, got: ${parentType}, but @magic/types does not have it.` } ]
+      }
 
-export const tests = {
-  lib: (lib, spec) => ({
-    fn: () => testLib(lib, spec),
-    expect: is.len.eq(0),
-  }),
-  spec: (spec, lib) => ({
-    fn: () => testSpec(spec, lib),
-    expect: is.len.eq(0),
-  }),
+      return [
+        { fn: fn(subLib), info: `Spec for ${fullName} is wrong, got ${subSpec}, type is ${typeof subLib}` }
+      ]
+    }
+
+    console.log({ fullName, subSpec })
+  }).filter(a => a)
 }
 
-export const version = {
-  lib: testLib,
-  spec: testSpec,
-  tests,
-}
+export const version = (lib, spec, parent) => deep.flatten(test(lib, spec, parent))
 
 export default version
