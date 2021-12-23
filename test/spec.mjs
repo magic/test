@@ -12,7 +12,8 @@ const spec = {
     },
   ],
   log: [
-    'fn', {
+    'fn',
+    {
       error: 'fn',
       log: 'fn',
       warn: 'fn',
@@ -47,11 +48,11 @@ const spec = {
         {
           log: 'fn',
           warn: 'fn',
-          error:
-            'fn',
+          error: 'fn',
           time: 'fn',
           timeEnd: 'fn',
-        } ]
+        },
+      ],
     },
   ],
   promise: 'fn',
@@ -61,8 +62,8 @@ const spec = {
       state: [
         'obj',
         {
-          suites: [ 'object', {} ],
-          stats: [ 'object', { all: 'num', pass: 'num', fail: 'num' } ],
+          suites: ['object', {}],
+          stats: ['object', { all: 'num', pass: 'num', fail: 'num' }],
           pkg: 'string',
         },
       ],
@@ -81,15 +82,15 @@ const spec = {
       falsy: 'number',
       nil: 'null',
       emptystr: 'string',
-      emptyobject: [ 'object', {} ],
+      emptyobject: ['object', {}],
       emptyarray: 'array',
       func: 'fn',
       number: 'num',
       num: 'num',
       float: 'float',
       int: 'int',
-      object: [ 'object', { test: 'string' } ],
-      obj: [ 'object', { t: 'string' } ],
+      object: ['object', { test: 'string' }],
+      obj: ['object', { t: 'string' }],
       string: 'string',
       str: 'string',
       email: 'string',
@@ -106,7 +107,7 @@ const spec = {
       hexa4: 'hexa4',
       hexa8: 'hexa8',
       regexp: 'regexp',
-    }
+    },
   ],
   version: 'obj',
   tryCatch: 'fn',
@@ -230,7 +231,6 @@ const spec = {
       constants: [
         'object',
         {
-
           UV_FS_SYMLINK_DIR: 'num',
           UV_FS_SYMLINK_JUNCTION: 'num',
           O_RDONLY: 'num',
@@ -287,7 +287,7 @@ const spec = {
           COPYFILE_FICLONE: 'num',
           UV_FS_COPYFILE_FICLONE_FORCE: 'num',
           COPYFILE_FICLONE_FORCE: 'num',
-        }
+        },
       ],
       promises: [
         'object',
@@ -321,7 +321,7 @@ const spec = {
           appendFile: 'fn',
           readFile: 'fn',
           watch: 'fn',
-        }
+        },
       ],
       readDir: 'fn',
       readfile: 'fn',
@@ -333,13 +333,13 @@ const spec = {
       getFiles: 'fn',
       getContentType: 'fn',
       getFilePath: 'fn',
-
     },
   ],
   is: [
     'obj',
     {
-      deep: [ 'obj',
+      deep: [
+        'obj',
         {
           equal: 'fn',
           isEqual: 'fn',
@@ -351,7 +351,8 @@ const spec = {
           flatten: 'fn',
           loop: 'fn',
           merge: 'fn',
-        }, ],
+        },
+      ],
       deepDiff: 'fn',
       deepDifferent: 'fn',
       deepEq: 'fn',
