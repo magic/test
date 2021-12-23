@@ -1,6 +1,26 @@
 import deep from '@magic/deep'
 import is from '@magic/types'
 
+const createLibTest = (lib, spec, fullName) => {
+  if (is.array(spec)) {
+    return spec.map(type => createLibTest(lib, type, fullName))
+  }
+
+  const fn = is[ spec ]
+
+  if (!is.fn(fn)) {
+    return {
+      fn: false,
+      info: `Spec for ${fullName} is wrong, got: ${spec}, but @magic/types does not have this function.`,
+    }
+  }
+
+  return {
+    fn: fn(lib),
+    info: `Spec for ${fullName} is wrong, expected: ${spec}, actual type is ${typeof lib}`,
+  }
+}
+
 export const test = (lib = {}, spec = {}, parent = '') => {
   return Object.entries(lib)
     .map(([name, subLib]) => {
@@ -8,36 +28,20 @@ export const test = (lib = {}, spec = {}, parent = '') => {
       const subSpec = spec[name]
 
       if (!subSpec) {
-        return [
-          {
-            fn: false,
-            info: `Spec missing for ${fullName}`,
-          },
-        ]
+        return {
+          fn: false,
+          info: `Spec missing for ${fullName}`,
+        }
       }
 
       if (is.array(subSpec)) {
-        const [parentType, subSpecChildren] = subSpec
+        const [ parentType, subSpecChildren ] = subSpec
 
-        const fn = is[parentType]
-
-        if (!is.fn(fn)) {
-          return [
-            {
-              fn: false,
-              info: `Spec for ${fullName} is wrong, got: ${parentType}, but @magic/types does not have it.`,
-            },
-          ]
-        }
-
+        const parentTest = createLibTest(subLib, parentType, fullName)
         const subTests = test(subLib, subSpecChildren, `${parent}${name}`)
 
         return [
-          {
-            fn: fn(subLib),
-            info: `Spec for ${fullName} is wrong, got ${parentType}, type is ${typeof subLib}`,
-          },
-          // recursive for all children missing
+          parentTest,
           ...subTests,
         ]
       } else if (is.string(subSpec)) {
@@ -50,26 +54,8 @@ export const test = (lib = {}, spec = {}, parent = '') => {
           ]
         }
 
-        const fn = is[subSpec]
-
-        if (!is.fn(fn)) {
-          return [
-            {
-              fn: false,
-              info: `Spec for ${fullName} is wrong, got: ${parentType}, but @magic/types does not have it.`,
-            },
-          ]
-        }
-
-        return [
-          {
-            fn: fn(subLib),
-            info: `Spec for ${fullName} is wrong, got ${subSpec}, type is ${typeof subLib}`,
-          },
-        ]
+        return createLibTest(subLib, subSpec, fullName)
       }
-
-      console.log({ fullName, subSpec })
     })
     .filter(a => a)
 }
