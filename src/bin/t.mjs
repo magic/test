@@ -2,8 +2,8 @@
 
 import path from 'path'
 
-import fs from '@magic/fs'
 import cli from '@magic/cli'
+import fs from '@magic/fs'
 
 const cwd = process.cwd()
 const res = cli({
