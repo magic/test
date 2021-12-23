@@ -725,5 +725,9 @@ update dependencies
 ##### 0.1.77
 update dependencies
 
-##### 0.1.78 - unreleased
+##### 0.2.0
+* update dependencies
+* version now tests spec and lib in a single run.
+
+##### 0.2.1 - unreleased
 ...
