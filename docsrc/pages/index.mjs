@@ -458,6 +458,33 @@ export default [
 ]
 `),
 
+  h4({ id: 'lib-version' }, 'version'),
+  p(
+    'The version plugin checks your code according to a spec defined by you. This is designed to warn you on changes to your exports.',
+  ),
+
+  p([
+    'Internally, the version function calls ',
+    Link({ to: 'https://github.com/magic/types', text: '@magic/types' }),
+    ' and all functions exported from it are valid type strings in version specs.',
+  ]),
+
+  Pre(`
+// test/spec.js
+import { version } from '@magic/test'
+
+// import your lib as your codebase requires
+// import * as lib from '../src/index.js'
+// import lib from '../src/index.js
+
+const spec = {
+  stringValue: 'string',
+  numberValue: 'number',
+}
+
+export default version(lib, spec)
+  `),
+
   h2({ id: 'usage' }, 'usage'),
 
   h3({ id: 'usage-js' }, 'js'),
