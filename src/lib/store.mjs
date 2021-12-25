@@ -11,10 +11,11 @@ export const defaultState = {
 }
 
 export const store = {
-  state: Object.assign({}, defaultState),
+  // make sure we get a copy by destructuring
+  state: { ...defaultState },
   set: val => {
     Object.entries(val).forEach(([key, val]) => {
-      if (is.object(val)) {
+      if (is.objectNative(val)) {
         store.state[key] = { ...store.state[key], ...val }
       } else {
         store.state[key] = val
