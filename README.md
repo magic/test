@@ -746,5 +746,12 @@ update dependencies
 * update dependencies
 * version now tests spec and lib in a single run.
 
-##### 0.2.1 - unreleased
+##### 0.2.1
+* internal restructuring
+* tests now output their run duration
+* add @magic/error dependency and export it from index
+* index.js files have the same functionality as index.mjs files
+* update dependencies
+
+##### 0.2.2 - unreleased
 ...
