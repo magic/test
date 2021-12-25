@@ -37,7 +37,6 @@ export const test = t => {
 
 export const printPercent = p => (p === 100 ? log.color('green', p) : log.color('red', p))
 
-
 export const info = () => {
   const suites = store.get('suites')
 
@@ -51,7 +50,7 @@ export const info = () => {
     fail: 0,
   }
 
-  Object.entries(suites).forEach(([ suiteName, suite ]) => {
+  Object.entries(suites).forEach(([suiteName, suite]) => {
     console.log(suiteName, suite.duration)
     const { all, fail, pass, tests, duration } = suite
 
@@ -102,7 +101,7 @@ export const info = () => {
     fail: 0,
   }
 
-  Object.entries(suites).forEach(([ suiteName, suite ]) => {
+  Object.entries(suites).forEach(([suiteName, suite]) => {
     const { pass = 0, all = 0, fail = 0 } = suite
     const passPercent = (pass / all) * 100
     const percentage = printPercent(passPercent)
