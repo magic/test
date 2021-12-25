@@ -1,40 +1,9 @@
 import log from '@magic/log'
 
-import store from './store.mjs'
-import { env } from './env.mjs'
-import { stringify } from './stringify.mjs'
-import { getDuration } from './getDuration.mjs'
-
-const defaultStats = {
-  pass: 0,
-  fail: 0,
-  all: 0,
-  tests: [],
-}
-
-export const test = t => {
-  const suites = store.get('suites')
-  const suite = { ...defaultStats, ...suites[t.key] }
-
-  if (!suite.tests.includes(t)) {
-    suite.tests.push(t)
-  }
-
-  // add statistics
-  if (t.pass) {
-    suite.pass += 1
-  } else {
-    suite.fail += 1
-  }
-
-  suite.all += 1
-
-  suites[t.key] = suite
-
-  store.set({ suites })
-
-  return suite
-}
+import store from '../store.mjs'
+import { env } from '../env.mjs'
+import { stringify } from '../stringify.mjs'
+import { getDuration } from '../getDuration.mjs'
 
 export const printPercent = p => (p === 100 ? log.color('green', p) : log.color('red', p))
 
@@ -52,7 +21,6 @@ export const info = () => {
   }
 
   Object.entries(suites).forEach(([suiteName, suite]) => {
-    console.log(suiteName, suite.duration)
     const { all, fail, pass, tests, duration } = suite
 
     s.pass += pass
@@ -63,7 +31,7 @@ export const info = () => {
 
     if (env.isVerbose() || percentage < 100) {
       log.info('\n')
-      log.info(`--- ${suiteName}, Pass: ${pass}/${all} ${printPercent(percentage)}%`)
+      log.info(`--- ${suiteName}, Pass: ${pass}/${all} ${printPercent(percentage)}% ${duration}`)
       log.info('')
     }
 
@@ -124,15 +92,3 @@ export const info = () => {
   log(`Ran ${st.all} tests in ${duration}. Passed ${st.pass}/${st.all} ${percentage}%\n`)
   return true
 }
-
-export const reset = () => {
-  store.reset()
-}
-
-export const stats = {
-  info,
-  test,
-  reset,
-}
-
-export default stats
