@@ -3,6 +3,7 @@ import log from '@magic/log'
 import store from './store.mjs'
 import { env } from './env.mjs'
 import { stringify } from './stringify.mjs'
+import { getDuration } from './getDuration.mjs'
 
 const defaultStats = {
   pass: 0,
@@ -117,8 +118,10 @@ export const info = () => {
     st.fail += fail
   })
 
+  const duration = getDuration()
+
   const percentage = printPercent((st.pass / st.all) * 100)
-  log(`Ran ${st.all} tests. Passed ${st.pass}/${st.all} ${percentage}%\n`)
+  log(`Ran ${st.all} tests in ${duration}. Passed ${st.pass}/${st.all} ${percentage}%\n`)
   return true
 }
 
