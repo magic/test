@@ -402,6 +402,23 @@ export default [
 ]
 ```
 
+##### <a name="lib-error"></a>error
+export [@magic/error](https://github.com/magic/error)
+which returns errors with optional names.
+
+```javascript
+import { error } from '@magic/test'
+
+export default [
+  {
+    fn: tryCatch(error('Message', 'E_NAME')),
+    expect: e => e.name === 'E_NAME' && e.message === 'Message',
+    info: 'Errors have messages and (optional) names.',
+  },
+]
+
+```
+
 #### <a name="usage"></a>Usage
 
 #### <a name="usage-js"></a>js api:
