@@ -6,7 +6,7 @@ const createLibTest = (lib, spec, fullName) => {
     return spec.map(type => createLibTest(lib, type, fullName))
   }
 
-  const fn = is[ spec ]
+  const fn = is[spec]
 
   if (!is.fn(fn)) {
     return {
@@ -35,23 +35,21 @@ export const test = (lib = {}, spec = {}, parent = '') => {
       }
 
       if (is.array(subSpec)) {
-        const [ parentType, subSpecChildren ] = subSpec
+        const [parentType, subSpecChildren] = subSpec
+        if (subSpecChildren === false) {
+          return []
+        }
 
         const parentTest = createLibTest(subLib, parentType, fullName)
         const subTests = test(subLib, subSpecChildren, `${parent}${name}`)
 
-        return [
-          parentTest,
-          ...subTests,
-        ]
+        return [parentTest, ...subTests]
       } else if (is.string(subSpec)) {
         if (subSpec === 'obj' || subSpec === 'object') {
-          return [
-            {
-              fn: false,
-              info: `Spec for ${fullName} specifies object, but no children defined. change to an array [parentType, { subName: subType }]`,
-            },
-          ]
+          return {
+            fn: false,
+            info: `Spec for ${fullName} specifies object, but no children defined. change to an array [parentType, { subName: subType }]`,
+          }
         }
 
         return createLibTest(subLib, subSpec, fullName)
