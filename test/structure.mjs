@@ -90,6 +90,7 @@ export default {
     {
       fn: () => {
         try {
+          // run does not exist, this will error
           return run('INVALID')
         } catch (e) {
           return e
