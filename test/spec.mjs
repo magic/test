@@ -561,6 +561,15 @@ const spec = {
       sameType: 'fn',
       isSame: 'fn',
       isSameType: 'fn',
+
+      ownProp: 'fn',
+      prop: 'fn',
+      ownProperty: 'fn',
+      isOwnProp: 'fn',
+      isOwnProperty: 'fn',
+
+      isModule: 'fn',
+      module: 'fn',
     },
   ],
 
@@ -582,6 +591,7 @@ const spec = {
       ],
     },
   ],
+  error: 'fn',
 }
 
 const libTests = test.version({ ...test }, spec)

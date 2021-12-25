@@ -13,11 +13,12 @@ export default [
     expect: is.obj,
     info: 'suites are collected in an object',
   },
-  {
-    fn: () => store.get('module'),
-    expect: '@magic/test',
-    info: 'module @magic/test exists',
-  },
+  // this is not needed anymore.
+  // {
+  //   fn: () => store.get('module'),
+  //   expect: '@magic/test',
+  //   info: 'module @magic/test exists',
+  // },
   {
     fn: () => store.get('stats'),
     expect: is.obj,
