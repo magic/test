@@ -557,6 +557,10 @@ const spec = {
       upperCase: 'fn',
       isLowerCase: 'fn',
       lowerCase: 'fn',
+      same: 'fn',
+      sameType: 'fn',
+      isSame: 'fn',
+      isSameType: 'fn',
     },
   ],
 
