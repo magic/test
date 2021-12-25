@@ -30,20 +30,16 @@ export const test = t => {
 
   suites[t.key] = suite
 
-  const data = {
-    suites,
-  }
-
-  store.set(data)
+  store.set({ suites })
 
   return suite
 }
 
 export const printPercent = p => (p === 100 ? log.color('green', p) : log.color('red', p))
 
+
 export const info = () => {
   const suites = store.get('suites')
-  const suiteNames = Object.keys(suites)
 
   const pkg = store.get('module')
 
@@ -55,8 +51,9 @@ export const info = () => {
     fail: 0,
   }
 
-  suiteNames.forEach(suiteName => {
-    const { pass, all, fail, tests } = suites[suiteName]
+  Object.entries(suites).forEach(([ suiteName, suite ]) => {
+    console.log(suiteName, suite.duration)
+    const { all, fail, pass, tests, duration } = suite
 
     s.pass += pass
     s.all += all
@@ -105,8 +102,8 @@ export const info = () => {
     fail: 0,
   }
 
-  suiteNames.forEach(suiteName => {
-    const { pass = 0, all = 0, fail = 0 } = suites[suiteName]
+  Object.entries(suites).forEach(([ suiteName, suite ]) => {
+    const { pass = 0, all = 0, fail = 0 } = suite
     const passPercent = (pass / all) * 100
     const percentage = printPercent(passPercent)
 
