@@ -3,6 +3,7 @@ import logging from '@magic/log'
 export { default as is } from '@magic/types'
 export { default as deep } from '@magic/deep'
 export { default as fs } from '@magic/fs'
+export { default as error } from '@magic/error'
 
 export { run } from './run.mjs'
 
