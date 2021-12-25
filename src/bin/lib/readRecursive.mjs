@@ -1,5 +1,23 @@
 import path from 'path'
+
 import fs from '@magic/fs'
+import is from '@magic/types'
+
+const importFile = async filePath => {
+  let mod = await import(filePath)
+
+  // catch es6 export default
+  if (is.module(mod)) {
+    const m = { ...mod }
+    if (is.ownProp(m, 'default')) {
+      return m.default
+    } else {
+      return m
+    }
+  } else {
+    return mod
+  }
+}
 
 export const readRecursive = async dir => {
   const testDir = path.join(process.cwd(), 'test')
@@ -17,7 +35,7 @@ export const readRecursive = async dir => {
     if (path.sep === '\\') {
       indexFilePath = 'file:\\\\\\' + indexFilePath
     }
-    tests[fileP] = await import(indexFilePath)
+    tests[fileP] = await importFile(indexFilePath)
   } else {
     // if dir/index.mjs does not exist, require all files and subdirectories of files
     const files = await fs.readdir(targetDir)
@@ -51,12 +69,11 @@ export const readRecursive = async dir => {
               fileP = `/${fileP.substr(1)}`
             }
 
-            let test = await import(filePath)
+            const test = await importFile(filePath)
+            // } catch (e) {
+            //   console.log(test)
+            // }
 
-            // catch es6 export default
-            if (test.default) {
-              test = test.default
-            }
             // write current file to tests cache
             tests[fileP] = test
           }

@@ -1,153 +1,160 @@
 import is from '@magic/types'
-import { default as log } from '@magic/log'
+import log from '@magic/log'
 
 import { cleanError, cleanFunctionString, getTestKey, stats } from '../lib/index.mjs'
 
 const runTest = async test => {
-  // could be undefined, we expect true to provide a default
-  if (!test.hasOwnProperty('expect')) {
-    test.expect = true
-  }
+  try {
+    // expect can be undefined, we set expect to true to provide a default for tests
+    if (!is.ownProp(test, 'expect')) {
+      // alternative name for expect
+      if (is.ownProp(test, 'is')) {
+        test.expect = test.is
+      } else {
+        test.expect = true
+      }
+    }
 
-  const { fn, name, pkg, before, html, parent, expect, runs = 1 } = test
+    const { fn, name, pkg, before, parent, expect, runs = 1, tests, info } = test
 
-  if (!test.hasOwnProperty('fn')) {
-    if (is.object(test) && is.object(test.tests)) {
-      const testNames = Object.keys(test.tests)
-      return Promise.all(
-        Object.entries(test.tests).map(async ([key, tests]) => {
-          try {
-            await runSuite({
-              parent: name,
-              name: key,
-              tests,
-            })
-          } catch (e) {
-            log.error('Suite:', key, ...cleanError(e))
-            process.exit(1)
+    if (!is.ownProp(test, 'fn')) {
+      if (is.object(test) && is.object(tests)) {
+        return await Promise.all(
+          Object.entries(tests).map(
+            async ([key, tests]) =>
+              await runSuite({
+                pkg,
+                parent: name,
+                name: key,
+                tests,
+              }),
+          ),
+        )
+      }
+
+      log.error('test.fn is not a function', test.key, test.info || '')
+    }
+
+    let after
+    if (is.function(before)) {
+      try {
+        after = await before(test)
+      } catch (e) {
+        log.error('test.before', test.before, e)
+      }
+    }
+
+    let result
+    let exp
+    let expString
+
+    const msg = cleanFunctionString(fn)
+
+    const key = getTestKey(pkg, parent, name)
+
+    let pass = false
+
+    let res
+    for (let i = 0; i < runs; i++) {
+      try {
+        if (is.function(fn)) {
+          res = await fn()
+        } else if (is.promise(fn)) {
+          res = await fn
+        } else {
+          res = fn
+        }
+      } catch (e) {
+        log.error('test.fn', key, ...cleanError(e))
+      }
+
+      try {
+        if (is.function(expect)) {
+          const combinedRes = [].concat(res)
+          if (combinedRes.length > 1) {
+            res = combinedRes
           }
-        }),
-      )
-    }
-
-    log.error('test.fn is not a function', test.key, test.info || '')
-  }
-
-  let after
-  if (is.function(before)) {
-    try {
-      after = await before(test)
-    } catch (e) {
-      log.error('test.before', test.before, e)
-      process.exit(1)
-    }
-  }
-
-  let result
-  let exp
-  let expString
-
-  const msg = cleanFunctionString(fn)
-
-  const key = getTestKey(pkg, parent, name)
-
-  let pass = false
-
-  let res
-  for (let i = 0; i < runs; i++) {
-    try {
-      if (is.function(fn)) {
-        res = await fn()
-      } else if (is.promise(fn)) {
-        res = await fn
-      } else {
-        res = fn
-      }
-    } catch (e) {
-      log.error('test.fn', key, ...cleanError(e))
-      process.exit(1)
-    }
-
-    try {
-      if (is.function(expect)) {
-        const combinedRes = [].concat(res)
-        if (combinedRes.length > 1) {
-          res = combinedRes
+          exp = await expect(res)
+          expString = cleanFunctionString(expect)
+          if (res !== true) {
+            pass = exp === res || exp === true
+          }
+        } else if (is.promise(expect)) {
+          exp = await expect
+          expString = expect
+        } else {
+          exp = expect
+          expString = expect
         }
-        exp = await expect(res)
-        expString = cleanFunctionString(expect)
-        if (res !== true) {
-          pass = exp === res || exp === true
+
+        if (!pass) {
+          if (is.undefined(exp)) {
+            pass = exp === res
+          } else if (is.sameType(exp, res)) {
+            pass = is.deep.equal(exp, res)
+          }
         }
-      } else if (is.promise(expect)) {
-        exp = await expect
-        expString = expect
-      } else {
-        exp = expect
-        expString = expect
+
+        if (!pass) {
+          result = res
+          // abort the run loop if the first iteration fails
+          break
+        }
+      } catch (e) {
+        log.error('E_TEST_EXPECT', key, e)
       }
 
-      if (!pass) {
-        if (is.undefined(exp)) {
-          pass = exp === res
-        } else if (typeof exp === typeof res) {
-          pass = is.deep.equal(exp, res)
-        }
-      }
-
-      if (!pass) {
+      // loop is done
+      if (i >= runs - 1) {
+        pass = true
         result = res
-        break
       }
-    } catch (e) {
-      log.error('test.expect', key, e)
-      process.exit(1)
     }
 
-    // loop is done
-    if (i >= runs - 1) {
-      pass = true
-      result = res
+    if (is.function(after)) {
+      try {
+        await after()
+      } catch (e) {
+        log.error('test.after', key, e)
+      }
     }
-  }
 
-  if (is.function(after)) {
-    try {
-      await after()
-    } catch (e) {
-      log.error('test.after', key, e)
-      process.exit(1)
+    if (is.function(test.after)) {
+      try {
+        await test.after()
+      } catch (e) {
+        log.error('test.after', key, e)
+      }
     }
-  }
 
-  if (is.function(test.after)) {
-    try {
-      await test.after()
-    } catch (e) {
-      log.error('test.after', key, e)
-      process.exit(1)
+    if (!pass) {
+      let testName = name
+      if (parent !== name) {
+        testName = `${parent}.${name}`
+      }
+      if (pkg !== parent && pkg !== name) {
+        testName = `${pkg}.${testName}`
+      }
+      log.error('FAIL', testName, info)
     }
-  }
 
-  const stat = Object.assign({}, test, {
-    pkg,
-    key,
-    expect: exp,
-    pass,
-    msg,
-    result,
-    expString,
-  })
+    stats.test({
+      parent,
+      name,
+      pass,
+      pkg,
+    })
 
-  stats.test(stat)
-
-  return {
-    result,
-    msg,
-    pass,
-    parent,
-    name,
-    expect: exp,
+    return {
+      result,
+      msg,
+      pass,
+      parent,
+      name,
+      expect: exp,
+    }
+  } catch (e) {
+    log.error('test error', e)
   }
 }
 

@@ -38,9 +38,8 @@ export const run = async tests => {
 
   const content = await fs.readFile(packagePath, 'utf8')
   const { name } = JSON.parse(content)
-  store.set({ module: name })
 
-  await Promise.all(
+  const suites = await Promise.all(
     Object.entries(tests).map(
       async ([name, tests]) =>
         await runSuite({
@@ -56,5 +55,5 @@ export const run = async tests => {
     await Promise.all(afterAll.filter(is.fn).map(fn => fn(tests)))
   }
 
-  stats.info()
+  stats.info(name, suites)
 }

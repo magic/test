@@ -8,25 +8,41 @@ const defaultStats = {
 }
 
 export const test = t => {
-  const suites = store.get('suites')
-  const suite = { ...defaultStats, ...suites[t.key] }
+  const results = store.get('results', {})
 
-  if (!suite.tests.includes(t)) {
-    suite.tests.push(t)
+  const { name, parent, pass, pkg } = t
+
+  let currentName = name
+
+  if (parent !== name) {
+    currentName = `${parent}.${name}`
+
+    results[parent] = results[parent] || { all: 0, pass: 0 }
+    results[parent].all++
+    if (pass) {
+      results[parent].pass++
+    }
   }
 
-  // add statistics
-  if (t.pass) {
-    suite.pass += 1
-  } else {
-    suite.fail += 1
+  if (pkg !== parent) {
+    currentName = `${pkg}.${currentName}`
+
+    results[pkg] = results[pkg] || { all: 0, pass: 0 }
+    results[pkg].all++
+    if (pass) {
+      results[pkg].pass++
+    }
   }
 
-  suite.all += 1
+  results[currentName] = results[currentName] || { all: 0, pass: 0 }
+  results.__PACKAGE_ROOT__ = results.__PACKAGE_ROOT__ || { all: 0, pass: 0 }
 
-  suites[t.key] = suite
+  results.__PACKAGE_ROOT__.all++
+  results[currentName].all++
+  if (pass) {
+    results.__PACKAGE_ROOT__.pass++
+    results[currentName].pass++
+  }
 
-  store.set({ suites })
-
-  return suite
+  store.set({ results })
 }

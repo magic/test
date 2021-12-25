@@ -22,7 +22,7 @@ export const store = {
       }
     })
   },
-  get: key => (key ? store.state[key] : store.state),
+  get: (key, def) => (key ? (is.ownProp(store.state, key) ? store.state[key] : def) : store.state),
   reset: () => {
     this.state = {}
   },
