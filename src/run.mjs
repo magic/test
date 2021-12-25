@@ -11,6 +11,9 @@ import runSuite from './run/suite.mjs'
 const cwd = process.cwd()
 
 export const run = async tests => {
+  const startTime = log.hrtime()
+  store.set({ startTime })
+
   if (is.function(tests)) {
     tests = tests()
   }
