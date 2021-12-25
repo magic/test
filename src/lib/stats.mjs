@@ -19,6 +19,7 @@ export const test = t => {
     suite.tests.push(t)
   }
 
+  // add statistics
   if (t.pass) {
     suite.pass += 1
   } else {
