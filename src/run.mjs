@@ -34,8 +34,6 @@ export const run = async tests => {
     afterAll.push(await beforeAll(tests))
   }
 
-  const suiteNames = Object.keys(tests)
-
   let packagePath = path.join(cwd, 'package.json')
 
   const content = await fs.readFile(packagePath, 'utf8')
@@ -43,13 +41,14 @@ export const run = async tests => {
   store.set({ module: name })
 
   await Promise.all(
-    suiteNames.map(async name =>
-      runSuite({
-        pkg: name,
-        parent: name,
-        name,
-        tests: tests[name],
-      }),
+    Object.entries(tests).map(
+      async ([name, tests]) =>
+        await runSuite({
+          pkg: name,
+          parent: name,
+          name,
+          tests,
+        }),
     ),
   )
 
