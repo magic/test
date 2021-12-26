@@ -2,7 +2,7 @@ export default [
   {
     fn: i(['testing', p('testing')]),
     expect: '<i>testing<p>testing</p></i>',
-    info: 'html i is defined',
+    info: 'html i is undefined',
   },
   {
     fn: i({ class: 'testing' }, 'testing'),
