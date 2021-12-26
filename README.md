@@ -753,5 +753,8 @@ update dependencies
 * index.js files have the same functionality as index.mjs files
 * update dependencies
 
-##### 0.2.2 - unreleased
+##### 0.2.2
+spec values can be functions, allowing arbitrary equality testing to be executed by @magic/test.version
+
+##### 0.2.3 - unreleased
 ...
