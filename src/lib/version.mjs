@@ -6,7 +6,10 @@ const createLibTest = (lib, spec, fullName) => {
     return spec.map(type => createLibTest(lib, type, fullName))
   }
 
-  const fn = is[spec]
+  let fn = spec
+  if (!is.fn(spec)) {
+    fn = is[spec]
+  }
 
   if (!is.fn(fn)) {
     return {
@@ -52,6 +55,8 @@ export const test = (lib = {}, spec = {}, parent = '') => {
           }
         }
 
+        return createLibTest(subLib, subSpec, fullName)
+      } else if (is.function(subSpec)) {
         return createLibTest(subLib, subSpec, fullName)
       }
     })
