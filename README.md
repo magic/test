@@ -756,5 +756,8 @@ update dependencies
 ##### 0.2.2
 spec values can be functions, allowing arbitrary equality testing to be executed by @magic/test.version
 
-##### 0.2.3 - unreleased
+##### 0.2.3
+update dependencies
+
+##### 0.2.4 - unreleased
 ...
