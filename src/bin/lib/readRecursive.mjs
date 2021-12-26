@@ -19,9 +19,9 @@ const importFile = async filePath => {
   }
 }
 
-export const readRecursive = async dir => {
+export const readRecursive = async (dir = '') => {
   const testDir = path.join(process.cwd(), 'test')
-  const targetDir = !dir ? testDir : path.join(testDir, dir)
+  const targetDir = path.join(testDir, dir)
 
   let tests = {}
 
