@@ -759,5 +759,9 @@ spec values can be functions, allowing arbitrary equality testing to be executed
 ##### 0.2.3
 update dependencies
 
-##### 0.2.4 - unreleased
+##### 0.2.4
+* lib/version: spec can have objects defined with ['obj', false], which will test the parent to be an object,
+  but does not test the key/value pairs in the object.
+
+##### 0.2.5 - unreleased
 ...
