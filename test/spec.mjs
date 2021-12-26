@@ -11,6 +11,8 @@ const spec = {
       isVerbose: 'fn',
     },
   ],
+
+  // @magic/log
   log: [
     'fn',
     {
@@ -112,6 +114,7 @@ const spec = {
   version: 'obj',
   tryCatch: 'fn',
 
+  // '@magic/deep'
   deep: [
     'obj',
     {
@@ -126,6 +129,7 @@ const spec = {
     },
   ],
 
+  // @magic/fs
   fs: [
     'obj',
     {
@@ -335,6 +339,8 @@ const spec = {
       getFilePath: 'fn',
     },
   ],
+
+  // @magic/types
   is: [
     'obj',
     {
@@ -591,6 +597,8 @@ const spec = {
       ],
     },
   ],
+
+  // @magic/error
   error: 'fn',
 }
 
