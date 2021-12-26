@@ -39,11 +39,12 @@ export const test = (lib = {}, spec = {}, parent = '') => {
 
       if (is.array(subSpec)) {
         const [parentType, subSpecChildren] = subSpec
+        const parentTest = createLibTest(subLib, parentType, fullName)
+
         if (subSpecChildren === false) {
-          return []
+          return parentTest
         }
 
-        const parentTest = createLibTest(subLib, parentType, fullName)
         const subTests = test(subLib, subSpecChildren, `${parent}${name}`)
 
         return [parentTest, ...subTests]
