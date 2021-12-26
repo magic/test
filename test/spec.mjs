@@ -1,7 +1,8 @@
 import * as test from '../src/index.mjs'
 
 const spec = {
-  run: 'fn',
+  // check if spec can handle functions instead of strings to allow more complicated tests
+  run: test.is.fn,
   curry: 'fn',
   env: [
     'obj',
