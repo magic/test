@@ -69,7 +69,7 @@ export const maybeInjectMagic = async () => {
             .replace(/&gt;/gim, '>')
             .replace(/&quot;/gim, '"')
 
-    Object.entries(modules).map(([key, fn]) => {
+    Object.entries(modules).forEach(([key, fn]) => {
       global[key] = renderString(fn)
     })
   }
