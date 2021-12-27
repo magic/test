@@ -21,6 +21,22 @@ export const maybeInjectMagic = async () => {
 
   // bail early if magic is not setup
   try {
+    const configFilePaths = [
+      path.join(cwd, 'config.mjs'),
+      path.join(cwd, 'magic.js'),
+    ]
+
+    const results = await Promise.all(configFilePaths.map(fs.exists))
+
+    if (is.empty(results.filter(a => a))) {
+      return
+    }
+
+    if (!global.CHECK_PROPS) {
+      const { CHECK_PROPS } = await import('@magic/core/src/lib/CHECK_PROPS.mjs')
+      global.CHECK_PROPS = CHECK_PROPS
+    }
+
     const core = await import('@magic/core')
     renderToString = core.renderToString
 
