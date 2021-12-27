@@ -2,6 +2,7 @@ import path from 'path'
 
 import cases from '@magic/cases'
 import fs from '@magic/fs'
+import is from '@magic/types'
 import log from '@magic/log'
 
 const cwd = process.cwd()
@@ -62,11 +63,11 @@ export const maybeInjectMagic = async () => {
 
     const renderString =
       fn =>
-      (...args) =>
-        renderToString(fn(...args))
-          .replace(/&lt;/gim, '<')
-          .replace(/&gt;/gim, '>')
-          .replace(/&quot;/gim, '"')
+        (...args) =>
+          renderToString(is.fn(fn.View) ? fn.View(...args) : fn(...args))
+            .replace(/&lt;/gim, '<')
+            .replace(/&gt;/gim, '>')
+            .replace(/&quot;/gim, '"')
 
     Object.entries(modules).map(([key, fn]) => {
       global[key] = renderString(fn)
