@@ -22,14 +22,14 @@ const res = cli({
       '--exclude': 'files to exclude from coverage',
     },
     header: `
-simple unit testing. runs all tests found in {cwd}/test
+simple unit testing. runs all tests found in {cwd}/test/
 see https://github.com/magic/test for info
 `.trim(),
 
     example: `
 Usage:
-t -p => run quick tests
-t    => run slow tests with coverage through nyc
+t -p => run tests without coverage
+t    => run slow tests with coverage
 t -h => this help text
 
 npm example:
