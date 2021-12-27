@@ -5,8 +5,6 @@ import path from 'path'
 import cli from '@magic/cli'
 import fs from '@magic/fs'
 
-import { isProd } from '../index.mjs'
-
 const cwd = process.cwd()
 const res = cli({
   options: [
@@ -47,6 +45,8 @@ const run = async () => {
   const pkgPath = path.join(cwd, 'package.json')
   const content = await fs.readFile(pkgPath)
   const { name } = JSON.parse(content)
+
+  const isProd = res.env.NODE_ENV === 'production'
 
   let binPath = path.join(cwd, 'node_modules', '@magic', 'test', 'src', 'bin')
   if (name === '@magic/test') {
