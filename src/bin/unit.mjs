@@ -17,7 +17,12 @@ const init = async () => {
     return
   }
 
-  run(tests)
+  try {
+    await run(tests)
+  } catch (e) {
+    e.code = 'E_MAGIC_TEST'
+    log.error(e)
+  }
 }
 
 init()
