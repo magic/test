@@ -20,7 +20,8 @@
     "clean": "magic clean",
     "serve": "magic serve",
     "dev": "magic dev",
-    "test": "node src/bin/t.mjs",
+    "test": "node src/bin/t.mjs -p",
+    "coverage": "node src/bin/t.mjs",
     "calls": "node src/bin/calls.mjs",
     "format": "f -w --exclude docs",
     "format:check": "f --exclude docs"
@@ -41,7 +42,7 @@
   },
   "dependencies": {
     "@magic/cli": "0.0.38",
-    "@magic/core": "0.0.133",
+    "@magic/core": "0.0.134",
     "@magic/deep": "0.1.10",
     "@magic/error": "0.0.12",
     "@magic/fs": "0.0.21",
