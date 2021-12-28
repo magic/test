@@ -762,6 +762,8 @@ update dependencies
 ##### 0.2.4
 * lib/version: spec can have objects defined with ['obj', false], which will test the parent to be an object,
   but does not test the key/value pairs in the object.
+* maybeInjectMagic: made magic injection more robust and much faster if magic is not being used.
+* t -p now does not show the coverage information
 
 ##### 0.2.5 - unreleased
 ...
