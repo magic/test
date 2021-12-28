@@ -21,10 +21,7 @@ export const maybeInjectMagic = async () => {
 
   // bail early if magic is not setup
   try {
-    const configFilePaths = [
-      path.join(cwd, 'config.mjs'),
-      path.join(cwd, 'magic.js'),
-    ]
+    const configFilePaths = [path.join(cwd, 'config.mjs'), path.join(cwd, 'magic.js')]
 
     const results = await Promise.all(configFilePaths.map(fs.exists))
 
@@ -79,11 +76,11 @@ export const maybeInjectMagic = async () => {
 
     const renderString =
       fn =>
-        (...args) =>
-          renderToString(is.fn(fn.View) ? fn.View(...args) : fn(...args))
-            .replace(/&lt;/gim, '<')
-            .replace(/&gt;/gim, '>')
-            .replace(/&quot;/gim, '"')
+      (...args) =>
+        renderToString(is.fn(fn.View) ? fn.View(...args) : fn(...args))
+          .replace(/&lt;/gim, '<')
+          .replace(/&gt;/gim, '>')
+          .replace(/&quot;/gim, '"')
 
     Object.entries(modules).forEach(([key, fn]) => {
       global[key] = renderString(fn)
