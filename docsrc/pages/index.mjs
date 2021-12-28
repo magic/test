@@ -480,6 +480,18 @@ import { version } from '@magic/test'
 const spec = {
   stringValue: 'string',
   numberValue: 'number',
+
+  objectValue: [
+    'obj',
+    {
+      key: 'Willbechecked',
+    },
+  ],
+
+  objectNoChildCheck: [
+    'obj',
+    false,
+  ],
 }
 
 export default version(lib, spec)
