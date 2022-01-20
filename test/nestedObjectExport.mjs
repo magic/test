@@ -1,6 +1,4 @@
-import is from '@magic/types'
-
-import { promise } from '../src/index.mjs'
+import { is, tryCatch, promise } from '../src/index.mjs'
 
 process.env.testVar = ''
 
@@ -18,21 +16,17 @@ const cbFn = (e, a, cb) => cb(e, a)
 
 export default {
   // test possible test structure
-  runBefore: [
-    {
-      fn: () => true,
-      before,
-      expect: () => process.env.testVar === 't',
-      info: 'Test before function by setting process.env.testVar',
-    },
-  ],
-  runAfter: [
-    {
-      fn: async () => new Promise(r => setTimeout(r, 10)),
-      expect: () => !process.env.testVar,
-      info: 'After should have deleted process.env.testVar',
-    },
-  ],
+  testRunBefore: {
+    fn: () => true,
+    before,
+    expect: () => process.env.testVar === 't',
+    info: 'Test before function by setting process.env.testVar',
+  },
+  testRunAfter: {
+    fn: async () => new Promise(r => setTimeout(r, 10)),
+    expect: () => !process.env.testVar,
+    info: 'After should have deleted process.env.testVar',
+  },
   testNestedObject: {
     nestedSingleTest: { fn: () => 1, expect: 1 },
     deeper: {
@@ -88,15 +82,10 @@ export default {
   },
   testInvalidTests: [
     {
-      fn: () => {
-        try {
-          // run does not exist, this will error
-          return run('INVALID')
-        } catch (e) {
-          return e
-        }
-      },
-      expect: e => e instanceof Error,
+      fn: tryCatch(() => {
+        throw Error('Oops')
+      }, 'E_NO_EXISTS'),
+      expect: is.error,
     },
   ],
   suiteFn: { fn: () => true, expect: true },

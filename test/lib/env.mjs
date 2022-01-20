@@ -15,7 +15,7 @@ export default [
   },
   {
     fn: env.isVerbose,
-    expect: process.argv.includes('-l'),
+    expect: process.argv.includes('--verbose'),
     info: 'isVerbose is equal to process.argv args',
   },
 ]

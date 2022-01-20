@@ -61,7 +61,8 @@ const equalities = testVals.map(({ fn, items }) => createTest({ fn, items, compa
 export default [
   {
     fn: () => Object.keys(vals).length,
-    expect: a => a < len || console.log('Missing Spec Tests', a, len),
+    // use log for internal warning. do not do this.
+    expect: a => a < len || log.error('E_MISSING_SPEC_TESTS', `Missing Spec Tests ${a} ${len}`),
     info: 'Number of test functions is equal to lib functions',
   },
   ...equalities,
