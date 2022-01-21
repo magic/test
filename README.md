@@ -765,5 +765,9 @@ update dependencies
 * maybeInjectMagic: made magic injection more robust and much faster if magic is not being used.
 * t -p now does not show the coverage information
 
-##### 0.2.5 - unreleased
+##### 0.2.5
+* update dependencies
+* @magic/core is a dev dependency now.
+
+##### 0.2.6 - unreleased
 ...
