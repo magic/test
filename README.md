@@ -769,5 +769,8 @@ update dependencies
 * update dependencies
 * @magic/core is a dev dependency now.
 
-##### 0.2.6 - unreleased
+##### 0.2.6
+update dependencies
+
+##### 0.2.7 - unreleased
 ...
