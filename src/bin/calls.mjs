@@ -2,7 +2,7 @@
 
 import path from 'path'
 
-import coveralls from 'coveralls'
+import coveralls from 'coveralls-next'
 
 import cli from '@magic/cli'
 import log from '@magic/log'
