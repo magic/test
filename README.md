@@ -776,6 +776,9 @@ update dependencies
 * update dependencies
 * replace coveralls with coveralls-next
 
-##### 0.2.8 - unreleased
+##### 0.2.8
+update dependencies
+
+##### 0.2.9 - unreleased
 
 ...
