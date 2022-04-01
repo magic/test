@@ -12,8 +12,10 @@ export const maybeInjectMagic = async () => {
 
   const pkg = await fs.readFile(path.join(cwd, 'package.json'))
   const { name } = JSON.parse(pkg)
+  let isRooted = false
   if (name === '@magic/core') {
     importRoot = cwd + '/src'
+    isRooted = true
   }
 
   let config
@@ -30,11 +32,13 @@ export const maybeInjectMagic = async () => {
     }
 
     if (!global.CHECK_PROPS) {
-      const { CHECK_PROPS } = await import('@magic/core/src/lib/CHECK_PROPS.mjs')
+      const checkPropPath = path.join(importRoot, 'lib', 'CHECK_PROPS.mjs')
+      const { CHECK_PROPS } = await import(checkPropPath)
       global.CHECK_PROPS = CHECK_PROPS
     }
 
-    const core = await import('@magic/core')
+    const magicPath = isRooted ? path.join(importRoot, 'index.mjs') : '@magic/core'
+    const core = await import(magicPath)
     renderToString = core.renderToString
 
     const { runConfig } = await import(`${importRoot}/config.mjs`)
