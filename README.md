@@ -779,6 +779,8 @@ update dependencies
 ##### 0.2.8
 update dependencies
 
-##### 0.2.9 - unreleased
+##### 0.2.9
+update dependencies
 
+##### 0.2.10 - unreleased
 ...
