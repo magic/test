@@ -785,5 +785,8 @@ update dependencies
 ##### 0.2.10
 @magic/test can now test @magic/core again
 
-##### 0.2.11 - unreleased
+##### 0.2.11
+update dependencies
+
+##### 0.2.12 - unreleased
 ...
