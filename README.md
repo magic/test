@@ -794,5 +794,8 @@ update dependencies
 ##### 0.2.13
 update dependencies
 
-##### 0.2.14 - unreleased
+##### 0.2.14
+update dependencies
+
+##### 0.2.15 - unreleased
 ...
