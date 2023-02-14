@@ -7,7 +7,7 @@ const spec = {
   http: [
     'obj',
     {
-      get: 'fn'
+      get: 'fn',
     },
   ],
   env: [
