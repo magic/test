@@ -797,5 +797,11 @@ update dependencies
 ##### 0.2.14
 update dependencies
 
-##### 0.2.15 - unreleased
+##### 0.2.15
+
+- update dependencies
+- percentage outputs print nicer numbers
+- added http export that allows http requests in tests, there might be dragons and future updates are expected. only supports get requests for now.
+
+##### 0.2.16 - unreleased
 ...
