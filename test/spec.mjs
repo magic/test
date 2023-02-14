@@ -4,6 +4,12 @@ const spec = {
   // check if spec can handle functions instead of strings to allow more complicated tests
   run: test.is.fn,
   curry: 'fn',
+  http: [
+    'obj',
+    {
+      get: 'fn'
+    },
+  ],
   env: [
     'obj',
     {
