@@ -5,7 +5,20 @@ import { stringify } from '../stringify.mjs'
 import { getDuration } from '../getDuration.mjs'
 import { store } from '../store.mjs'
 
-export const printPercent = p => (p === 100 ? log.color('green', p) : log.color('red', p))
+export const toMinimalFixed = (p, fix = 2) => p.toFixed(fix) / 1
+
+export const printPercent = p => {
+  let color = 'red'
+  if (p === 100) {
+    color = 'green'
+  } else if (p > 90) {
+    color = 'yellow'
+  }
+
+  const value = toMinimalFixed(p, 2)
+
+  return log.color(color, value)
+}
 
 export const info = (pkg, suites) => {
   log(`###  Testing package: ${pkg}`)
