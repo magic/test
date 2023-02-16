@@ -41,12 +41,12 @@
     "url": "https://github.com/magic/test/issues"
   },
   "dependencies": {
-    "@magic/cli": "0.0.43",
-    "@magic/deep": "0.1.15",
-    "@magic/error": "0.0.16",
-    "@magic/fs": "0.0.27",
-    "@magic/log": "0.1.17",
-    "@magic/types": "0.1.22",
+    "@magic/cli": "0.0.44",
+    "@magic/deep": "0.1.16",
+    "@magic/error": "0.0.17",
+    "@magic/fs": "0.0.28",
+    "@magic/log": "0.1.18",
+    "@magic/types": "0.1.23",
     "c8": "7.12.0",
     "coveralls-next": "4.2.0"
   },
@@ -57,7 +57,7 @@
     "@magic-modules/pre": "0.0.11",
     "@magic-themes/docs": "0.0.14",
     "@magic/core": "0.0.149",
-    "@magic/format": "0.0.50"
+    "@magic/format": "0.0.51"
   },
   "contributors": [
     {
