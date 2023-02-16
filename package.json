@@ -1,6 +1,6 @@
 {
   "name": "@magic/test",
-  "version": "0.2.15",
+  "version": "0.2.16",
   "author": "Wizards & Witches",
   "description": "simple yet powerful unit testing library",
   "license": "AGPL-3.0",
