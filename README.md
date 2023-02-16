@@ -803,5 +803,9 @@ update dependencies
 - percentage outputs print nicer numbers
 - added http export that allows http requests in tests, there might be dragons and future updates are expected. only supports get requests for now.
 
-##### 0.2.16 - unreleased
+##### 0.2.16
+
+update dependencies
+
+##### 0.2.17 - unreleased
 ...
