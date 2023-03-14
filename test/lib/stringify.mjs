@@ -7,6 +7,14 @@ export default [
   { fn: stringify(true), expect: true, info: '"true" as argument returns "true"' },
   { fn: stringify({}), expect: {}, info: 'empty object returns empty object' },
   { fn: stringify([]), expect: [], info: 'empty array returns empty array' },
-  { fn: stringify(['testing', () => {}]), expect: ['testing', '() => {}'], info: 'empty array returns empty array' },
-  { fn: stringify({ testing: true, fn: () => {} }), expect: { testing: true, fn: '() => {}' }, info: 'functions get stringifiede' },
+  {
+    fn: stringify(['testing', () => {}]),
+    expect: ['testing', '() => {}'],
+    info: 'empty array returns empty array',
+  },
+  {
+    fn: stringify({ testing: true, fn: () => {} }),
+    expect: { testing: true, fn: '() => {}' },
+    info: 'functions get stringifiede',
+  },
 ]
