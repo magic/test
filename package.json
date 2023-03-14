@@ -10,8 +10,7 @@
   "type": "module",
   "bin": {
     "t": "src/bin/t.mjs",
-    "magic-test": "src/bin/t.mjs",
-    "calls": "src/bin/calls.mjs"
+    "magic-test": "src/bin/t.mjs"
   },
   "scripts": {
     "start": "node src/bin/t.mjs -p",
@@ -22,7 +21,6 @@
     "dev": "magic dev",
     "test": "node src/bin/t.mjs -p",
     "coverage": "node src/bin/t.mjs",
-    "calls": "node src/bin/calls.mjs",
     "format": "f -w --exclude docs",
     "format:check": "f --exclude docs"
   },
@@ -47,8 +45,7 @@
     "@magic/fs": "0.0.28",
     "@magic/log": "0.1.18",
     "@magic/types": "0.1.23",
-    "c8": "7.12.0",
-    "coveralls-next": "4.2.0"
+    "c8": "7.12.0"
   },
   "devDependencies": {
     "@magic-modules/git-badges": "0.0.12",
