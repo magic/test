@@ -928,4 +928,8 @@ update dependencies
 
 ##### 0.2.17 - unreleased
 
-...
+- remove calls and coveralls-next
+- update dependencies
+- ...
+
+##### 0.2.18 - unreleased
