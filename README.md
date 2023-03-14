@@ -926,10 +926,11 @@ update dependencies
 
 update dependencies
 
-##### 0.2.17 - unreleased
+##### 0.2.17
 
-- remove calls and coveralls-next
+- remove calls and coveralls-next, c8 takes care of coverage.
 - update dependencies
-- ...
 
 ##### 0.2.18 - unreleased
+
+...
