@@ -931,6 +931,12 @@ update dependencies
 - remove calls and coveralls-next, c8 takes care of coverage.
 - update dependencies
 
-##### 0.2.18 - unreleased
+##### 0.2.18
+
+- add missing fs.statfs, fs.statfsSync and fs.promises.constants to test/spec
+- update dependencies
+
+
+##### 0.2.19 - unreleased
 
 ...
