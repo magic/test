@@ -59,6 +59,8 @@ const constants = [
     COPYFILE_FICLONE: 'num',
     UV_FS_COPYFILE_FICLONE_FORCE: 'num',
     COPYFILE_FICLONE_FORCE: 'num',
+    EXTENSIONLESS_FORMAT_JAVASCRIPT: 'num',
+    EXTENSIONLESS_FORMAT_WASM: 'num',
   },
 ]
 
@@ -70,6 +72,7 @@ const spec = {
     'obj',
     {
       get: 'fn',
+      post: 'fn',
     },
   ],
   env: [
@@ -249,6 +252,7 @@ const spec = {
       mkdtemp: 'fn',
       mkdtempSync: 'fn',
       open: 'fn',
+      openAsBlob: 'fn',
       openSync: 'fn',
       opendir: 'fn',
       opendirSync: 'fn',
