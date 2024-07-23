@@ -22,12 +22,11 @@ export const get = url =>
 
 export const post = (url, body = '') =>
   new Promise((resolve, reject) => {
-
     try {
       const urlObject = new URL(url)
       const connector = urlObject.protocol === 'https:' ? nodeHttps : nodeHttp
 
-      const { protocol, hostname, port, pathname : path } = urlObject
+      const { protocol, hostname, port, pathname: path } = urlObject
 
       const options = {
         protocol,
@@ -43,7 +42,7 @@ export const post = (url, body = '') =>
         const postData = JSON.stringify(body)
         const byteLength = Buffer.byteLength(postData)
         headers['Content-Length'] = byteLength
-        headers['Content-Type']= 'application/json'
+        headers['Content-Type'] = 'application/json'
       }
 
       // console.log({ options })
