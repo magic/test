@@ -1,1 +1,344 @@
-function t(t,e){(null==e||e>t.length)&&(e=t.length);for(var n=0,r=Array(e);n<e;n++)r[n]=t[n];return r}function e(t){if(Array.isArray(t))return t}function n(){throw TypeError("Invalid attempt to destructure non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}function r(t){for(var e=1;e<arguments.length;e++){var n=null!=arguments[e]?arguments[e]:{},r=Object.keys(n);"function"==typeof Object.getOwnPropertySymbols&&(r=r.concat(Object.getOwnPropertySymbols(n).filter(function(t){return Object.getOwnPropertyDescriptor(n,t).enumerable}))),r.forEach(function(e){var r,o;r=t,o=n[e],e in r?Object.defineProperty(r,e,{value:o,enumerable:!0,configurable:!0,writable:!0}):r[e]=o})}return t}function o(t,e){return e=null!=e?e:{},Object.getOwnPropertyDescriptors?Object.defineProperties(t,Object.getOwnPropertyDescriptors(e)):(function(t,e){var n=Object.keys(t);if(Object.getOwnPropertySymbols){var r=Object.getOwnPropertySymbols(t);n.push.apply(n,r)}return n})(Object(e)).forEach(function(n){Object.defineProperty(t,n,Object.getOwnPropertyDescriptor(e,n))}),t}function i(t,e){if(null==t)return{};var n,r,o=function(t,e){if(null==t)return{};var n,r,o={},i=Object.keys(t);for(r=0;r<i.length;r++)n=i[r],e.indexOf(n)>=0||(o[n]=t[n]);return o}(t,e);if(Object.getOwnPropertySymbols){var i=Object.getOwnPropertySymbols(t);for(r=0;r<i.length;r++)n=i[r],!(e.indexOf(n)>=0)&&Object.prototype.propertyIsEnumerable.call(t,n)&&(o[n]=t[n])}return o}function s(t,r){return e(t)||function(t,e){var n,r,o=null==t?null:"undefined"!=typeof Symbol&&t[Symbol.iterator]||t["@@iterator"];if(null!=o){var i=[],s=!0,a=!1;try{for(o=o.call(t);!(s=(n=o.next()).done)&&(i.push(n.value),!e||i.length!==e);s=!0);}catch(t){a=!0,r=t}finally{try{s||null==o.return||o.return()}finally{if(a)throw r}}return i}}(t,r)||a(t,r)||n()}function a(e,n){if(e){if("string"==typeof e)return t(e,n);var r=Object.prototype.toString.call(e).slice(8,-1);if("Object"===r&&e.constructor&&(r=e.constructor.name),"Map"===r||"Set"===r)return Array.from(r);if("Arguments"===r||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(r))return t(e,n)}}!function(){var t,c,l,u,f,p,d,m,h,g,b,y,v,x,w,k,j,C,T,O,A=(t={},l=(c=[]).map,u=Array.isArray,f="undefined"!=typeof requestAnimationFrame?requestAnimationFrame:setTimeout,p=function(t){var e="";if("string"==typeof t)return t;if(u(t)&&t.length>0)for(var n,r=0;r<t.length;r++)""!==(n=p(t[r]))&&(e+=(e&&" ")+n);else for(var r in t)t[r]&&(e+=(e&&" ")+r);return e},d=function(t,e){var n={};for(var r in t)n[r]=t[r];for(var r in e)n[r]=e[r];return n},m=function(t){return t.reduce(function(t,e){return t.concat(e&&!0!==e?"function"==typeof e[0]?[e]:m(e):0)},c)},h=function(t,e){if(t!==e)for(var n in d(t,e)){var r,o;if(t[n]!==e[n]&&(r=t[n],o=e[n],!(u(r)&&u(o))||r[0]!==o[0]||"function"!=typeof r[0]))return!0;e[n]=t[n]}},g=function(t,e,n){for(var r,o,i=0,s=[];i<t.length||i<e.length;i++)r=t[i],s.push((o=e[i])?!r||o[0]!==r[0]||h(o[1],r[1])?[o[0],o[1],o[0](n,o[1]),r&&r[2]()]:r:r&&r[2]());return s},b=function(t,e,n,r,o,i){if("key"===e);else if("style"===e)for(var s in d(n,r))n=null==r||null==r[s]?"":r[s],"-"===s[0]?t[e].setProperty(s,n):t[e][s]=n;else"o"===e[0]&&"n"===e[1]?((t.actions||(t.actions={}))[e=e.slice(2)]=r)?n||t.addEventListener(e,o):t.removeEventListener(e,o):!i&&"list"!==e&&e in t?t[e]=null==r?"":r:null!=r&&!1!==r&&("class"!==e||(r=p(r)))?t.setAttribute(e,r):t.removeAttribute(e)},y=function(t,e,n){var r=t.props,o=3===t.type?document.createTextNode(t.name):(n=n||"svg"===t.name)?document.createElementNS("http://www.w3.org/2000/svg",t.name,{is:r.is}):document.createElement(t.name,{is:r.is});for(var i in r)b(o,i,null,r[i],e,n);for(var s=0,a=t.children.length;s<a;s++)o.appendChild(y(t.children[s]=j(t.children[s]),e,n));return t.node=o},v=function(t){return null==t?null:t.key},x=function(t,e,n,r,o,i){if(n===r);else if(null!=n&&3===n.type&&3===r.type)n.name!==r.name&&(e.nodeValue=r.name);else if(null==n||n.name!==r.name)e=t.insertBefore(y(r=j(r),o,i),e),null!=n&&t.removeChild(n.node);else{var s,a,c,l,u=n.props,f=r.props,p=n.children,m=r.children,h=0,g=0,w=p.length-1,k=m.length-1;for(var C in i=i||"svg"===r.name,d(u,f))("value"===C||"selected"===C||"checked"===C?e[C]:u[C])!==f[C]&&b(e,C,u[C],f[C],o,i);for(;g<=k&&h<=w&&null!=(c=v(p[h]))&&c===v(m[g]);)x(e,p[h].node,p[h],m[g]=j(m[g++],p[h++]),o,i);for(;g<=k&&h<=w&&null!=(c=v(p[w]))&&c===v(m[k]);)x(e,p[w].node,p[w],m[k]=j(m[k--],p[w--]),o,i);if(h>w)for(;g<=k;)e.insertBefore(y(m[g]=j(m[g++]),o,i),(a=p[h])&&a.node);else if(g>k)for(;h<=w;)e.removeChild(p[h++].node);else{for(var C=h,T={},O={};C<=w;C++)null!=(c=p[C].key)&&(T[c]=p[C]);for(;g<=k;){if(c=v(a=p[h]),l=v(m[g]=j(m[g],a)),O[c]||null!=l&&l===v(p[h+1])){null==c&&e.removeChild(a.node),h++;continue}null==l||1===n.type?(null==c&&(x(e,a&&a.node,a,m[g],o,i),g++),h++):(c===l?(x(e,a.node,a,m[g],o,i),O[l]=!0,h++):null!=(s=T[l])?(x(e,e.insertBefore(s.node,a&&a.node),s,m[g],o,i),O[l]=!0):x(e,a&&a.node,null,m[g],o,i),g++)}for(;h<=w;)null==v(a=p[h++])&&e.removeChild(a.node);for(var C in T)null==O[C]&&e.removeChild(T[C].node)}}return r.node=e},w=function(t,e){for(var n in t)if(t[n]!==e[n])return!0;for(var n in e)if(t[n]!==e[n])return!0},k=function(t){return"object"==typeof t?t:T(t)},j=function(t,e){return 2===t.type?((!e||!e.lazy||w(e.lazy,t.lazy))&&((e=k(t.lazy.view(t.lazy))).lazy=t.lazy),e):t},C=function(t,e,n,r,o,i){return{name:t,props:e,children:n,node:r,type:i,key:o}},T=function(e,n){return C(e,t,c,n,void 0,3)},O=function(e){return 3===e.nodeType?T(e.nodeValue,e):C(e.nodeName.toLowerCase(),t,l.call(e.childNodes,O),e,void 0,1)},{h:function(e,n){for(var r,o=[],i=[],s=arguments.length;s-- >2;)o.push(arguments[s]);for(;o.length>0;)if(u(r=o.pop()))for(var s=r.length;s-- >0;)o.push(r[s]);else!1===r||!0===r||null==r||i.push(k(r));return n=n||t,"function"==typeof e?e(n,i):C(e,n,i,void 0,n.key)},app:function(t){var e={},n=!1,r=t.view,o=t.node,i=o&&O(o),s=t.subscriptions,a=[],c=function(t){d(this.actions[t.type],t)},l=function(t){return e!==t&&(e=t,s&&(a=g(a,m([s(e)]),d)),r&&!n&&f(h,n=!0)),e},p=t.middleware,d=(void 0===p?function(t){return t}:p)(function(t,n){return"function"==typeof t?d(t(e,n)):u(t)?"function"==typeof t[0]||u(t[0])?d(t[0],"function"==typeof t[1]?t[1](n):t[1]):(m(t.slice(1)).map(function(t){t&&t[0](d,t[1])},l(t[0])),e):l(t)}),h=function(){n=!1,o=x(o.parentNode,o,i,i=k(r(e)),c)};d(t.init)}}),S=A.h,P=A.app,M=function(t){return function(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},n=arguments.length>1?arguments[1]:void 0,r=function(t){for(var e=arguments.length,n=Array(e>1?e-1:0),r=1;r<e;r++)n[r-1]=arguments[r];return n.some(function(e){return e===(void 0===t?"undefined":t&&"undefined"!=typeof Symbol&&t.constructor===Symbol?"symbol":typeof t)})};if(r(n,"undefined")){if(e.props)return S(t,{},[e]);r(e,"string","number","function")||Array.isArray(e)?(n=e,e={}):r(e.View,"function")&&(n=e.View,e={})}return S(t,e,n)}},W=M("a");M("abbr"),M("address"),M("animate"),M("animateMotion"),M("animateTransform"),M("area"),M("article"),M("aside"),M("audio"),M("b"),M("base"),M("bdi"),M("bdo"),M("blockquote"),M("body"),M("br");var E=M("button");M("canvas"),M("caption");var z=M("circle");M("cite"),M("clipPath");var q=M("code");M("col"),M("colgroup"),M("data"),M("datalist"),M("dd"),M("defs"),M("del"),M("desc"),M("description"),M("details"),M("dfn"),M("dialog"),M("discard");var L=M("div");M("dl"),M("dt"),M("ellipse"),M("em"),M("embed"),M("feBlend"),M("feColorMatrix"),M("feComponentTransfer"),M("feComposite"),M("feConvolveMatrix"),M("feDiffuseLighting"),M("feDisplacementMap"),M("feDistantLight"),M("feDropShadow"),M("feFlood"),M("feFuncA"),M("feFuncB"),M("feFuncG"),M("feFuncR"),M("feGaussianBlur"),M("feImage"),M("feMerge"),M("feMergeNode"),M("feMorphology"),M("feOffset"),M("fePointLight"),M("feSpecularLighting"),M("feSpotLight"),M("feTile"),M("feTurbulence"),M("fieldset"),M("figcaption"),M("figure"),M("filter");var N=M("footer");M("foreignObject"),M("form");var B=M("g"),D=M("h1"),I=M("h2"),F=M("h3"),R=M("h4");M("h5"),M("h6"),M("hatch"),M("hatchpath"),M("head");var V=M("header");M("hgroup"),M("hr"),M("html"),M("i"),M("iframe"),M("image");var G=M("img"),U=M("input");M("ins"),M("kbd"),M("label"),M("legend");var H=M("li");M("line"),M("linearGradient"),M("link");var _=M("main");M("map"),M("mark"),M("marker"),M("mask"),M("mesh"),M("meshgradient"),M("meshpatch"),M("meshrow"),M("meta"),M("metadata"),M("meter"),M("mpath");var Y=M("nav");M("noscript"),M("object"),M("ol"),M("optgroup"),M("option"),M("output");var J=M("p");M("param");var $=M("path");M("pattern"),M("picture"),M("polygon"),M("polyline");var K=M("pre");M("progress"),M("q"),M("radialGradient"),M("rb"),M("rect"),M("rp"),M("rt"),M("rtc"),M("ruby"),M("s"),M("samp"),M("script"),M("section"),M("select"),M("set"),M("small"),M("solidcolor"),M("source");var Q=M("span");M("stop"),M("strong"),M("style"),M("sub"),M("summary"),M("sup");var X=M("svg");M("symbol"),M("table"),M("tbody"),M("td"),M("template"),M("text"),M("textPath"),M("textarea"),M("tfoot"),M("th"),M("thead"),M("time"),M("title"),M("tr"),M("track"),M("tspan"),M("u");var Z=M("ul");M("unknown"),M("use"),M("video"),M("view"),M("wbr");var tt=function(t){var e=arguments.length>1&&void 0!==arguments[1]?arguments[1]:[];return N({class:"Footer"},[L({class:"Container"},[L({class:"Credits"},["made with a few bits of ",to({to:"https://magic.github.io/",target:"_blank",rel:"noopener"},"magic")]),e])])},te=function(t){if("string"==typeof t)t={project:t};else if(!t.project)return;var e=t.branch,n=void 0===e?"master":e,r=t.host,o=void 0===r?"github":r,i=t.project,a=void 0!==i&&i,c="",l=a;a.startsWith("@")?(c="@",a=a.substr(1)):l=a.split("/")[1];var u=[["npm",function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:a;return t&&{to:"https://www.npmjs.com/package/".concat(l),src:"https://img.shields.io/npm/v/".concat(c).concat(t,"?color=blue")}}],["node",function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:a;return t&&{src:"https://img.shields.io/node/v/".concat(c).concat(t,"?color=blue")}}],["license",function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:a;return t&&{src:"https://img.shields.io/npm/l/".concat(c).concat(t,"?color=blue")}}],["travis",function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:a;return t&&{to:"https://travis-ci.com/".concat(t),src:"https://img.shields.io/travis/com/".concat(t,"/").concat(n)}}],["appveyor",function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:a;if(t){var e=s(t.split("/"),2),r=e[0],o=e[1];return r=r.replace(/-/g,""),{to:"https://ci.appveyor.com/project/".concat(r,"/").concat(o,"/branch/").concat(n),src:"https://img.shields.io/appveyor/ci/".concat(r,"/").concat(o,"/").concat(n,".svg")}}}],["coveralls",function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:a;return{to:"https://coveralls.io/".concat(o,"/").concat(t),src:"https://img.shields.io/coveralls/".concat(o,"/").concat(t,"/").concat(n,".svg")}}],["snyk",function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:a;return t&&{to:"https://snyk.io/test/".concat(o,"/").concat(t),src:"https://img.shields.io/snyk/vulnerabilities/github/".concat(t,".svg")}}]].map(function(e){var n=s(e,2),r=n[0];return(0,n[1])(t[r])});if(u.length)return Z({class:"GitBadges"},u.map(function(t){var e=t.to,n=t.src;if(n){var r=tr({src:n,height:"23"});return e?H(to({to:e},r)):H(r)}}))},tn=function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},e=arguments.length>1&&void 0!==arguments[1]?arguments[1]:[],n=t.logo,r=t.menu,o=t.logotext,i=t.hash,s=t.url;if(n||r||o)return V({class:"Header"},[ti(),o&&J(o),r&&ts({url:s,hash:i,menu:r}),e])},tr=function(t){if("string"==typeof t&&(t={src:t}),t.src)return t.alt||(t.title?t.alt=t.title:(t.role="presentation",t.alt="",t.loading=t.loading||"lazy")),G(t)},to=function(t,e){var n=t.to,r=t.action,o=void 0===r?tp.go:r,s=t.text,a=i(t,["to","action","text"]),c=a.href,l=a.nofollow,u=a.noreferrer,f=i(a,["href","nofollow","noreferrer"]);return n=n||c||"",f.href=n,s&&e?s=[s,e]:s||(s=e||n),"/"===n[0]||"#"===n[0]?f.onclick=[o,tf.preventDefault]:(f.target="_blank",f.rel="noopener",l&&(f.rel+=" nofollow"),u&&(f.rel+=" noreferrer")),W(f,s)},ti=function(){return to({to:"/test/",class:"Logo"},[X({viewBox:"0 0 512 444"},[$({d:"M512 444L256 0 0 444z",fill:"#663695"}),z({cx:"256",cy:"294",r:"130",fill:"#fff"}),z({cx:"256",cy:"281",r:"40",fill:"#663695"}),$({d:"M256 350v44m24-44l1 13c1 27 29 27 29-7m-160-72s46-47 106-47c59 0 106 47 106 47s-47 43-106 43c-60 0-106-43-106-43zm65-75a134 134 0 0189 2",class:"stroke"}),$({d:"M256 81v53m184 270l-43-29M72 404l43-29",class:"stroke white"})])])},ts=function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},e=t.collapse,n=void 0===e||e,i=t.menu,s=t.hash,a=t.class,c=void 0===a?"":a,l=t.url;return c.includes("Menu")||(c="Menu ".concat(c).trim()),s&&!l.endsWith(s)&&(l+="#".concat(s)),Y({className:c},Z(i.map(function(t){return ta(o(r({},t),{url:l,collapse:n}))})))},ta=function(t){var e=t.collapse,n=t.items,o=void 0===n?[]:n,s=t.text,a=t.url,c=i(t,["collapse","items","text","url"]),l={class:{}},u=c.to;u===a&&(l.class.active=!0);var f=[];return(!e||a.includes(u))&&o.length&&(f=Z(o.map(function(t){return ta(r({url:a,collapse:e},t))}))),H(l,[u?to(c,s):Q(c,s),f])},tc=function(t){var e=t.nospy,n=void 0===e?{}:e;t.cookies;var r=n.show,o=n.title,i=void 0===o?"Privacy Notice":o,s=n.content,a=void 0===s?"This app neither saves, collects, nor shares any data about you.":s,c=n.buttonText;return r?L({class:"NoSpy"},[L({class:"Background",onclick:tp.nospy.toggle}),L({class:"Container"},[i&&F(i),a&&J(a),U({onclick:tp.nospy.toggle,value:void 0===c?"Awesome!":c,type:"button"})])]):L({class:"NoSpy"},X({class:"icon",onclick:tp.nospy.toggle,width:"25",height:"25",viewBox:"0 0 512 512"},[B([$({d:"\nM507,208c-1-7-7-12-14-13c-7-1-13,3-16,9\nc-5,11-16,19-29,19c-14,0-26-10-30-23c-2-8-11-13-19-11\nC393,191,389,192,384,192c-35-0-64-29-64-64c0-5,1-9,2-14\nc2-8-3-16-11-19C297,90,288,78,288,64c-0-13,8-24,19-29\nc6-3,10-9,9-16c-1-7-6-12-13-14C288,2,272,0,256,0\nC115,0,0,115,0,256c0,141,115,256,256,256c141-0,256-115,256-256\nC512,239,510,224,507,209z M414,414C374,455,318,480,256,480s-118-25-158-66\nC57,374,32,318,32,256S57,138,98,98C138,57,194,32,256,32c3,0,6,0,9,0\nC259,42,256,52,256,64c0,24,13,44,33,55C288,122,288,125,288,128\nc0,53,43,96,96,96c3,0,6-0,8-0C403,242,424,256,448,256\nc11-0,22-3,32-8c0,3,0,6,0,9C480,318,455,374,414,414z\n"}),z({cx:"192",cy:"128",r:"32"}),z({cx:"128",cy:"256",r:"32"}),z({cx:"288",cy:"384",r:"32"}),z({cx:"272",cy:"272",r:"16"}),z({cx:"400",cy:"336",r:"16"}),z({cx:"176",cy:"368",r:"16"})])]))},tl=function(t,e){var n=t.page,r=t.state;return _({id:"Magic",class:r.pageClass},L({class:{Wrapper:!0}},[tn(r),L({class:"Page",id:"page"},n(r)),tt(r),e]))},tu=function(t,e){"string"==typeof t?t={content:t}:e?t=r({content:e},t):Array.isArray(t)&&(t={content:t.join("")});var n=t.content,o=t.lines,i=void 0===o||o;return L({class:{Pre:!0,lines:i&&"false"!==i}},[L({class:"menu"},[E({onclick:[tp.pre.clip,function(t){return{e:t,content:n}}]},"copy")]),K(n.trim().split("\n").map(tu.Line))])};tu.Comment=function(t){return Q({class:"comment"},t)},tu.Line=function(t){return q({class:"line"},tu.Words(t))},tu.Word=function(t){if(!t)return"";var e=t.includes("://"),n=t.startsWith("mailto:")||t.includes("@")&&t.includes(".");if(e||n)return to({to:t,text:t});var r="";return("state"===t?r="state":"actions"===t?r="actions":tf.pre.keywords.includes(t)?r="keyword":tf.pre.builtins.includes(t)?r="builtin":tf.pre.booleans.includes(t)&&(r="boolean"),r)?Q({class:r},t):t},tu.Words=function(t){var r,o=e(r=t.split(tf.pre.commentRegex))||function(t){if("undefined"!=typeof Symbol&&null!=t[Symbol.iterator]||null!=t["@@iterator"])return Array.from(t)}(r)||a(r)||n(),i=o[0],c=o.slice(1);if(!i.endsWith(":")&&c.length)return[tu.Words(i),tu.Comment(c.join("").split(tf.pre.wordRegex).map(tu.Word))];var l=[],u=t;return(t.replace(tf.pre.stringRegex,function(t){if(u){var e=s(u.split(t),2),n=e[0],r=e[1];n&&l.push(n.split(tf.pre.wordRegex).map(tu.Word).filter(function(t){return t})),u=r}l.push(Q({class:"string"},t))}),u!==t)?(u&&l.push(u.split(tf.pre.wordRegex).map(tu.Word).filter(function(t){return t})),l):t.split(tf.pre.wordRegex).filter(function(t){return t}).map(tu.Word)};var tf={pre:{booleans:["true","false"],builtins:["Array","Object","String","Number","RegExp","Null","Symbol","Set","WeakSet","Map","WeakMap","setInterval","setTimeout","Promise","JSON","Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array"],commentRegex:/(\/\/)/gim,keywords:["let","this","long","package","float","goto","private","class","if","short","while","protected","with","debugger","case","continue","volatile","interface","instanceof","super","synchronized","throw","extends","final","export","throws","try","import","double","enum","boolean","abstract","function","implements","typeof","transient","break","default","do","static","void","int","new","async","native","switch","else","delete","null","public","var","await","byte","finally","catch","in","return","for","get","const","char","module","exports","require","npm","install","=>"],stringRegex:/("|')(.*?)\1/gim,wordRegex:/( )/gim},preventDefault:function(t){return t.preventDefault(),t}},tp={changeTheme:function(t){return o(r({},t),{pageClass:o(r({},t.pageClass),{light:"dark"===t.theme}),theme:"dark"===t.theme?"light":"dark"})},go:function(t,e){var n=e.currentTarget.href.replace(window.location.origin,""),i=s(n.split("#"),2),a=i[0],c=i[1],l=void 0===c?"":c;if(a===t.url&&l===t.hash)return l&&(window.location.hash=l),t;var u=t.pages&&t.pages[a]&&t.pages[a].title;u&&(document.title=t.title=u),a!==t.url?l||window.scrollTo({top:0}):window.location.hash=l;var f=window.scrollY;return window.history.pushState({url:a,hash:l,scrollY:f},t.title,n),o(r({},t),{url:a,hash:l,prev:t.url})},nospy:{toggle:function(t){return t.nospy.show=!t.nospy.show,r({},t)}},pop:function(t,e){var n=window.location,i=n.pathname,s=n.hash;s=s.substring(1);var a=0;return e.state&&(i=e.state.url,s=e.state.hash,a=e.state.scrollY||0),s?window.location.hash=s:window.scroll({top:a}),o(r({},t),{url:i,hash:s})},pre:{clip:function(t,e){var n=e.content;if("undefined"!=typeof document&&"function"==typeof document.execCommand){var r=document.createElement("textarea");r.id="copy",r.innerHTML=n,document.body.appendChild(r);var o=document.getElementById("copy");o.select(),document.execCommand("copy"),document.body.removeChild(o)}return t}}},td={listenPopState:function(t,e){var n=function(n){return t(e,n)};return addEventListener("popstate",n),function(){return removeEventListener("popstate",n)}}},tm={"/test/":function(t){return[D({id:"magictest"},"@magic/test"),J(["simple tests with lots of utility."," ecmascript modules only."," runs ecmascript module syntax tests without transpilation."," unbelievably fast."]),te("@magic/test"),I({id:"getting-started"},"getting started"),J("be in a nodejs project."),F({id:"getting-started-install"},"install"),tu({lines:"false"},"npm i --save-dev --save-exact @magic/test"),F("Create a test"),tu("\n// create test/functionName.mjs\nimport yourTest from '../path/to/your/file.mjs'\n\nexport default [\n  { fn: () => true, expect: true, info: 'true is true' },\n  // note that the yourTest function will be called automagically\n  { fn: yourTest, expect: true, info: 'hope this will work ;)'}\n]\n"),F({id:"getting-started-npm-scripts"},"npm scripts"),J("edit package.json"),tu('\n{\n  "scripts": {\n    "test": "t -p", // quick test, only failing tests log\n    "coverage": "t", // get full test output and coverage reports\n  }\n}\n'),J("repeated for easy copy pasting (without comments and trailing commas)"),tu('\n  "scripts": {\n    "test": "t -p",\n    "coverage": "t"\n  }\n'),F({id:"getting-started-quick-tests"},"quick tests"),J("without coverage"),tu("\n  // run the tests:\nnpm test\n\n// example output:\n// (failing tests will print, passing tests are silent)\n\n// ### Testing package: @magic/test\n// Ran 2 tests. Passed 2/2 100%\n"),F({id:"getting-started-coverage"},"coverage"),J(["@magic/test will automagically generate coverage reports"," if it is not called with the -p flag."]),F({id:"test-suites"},"data/fs driven test suite creation:"),R({id:"expectations-for-optimal-test-messages"},"expectations for optimal test messages:"),Z([H("src and test directories have the same directory structure and filenames"),H("tests one src file per test file"),H("tests one function per test suite"),H("tests one feature per test unit")]),R({id:"test-suites-fs"},"Filesystem based naming"),J("the following directory structure:"),tu("./test/\n  ./suite1.mjs\n  ./suite2.mjs"),J("yields the same result as exporting the following from ./test/index.mjs"),R({id:"test-suites-data"},"Data driven naming"),tu("import suite1 from './suite1'\nimport suite2 from './suite2'\n\nexport default {\n  suite1,\n  suite2,\n}"),F({id:"important---file-mappings"},"Important - File mappings"),J(["if test/index.mjs exists, no other files will be loaded."," if test/index.mjs exists, no other files from that directory will be loaded,"," if test/lib/index.mjs, no other files from that subdirectory will be loaded."," instead the exports of those index.mjs will be expected to be tests"]),F({id:"tests"},"single test"),J("literal value, function or promise"),tu("\nexport default { fn: true, expect: true, info: 'expect true to be true' }\n\n// expect: true is the default and can be omitted\nexport default { fn: true, info: 'expect true to be true' }\n\n// if fn is a function expect is the returned value of the function\nexport default { fn: () => false, expect: false, info: 'expect true to be true' }\n\n// if expect is a function the return value of the test get passed to it\nexport default { fn: false, expect: t => t === false, info: 'expect true to be true' }\n\n// if fn is a promise the resolved value will be returned\nexport default { fn: new Promise(r => r(true)), expect: true, info: 'expect true to be true' }\n\n// if expects is a promise it will resolve before being compared to the fn return value\nexport default { fn: true, expect: new Promise(r => r(true)), info: 'expect true to be true' }\n\n// callback functions can be tested easily too:\nimport { promise } from '@magic/test'\n\nconst fnWithCallback = (err, arg, cb) => cb(err, arg)\n\nexport default { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect: \"arg\" }\n"),R({id:"tests-types"},"testing types"),J(["types can be compared using ",to({to:"https://github.com/magic/types",text:"@magic/types"})]),J(["@magic/types is a richly featured and thoroughly tested type library without dependencies."," it is exported from this library for convenience."]),tu("\nimport { is } from '@magic/test'\n\nexport default [\n  { fn: () => 'string',\n    expect: is.string,\n    info: 'test if a function returns a string'\n  },\n  {\n    fn: () => 'string',\n    expect: is.length.equal(6),\n    info: 'test length of returned value'\n  },\n  // !!! Testing for deep equality. simple.\n  {\n    fn: () => [1, 2, 3],\n    expect: is.deep.equal([1, 2, 3]),\n    info: 'deep compare arrays/objects for equality',\n  },\n  {\n    fn: () => { key: 1 },\n    expect: is.deep.different({ value: 1 }),\n    info: 'deep compare arrays/objects for difference',\n  },\n]\n"),R({id:"caveat"},"caveat:"),J(["if you want to test if a function is a function, you need to wrap the function in a function."," this is because functions passed to fn get executed automatically."]),tu("\nimport { is } from '@magic/test'\n\nconst fnToTest = () => {}\n\n// both the tests will work as expected\nexport default [\n  {\n    fn: () => fnToTest,\n    expect: is.function,\n    info: 'function is a function',\n  },\n  {\n    fn: is.fn(fnToTest), // returns true\n    // we do not set expect: true, since that is the default\n    // expect: true,\n    info: 'function is a function',\n  },\n]\n"),tu("\n// will not work as expected and instead call fnToTest\nexport default {\n  fn: fnToTest,\n  expect: is.function,\n  info: 'function is a function',\n}\n"),F({id:"tests-multiple"},"multiple tests"),J("multiple tests can be created by exporting an array of single test objects."),tu("\nexport default {\n  multipleTests: [\n    { fn: () => true, expect: true, info: 'expect true to be true' },\n    { fn: () => false, expect: false, info: 'expect false to be false' },\n  ]\n}"),J("multiple tests can also be created by exporting an array of tests."),tu("\nexport default [\n  { fn: () => true, expect: true, info: 'expect true to be true' },\n  { fn: () => false, expect: false, info: 'expect false to be false' },\n]\n"),F({id:"tests-promises"},"promises"),tu("\nimport { promise, is } from '@magic/test'\n\nexport default [\n  // kinda clumsy, but works. until you try handling errors.\n  {\n    fn: new Promise(cb => setTimeOut(() => cb(true), 2000)),\n    expect: true,\n    info: 'handle promises',\n  },\n  // better!\n  {\n    fn: promise(cb => setTimeOut(() => cb(null, true), 200)),\n    expect: true,\n    info: 'handle promises in a nicer way',\n  },\n  {\n    fn: promise(cb => setTimeOut(() => cb(new Error('error')), 200)),\n    expect: is.error,\n    info: 'handle promise errors in a nice way',\n  },\n]\n"),F({id:"tests-cb"},"callback functions"),tu("\nimport { promise, is } from '@magic/test'\n\nconst fnWithCallback = (err, arg, cb) => cb(err, arg)\n\nexport default [\n  {\n    fn: promise(cb => fnWithCallback(null, true, cb)),\n    expect: true\n    info: 'handle callback functions as promises',\n  },\n  {\n    fn: promise(cb => fnWithCallback(new Error('oops'), true, cb)),\n    expect: is.error,\n    info: 'handle callback function error as promise',\n  },\n]\n"),F({id:"tests-hooks"},"hooks"),J("run functions before and/or after individual test"),tu("\nconst after = () => {\n  global.testing = 'Test has finished, cleanup.'\n}\n\nconst before = () => {\n  global.testing = false\n\n  // if a function gets returned,\n  // this function will be executed once the test finished.\n  return after\n}\n\nexport default [\n  {\n    fn: () => { global.testing = 'changed in test' },\n    // if before returns a function, it will execute after the test.\n    before,\n    after,\n    expect: () => global.testing === 'changed in test',\n  },\n]\n"),F({id:"tests-suite-hooks"},"suite hooks"),J("run functions before and/or after a suite of tests"),tu("\nconst afterAll = () => {\n  // Test has finished, cleanup.'\n  global.testing = undefined\n}\n\nconst beforeAll = () => {\n  global.testing = false\n\n  // if a function gets returned,\n  // this function will be executed once the test suite finished.\n  return afterAll\n}\n\nexport default [\n  {\n    fn: () => { global.testing = 'changed in test' },\n    // if beforeAll returns a function, it will execute after the test suite.\n    beforeAll,\n    // this is optional and can be omitted if beforeall returns a function.\n    // in this example, afterAll will trigger twice.\n    afterAll,\n    expect: () => global.testing === 'changed in test',\n  },\n]\n"),F({id:"tests-magic-modules"},"magic modules"),J(["@magic-modules assume all html tags to be globally defined."," to create those globals for your test and check if a @magic-module returns the correct markup,"," just add an html: true flag to the test."]),tu("\nconst expect = [\n  'i',\n  [\n    { class: 'testing' },\n    'testing',\n  ],\n]\n\nconst props = { class: 'testing' }\n\nexport default [\n  // note that fn is a wrapped function, we can not call i directly as we could other functions\n  {\n    fn: () => i(props, 'testing'),\n    expect,\n    info: 'magic/test can now test html',\n  },\n]\n"),I({id:"lib"},"Utility Belt"),J(["@magic/test exports some utility functions"," that make working with complex test workflows simpler."]),R({id:"lib-curry"},"curry"),J(["Currying can be used to split the arguments of a function into multiple nested functions."," This helps if you have a function with complicated arguments that you just want to quickly shim."]),tu("\nimport { curry } from '@magic/test'\n\nconst compare = (a, b) => a === b\nconst curried = curry(compare)\nconst shimmed = curried('shimmed_value')\n\nexport default {\n  fn: shimmed('shimmed_value'),\n  expect: true,\n  info: 'expect will be called with a and b and a will equal b',\n}\n"),R({id:"lib-vals"},"vals"),J(["exports some javascript types. more to come."," will sometime in the future be the base of a fuzzer."]),F({id:"lib-promises"},"promises"),J(["Helper function to wrap nodejs callback functions and promises with ease."," Handle the try/catch steps internally and return a resolved or rejected promise."]),tu("\nimport { promise, is } from '@magic/test'\n\nexport default [\n  {\n    fn: promise(cb => setTimeOut(() => cb(null, true), 200)),\n    expect: true,\n    info: 'handle promises in a nice way',\n  },\n  {\n    fn: promise(cb => setTimeOut(() => cb(new Error('error')), 200)),\n    expect: is.error,\n    info: 'handle promise errors in a nice way',\n  },\n]\n"),F({id:"lib-css"},"css"),J(["exports ",to({to:"https://github.com/magic/css",text:"@magic/css"}),", which allows parsing and stringification of css-in-js objects."]),R({id:"lib-trycatch"},"trycatch"),J("allows to test functions without bubbling the errors up into the runtime"),tu("\nimport { is, tryCatch } from '@magic/test'\n\nconst throwing = () => throw new Error('oops')\nconst healthy = () => true\n\nexport default [\n  {\n    fn: tryCatch(throwing()),\n    expect: is.error,\n    info: 'function throws an error',\n  },\n  {\n    fn: tryCatch(healthy()),\n    expect: true,\n    info: 'function does not throw'\n  },\n]\n"),R({id:"lib-version"},"version"),J("The version plugin checks your code according to a spec defined by you. This is designed to warn you on changes to your exports."),J(["Internally, the version function calls ",to({to:"https://github.com/magic/types",text:"@magic/types"})," and all functions exported from it are valid type strings in version specs."]),tu("\n// test/spec.js\nimport { version } from '@magic/test'\n\n// import your lib as your codebase requires\n// import * as lib from '../src/index.js'\n// import lib from '../src/index.js\n\nconst spec = {\n  stringValue: 'string',\n  numberValue: 'number',\n\n  objectValue: [\n    'obj',\n    {\n      key: 'Willbechecked',\n    },\n  ],\n\n  objectNoChildCheck: [\n    'obj',\n    false,\n  ],\n}\n\nexport default version(lib, spec)\n  "),I({id:"usage"},"usage"),F({id:"usage-js"},"js"),tu("\n// test/index.mjs\nimport run from '@magic/test'\n\nconst tests = {\n  lib: [\n    { fn: () => true, expect: true, info: 'Expect true to be true' }\n  ],\n}\n\nrun(tests)\n"),I({id:"usage-cli"},"cli"),F({id:"packagejson-recommended"},"package.json (recommended)"),J("add the magic/test bin scripts to package.json"),tu('\n{\n  "scripts": {\n    "test": "t -p",\n    "coverage": "t",\n  },\n  "devDependencies": {\n    "@magic/test": "github:magic/test"\n  }\n}'),J("then use the npm run scripts"),tu("\nnpm test\nnpm run coverage\n"),F({id:"usage-global"},"Globally (not recommended):"),J(["you can install this library globally,"," but the recommendation is to add the dependency and scripts to the package.json file."]),J(["this both explains to everyone that your app has these dependencies"," as well as keeping your bash free of clutter"]),tu("\nnpm i -g @magic/test\n\n// run tests in production mode\nt -p\n\n// run tests and get coverage in verbose mode\nt\n"),J(["This library tests itself, have a look at ",to({to:"https://github.com/magic/test/tree/master/test",text:"the tests"})," Checkout ",to({to:"https://github.com/magic/types/tree/master/test",text:"@magic/types"})," and the other magic libraries for more test examples."])]},"/test/404/":function(){return L("404 - not found.")}};P({init:o(r({},{description:["simple tests with lots of utility. ecmascript modules only.","runs ecmascript module tests without transpilation.","unbelievably fast."],logotext:"@magic/test",menu:[{items:[{text:"install",to:"/test/#getting-started-install"},{text:"npm scripts",to:"/test/#getting-started-npm-scripts"},{text:"quick tests",to:"/test/#getting-started-quick-tests"},{text:"coverage",to:"/test/#getting-started-coverage"}],text:"getting started",to:"/test/#getting-started"},{items:[{text:"fs based test suites",to:"/test/#test-suites-fs"},{text:"data based test suites",to:"/test/#test-suites-data"}],text:"test suites",to:"/test/#test-suites"},{items:[{text:"testing types",to:"/test/#tests-types"},{text:"multiple tests in one file",to:"/test/#tests-multiple"},{text:"promises",to:"/test/#tests-promises"},{text:"callback functions",to:"/test/#tests-cb"},{text:"run function before / after individual tests",to:"/test/#tests-hooks"},{text:"run function before / after suite of tests",to:"/test/#tests-suite-hooks"},{text:"test @magic-modules",to:"/test/#tests-magic-modules"}],text:"writing tests",to:"/test/#tests"},{items:[{text:"curry",to:"/test/#lib-curry"},{text:"vals",to:"/test/#lib-vals"},{text:"promises",to:"/test/#lib-promises"},{text:"css",to:"/test/#lib-css"},{text:"tryCatch",to:"/test/#lib-trycatch"}],text:"utility functions",to:"/test/#lib"},{items:[{text:"js api",to:"/test/#usage-js"},{text:"cli",to:"/test/#usage-cli"},{text:"npm i -g",to:"/test/#usage-global"}],text:"usage",to:"/test/#usage"}],nospy:{show:!1},pageClass:{},pages:{"/test/404/":{description:"404 - not found.",title:"404 - not found"}},root:"/test/",theme:"dark",title:"@magic/test",url:"/test/"}),{url:window.location.pathname,hash:window.location.hash.substr(1)}),subscriptions:function(t){return[[td.listenPopState,tp.pop]]},view:function(t){var e=tm[t.url]?t.url:"/404/",n=tm[e],r=t.pages&&t.pages[e];return r&&Object.keys(r).forEach(function(e){t[e]=r[e]}),t.url=e,tl({page:n,state:t},[function(){return arguments.length>0&&void 0!==arguments[0]&&arguments[0],X({class:"LightSwitch icon",onclick:tp.changeTheme,height:25,width:25,viewBox:"0 0 352 460"},[$({d:"M149 48C96 48 48 95 47 143c-1 13 19 17 20 0-1-35 48-75 83-75 15 0 12-22-1-20z"}),$({d:"M176 0C74 0 0 83 0 176c9 91 84 118 100 204h20c-16-92-97-138-100-204C22 70 105 21 176 20zM95 400c2 68 20 48 40 60h82c20-12 38 8 40-60z"}),$({d:"M175 0c102 0 177 83 177 176-9 91-86 118-102 204h-20c16-92 99-138 102-204-2-106-86-155-157-156z"})])}(t),tc(t)])},node:document.getElementById("Magic")})}();
+function e(e){for(var t=1;t<arguments.length;t++){var s=null!=arguments[t]?arguments[t]:{},i=Object.keys(s);"function"==typeof Object.getOwnPropertySymbols&&(i=i.concat(Object.getOwnPropertySymbols(s).filter(function(e){return Object.getOwnPropertyDescriptor(s,e).enumerable}))),i.forEach(function(t){var i,r;i=e,r=s[t],t in i?Object.defineProperty(i,t,{value:r,enumerable:!0,configurable:!0,writable:!0}):i[t]=r})}return e}function t(e,t){return t=null!=t?t:{},Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(t)):(function(e,t){var s=Object.keys(e);if(Object.getOwnPropertySymbols){var i=Object.getOwnPropertySymbols(e);s.push.apply(s,i)}return s})(Object(t)).forEach(function(s){Object.defineProperty(e,s,Object.getOwnPropertyDescriptor(t,s))}),e}function s(e,t){if(null==e)return{};var s,i,r=function(e,t){if(null==e)return{};var s,i,r={},n=Object.keys(e);for(i=0;i<n.length;i++)s=n[i],t.indexOf(s)>=0||(r[s]=e[s]);return r}(e,t);if(Object.getOwnPropertySymbols){var n=Object.getOwnPropertySymbols(e);for(i=0;i<n.length;i++)s=n[i],!(t.indexOf(s)>=0)&&Object.prototype.propertyIsEnumerable.call(e,s)&&(r[s]=e[s])}return r}(()=>{let{h:i,app:r}=(()=>{var e={},t=[],s=t.map,i=Array.isArray,r="undefined"!=typeof requestAnimationFrame?requestAnimationFrame:setTimeout,n=function(e){var t="";if("string"==typeof e)return e;if(i(e)&&e.length>0)for(var s,r=0;r<e.length;r++)""!==(s=n(e[r]))&&(t+=(t&&" ")+s);else for(var r in e)e[r]&&(t+=(t&&" ")+r);return t},o=function(e,t){var s={};for(var i in e)s[i]=e[i];for(var i in t)s[i]=t[i];return s},a=function(e){return e.reduce(function(e,t){return e.concat(t&&!0!==t?"function"==typeof t[0]?[t]:a(t):0)},t)},l=function(e,t){if(e!==t)for(var s in o(e,t)){var r,n;if(e[s]!==t[s]&&(r=e[s],n=t[s],!(i(r)&&i(n))||r[0]!==n[0]||"function"!=typeof r[0]))return!0;t[s]=e[s]}},c=function(e,t,s){for(var i,r,n=0,o=[];n<e.length||n<t.length;n++)i=e[n],o.push((r=t[n])?!i||r[0]!==i[0]||l(r[1],i[1])?[r[0],r[1],r[0](s,r[1]),i&&i[2]()]:i:i&&i[2]());return o},u=function(e,t,s,i,r,a){if("key"===t);else if("style"===t)for(var l in o(s,i))s=null==i||null==i[l]?"":i[l],"-"===l[0]?e[t].setProperty(l,s):e[t][l]=s;else"o"===t[0]&&"n"===t[1]?((e.actions||(e.actions={}))[t=t.slice(2)]=i)?s||e.addEventListener(t,r):e.removeEventListener(t,r):!a&&"list"!==t&&t in e?e[t]=null==i?"":i:null!=i&&!1!==i&&("class"!==t||(i=n(i)))?e.setAttribute(t,i):e.removeAttribute(t)},p=function(e,t,s){var i=e.props,r=3===e.type?document.createTextNode(e.name):(s=s||"svg"===e.name)?document.createElementNS("http://www.w3.org/2000/svg",e.name,{is:i.is}):document.createElement(e.name,{is:i.is});for(var n in i)u(r,n,null,i[n],t,s);for(var o=0,a=e.children.length;o<a;o++)r.appendChild(p(e.children[o]=h(e.children[o]),t,s));return e.node=r},f=function(e){return null==e?null:e.key},d=function(e,t,s,i,r,n){if(s===i);else if(null!=s&&3===s.type&&3===i.type)s.name!==i.name&&(t.nodeValue=i.name);else if(null==s||s.name!==i.name)t=e.insertBefore(p(i=h(i),r,n),t),null!=s&&e.removeChild(s.node);else{var a,l,c,m,g=s.props,b=i.props,y=s.children,x=i.children,w=0,v=0,k=y.length-1,j=x.length-1;for(var C in n=n||"svg"===i.name,o(g,b))("value"===C||"selected"===C||"checked"===C?t[C]:g[C])!==b[C]&&u(t,C,g[C],b[C],r,n);for(;v<=j&&w<=k&&null!=(c=f(y[w]))&&c===f(x[v]);)d(t,y[w].node,y[w],x[v]=h(x[v++],y[w++]),r,n);for(;v<=j&&w<=k&&null!=(c=f(y[k]))&&c===f(x[j]);)d(t,y[k].node,y[k],x[j]=h(x[j--],y[k--]),r,n);if(w>k)for(;v<=j;)t.insertBefore(p(x[v]=h(x[v++]),r,n),(l=y[w])&&l.node);else if(v>j)for(;w<=k;)t.removeChild(y[w++].node);else{for(var C=w,O={},T={};C<=k;C++)null!=(c=y[C].key)&&(O[c]=y[C]);for(;v<=j;){if(c=f(l=y[w]),m=f(x[v]=h(x[v],l)),T[c]||null!=m&&m===f(y[w+1])){null==c&&t.removeChild(l.node),w++;continue}null==m||1===s.type?(null==c&&(d(t,l&&l.node,l,x[v],r,n),v++),w++):(c===m?(d(t,l.node,l,x[v],r,n),T[m]=!0,w++):null!=(a=O[m])?(d(t,t.insertBefore(a.node,l&&l.node),a,x[v],r,n),T[m]=!0):d(t,l&&l.node,null,x[v],r,n),v++)}for(;w<=k;)null==f(l=y[w++])&&t.removeChild(l.node);for(var C in O)null==T[C]&&t.removeChild(O[C].node)}}return i.node=t},m=function(e,t){for(var s in e)if(e[s]!==t[s])return!0;for(var s in t)if(e[s]!==t[s])return!0},g=function(e){return"object"==typeof e?e:y(e)},h=function(e,t){return 2===e.type?((!t||!t.lazy||m(t.lazy,e.lazy))&&((t=g(e.lazy.view(e.lazy))).lazy=e.lazy),t):e},b=function(e,t,s,i,r,n){return{name:e,props:t,children:s,node:i,type:n,key:r}},y=function(s,i){return b(s,e,t,i,void 0,3)},x=function(t){return 3===t.nodeType?y(t.nodeValue,t):b(t.nodeName.toLowerCase(),e,s.call(t.childNodes,x),t,void 0,1)};return{h:function(t,s){for(var r,n=[],o=[],a=arguments.length;a-- >2;)n.push(arguments[a]);for(;n.length>0;)if(i(r=n.pop()))for(var a=r.length;a-- >0;)n.push(r[a]);else!1===r||!0===r||null==r||o.push(g(r));return s=s||e,"function"==typeof t?t(s,o):b(t,s,o,void 0,s.key)},app:function(e){var t={},s=!1,n=e.view,o=e.node,l=o&&x(o),u=e.subscriptions,p=[],f=function(e){b(this.actions[e.type],e)},m=function(e){return t!==e&&(t=e,u&&(p=c(p,a([u(t)]),b)),n&&!s&&r(y,s=!0)),t};let{middleware:h=e=>e}=e,b=h((e,s)=>"function"==typeof e?b(e(t,s)):i(e)?"function"==typeof e[0]||i(e[0])?b(e[0],"function"==typeof e[1]?e[1](s):e[1]):(a(e.slice(1)).map(function(e){e&&e[0](b,e[1])},m(e[0])),t):m(e));var y=function(){s=!1,o=d(o.parentNode,o,l,l=g(n(t)),f)};b(e.init)}}})(),n=e=>(t={},s)=>{let r=(e,...t)=>t.some(t=>t===typeof e);if(r(s,"undefined")){if(t.props)return i(e,{},[t]);r(t,"string","number","function")||Array.isArray(t)?(s=t,t={}):r(t.View,"function")&&(s=t.View,t={})}return i(e,t,s)},o=n("a");n("abbr"),n("address"),n("animate"),n("animateMotion"),n("animateTransform"),n("area"),n("article"),n("aside"),n("audio"),n("b"),n("base"),n("bdi"),n("bdo"),n("blockquote"),n("body"),n("br");let a=n("button");n("canvas"),n("caption");let l=n("circle");n("cite"),n("clipPath");let c=n("code");n("col"),n("colgroup"),n("data"),n("datalist"),n("dd"),n("defs"),n("del"),n("desc"),n("description"),n("details"),n("dfn"),n("dialog"),n("discard");let u=n("div");n("dl"),n("dt"),n("ellipse"),n("em"),n("embed"),n("feBlend"),n("feColorMatrix"),n("feComponentTransfer"),n("feComposite"),n("feConvolveMatrix"),n("feDiffuseLighting"),n("feDisplacementMap"),n("feDistantLight"),n("feDropShadow"),n("feFlood"),n("feFuncA"),n("feFuncB"),n("feFuncG"),n("feFuncR"),n("feGaussianBlur"),n("feImage"),n("feMerge"),n("feMergeNode"),n("feMorphology"),n("feOffset"),n("fePointLight"),n("feSpecularLighting"),n("feSpotLight"),n("feTile"),n("feTurbulence"),n("fieldset"),n("figcaption"),n("figure"),n("filter");let p=n("footer");n("foreignObject"),n("form");let f=n("g"),d=n("h1"),m=n("h2"),g=n("h3"),h=n("h4");n("h5"),n("h6"),n("hatch"),n("hatchpath"),n("head");let b=n("header");n("hgroup"),n("hr"),n("html"),n("i"),n("iframe"),n("image");let y=n("img"),x=n("input");n("ins"),n("kbd"),n("label"),n("legend");let w=n("li");n("line"),n("linearGradient"),n("link");let v=n("main");n("map"),n("mark"),n("marker"),n("mask"),n("mesh"),n("meshgradient"),n("meshpatch"),n("meshrow"),n("meta"),n("metadata"),n("meter"),n("mpath");let k=n("nav");n("noscript"),n("object"),n("ol"),n("optgroup"),n("option"),n("output");let j=n("p");n("param");let C=n("path");n("pattern"),n("picture"),n("polygon"),n("polyline");let O=n("pre");n("progress"),n("q"),n("radialGradient"),n("rb"),n("rect"),n("rp"),n("rt"),n("rtc"),n("ruby"),n("s"),n("samp"),n("script"),n("section"),n("select"),n("set"),n("small"),n("solidcolor"),n("source");let T=n("span");n("stop"),n("strong"),n("style"),n("sub"),n("summary"),n("sup");let A=n("svg");n("symbol"),n("table"),n("tbody"),n("td"),n("template"),n("text"),n("textPath"),n("textarea"),n("tfoot"),n("th"),n("thead"),n("time"),n("title"),n("tr"),n("track"),n("tspan"),n("u");let P=n("ul");n("unknown"),n("url"),n("use"),n("video"),n("view"),n("wbr");let $=()=>u({class:"Credits"},["made with a few bits of ",q({to:"https://magic.github.io/",target:"_blank",rel:"noopener"},"magic")]),M=(e,t=[])=>p({class:"Footer"},[u({class:"Container"},[$(),t])]),S=e=>{if("string"==typeof e)e={project:e};else if(!e.project)return;let{branch:t="master",host:s="github"}=e,{project:i=!1}=e,r="",n=i;i.startsWith("@")?(r="@",i=i.substr(1)):n=i.split("/")[1];let o=[["npm",(e=i)=>e&&{to:`https://www.npmjs.com/package/${n}`,src:`https://img.shields.io/npm/v/${r}${e}?color=blue`}],["node",(e=i)=>e&&{src:`https://img.shields.io/node/v/${r}${e}?color=blue`}],["license",(e=i)=>e&&{src:`https://img.shields.io/npm/l/${r}${e}?color=blue`}],["travis",(e=i)=>e&&{to:`https://travis-ci.com/${e}`,src:`https://img.shields.io/travis/com/${e}/${t}`}],["appveyor",(e=i)=>{if(e){let[s,i]=e.split("/");return{to:`https://ci.appveyor.com/project/${s=s.replace(/-/g,"")}/${i}/branch/${t}`,src:`https://img.shields.io/appveyor/ci/${s}/${i}/${t}.svg`}}}],["coveralls",(e=i)=>({to:`https://coveralls.io/${s}/${e}`,src:`https://img.shields.io/coveralls/${s}/${e}/${t}.svg`})],["snyk",(e=i)=>e&&{to:`https://snyk.io/test/${s}/${e}`,src:`https://img.shields.io/snyk/vulnerabilities/github/${e}.svg`}]].map(([t,s])=>s(e[t]));if(o.length)return P({class:"GitBadges"},o.map(({to:e,src:t})=>{if(!t)return;let s=z({src:t,height:"23"});return e?w(q({to:e},s)):w(s)}))},W=(e={},t=[])=>{let{logo:s,menu:i,logotext:r,hash:n,url:o}=e;if(s||i||r)return b({class:"Header"},[L(),r&&j(r),i&&B({url:o,hash:n,menu:i}),t])},z=e=>{"string"==typeof e&&(e={src:e});let{loading:t="lazy"}=e;if(e.src)return e.hasOwnProperty("alt")||(e.title?e.alt=e.title:e.alt=""),e.loading=t,y(e)},E=(e={})=>A({class:"LightSwitch icon",onclick:V.changeTheme,height:25,width:25,viewBox:"0 0 352 460"},[C({d:"M149 48C96 48 48 95 47 143c-1 13 19 17 20 0-1-35 48-75 83-75 15 0 12-22-1-20z"}),C({d:"M176 0C74 0 0 83 0 176c9 91 84 118 100 204h20c-16-92-97-138-100-204C22 70 105 21 176 20zM95 400c2 68 20 48 40 60h82c20-12 38 8 40-60z"}),C({d:"M175 0c102 0 177 83 177 176-9 91-86 118-102 204h-20c16-92 99-138 102-204-2-106-86-155-157-156z"})]),q=(e,t)=>{var{to:i,action:r=V.go,text:n}=e,a=s(e,["to","action","text"]);let{href:l,nofollow:c,noreferrer:u}=a,p=s(a,["href","nofollow","noreferrer"]);i=i||l||"",p.href=i,n&&t?n=[n,t]:n||(n=t||i);let f="/"===i[0]||"#"===i[0];return f?p.onclick=[r,I.preventDefault]:(p.target="_blank",p.rel="noopener",c&&(p.rel+=" nofollow"),u&&(p.rel+=" noreferrer")),o(p,n)},L=()=>q({to:"/test/",class:"Logo"},[A({viewBox:"0 0 512 444"},[C({d:"M512 444L256 0 0 444z",fill:"#663695"}),l({cx:"256",cy:"294",r:"130",fill:"#fff"}),l({cx:"256",cy:"281",r:"40",fill:"#663695"}),C({d:"M256 350v44m24-44l1 13c1 27 29 27 29-7m-160-72s46-47 106-47c59 0 106 47 106 47s-47 43-106 43c-60 0-106-43-106-43zm65-75a134 134 0 0189 2",class:"stroke"}),C({d:"M256 81v53m184 270l-43-29M72 404l43-29",class:"stroke white"})])]),B=(s={})=>{let{collapse:i=!0,menu:r,hash:n}=s,{class:o="",url:a}=s;return o.includes("Menu")||(o=`Menu ${o}`.trim()),n&&!a.endsWith(n)&&(a+=`#${n}`),k({className:o},P(r.map(s=>N(t(e({},s),{url:a,collapse:i})))))},N=t=>{let{collapse:i,items:r=[],text:n,url:o}=t,a=s(t,["collapse","items","text","url"]),l={class:{}},{to:c}=a;c===o&&(l.class.active=!0);let u=[],p=!i||o.includes(c);return p&&r.length&&(u=P(r.map(t=>N(e({url:o,collapse:i},t))))),w(l,[c?q(a,n):T(a,n),u])},D=({nospy:e={},cookies:t=[]})=>{let{show:s,title:i="Privacy Notice",content:r="This app neither saves, collects, nor shares any data about you.",buttonText:n="Awesome!"}=e;return s?u({class:"NoSpy"},[u({class:"Background",onclick:V.nospy.toggle}),u({class:"Container"},[i&&g(i),r&&j(r),x({onclick:V.nospy.toggle,value:n,type:"button"})])]):u({class:"NoSpy"},A({class:"icon",onclick:V.nospy.toggle,width:"25",height:"25",viewBox:"0 0 512 512"},[f([C({d:`
+M507,208c-1-7-7-12-14-13c-7-1-13,3-16,9
+c-5,11-16,19-29,19c-14,0-26-10-30-23c-2-8-11-13-19-11
+C393,191,389,192,384,192c-35-0-64-29-64-64c0-5,1-9,2-14
+c2-8-3-16-11-19C297,90,288,78,288,64c-0-13,8-24,19-29
+c6-3,10-9,9-16c-1-7-6-12-13-14C288,2,272,0,256,0
+C115,0,0,115,0,256c0,141,115,256,256,256c141-0,256-115,256-256
+C512,239,510,224,507,209z M414,414C374,455,318,480,256,480s-118-25-158-66
+C57,374,32,318,32,256S57,138,98,98C138,57,194,32,256,32c3,0,6,0,9,0
+C259,42,256,52,256,64c0,24,13,44,33,55C288,122,288,125,288,128
+c0,53,43,96,96,96c3,0,6-0,8-0C403,242,424,256,448,256
+c11-0,22-3,32-8c0,3,0,6,0,9C480,318,455,374,414,414z
+`}),l({cx:"192",cy:"128",r:"32"}),l({cx:"128",cy:"256",r:"32"}),l({cx:"288",cy:"384",r:"32"}),l({cx:"272",cy:"272",r:"16"}),l({cx:"400",cy:"336",r:"16"}),l({cx:"176",cy:"368",r:"16"})])]))},F=({page:e,state:t},s)=>{let i={id:"Magic",class:t.pageClass};return v(i,u({class:{Wrapper:!0}},[W(t),u({class:"Page",id:"page"},e(t)),M(t),s]))},R=(t,s)=>{"string"==typeof t?t={content:t}:s?t=e({content:s},t):Array.isArray(t)&&(t={content:t.join("")});let{content:i,lines:r=!0}=t;return u({class:{Pre:!0,lines:r&&"false"!==r}},[u({class:"menu"},[a({onclick:[V.pre.clip,e=>({e,content:i})]},"copy")]),O(i.trim().split("\n").map(R.Line))])};R.Comment=e=>T({class:"comment"},e),R.Line=e=>c({class:"line"},R.Words(e)),R.Word=e=>{if(!e)return"";let t=e.includes("://"),s=e.startsWith("mailto:")||e.includes("@")&&e.includes(".");if(t||s)return q({to:e,text:e});let i="";return("state"===e?i="state":"actions"===e?i="actions":"effects"===e?i="effects":"subscriptions"===e?i="subscriptions":I.pre.keywords.includes(e)?i="keyword":I.pre.builtins.includes(e)?i="builtin":I.pre.booleans.includes(e)&&(i="boolean"),i)?T({class:i},e):e},R.Words=e=>{let[t,...s]=e.split(I.pre.commentRegex),i=!t.endsWith(":")&&s.length;if(i)return[R.Words(t),R.Comment(s.join("").split(I.pre.wordRegex).map(R.Word))];let r=[],n=e;if(e.replace(I.pre.stringRegex,e=>{if(n){let[t,s]=n.split(e);t&&r.push(t.split(I.pre.wordRegex).map(R.Word).filter(e=>e)),n=s}r.push(T({class:"string"},e))}),n!==e)return n&&r.push(n.split(I.pre.wordRegex).map(R.Word).filter(e=>e)),r;let o=e.split(I.pre.wordRegex).filter(e=>e);return o.map(R.Word)};let I={pre:{booleans:["true","false"],builtins:["Array","Object","String","Number","RegExp","Null","Symbol","Set","WeakSet","Map","WeakMap","setInterval","setTimeout","Promise","JSON","Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array"],commentRegex:/(\/\/)/gim,keywords:["let","this","long","package","float","goto","private","class","if","short","while","protected","with","debugger","case","continue","volatile","interface","instanceof","super","synchronized","throw","extends","final","export","throws","try","import","double","enum","boolean","abstract","function","implements","typeof","transient","break","default","do","static","void","int","new","async","native","switch","else","delete","null","public","var","await","byte","finally","catch","in","return","for","get","const","char","module","exports","require","npm","install","=>"],stringRegex:/("|')(.*?)\1/gim,wordRegex:/( )/gim},preventDefault:e=>(e.preventDefault(),e)},V={changeTheme:s=>t(e({},s),{pageClass:t(e({},s.pageClass),{light:"dark"===s.theme}),theme:"dark"===s.theme?"light":"dark"}),go:(s,i)=>{let r=i.currentTarget.href.replace(window.location.origin,""),[n,o=""]=r.split("#");if(n===s.url&&o===s.hash)return o&&(window.location.hash=o),s;let a=s.pages&&s.pages[n]&&s.pages[n].title;a&&(document.title=s.title=a),n!==s.url?o||window.scrollTo({top:0}):window.location.hash=o;let{scrollY:l}=window;return window.history.pushState({url:n,hash:o,scrollY:l},s.title,r),t(e({},s),{url:n,hash:o,prev:s.url})},nospy:{toggle:t=>(t.nospy.show=!t.nospy.show,e({},t))},pop:(s,i)=>{let{pathname:r,hash:n}=window.location;n=n.substring(1);let o=0;return i.state&&(r=i.state.url,n=i.state.hash,o=i.state.scrollY||0),n?window.location.hash=n:window.scroll({top:o}),t(e({},s),{url:r,hash:n})},pre:{clip:(e,{content:t})=>{if("undefined"!=typeof document&&"function"==typeof document.execCommand){let e=document.createElement("textarea");e.id="copy",e.innerHTML=t,document.body.appendChild(e);let s=document.getElementById("copy");s.select(),document.execCommand("copy"),document.body.removeChild(s)}return e}}},G={listenPopState:(e,t)=>{let s=s=>e(t,s);return addEventListener("popstate",s),()=>removeEventListener("popstate",s)}},U={"/test/":e=>[d({id:"magictest"},"@magic/test"),j(["simple tests with lots of utility."," ecmascript modules only."," runs ecmascript module syntax tests without transpilation."," unbelievably fast."]),S("@magic/test"),m({id:"getting-started"},"getting started"),j("be in a nodejs project."),g({id:"getting-started-install"},"install"),R({lines:"false"},"npm i --save-dev --save-exact @magic/test"),g("Create a test"),R(`
+// create test/functionName.mjs
+import yourTest from '../path/to/your/file.mjs'
+
+export default [
+  { fn: () => true, expect: true, info: 'true is true' },
+  // note that the yourTest function will be called automagically
+  { fn: yourTest, expect: true, info: 'hope this will work ;)'}
+]
+`),g({id:"getting-started-npm-scripts"},"npm scripts"),j("edit package.json"),R(`
+{
+  "scripts": {
+    "test": "t -p", // quick test, only failing tests log
+    "coverage": "t", // get full test output and coverage reports
+  }
+}
+`),j("repeated for easy copy pasting (without comments and trailing commas)"),R(`
+  "scripts": {
+    "test": "t -p",
+    "coverage": "t"
+  }
+`),g({id:"getting-started-quick-tests"},"quick tests"),j("without coverage"),R(`
+  // run the tests:
+npm test
+
+// example output:
+// (failing tests will print, passing tests are silent)
+
+// ### Testing package: @magic/test
+// Ran 2 tests. Passed 2/2 100%
+`),g({id:"getting-started-coverage"},"coverage"),j(["@magic/test will automagically generate coverage reports"," if it is not called with the -p flag."]),g({id:"test-suites"},"data/fs driven test suite creation:"),h({id:"expectations-for-optimal-test-messages"},"expectations for optimal test messages:"),P([w("src and test directories have the same directory structure and filenames"),w("tests one src file per test file"),w("tests one function per test suite"),w("tests one feature per test unit")]),h({id:"test-suites-fs"},"Filesystem based naming"),j("the following directory structure:"),R(`./test/
+  ./suite1.mjs
+  ./suite2.mjs`),j("yields the same result as exporting the following from ./test/index.mjs"),h({id:"test-suites-data"},"Data driven naming"),R(`import suite1 from './suite1'
+import suite2 from './suite2'
+
+export default {
+  suite1,
+  suite2,
+}`),g({id:"important---file-mappings"},"Important - File mappings"),j(["if test/index.mjs exists, no other files will be loaded."," if test/index.mjs exists, no other files from that directory will be loaded,"," if test/lib/index.mjs, no other files from that subdirectory will be loaded."," instead the exports of those index.mjs will be expected to be tests"]),g({id:"tests"},"single test"),j("literal value, function or promise"),R(`
+export default { fn: true, expect: true, info: 'expect true to be true' }
+
+// expect: true is the default and can be omitted
+export default { fn: true, info: 'expect true to be true' }
+
+// if fn is a function expect is the returned value of the function
+export default { fn: () => false, expect: false, info: 'expect true to be true' }
+
+// if expect is a function the return value of the test get passed to it
+export default { fn: false, expect: t => t === false, info: 'expect true to be true' }
+
+// if fn is a promise the resolved value will be returned
+export default { fn: new Promise(r => r(true)), expect: true, info: 'expect true to be true' }
+
+// if expects is a promise it will resolve before being compared to the fn return value
+export default { fn: true, expect: new Promise(r => r(true)), info: 'expect true to be true' }
+
+// callback functions can be tested easily too:
+import { promise } from '@magic/test'
+
+const fnWithCallback = (err, arg, cb) => cb(err, arg)
+
+export default { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect: "arg" }
+`),h({id:"tests-types"},"testing types"),j(["types can be compared using ",q({to:"https://github.com/magic/types",text:"@magic/types"})]),j(["@magic/types is a richly featured and thoroughly tested type library without dependencies."," it is exported from this library for convenience."]),R(`
+import { is } from '@magic/test'
+
+export default [
+  { fn: () => 'string',
+    expect: is.string,
+    info: 'test if a function returns a string'
+  },
+  {
+    fn: () => 'string',
+    expect: is.length.equal(6),
+    info: 'test length of returned value'
+  },
+  // !!! Testing for deep equality. simple.
+  {
+    fn: () => [1, 2, 3],
+    expect: is.deep.equal([1, 2, 3]),
+    info: 'deep compare arrays/objects for equality',
+  },
+  {
+    fn: () => { key: 1 },
+    expect: is.deep.different({ value: 1 }),
+    info: 'deep compare arrays/objects for difference',
+  },
+]
+`),h({id:"caveat"},"caveat:"),j(["if you want to test if a function is a function, you need to wrap the function in a function."," this is because functions passed to fn get executed automatically."]),R(`
+import { is } from '@magic/test'
+
+const fnToTest = () => {}
+
+// both the tests will work as expected
+export default [
+  {
+    fn: () => fnToTest,
+    expect: is.function,
+    info: 'function is a function',
+  },
+  {
+    fn: is.fn(fnToTest), // returns true
+    // we do not set expect: true, since that is the default
+    // expect: true,
+    info: 'function is a function',
+  },
+]
+`),R(`
+// will not work as expected and instead call fnToTest
+export default {
+  fn: fnToTest,
+  expect: is.function,
+  info: 'function is a function',
+}
+`),g({id:"tests-multiple"},"multiple tests"),j("multiple tests can be created by exporting an array of single test objects."),R(`
+export default {
+  multipleTests: [
+    { fn: () => true, expect: true, info: 'expect true to be true' },
+    { fn: () => false, expect: false, info: 'expect false to be false' },
+  ]
+}`),j("multiple tests can also be created by exporting an array of tests."),R(`
+export default [
+  { fn: () => true, expect: true, info: 'expect true to be true' },
+  { fn: () => false, expect: false, info: 'expect false to be false' },
+]
+`),g({id:"tests-promises"},"promises"),R(`
+import { promise, is } from '@magic/test'
+
+export default [
+  // kinda clumsy, but works. until you try handling errors.
+  {
+    fn: new Promise(cb => setTimeOut(() => cb(true), 2000)),
+    expect: true,
+    info: 'handle promises',
+  },
+  // better!
+  {
+    fn: promise(cb => setTimeOut(() => cb(null, true), 200)),
+    expect: true,
+    info: 'handle promises in a nicer way',
+  },
+  {
+    fn: promise(cb => setTimeOut(() => cb(new Error('error')), 200)),
+    expect: is.error,
+    info: 'handle promise errors in a nice way',
+  },
+]
+`),g({id:"tests-cb"},"callback functions"),R(`
+import { promise, is } from '@magic/test'
+
+const fnWithCallback = (err, arg, cb) => cb(err, arg)
+
+export default [
+  {
+    fn: promise(cb => fnWithCallback(null, true, cb)),
+    expect: true
+    info: 'handle callback functions as promises',
+  },
+  {
+    fn: promise(cb => fnWithCallback(new Error('oops'), true, cb)),
+    expect: is.error,
+    info: 'handle callback function error as promise',
+  },
+]
+`),g({id:"tests-hooks"},"hooks"),j("run functions before and/or after individual test"),R(`
+const after = () => {
+  global.testing = 'Test has finished, cleanup.'
+}
+
+const before = () => {
+  global.testing = false
+
+  // if a function gets returned,
+  // this function will be executed once the test finished.
+  return after
+}
+
+export default [
+  {
+    fn: () => { global.testing = 'changed in test' },
+    // if before returns a function, it will execute after the test.
+    before,
+    after,
+    expect: () => global.testing === 'changed in test',
+  },
+]
+`),g({id:"tests-suite-hooks"},"suite hooks"),j("run functions before and/or after a suite of tests"),R(`
+const afterAll = () => {
+  // Test has finished, cleanup.'
+  global.testing = undefined
+}
+
+const beforeAll = () => {
+  global.testing = false
+
+  // if a function gets returned,
+  // this function will be executed once the test suite finished.
+  return afterAll
+}
+
+export default [
+  {
+    fn: () => { global.testing = 'changed in test' },
+    // if beforeAll returns a function, it will execute after the test suite.
+    beforeAll,
+    // this is optional and can be omitted if beforeall returns a function.
+    // in this example, afterAll will trigger twice.
+    afterAll,
+    expect: () => global.testing === 'changed in test',
+  },
+]
+`),g({id:"tests-magic-modules"},"magic modules"),j(["@magic-modules assume all html tags to be globally defined."," to create those globals for your test and check if a @magic-module returns the correct markup,"," just add an html: true flag to the test."]),R(`
+const expect = [
+  'i',
+  [
+    { class: 'testing' },
+    'testing',
+  ],
+]
+
+const props = { class: 'testing' }
+
+export default [
+  // note that fn is a wrapped function, we can not call i directly as we could other functions
+  {
+    fn: () => i(props, 'testing'),
+    expect,
+    info: 'magic/test can now test html',
+  },
+]
+`),m({id:"lib"},"Utility Belt"),j(["@magic/test exports some utility functions"," that make working with complex test workflows simpler."]),h({id:"lib-curry"},"curry"),j(["Currying can be used to split the arguments of a function into multiple nested functions."," This helps if you have a function with complicated arguments that you just want to quickly shim."]),R(`
+import { curry } from '@magic/test'
+
+const compare = (a, b) => a === b
+const curried = curry(compare)
+const shimmed = curried('shimmed_value')
+
+export default {
+  fn: shimmed('shimmed_value'),
+  expect: true,
+  info: 'expect will be called with a and b and a will equal b',
+}
+`),h({id:"lib-vals"},"vals"),j(["exports some javascript types. more to come."," will sometime in the future be the base of a fuzzer."]),g({id:"lib-promises"},"promises"),j(["Helper function to wrap nodejs callback functions and promises with ease."," Handle the try/catch steps internally and return a resolved or rejected promise."]),R(`
+import { promise, is } from '@magic/test'
+
+export default [
+  {
+    fn: promise(cb => setTimeOut(() => cb(null, true), 200)),
+    expect: true,
+    info: 'handle promises in a nice way',
+  },
+  {
+    fn: promise(cb => setTimeOut(() => cb(new Error('error')), 200)),
+    expect: is.error,
+    info: 'handle promise errors in a nice way',
+  },
+]
+`),g({id:"lib-css"},"css"),j(["exports ",q({to:"https://github.com/magic/css",text:"@magic/css"}),", which allows parsing and stringification of css-in-js objects."]),h({id:"lib-trycatch"},"trycatch"),j("allows to test functions without bubbling the errors up into the runtime"),R(`
+import { is, tryCatch } from '@magic/test'
+
+const throwing = () => throw new Error('oops')
+const healthy = () => true
+
+export default [
+  {
+    fn: tryCatch(throwing()),
+    expect: is.error,
+    info: 'function throws an error',
+  },
+  {
+    fn: tryCatch(healthy()),
+    expect: true,
+    info: 'function does not throw'
+  },
+]
+`),h({id:"lib-version"},"version"),j("The version plugin checks your code according to a spec defined by you. This is designed to warn you on changes to your exports."),j(["Internally, the version function calls ",q({to:"https://github.com/magic/types",text:"@magic/types"})," and all functions exported from it are valid type strings in version specs."]),R(`
+// test/spec.js
+import { version } from '@magic/test'
+
+// import your lib as your codebase requires
+// import * as lib from '../src/index.js'
+// import lib from '../src/index.js
+
+const spec = {
+  stringValue: 'string',
+  numberValue: 'number',
+
+  objectValue: [
+    'obj',
+    {
+      key: 'Willbechecked',
+    },
+  ],
+
+  objectNoChildCheck: [
+    'obj',
+    false,
+  ],
+}
+
+export default version(lib, spec)
+  `),m({id:"usage"},"usage"),g({id:"usage-js"},"js"),R(`
+// test/index.mjs
+import run from '@magic/test'
+
+const tests = {
+  lib: [
+    { fn: () => true, expect: true, info: 'Expect true to be true' }
+  ],
+}
+
+run(tests)
+`),m({id:"usage-cli"},"cli"),g({id:"packagejson-recommended"},"package.json (recommended)"),j("add the magic/test bin scripts to package.json"),R(`
+{
+  "scripts": {
+    "test": "t -p",
+    "coverage": "t",
+  },
+  "devDependencies": {
+    "@magic/test": "github:magic/test"
+  }
+}`),j("then use the npm run scripts"),R(`
+npm test
+npm run coverage
+`),g({id:"usage-global"},"Globally (not recommended):"),j(["you can install this library globally,"," but the recommendation is to add the dependency and scripts to the package.json file."]),j(["this both explains to everyone that your app has these dependencies"," as well as keeping your bash free of clutter"]),R(`
+npm i -g @magic/test
+
+// run tests in production mode
+t -p
+
+// run tests and get coverage in verbose mode
+t
+`),j(["This library tests itself, have a look at ",q({to:"https://github.com/magic/test/tree/master/test",text:"the tests"})," Checkout ",q({to:"https://github.com/magic/types/tree/master/test",text:"@magic/types"})," and the other magic libraries for more test examples."])],"/test/404/":()=>u("404 - not found.")};r({init:t(e({},{description:["simple tests with lots of utility. ecmascript modules only.","runs ecmascript module tests without transpilation.","unbelievably fast."],logotext:"@magic/test",menu:[{items:[{text:"install",to:"/test/#getting-started-install"},{text:"npm scripts",to:"/test/#getting-started-npm-scripts"},{text:"quick tests",to:"/test/#getting-started-quick-tests"},{text:"coverage",to:"/test/#getting-started-coverage"}],text:"getting started",to:"/test/#getting-started"},{items:[{text:"fs based test suites",to:"/test/#test-suites-fs"},{text:"data based test suites",to:"/test/#test-suites-data"}],text:"test suites",to:"/test/#test-suites"},{items:[{text:"testing types",to:"/test/#tests-types"},{text:"multiple tests in one file",to:"/test/#tests-multiple"},{text:"promises",to:"/test/#tests-promises"},{text:"callback functions",to:"/test/#tests-cb"},{text:"run function before / after individual tests",to:"/test/#tests-hooks"},{text:"run function before / after suite of tests",to:"/test/#tests-suite-hooks"},{text:"test @magic-modules",to:"/test/#tests-magic-modules"}],text:"writing tests",to:"/test/#tests"},{items:[{text:"curry",to:"/test/#lib-curry"},{text:"vals",to:"/test/#lib-vals"},{text:"promises",to:"/test/#lib-promises"},{text:"css",to:"/test/#lib-css"},{text:"tryCatch",to:"/test/#lib-trycatch"}],text:"utility functions",to:"/test/#lib"},{items:[{text:"js api",to:"/test/#usage-js"},{text:"cli",to:"/test/#usage-cli"},{text:"npm i -g",to:"/test/#usage-global"}],text:"usage",to:"/test/#usage"}],nospy:{show:!1},pageClass:{},pages:{"/test/404/":{description:"404 - not found.",title:"404 - not found"}},root:"/test/",theme:"dark",title:"@magic/test",url:"/test/"}),{url:window.location.pathname,hash:window.location.hash.substr(1)}),subscriptions:e=>[[G.listenPopState,V.pop]],view:e=>{let t=U[e.url]?e.url:"/404/",s=U[t],i=e.pages&&e.pages[t];return i&&Object.keys(i).forEach(t=>{e[t]=i[t]}),e.url=t,F({page:s,state:e},[E(e),D(e)])},node:document.getElementById("Magic")})})();
