@@ -42,10 +42,10 @@
     "@magic/cli": "0.0.46",
     "@magic/deep": "0.1.16",
     "@magic/error": "0.0.17",
-    "@magic/fs": "0.0.28",
+    "@magic/fs": "0.0.30",
     "@magic/log": "0.1.18",
     "@magic/types": "0.1.23",
-    "c8": "8.0.0"
+    "c8": "10.1.2"
   },
   "devDependencies": {
     "@magic-modules/git-badges": "0.0.12",
@@ -53,8 +53,8 @@
     "@magic-modules/no-spy": "0.0.9",
     "@magic-modules/pre": "0.0.12",
     "@magic-themes/docs": "0.0.15",
-    "@magic/core": "0.0.153",
-    "@magic/format": "0.0.51"
+    "@magic/core": "0.0.156",
+    "@magic/format": "0.0.60"
   },
   "contributors": [
     {
