@@ -939,6 +939,7 @@ update dependencies
 ##### 0.2.19
 
 - update dependencies
+- add unused http.post. probably should replace http with fetch...
 
 ##### 0.2.20 - unreleased
 
