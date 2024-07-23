@@ -936,7 +936,10 @@ update dependencies
 - add missing fs.statfs, fs.statfsSync and fs.promises.constants to test/spec
 - update dependencies
 
+##### 0.2.19
 
-##### 0.2.19 - unreleased
+- update dependencies
+
+##### 0.2.20 - unreleased
 
 ...
