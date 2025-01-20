@@ -45,7 +45,7 @@
     "@magic/fs": "0.0.30",
     "@magic/log": "0.1.18",
     "@magic/types": "0.1.23",
-    "c8": "10.1.2"
+    "c8": "10.1.3"
   },
   "devDependencies": {
     "@magic-modules/git-badges": "0.0.12",
@@ -54,7 +54,7 @@
     "@magic-modules/pre": "0.0.12",
     "@magic-themes/docs": "0.0.15",
     "@magic/core": "0.0.156",
-    "@magic/format": "0.0.60"
+    "@magic/format": "0.0.65"
   },
   "contributors": [
     {
