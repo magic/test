@@ -941,6 +941,10 @@ update dependencies
 - update dependencies
 - add unused http.post. probably should replace http with fetch...
 
-##### 0.2.20 - unreleased
+##### 0.2.20
+
+- update dependencies
+
+##### 0.2.21 - unreleased
 
 ...
