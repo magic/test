@@ -5,22 +5,22 @@
   "description": "simple yet powerful unit testing library",
   "license": "AGPL-3.0",
   "homepage": "https://magic.github.io/test",
-  "main": "src/index.mjs",
-  "module": "src/index.mjs",
+  "main": "src/index.js",
+  "module": "src/index.js",
   "type": "module",
   "bin": {
-    "t": "src/bin/t.mjs",
-    "magic-test": "src/bin/t.mjs"
+    "t": "src/bin/t.js",
+    "magic-test": "src/bin/t.js"
   },
   "scripts": {
-    "start": "node src/bin/t.mjs -p",
+    "start": "node src/bin/t.js -p",
     "build": "NODE_ENV=production magic build",
     "prod": "NODE_ENV=production magic build serve",
     "clean": "magic clean",
     "serve": "magic serve",
     "dev": "magic dev",
-    "test": "node src/bin/t.mjs -p",
-    "coverage": "node src/bin/t.mjs",
+    "test": "node src/bin/t.js -p",
+    "coverage": "node src/bin/t.js",
     "format": "f -w --exclude docs",
     "format:check": "f --exclude docs"
   },

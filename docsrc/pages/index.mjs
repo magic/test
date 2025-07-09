@@ -19,8 +19,8 @@ export const View = state => [
   h3('Create a test'),
 
   Pre(`
-// create test/functionName.mjs
-import yourTest from '../path/to/your/file.mjs'
+// create test/functionName.js
+import yourTest from '../path/to/your/file.js'
 
 export default [
   { fn: () => true, expect: true, info: 'true is true' },
@@ -87,9 +87,9 @@ npm test
   p('the following directory structure:'),
 
   Pre(`./test/
-  ./suite1.mjs
-  ./suite2.mjs`),
-  p('yields the same result as exporting the following from ./test/index.mjs'),
+  ./suite1.js
+  ./suite2.js`),
+  p('yields the same result as exporting the following from ./test/index.js'),
 
   h4({ id: 'test-suites-data' }, 'Data driven naming'),
 
@@ -104,10 +104,10 @@ export default {
   h3({ id: 'important---file-mappings' }, 'Important - File mappings'),
 
   p([
-    'if test/index.mjs exists, no other files will be loaded.',
-    ' if test/index.mjs exists, no other files from that directory will be loaded,',
-    ' if test/lib/index.mjs, no other files from that subdirectory will be loaded.',
-    ' instead the exports of those index.mjs will be expected to be tests',
+    'if test/index.js exists, no other files will be loaded.',
+    ' if test/index.js exists, no other files from that directory will be loaded,',
+    ' if test/lib/index.js, no other files from that subdirectory will be loaded.',
+    ' instead the exports of those index.js will be expected to be tests',
   ]),
 
   h3({ id: 'tests' }, 'single test'),
@@ -502,7 +502,7 @@ export default version(lib, spec)
   h3({ id: 'usage-js' }, 'js'),
 
   Pre(`
-// test/index.mjs
+// test/index.js
 import run from '@magic/test'
 
 const tests = {

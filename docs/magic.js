@@ -11,8 +11,8 @@ C259,42,256,52,256,64c0,24,13,44,33,55C288,122,288,125,288,128
 c0,53,43,96,96,96c3,0,6-0,8-0C403,242,424,256,448,256
 c11-0,22-3,32-8c0,3,0,6,0,9C480,318,455,374,414,414z
 `}),l({cx:"192",cy:"128",r:"32"}),l({cx:"128",cy:"256",r:"32"}),l({cx:"288",cy:"384",r:"32"}),l({cx:"272",cy:"272",r:"16"}),l({cx:"400",cy:"336",r:"16"}),l({cx:"176",cy:"368",r:"16"})])]))},F=({page:e,state:t},s)=>{let i={id:"Magic",class:t.pageClass};return v(i,u({class:{Wrapper:!0}},[W(t),u({class:"Page",id:"page"},e(t)),M(t),s]))},R=(t,s)=>{"string"==typeof t?t={content:t}:s?t=e({content:s},t):Array.isArray(t)&&(t={content:t.join("")});let{content:i,lines:r=!0}=t;return u({class:{Pre:!0,lines:r&&"false"!==r}},[u({class:"menu"},[a({onclick:[V.pre.clip,e=>({e,content:i})]},"copy")]),O(i.trim().split("\n").map(R.Line))])};R.Comment=e=>T({class:"comment"},e),R.Line=e=>c({class:"line"},R.Words(e)),R.Word=e=>{if(!e)return"";let t=e.includes("://"),s=e.startsWith("mailto:")||e.includes("@")&&e.includes(".");if(t||s)return q({to:e,text:e});let i="";return("state"===e?i="state":"actions"===e?i="actions":"effects"===e?i="effects":"subscriptions"===e?i="subscriptions":I.pre.keywords.includes(e)?i="keyword":I.pre.builtins.includes(e)?i="builtin":I.pre.booleans.includes(e)&&(i="boolean"),i)?T({class:i},e):e},R.Words=e=>{let[t,...s]=e.split(I.pre.commentRegex),i=!t.endsWith(":")&&s.length;if(i)return[R.Words(t),R.Comment(s.join("").split(I.pre.wordRegex).map(R.Word))];let r=[],n=e;if(e.replace(I.pre.stringRegex,e=>{if(n){let[t,s]=n.split(e);t&&r.push(t.split(I.pre.wordRegex).map(R.Word).filter(e=>e)),n=s}r.push(T({class:"string"},e))}),n!==e)return n&&r.push(n.split(I.pre.wordRegex).map(R.Word).filter(e=>e)),r;let o=e.split(I.pre.wordRegex).filter(e=>e);return o.map(R.Word)};let I={pre:{booleans:["true","false"],builtins:["Array","Object","String","Number","RegExp","Null","Symbol","Set","WeakSet","Map","WeakMap","setInterval","setTimeout","Promise","JSON","Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array"],commentRegex:/(\/\/)/gim,keywords:["let","this","long","package","float","goto","private","class","if","short","while","protected","with","debugger","case","continue","volatile","interface","instanceof","super","synchronized","throw","extends","final","export","throws","try","import","double","enum","boolean","abstract","function","implements","typeof","transient","break","default","do","static","void","int","new","async","native","switch","else","delete","null","public","var","await","byte","finally","catch","in","return","for","get","const","char","module","exports","require","npm","install","=>"],stringRegex:/("|')(.*?)\1/gim,wordRegex:/( )/gim},preventDefault:e=>(e.preventDefault(),e)},V={changeTheme:s=>t(e({},s),{pageClass:t(e({},s.pageClass),{light:"dark"===s.theme}),theme:"dark"===s.theme?"light":"dark"}),go:(s,i)=>{let r=i.currentTarget.href.replace(window.location.origin,""),[n,o=""]=r.split("#");if(n===s.url&&o===s.hash)return o&&(window.location.hash=o),s;let a=s.pages&&s.pages[n]&&s.pages[n].title;a&&(document.title=s.title=a),n!==s.url?o||window.scrollTo({top:0}):window.location.hash=o;let{scrollY:l}=window;return window.history.pushState({url:n,hash:o,scrollY:l},s.title,r),t(e({},s),{url:n,hash:o,prev:s.url})},nospy:{toggle:t=>(t.nospy.show=!t.nospy.show,e({},t))},pop:(s,i)=>{let{pathname:r,hash:n}=window.location;n=n.substring(1);let o=0;return i.state&&(r=i.state.url,n=i.state.hash,o=i.state.scrollY||0),n?window.location.hash=n:window.scroll({top:o}),t(e({},s),{url:r,hash:n})},pre:{clip:(e,{content:t})=>{if("undefined"!=typeof document&&"function"==typeof document.execCommand){let e=document.createElement("textarea");e.id="copy",e.innerHTML=t,document.body.appendChild(e);let s=document.getElementById("copy");s.select(),document.execCommand("copy"),document.body.removeChild(s)}return e}}},G={listenPopState:(e,t)=>{let s=s=>e(t,s);return addEventListener("popstate",s),()=>removeEventListener("popstate",s)}},U={"/test/":e=>[d({id:"magictest"},"@magic/test"),j(["simple tests with lots of utility."," ecmascript modules only."," runs ecmascript module syntax tests without transpilation."," unbelievably fast."]),S("@magic/test"),m({id:"getting-started"},"getting started"),j("be in a nodejs project."),g({id:"getting-started-install"},"install"),R({lines:"false"},"npm i --save-dev --save-exact @magic/test"),g("Create a test"),R(`
-// create test/functionName.mjs
-import yourTest from '../path/to/your/file.mjs'
+// create test/functionName.js
+import yourTest from '../path/to/your/file.js'
 
 export default [
   { fn: () => true, expect: true, info: 'true is true' },
@@ -41,14 +41,14 @@ npm test
 // ### Testing package: @magic/test
 // Ran 2 tests. Passed 2/2 100%
 `),g({id:"getting-started-coverage"},"coverage"),j(["@magic/test will automagically generate coverage reports"," if it is not called with the -p flag."]),g({id:"test-suites"},"data/fs driven test suite creation:"),h({id:"expectations-for-optimal-test-messages"},"expectations for optimal test messages:"),P([w("src and test directories have the same directory structure and filenames"),w("tests one src file per test file"),w("tests one function per test suite"),w("tests one feature per test unit")]),h({id:"test-suites-fs"},"Filesystem based naming"),j("the following directory structure:"),R(`./test/
-  ./suite1.mjs
-  ./suite2.mjs`),j("yields the same result as exporting the following from ./test/index.mjs"),h({id:"test-suites-data"},"Data driven naming"),R(`import suite1 from './suite1'
+  ./suite1.js
+  ./suite2.js`),j("yields the same result as exporting the following from ./test/index.js"),h({id:"test-suites-data"},"Data driven naming"),R(`import suite1 from './suite1'
 import suite2 from './suite2'
 
 export default {
   suite1,
   suite2,
-}`),g({id:"important---file-mappings"},"Important - File mappings"),j(["if test/index.mjs exists, no other files will be loaded."," if test/index.mjs exists, no other files from that directory will be loaded,"," if test/lib/index.mjs, no other files from that subdirectory will be loaded."," instead the exports of those index.mjs will be expected to be tests"]),g({id:"tests"},"single test"),j("literal value, function or promise"),R(`
+}`),g({id:"important---file-mappings"},"Important - File mappings"),j(["if test/index.js exists, no other files will be loaded."," if test/index.js exists, no other files from that directory will be loaded,"," if test/lib/index.js, no other files from that subdirectory will be loaded."," instead the exports of those index.js will be expected to be tests"]),g({id:"tests"},"single test"),j("literal value, function or promise"),R(`
 export default { fn: true, expect: true, info: 'expect true to be true' }
 
 // expect: true is the default and can be omitted
@@ -311,7 +311,7 @@ const spec = {
 
 export default version(lib, spec)
   `),m({id:"usage"},"usage"),g({id:"usage-js"},"js"),R(`
-// test/index.mjs
+// test/index.js
 import run from '@magic/test'
 
 const tests = {

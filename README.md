@@ -549,9 +549,9 @@ update @magic/cli
 
 #### 0.1.9
 
-- test/beforeAll.mjs gets loaded separately if it exists and executed before all tests
-- test/afterAll.mjs gets loaded separately if it exists and executed after all tests
-- if the function exported from test/beforeAll.mjs returns another function,
+- test/beforeAll.js gets loaded separately if it exists and executed before all tests
+- test/afterAll.js gets loaded separately if it exists and executed after all tests
+- if the function exported from test/beforeAll.js returns another function,
   this returned function will also be executed after all tests
 - export hyperapp beta 18
 
@@ -574,7 +574,7 @@ windows support is back
 
 #### 0.1.14
 
-windows support now supports index.mjs files that provide test structure
+windows support now supports index.js files that provide test structure
 
 #### 0.1.15
 
@@ -856,7 +856,7 @@ update dependencies
 - internal restructuring
 - tests now output their run duration
 - add @magic/error dependency and export it from index
-- index.js files have the same functionality as index.mjs files
+- index.js files have the same functionality as index.js files
 - update dependencies
 
 ##### 0.2.2
