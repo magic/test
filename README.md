@@ -945,6 +945,10 @@ update dependencies
 
 - update dependencies
 
-##### 0.2.21 - unreleased
+##### 0.2.21
+
+- update dependencies
+
+##### 0.2.22 - unreleased
 
 ...
