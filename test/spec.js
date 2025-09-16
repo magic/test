@@ -309,6 +309,10 @@ const spec = {
       R_OK: 'num',
       W_OK: 'num',
       X_OK: 'num',
+
+      mkdtempDisposableSync: 'function',
+      mkdtempDisposable: 'function',
+      Utf8Stream: 'function',
       constants,
       promises: [
         'object',
@@ -345,6 +349,7 @@ const spec = {
           appendFile: 'fn',
           readFile: 'fn',
           watch: 'fn',
+          mkdtempDisposable: 'fn',
         },
       ],
       readDir: 'fn',
