@@ -26,5 +26,3 @@ export const expectedArguments = fn => {
 
   return expected.split(',')
 }
-
-export default expectedArguments

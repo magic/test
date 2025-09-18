@@ -1,4 +1,4 @@
-import env from '../env.js'
+import { env } from '../env.js'
 
 export const log = {
   log: () => !env.isNodeProd(),
@@ -7,5 +7,3 @@ export const log = {
   time: () => !env.isNodeProd(),
   timeEnd: () => !env.isNodeProd(),
 }
-
-export default log

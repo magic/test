@@ -10,5 +10,3 @@ export const tryCatch =
       return e
     }
   }
-
-export default tryCatch

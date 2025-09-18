@@ -21,5 +21,3 @@ export const cleanFunctionString = fn => {
     .replace('(t) => ', '')
     .replace('() => ', '')
 }
-
-export default cleanFunctionString

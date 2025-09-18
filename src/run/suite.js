@@ -2,8 +2,9 @@ import error from '@magic/error'
 import log from '@magic/log'
 import is from '@magic/types'
 
-import runTest from './test.js'
-import store from '../lib/store.js'
+import { runTest } from './test.js'
+import { store } from '../lib/store.js'
+import { isolation } from './isolation.js'
 
 const getFNS = () => {
   let { FN = '' } = process.env
@@ -27,7 +28,7 @@ const defaultSuite = {
   all: 0,
 }
 
-const runSuite = async (props = {}) => {
+export const runSuite = async (props = {}) => {
   const suite = { ...defaultSuite, ...props }
   const { parent = '', name = '', pkg = '' } = suite
   let { tests } = suite
@@ -109,5 +110,3 @@ const runSuite = async (props = {}) => {
     }
   }
 }
-
-export default runSuite

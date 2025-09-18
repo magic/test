@@ -14,5 +14,3 @@ export const argHandler =
 
 // investigate argument passing
 export const promise = fn => () => new Promise(r => fn(argHandler(r)))
-
-export default promise

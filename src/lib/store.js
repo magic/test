@@ -24,8 +24,6 @@ export const store = {
   },
   get: (key, def) => (key ? (is.ownProp(store.state, key) ? store.state[key] : def) : store.state),
   reset: () => {
-    this.state = {}
+    store.state = {}
   },
 }
-
-export default store

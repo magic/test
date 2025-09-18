@@ -1,6 +1,6 @@
 import log from '@magic/log'
 
-import store from './store.js'
+import { store } from './store.js'
 
 export const getDuration = () => {
   const startTime = store.get('startTime')

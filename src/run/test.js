@@ -3,7 +3,7 @@ import log from '@magic/log'
 
 import { cleanError, cleanFunctionString, getTestKey, stats } from '../lib/index.js'
 
-const runTest = async test => {
+export const runTest = async test => {
   try {
     // expect can be undefined, we set expect to true to provide a default for tests
     if (!is.ownProp(test, 'expect')) {
@@ -152,10 +152,11 @@ const runTest = async test => {
       parent,
       name,
       expect: exp,
+      expString,
+      key,
+      info,
     }
   } catch (e) {
     log.error('test error', e)
   }
 }
-
-export default runTest

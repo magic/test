@@ -13,5 +13,3 @@ export const cleanError = e => {
   const stack = [err, file.replace('    ', '')]
   return stack
 }
-
-export default cleanError

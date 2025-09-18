@@ -62,5 +62,3 @@ export const http = {
   get,
   post,
 }
-
-export default http

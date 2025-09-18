@@ -6,7 +6,7 @@ import fs from '@magic/fs'
 
 import { stats, store } from './lib/index.js'
 
-import runSuite from './run/suite.js'
+import { runSuite } from './run/suite.js'
 
 const cwd = process.cwd()
 

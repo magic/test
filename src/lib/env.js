@@ -9,5 +9,3 @@ export const env = {
   isProd,
   isVerbose,
 }
-
-export default env

@@ -1,6 +1,6 @@
 import is from '@magic/types'
 
-import expectedArguments from './expectedArguments.js'
+import { expectedArguments } from './expectedArguments.js'
 
 const invalidArgsMsg = 'curry expects a function as first or last argument'
 const tooManyArgsMsg = 'too many arguments passed to curried function'
@@ -30,5 +30,3 @@ export const curry = (...a) => {
     return b => curry(fn, ...args, b)
   }
 }
-
-export default curry

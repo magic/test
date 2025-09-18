@@ -65,5 +65,3 @@ export const test = (lib = {}, spec = {}, parent = '') => {
 }
 
 export const version = (lib, spec, parent) => deep.flatten(test(lib, spec, parent))
-
-export default version

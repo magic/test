@@ -1,11 +1,11 @@
-import store from '../store.js'
+import { store } from '../store.js'
 
-const defaultStats = {
-  pass: 0,
-  fail: 0,
-  all: 0,
-  tests: [],
-}
+// const defaultStats = {
+//   pass: 0,
+//   fail: 0,
+//   all: 0,
+//   tests: [],
+// }
 
 export const test = t => {
   const results = store.get('results', {})

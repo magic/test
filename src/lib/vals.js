@@ -34,5 +34,3 @@ export const vals = {
   hexa8: '#3d3d3111',
   regexp: /test/,
 }
-
-export default vals

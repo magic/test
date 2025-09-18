@@ -1,6 +1,6 @@
 import is from '@magic/types'
 
-import expectedArguments from '../../src/lib/expectedArguments.js'
+import { expectedArguments } from '../../src/lib/expectedArguments.js'
 
 export default [
   { fn: () => expectedArguments(() => {}), expect: is.array },
