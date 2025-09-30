@@ -10,7 +10,7 @@ const cwd = process.cwd()
 export const maybeInjectMagic = async () => {
   let importRoot = path.join('@magic', 'core', 'src')
 
-  const pkg = await fs.readFile(path.join(cwd, 'package.json'))
+  const pkg = await fs.readFile(path.join(cwd, 'package.json'), 'utf-8')
   const { name } = JSON.parse(pkg)
   let isRooted = false
   if (name === '@magic/core') {
