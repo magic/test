@@ -1,0 +1,75 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ES2022",
+    "moduleResolution": "Node",
+    "allowJs": true,
+    "checkJs": true,
+    "maxNodeModuleJsDepth": 2,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./types",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "verbatimModuleSyntax": false,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": false,
+    "noImplicitOverride": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "baseUrl": "./",
+    "paths": {
+      "@magic/test": ["./src/index.js"],
+      "@magic/test/*": ["./src/*"]
+    },
+    "resolveJsonModule": true,
+
+    // Emit
+    "sourceMap": true,
+    "removeComments": false,
+    "importHelpers": false,
+    "downlevelIteration": true,
+
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+
+    "allowImportingTsExtensions": true,
+    "noResolve": false
+  },
+
+  "include": ["src/**/*", "test/**/*", "*.mjs", "*.js", ],
+
+  "exclude": ["node_modules", "coverage", ".tmp", "dist", "build", "**/*.min.js", "**/*.bundle.js"],
+
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  },
+
+  "typeRoots": ["./types", "./node_modules/@types"],
+
+  "typeAcquisition": {
+    "enable": true,
+    "include": [
+      "@magic/types",
+      "@magic/log",
+      "@magic/fs",
+      "@magic/deep",
+      "@magic/error",
+      "@magic/cli",
+      "@magic/cases",
+      "@magic/core"
+    ],
+    "exclude": []
+  }
+}
