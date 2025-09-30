@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import is from '@magic/types'
 import log from '@magic/log'

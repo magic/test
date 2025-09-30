@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import cases from '@magic/cases'
 import fs from '@magic/fs'
