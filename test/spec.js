@@ -183,7 +183,6 @@ const spec = {
       regexp: 'regexp',
     },
   ],
-  version: 'obj',
   tryCatch: 'fn',
 
   // '@magic/deep'
@@ -369,6 +368,10 @@ const spec = {
   is: [
     'obj',
     {
+      args: 'fn',
+      isArgs: 'fn',
+      arguments: 'fn',
+      isArguments: 'fn',
       deep: [
         'obj',
         {
