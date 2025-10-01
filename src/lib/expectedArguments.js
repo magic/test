@@ -1,5 +1,11 @@
 import is from '@magic/types'
 
+/**
+ *
+ * @param {Function} fn
+ * @returns
+ */
+
 export const expectedArguments = fn => {
   if (!is.function(fn)) {
     return []

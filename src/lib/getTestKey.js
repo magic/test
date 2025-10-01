@@ -1,3 +1,10 @@
+/**
+ *
+ * @param {string} pkg
+ * @param {string} [parent]
+ * @param {string} [name]
+ * @returns
+ */
 export const getTestKey = (pkg, parent, name) => {
   let key = ''
   if (parent && parent !== pkg) {

@@ -3,6 +3,13 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import is from '@magic/types'
 
+/** @typedef {import('@magic/test/run').Test} Test */
+
+/**
+ *
+ * @param {string} filePath
+ * @returns
+ */
 const importFile = async filePath => {
   let mod = await import(filePath)
 
@@ -23,6 +30,7 @@ export const readRecursive = async (dir = '') => {
   const testDir = path.join(process.cwd(), 'test')
   const targetDir = path.join(testDir, dir)
 
+  /** @type {Record<string, Test | Test[]>} */
   let tests = {}
 
   // first resolve test/{dir/?}index.js

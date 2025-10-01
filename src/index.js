@@ -21,7 +21,8 @@ export const isDev = NODE_ENV === 'development'
 
 process
   .on('unhandledRejection', error => {
-    log.error(error)
+    const err = /** @type {Error} */ (error)
+    log.error(err)
     process.exit(1)
   })
   .on('uncaughtException', error => {

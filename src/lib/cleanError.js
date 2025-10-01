@@ -1,5 +1,10 @@
 import is from '@magic/types'
 
+/**
+ *
+ * @param {Error} e
+ * @returns {string[] | Error[] | Error}
+ */
 export const cleanError = e => {
   if (is.undefined(e?.stack?.split)) {
     return e
