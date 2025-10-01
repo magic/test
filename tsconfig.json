@@ -47,7 +47,7 @@
     "noResolve": false
   },
 
-  "include": ["src/**/*", "test/**/*", "*.mjs", "*.js", ],
+  "include": ["src/**/*", "test/**/*", "*.mjs", "*.js"],
 
   "exclude": ["node_modules", "coverage", ".tmp", "dist", "build", "**/*.min.js", "**/*.bundle.js"],
 
