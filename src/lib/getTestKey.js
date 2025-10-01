@@ -1,6 +1,6 @@
 /**
  *
- * @param {string} pkg
+ * @param {string} [pkg]
  * @param {string} [parent]
  * @param {string} [name]
  * @returns

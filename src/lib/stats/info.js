@@ -5,8 +5,35 @@ import { stringify } from '../stringify.js'
 import { getDuration } from '../getDuration.js'
 import { store } from '../store.js'
 
-export const toMinimalFixed = (p, fix = 2) => p.toFixed(fix) / 1
+/**
+ * Type guard to check if a value is a TestResult.
+ * @param {Suite | TestResult} obj
+ * @returns {obj is TestResult}
+ */
+export const isTestResult = obj =>
+  obj &&
+  typeof obj === 'object' &&
+  'result' in obj &&
+  'expString' in obj &&
+  'msg' in obj &&
+  'pass' in obj &&
+  'key' in obj
 
+/**
+ * Formats a number with fixed decimals and converts to number type.
+ *
+ * @param {number} p - The number to format.
+ * @param {number} [fix=2] - Decimal places to fix.
+ * @returns {number}
+ */
+export const toMinimalFixed = (p, fix = 2) => parseFloat(p.toFixed(fix))
+
+/**
+ * Returns a colored percentage string.
+ *
+ * @param {number} p - Percentage value.
+ * @returns {string}
+ */
 export const printPercent = p => {
   let color = 'red'
   if (p === 100) {
@@ -20,26 +47,28 @@ export const printPercent = p => {
   return log.color(color, value)
 }
 
+/** @typedef {import('../../run/test.js').TestResult} TestResult */
+/** @typedef {import('../../run/suite.js').Suite} Suite */
+
+/**
+ * Prints test results for a package and its suites.
+ *
+ * @param {string} pkg - Package name.
+ * @param {Suite[]} suites - Array of test suites.
+ * @returns {boolean} Always returns true.
+ */
 export const info = (pkg, suites) => {
   log(`###  Testing package: ${pkg}`)
-
   const results = store.get('results')
 
   suites.forEach(suite => {
-    if (!suite) {
-      return
-    }
-
+    if (!suite) return
     const { tests, duration, name } = suite
-
-    if (!tests) {
-      return
-    }
+    if (!tests) return
 
     const result = results[name] || { all: 0, pass: 0 }
     const { pass, all } = result
-
-    const percentage = (pass / all) * 100
+    const percentage = all > 0 ? (pass / all) * 100 : 0
 
     if (env.isVerbose() || percentage < 100) {
       log.info('\n')
@@ -48,16 +77,11 @@ export const info = (pkg, suites) => {
     }
 
     tests.forEach(test => {
-      if (!test) {
-        return
-      }
+      if (!isTestResult(test)) return
 
       const { pass, result, expString, key, msg, info } = test
 
-      // dirty workaround for now, all suites get all tests passed in test()
-      if (key !== name) {
-        return
-      }
+      if (key !== name) return
 
       if (pass) {
         if (env.isVerbose()) {
@@ -81,30 +105,21 @@ export const info = (pkg, suites) => {
   })
 
   suites.forEach(suite => {
-    if (!suite) {
-      return
-    }
-
+    if (!suite) return
     const { name } = suite
-    const { pass, all } = results[name]
-
-    const passPercent = (pass / all) * 100
+    const { pass, all } = results[name] || { pass: 0, all: 0 }
+    const passPercent = all > 0 ? (pass / all) * 100 : 0
     const percentage = printPercent(passPercent)
 
     const logOutput = `${name} => Pass: ${pass}/${all} ${percentage}%`
-    if (passPercent === 100) {
-      log.info(logOutput)
-    } else {
-      log.warn(logOutput)
-    }
+    passPercent === 100 ? log.info(logOutput) : log.warn(logOutput)
   })
 
-  const result = results.__PACKAGE_ROOT__
+  const result = results.__PACKAGE_ROOT__ || { pass: 0, all: 0 }
   const { pass, all } = result
-
   const duration = getDuration()
+  const percentage = all > 0 ? printPercent((pass / all) * 100) : printPercent(0)
 
-  const percentage = printPercent((pass / all) * 100)
   log(`Ran ${all} tests in ${duration}. Passed ${pass}/${all} ${percentage}%\n`)
   return true
 }
