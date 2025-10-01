@@ -20,22 +20,30 @@ const init = async () => {
   try {
     await run(tests)
   } catch (e) {
-    e.code = 'E_MAGIC_TEST'
-    log.error(e)
+    const err = /** @type {import('@magic/error').CustomError} */ (e)
+    err.code = 'E_MAGIC_TEST'
+    log.error(err)
   }
 }
 
 init()
 
+/**
+ *
+ * @param {Error} error
+ */
 const handleError = error => {
   if (is.string(error)) {
     error = new Error(error)
   }
 
   log.error(error.name, error.message)
-  const stack = error.stack.replace(error.name, '').replace(error.message, '')
 
-  log.warn('stacktrace', stack)
+  if (error.stack) {
+    const stack = error.stack.replace(error.name, '').replace(error.message, '')
+    log.warn('stacktrace', stack)
+  }
+
   process.exit(1)
 }
 

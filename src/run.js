@@ -10,6 +10,23 @@ import { runSuite } from './run/suite.js'
 
 const cwd = process.cwd()
 
+/** @typedef {import('./run/suite.js').Suite} Suite */
+/** @typedef {import('./run/test.js').Test} Test */
+/** @typedef {import('./run/suite.js').TestsWithHooks} TestsWithHooks */
+
+/**
+ * Global test hooks object with special file-based keys
+ * @typedef {Record<string, unknown> & {
+ *   '/beforeAll.js'?: (tests: Record<string, unknown>) => (void | Promise<void | (() => (void | Promise<void>))>),
+ *   '/afterAll.js'?: (tests: Record<string, unknown>) => (void | Promise<void>)
+ * }} TestSuites
+ */
+
+/**
+ * Run all test suites
+ * @param {(() => (Record<string, unknown> & TestSuites)) | (Record<string, unknown> & TestSuites)} tests - Test suites object or function that returns one
+ * @returns {Promise<Error | void>}
+ */
 export const run = async tests => {
   const startTime = log.hrtime()
   store.set({ startTime })
@@ -31,7 +48,10 @@ export const run = async tests => {
 
   // execute beforeall and save the result in the afterAll array for later
   if (is.fn(beforeAll)) {
-    afterAll.push(await beforeAll(tests))
+    const after = await beforeAll(tests)
+    if (after) {
+      afterAll.push(after)
+    }
   }
 
   let packagePath = path.join(cwd, 'package.json')
@@ -41,12 +61,12 @@ export const run = async tests => {
 
   const suites = await Promise.all(
     Object.entries(tests).map(
-      async ([name, tests]) =>
+      async ([name, testsValue]) =>
         await runSuite({
           pkg: name,
           parent: name,
           name,
-          tests,
+          tests: /** @type {Test[] | (Record<string, unknown> & TestsWithHooks)} */ (testsValue),
         }),
     ),
   )
