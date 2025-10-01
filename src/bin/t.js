@@ -4,6 +4,7 @@ import path from 'node:path'
 
 import cli from '@magic/cli'
 import fs from '@magic/fs'
+import is from '@magic/types'
 
 const cwd = process.cwd()
 const res = cli({
@@ -43,7 +44,7 @@ npm example:
 
 const run = async () => {
   const pkgPath = path.join(cwd, 'package.json')
-  const content = await fs.readFile(pkgPath)
+  const content = await fs.readFile(pkgPath, 'utf-8')
   const { name } = JSON.parse(content)
 
   const isProd = res.env.NODE_ENV === 'production'
@@ -58,9 +59,14 @@ const run = async () => {
   const isWin = process.platform === 'win32'
 
   let cmd = 'node'
+  /** @type {string[]} */
   let argv = []
 
-  const { include = ['src'], exclude = ['.tmp'] } = res.args
+  const includeArgs = res.args.include || ['src']
+  const excludeArgs = res.args.exclude || ['.tmp']
+
+  const include = is.array(includeArgs) ? includeArgs : [includeArgs]
+  const exclude = is.array(excludeArgs) ? excludeArgs : [excludeArgs]
 
   if (!isProd) {
     exclude.forEach(ex => {
@@ -71,7 +77,6 @@ const run = async () => {
       argv = ['--include', inc, ...argv]
     })
   }
-
   argv.push(binFile)
 
   if (process.argv.length > 2) {
@@ -80,11 +85,7 @@ const run = async () => {
   }
 
   if (!isProd) {
-    let c8Cmd = 'c8'
-    if (isWin) {
-      c8Cmd += '.cmd'
-    }
-
+    const c8Cmd = isWin ? 'c8.cmd' : 'c8'
     cmd = path.join(cwd, 'node_modules', '.bin', c8Cmd)
     argv = ['--all', ...argv]
   }
