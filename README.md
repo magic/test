@@ -949,6 +949,13 @@ update dependencies
 
 - update dependencies
 
-##### 0.2.22 - unreleased
+##### 0.2.22
+
+- add comprehensive typescript types
+- rework some functionality to be typesafe and typeguarded
+- update dependencies
+
+
+##### 0.2.23 - unreleased
 
 ...
