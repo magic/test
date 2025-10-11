@@ -1,14 +1,14 @@
-import is from '@magic/types'
+import { is } from '../../src/index.js'
 
 import { expectedArguments } from '../../src/lib/expectedArguments.js'
 
 export default [
   { fn: () => expectedArguments(() => {}), expect: is.array },
   { fn: () => expectedArguments(() => {}), expect: is.empty },
-  { fn: () => expectedArguments(a => {}), expect: is.array },
-  { fn: () => expectedArguments(a => {}), expect: is.len.eq(1) },
-  { fn: () => expectedArguments((a, b) => {}), expect: is.len.eq(2) },
-  { fn: () => expectedArguments((a, b, c) => {}), expect: is.len.eq(3) },
+  { fn: () => expectedArguments(_a => {}), expect: is.array },
+  { fn: () => expectedArguments(_a => {}), expect: is.length.eq(1) },
+  { fn: () => expectedArguments((_a, _b) => {}), expect: is.len.eq(2) },
+  { fn: () => expectedArguments((_a, _b, _c) => {}), expect: is.len.eq(3) },
   { fn: () => expectedArguments(), expect: is.array },
   { fn: () => expectedArguments(), expect: is.empty },
   { fn: () => expectedArguments(''), expect: is.array },

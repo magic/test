@@ -1,4 +1,3 @@
-import { is } from '../../src/index.js'
 import { stringify } from '../../src/lib/stringify.js'
 
 export default [
@@ -15,6 +14,6 @@ export default [
   {
     fn: stringify({ testing: true, fn: () => {} }),
     expect: { testing: true, fn: '() => {}' },
-    info: 'functions get stringifiede',
+    info: 'functions get stringified',
   },
 ]

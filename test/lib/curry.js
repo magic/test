@@ -3,6 +3,7 @@ import is from '@magic/types'
 import { curry, tryCatch } from '../../src/lib/index.js'
 
 const fn = v => v
+
 const add = (a, b, c) => a + b + c
 
 export default [
@@ -15,7 +16,7 @@ export default [
   { fn: tryCatch(curry), expect: is.error },
   // curry returns functions if arguments are not satisfied
   { fn: () => curry(v => v), expect: is.function },
-  { fn: () => curry(a => {}), expect: is.function },
+  { fn: () => curry(_a => {}), expect: is.function },
   { fn: () => curry(is.type, 'object'), expect: is.function },
 
   // currying

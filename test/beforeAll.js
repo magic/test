@@ -1,8 +1,8 @@
-export default tests => {
-  global.before = true
-  global.tests = tests
+export default (/** @type {any} */ tests) => {
+  globalThis.before = true
+  globalThis.tests = tests
 
   return () => {
-    delete global.before
+    delete globalThis.before
   }
 }
