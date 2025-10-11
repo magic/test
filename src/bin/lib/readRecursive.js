@@ -3,12 +3,9 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import is from '@magic/types'
 
-/** @typedef {import('@magic/test/run').Test} Test */
-
 /**
- *
  * @param {string} filePath
- * @returns
+ * @returns {Promise<Test[] | (Record<string, unknown> & TestsWithHooks)>}
  */
 const importFile = async filePath => {
   let mod = await import(filePath)
@@ -17,7 +14,7 @@ const importFile = async filePath => {
   if (is.module(mod)) {
     const m = { ...mod }
     if (is.ownProp(m, 'default')) {
-      return m.default
+      return /** @type {Test[] | (Record<string, unknown> & TestsWithHooks)} */ (m.default)
     } else {
       return m
     }
@@ -26,11 +23,15 @@ const importFile = async filePath => {
   }
 }
 
+/**
+ * @param {string} [dir='']
+ * @returns {Promise<TestSuites>}
+ */
 export const readRecursive = async (dir = '') => {
   const testDir = path.join(process.cwd(), 'test')
   const targetDir = path.join(testDir, dir)
 
-  /** @type {Record<string, Test | Test[]>} */
+  /** @type {TestSuites} */
   let tests = {}
 
   // first resolve test/{dir/?}index.js
@@ -43,7 +44,8 @@ export const readRecursive = async (dir = '') => {
     if (path.sep === '\\') {
       indexFilePath = 'file:\\\\\\' + indexFilePath
     }
-    tests[fileP] = await importFile(indexFilePath)
+    const imported = await importFile(indexFilePath)
+    tests[fileP] = /** @type {Test[] | (Record<string, unknown> & TestsWithHooks)} */ (imported)
   } else {
     // if dir/index.js does not exist, require all files and subdirectories of files
     const files = await fs.readdir(targetDir)
@@ -74,16 +76,13 @@ export const readRecursive = async (dir = '') => {
             // windows fix
             if (path.sep === '\\') {
               filePath = 'file:\\\\\\' + filePath
-              fileP = `/${fileP.substr(1)}`
+              fileP = `/${fileP.substring(1)}`
             }
 
             const test = await importFile(filePath)
-            // } catch (e) {
-            //   console.log(test)
-            // }
 
             // write current file to tests cache
-            tests[fileP] = test
+            tests[fileP] = /** @type {Test[] | (Record<string, unknown> & TestsWithHooks)} */ (test)
           }
         }),
     )
