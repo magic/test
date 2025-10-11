@@ -1,14 +1,26 @@
-import deep from '@magic/deep'
 import is from '@magic/types'
 
+/** @typedef {unknown} SpecValue */
+
+/**
+ * @param {unknown} lib
+ * @param {unknown | unknown[]} spec
+ * @param {string} fullName
+ * @returns {{ fn: boolean, info: string } | { fn: boolean, info: string }[]}
+ */
 const createLibTest = (lib, spec, fullName) => {
   if (is.array(spec)) {
-    return spec.map(type => createLibTest(lib, type, fullName))
+    return spec.map(type => createLibTest(lib, type, fullName)).flat()
   }
 
   let fn = spec
   if (!is.fn(spec)) {
-    fn = is[spec]
+    if (is.string(spec) && is.ownProp(is, spec)) {
+      const isValue = is[/** @type {keyof typeof is} */ (spec)]
+      if (is.fn(isValue)) {
+        fn = isValue
+      }
+    }
   }
 
   if (!is.fn(fn)) {
@@ -19,11 +31,17 @@ const createLibTest = (lib, spec, fullName) => {
   }
 
   return {
-    fn: fn(lib),
+    fn: /** @type {Function} */ (fn)(lib),
     info: `Spec for ${fullName} is wrong, expected: ${spec}, actual type is ${typeof lib}`,
   }
 }
 
+/**
+ * @param {Record<string, unknown>} [lib={}]
+ * @param {Record<string, SpecValue>} [spec={}]
+ * @param {string} [parent='']
+ * @returns {({ fn: boolean, info: string } | { fn: boolean, info: string }[])[]}
+ */
 export const test = (lib = {}, spec = {}, parent = '') => {
   return Object.entries(lib)
     .map(([name, subLib]) => {
@@ -39,15 +57,24 @@ export const test = (lib = {}, spec = {}, parent = '') => {
 
       if (is.array(subSpec)) {
         const [parentType, subSpecChildren] = subSpec
+
         const parentTest = createLibTest(subLib, parentType, fullName)
 
         if (subSpecChildren === false) {
           return parentTest
         }
 
-        const subTests = test(subLib, subSpecChildren, `${parent}${name}`)
+        if (is.object(subLib) && is.object(subSpecChildren)) {
+          const subTests = test(
+            /** @type {Record<string, unknown>} */ (subLib),
+            /** @type {Record<string, SpecValue>} */ (subSpecChildren),
+            `${parent}${name}`,
+          )
 
-        return [parentTest, ...subTests]
+          return [parentTest, ...subTests].flat()
+        }
+
+        return parentTest
       } else if (is.string(subSpec)) {
         if (subSpec === 'obj' || subSpec === 'object') {
           return {
@@ -60,8 +87,16 @@ export const test = (lib = {}, spec = {}, parent = '') => {
       } else if (is.function(subSpec)) {
         return createLibTest(subLib, subSpec, fullName)
       }
+
+      return undefined
     })
-    .filter(a => a)
+    .filter(a => !!a)
 }
 
-export const version = (lib, spec, parent) => deep.flatten(test(lib, spec, parent))
+/**
+ * @param {Record<string, unknown>} [lib]
+ * @param {Record<string, SpecValue>} [spec]
+ * @param {string} [parent]
+ * @returns {{ fn: boolean, info: string }[]}
+ */
+export const version = (lib, spec, parent) => test(lib, spec, parent).flat(2000)
