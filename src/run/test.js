@@ -5,53 +5,6 @@ import { cleanError, cleanFunctionString, getTestKey, stats } from '../lib/index
 import { isolation } from './isolation.js'
 import { runSuite } from './suite.js'
 
-/** @typedef {import('./suite.js').Suite} Suite */
-
-/**
- * Definition of a single test (input before execution).
- *
- * @typedef {object} Test
- * @property {string} name - The test name.
- * @property {string} [pkg] - The package this test belongs to.
- * @property {string} [parent] - The parent suite/group name.
- * @property {string} [info] - Additional information about the test.
- * @property {string} [key] - A unique identifier for the test.
- *
- * @property {Function | Promise<unknown> | string | boolean | number | Record<string, unknown> | unknown[]} [fn] -
- *   The test function, a promise, or a direct value to evaluate.
- *
- * @property {Function | Promise<unknown> | unknown} [expect] -
- *   The expected value, or a function/promise that produces it.
- *
- * @property {Function | Promise<unknown> | unknown} [is] -
- *   Alias for `expect`.
- *
- * @property {number} [runs=1] - Number of times to run the test.
- *
- * @property {Record<string, Test> | Test[]} [tests] -
- *   Nested tests or child suites.
- *
- * @property {(test: Test) => (void | Function | Promise<void | Function>)} [before] -
- *   Hook executed before running the test.
- *   Can return a cleanup function.
- *
- * @property {() => (void | Promise<void>)} [after] -
- *   Hook executed after the test finishes.
- */
-
-/**
- * @typedef {object} TestResult
- * @property {unknown} result - The actual output of the test.
- * @property {string} msg - Cleaned stringified version of the test function.
- * @property {boolean} pass - Whether the test passed.
- * @property {string} parent - The parent suite/group name.
- * @property {string} name - The test name.
- * @property {unknown} expect - The expected value (evaluated).
- * @property {string | unknown} expString - Stringified expectation.
- * @property {string} key - Unique test key.
- * @property {string} [info] - Extra metadata or documentation.
- */
-
 /**
  * Run a test or delegate to a suite.
  *
@@ -116,7 +69,7 @@ export const runTest = async test => {
           await isolation.executeIsolated(key, async () => {
             if (is.function(fn)) {
               res = await fn()
-            } else {
+            } else if (is.promise(fn)) {
               res = await fn
             }
           })

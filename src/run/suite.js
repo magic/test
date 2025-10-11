@@ -6,38 +6,6 @@ import { runTest } from './test.js'
 import { store, getFNS, suiteNeedsIsolation } from '../lib/index.js'
 import { isolation } from './isolation.js'
 
-/** @typedef {import('./test.js').Test} Test */
-/** @typedef {import('./test.js').TestResult} TestResult */
-
-/**
- * @typedef {object} Suite
- * @property {number} pass - Number of passing tests
- * @property {number} fail - Number of failing tests
- * @property {number} all - Total number of tests run
- * @property {string} name - Suite name
- * @property {string} parent - Parent suite name
- * @property {string} pkg - Package name
- * @property {(TestResult | Suite)[]} tests - Child test results or nested suites
- * @property {string} [duration] - Execution duration
- * @property {string} [key] - Unique suite key
- */
-
-/**
- * @typedef {object} TestsWithHooks
- * @property {() => (void | Promise<void | (() => (void | Promise<void>))>)} [beforeAll]
- * @property {() => (void | Promise<void>)} [afterAll]
- * @property {() => (unknown | Promise<unknown>)} [fn]
- */
-
-/**
- * @typedef {object} SuiteInput
- * @property {string} [name]
- * @property {string} [parent]
- * @property {string} [pkg]
- * @property {string} [key]
- * @property {Test[] | (Record<string, unknown> & TestsWithHooks)} [tests]
- */
-
 /** @type {Suite} */
 const defaultSuite = {
   pass: 0,
@@ -52,10 +20,10 @@ const defaultSuite = {
 /**
  * Run a suite of tests (recursively).
  *
- * @param {SuiteInput} [props]
+ * @param {SuiteInput} props
  * @returns {Promise<Suite|void|undefined>}
  */
-export const runSuite = async (props = {}) => {
+export const runSuite = async props => {
   /** @type {Suite} */
   const suite = {
     ...defaultSuite,
@@ -103,7 +71,11 @@ export const runSuite = async (props = {}) => {
         'beforeAll' in tests &&
         is.function(tests.beforeAll)
       ) {
-        afterAll = await tests.beforeAll()
+        const testsWithHooks = /** @type {Record<string, unknown> & TestsWithHooks} */ (tests)
+        const result = is.fn(testsWithHooks.beforeAll) && (await testsWithHooks.beforeAll())
+        if (is.function(result)) {
+          afterAll = result
+        }
       }
 
       if (is.array(tests)) {
@@ -135,16 +107,18 @@ export const runSuite = async (props = {}) => {
           results = resolved.filter(r => !!r)
         }
       } else if (is.objectNative(tests)) {
-        if (is.function(tests.fn)) {
+        const testsObj = /** @type {Record<string, unknown> & TestsWithHooks} */ (tests)
+
+        if (is.function(testsObj.fn)) {
           const fns = getFNS()
           if (!fns.includes(name)) return
 
           /** @type {Test} */
-          const test = { ...tests, name, parent, pkg }
+          const test = { ...testsObj, name, parent, pkg }
           const result = await runTest(test)
           results = result ? [result] : []
         } else {
-          const entries = Object.entries(tests).filter(
+          const entries = Object.entries(testsObj).filter(
             ([key]) => key !== 'beforeAll' && key !== 'afterAll' && key !== 'fn',
           )
 
@@ -160,7 +134,7 @@ export const runSuite = async (props = {}) => {
             }),
           )
           const resolved = await Promise.all(promises)
-          results = resolved.filter(r => !!r)
+          results = resolved.filter(r => !!(/** @type {Suite} */ r))
         }
       }
 
@@ -179,7 +153,10 @@ export const runSuite = async (props = {}) => {
         'afterAll' in tests &&
         is.function(tests.afterAll)
       ) {
-        await tests.afterAll()
+        const testsWithHooks = /** @type {Record<string, unknown> & TestsWithHooks} */ (tests)
+        if (is.fn(testsWithHooks.afterAll)) {
+          await testsWithHooks.afterAll()
+        }
       }
 
       return suite

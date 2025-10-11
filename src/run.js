@@ -10,21 +10,9 @@ import { runSuite } from './run/suite.js'
 
 const cwd = process.cwd()
 
-/** @typedef {import('./run/suite.js').Suite} Suite */
-/** @typedef {import('./run/test.js').Test} Test */
-/** @typedef {import('./run/suite.js').TestsWithHooks} TestsWithHooks */
-
-/**
- * Global test hooks object with special file-based keys
- * @typedef {Record<string, unknown> & {
- *   '/beforeAll.js'?: (tests: Record<string, unknown>) => (void | Promise<void | (() => (void | Promise<void>))>),
- *   '/afterAll.js'?: (tests: Record<string, unknown>) => (void | Promise<void>)
- * }} TestSuites
- */
-
 /**
  * Run all test suites
- * @param {(() => (Record<string, unknown> & TestSuites)) | (Record<string, unknown> & TestSuites)} tests - Test suites object or function that returns one
+ * @param {TestSuites | (() => TestSuites)} tests - Test suites object or function that returns one
  * @returns {Promise<Error | void>}
  */
 export const run = async tests => {
