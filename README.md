@@ -955,7 +955,6 @@ update dependencies
 - rework some functionality to be typesafe and typeguarded
 - update dependencies
 
-
 ##### 0.2.23 - unreleased
 
 ...
