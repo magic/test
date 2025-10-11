@@ -1,9 +1,16 @@
 /**
  * Handles an HTTP response, collecting data and resolving or rejecting a promise.
+ * Automatically parses JSON responses based on content-type header.
+ * Only accepts 200 status codes as successful (rejects others).
  *
  * @param {import('http').IncomingMessage} res - The HTTP response object.
  * @param {(value: unknown) => void} resolve - The resolve function of a Promise.
  * @param {(reason?: unknown) => void} reject - The reject function of a Promise.
+ *
+ * @example
+ * const promise = new Promise((resolve, reject) => {
+ *   http.get(url, res => handleResponse(res, resolve, reject))
+ * })
  */
 export const handleResponse = (res, resolve, reject) => {
   const { statusCode } = res

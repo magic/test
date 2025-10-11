@@ -1,6 +1,56 @@
-// collection of javascript types to test anything against
+/**
+ * @typedef {Object} RGB
+ * @property {number} r - Red value
+ * @property {number} g - Green value
+ * @property {number} b - Blue value
+ */
 
-export const vals = {
+/**
+ * @typedef {Object} RGBA
+ * @property {number} r - Red value
+ * @property {number} g - Green value
+ * @property {number} b - Blue value
+ * @property {number} a - Alpha value
+ */
+
+/**
+ * Collection of JavaScript types to test anything against
+ * @type {Readonly<{
+ *   array: string[],
+ *   true: true,
+ *   false: false,
+ *   truthy: string,
+ *   falsy: number,
+ *   nil: null,
+ *   emptystr: string,
+ *   emptyobject: Record<string, never>,
+ *   emptyarray: never[],
+ *   func: () => void,
+ *   number: number,
+ *   num: number,
+ *   float: number,
+ *   int: number,
+ *   object: { test: string },
+ *   obj: { t: string },
+ *   string: string,
+ *   str: string,
+ *   email: string,
+ *   undefined: undefined,
+ *   undef: undefined,
+ *   date: Date,
+ *   time: number,
+ *   error: Error,
+ *   err: Error,
+ *   rgb: RGB,
+ *   rgba: RGBA,
+ *   hex3: string,
+ *   hex6: string,
+ *   hexa4: string,
+ *   hexa8: string,
+ *   regexp: RegExp
+ * }>}
+ */
+export const vals = /** @type {const} */ ({
   array: ['test'],
   true: true,
   false: false,
@@ -33,4 +83,4 @@ export const vals = {
   hexa4: '#3d31',
   hexa8: '#3d3d3111',
   regexp: /test/,
-}
+})

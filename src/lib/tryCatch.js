@@ -1,3 +1,9 @@
+/**
+ *
+ * @param {(...args: unknown[]) => unknown} fn
+ * @param  {...unknown} args
+ * @returns
+ */
 export const tryCatch =
   (fn, ...args) =>
   async () => {

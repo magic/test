@@ -4,6 +4,7 @@ import { env } from '../env.js'
 import { stringify } from '../stringify.js'
 import { getDuration } from '../getDuration.js'
 import { store } from '../store.js'
+import is from '@magic/types'
 
 /**
  * Type guard to check if a value is a TestResult.
@@ -11,8 +12,7 @@ import { store } from '../store.js'
  * @returns {obj is TestResult}
  */
 export const isTestResult = obj =>
-  obj &&
-  typeof obj === 'object' &&
+  is.objectNative(obj) &&
   'result' in obj &&
   'expString' in obj &&
   'msg' in obj &&
@@ -47,24 +47,31 @@ export const printPercent = p => {
   return log.color(color, value)
 }
 
-/** @typedef {import('../../run/test.js').TestResult} TestResult */
-/** @typedef {import('../../run/suite.js').Suite} Suite */
-
 /**
  * Prints test results for a package and its suites.
  *
  * @param {string} pkg - Package name.
- * @param {Suite[]} suites - Array of test suites.
+ * @param {(Suite | undefined | void)[]} suites - Array of test suites.
  * @returns {boolean} Always returns true.
  */
 export const info = (pkg, suites) => {
   log(`###  Testing package: ${pkg}`)
+
   const results = store.get('results')
 
+  if (!results) {
+    return true
+  }
+
   suites.forEach(suite => {
-    if (!suite) return
+    if (!suite) {
+      return
+    }
+
     const { tests, duration, name } = suite
-    if (!tests) return
+    if (!tests) {
+      return
+    }
 
     const result = results[name] || { all: 0, pass: 0 }
     const { pass, all } = result
@@ -92,8 +99,8 @@ export const info = (pkg, suites) => {
           log.color('red', '* fail:'),
           key.replace(/\./g, '/'),
           `executed: "${msg.toString().slice(0, 40).concat('...')}"\n`,
-          `got: "${JSON.stringify(stringify(result), null, 2)}"\n`,
-          `wanted: "${JSON.stringify(stringify(expString), null, 2)}"\n`,
+          `got: "${JSON.stringify(stringify(/** @type {import('../stringify.js').InputValue} */ (result)), null, 2)}"\n`,
+          `wanted: "${JSON.stringify(stringify(/** @type {import('../stringify.js').InputValue} */ (expString)), null, 2)}"\n`,
           info ? `info: ${log.paint('grey', info)}\n` : '',
         )
       }

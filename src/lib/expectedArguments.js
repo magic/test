@@ -2,7 +2,7 @@ import is from '@magic/types'
 
 /**
  *
- * @param {Function} fn
+ * @param {Function} [fn]
  * @returns
  */
 
