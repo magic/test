@@ -1,0 +1,1 @@
+{"version":3,"file":"curry.d.ts","sourceRoot":"","sources":["../../src/lib/curry.js"],"names":[],"mappings":"AAoBO,sBALM,KAAK,EACL,OAAO,QACN,CAAC,WAAS,GAAG,CAAC,EAAA,GACf,OAAO,GAAC,aAAa,CAAC,KAAK,EAAE,OAAO,CAAC,CA8BjD;0BAzCY,KAAK,EACL,OAAO,IACP,CAAC,GAAG,EAAE,GAAG,KAAK,OAAO,GAAC,aAAa,CAAC,KAAK,EAAE,OAAO,CAAC"}
