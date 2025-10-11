@@ -16,7 +16,6 @@
   "scripts": {
     "start": "node src/bin/t.js -p",
     "build": "tsc && npm run format",
-    "prepublishOnly": "npm run build",
     "build:docs": "NODE_ENV=production magic build",
     "prod": "NODE_ENV=production magic build serve",
     "clean": "magic clean",
