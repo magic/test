@@ -50,7 +50,16 @@
 
   "include": ["src/app.d.ts", "src/**/*", "test/**/*"],
 
-  "exclude": ["node_modules", "coverage", ".tmp", "dist", "build", "**/*.min.js", "**/*.bundle.js", "test/**/*"],
+  "exclude": [
+    "node_modules",
+    "coverage",
+    ".tmp",
+    "dist",
+    "build",
+    "**/*.min.js",
+    "**/*.bundle.js",
+    "test/**/*"
+  ],
 
   "ts-node": {
     "esm": true,
