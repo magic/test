@@ -47,7 +47,7 @@
     "noResolve": false
   },
 
-  "include": ["src/**/*", "test/**/*", "*.mjs", "*.js"],
+  "include": ["src/app.d.ts", "src/**/*", "test/**/*", "*.mjs", "*.js"],
 
   "exclude": ["node_modules", "coverage", ".tmp", "dist", "build", "**/*.min.js", "**/*.bundle.js"],
 
@@ -56,20 +56,5 @@
     "experimentalSpecifierResolution": "node"
   },
 
-  "typeRoots": ["./types", "./node_modules/@types"],
-
-  "typeAcquisition": {
-    "enable": true,
-    "include": [
-      "@magic/types",
-      "@magic/log",
-      "@magic/fs",
-      "@magic/deep",
-      "@magic/error",
-      "@magic/cli",
-      "@magic/cases",
-      "@magic/core"
-    ],
-    "exclude": []
-  }
+  "typeRoots": ["./types", "./node_modules/@types"]
 }
