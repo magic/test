@@ -10,6 +10,7 @@
     "declaration": true,
     "declarationMap": true,
     "emitDeclarationOnly": true,
+    "rootDir": "./src",
     "outDir": "./types",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -47,9 +48,9 @@
     "noResolve": false
   },
 
-  "include": ["src/app.d.ts", "src/**/*", "test/**/*", "*.mjs", "*.js"],
+  "include": ["src/app.d.ts", "src/**/*", "test/**/*"],
 
-  "exclude": ["node_modules", "coverage", ".tmp", "dist", "build", "**/*.min.js", "**/*.bundle.js"],
+  "exclude": ["node_modules", "coverage", ".tmp", "dist", "build", "**/*.min.js", "**/*.bundle.js", "test/**/*"],
 
   "ts-node": {
     "esm": true,
