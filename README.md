@@ -955,6 +955,11 @@ update dependencies
 - rework some functionality to be typesafe and typeguarded
 - update dependencies
 
-##### 0.2.23 - unreleased
+##### 0.2.23
+
+- readd npm run prepublishOnly task
+- update dependencies
+
+##### 0.2.24 - unreleased
 
 ...
