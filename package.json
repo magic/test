@@ -46,7 +46,7 @@
     "@magic/cli": "0.0.48",
     "@magic/deep": "0.1.18",
     "@magic/error": "0.0.20",
-    "@magic/fs": "0.0.32",
+    "@magic/fs": "0.0.33",
     "@magic/log": "0.1.20",
     "@magic/types": "0.1.29",
     "c8": "10.1.3"
