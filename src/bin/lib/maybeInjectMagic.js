@@ -7,6 +7,9 @@ import log from '@magic/log'
 
 const cwd = process.cwd()
 
+// ✅ helper to normalize Windows paths for dynamic imports
+const toImportPath = p => p.split(path.sep).join('/')
+
 /**
  * @typedef {(...args: unknown[]) => unknown[] | { View?: (...args: unknown[]) => unknown }} ModuleFn
  */
@@ -37,21 +40,21 @@ export const maybeInjectMagic = async () => {
     }
 
     if (!globalThis.CHECK_PROPS) {
-      const checkPropPath = path.join(importRoot, 'lib', 'CHECK_PROPS.mjs')
+      const checkPropPath = toImportPath(path.join(importRoot, 'lib', 'CHECK_PROPS.mjs'))
       const checkPropsModule = await import(checkPropPath)
       if ('CHECK_PROPS' in checkPropsModule) {
         globalThis.CHECK_PROPS = checkPropsModule.CHECK_PROPS
       }
     }
 
-    const magicPath = isRooted ? path.join(importRoot, 'index.mjs') : '@magic/core'
+    const magicPath = isRooted ? toImportPath(path.join(importRoot, 'index.mjs')) : '@magic/core'
 
     const core = await import(magicPath)
     if ('renderToString' in core && is.fn(core.renderToString)) {
       renderToString = /** @type {(view: unknown) => string} */ (core.renderToString)
     }
 
-    const configModule = await import(`${importRoot}/config.mjs`)
+    const configModule = await import(toImportPath(path.join(importRoot, 'config.mjs')))
     if ('runConfig' in configModule && is.fn(configModule.runConfig)) {
       config = await configModule.runConfig({ silent: true })
     }
@@ -72,8 +75,8 @@ export const maybeInjectMagic = async () => {
   }
 
   if (config) {
-    const runAppModule = await import(`${importRoot}/modules/app.mjs`)
-    const runCmdModule = await import(`${importRoot}/cluster/runCmd.mjs`)
+    const runAppModule = await import(toImportPath(path.join(importRoot, 'modules/app.mjs')))
+    const runCmdModule = await import(toImportPath(path.join(importRoot, 'cluster/runCmd.mjs')))
 
     if (!('default' in runAppModule) || !is.fn(runAppModule.default)) {
       log.error('E_IMPORT', 'Failed to import runApp from modules/app.mjs')
