@@ -99,12 +99,12 @@ run the test:
 ```
 
 example output:
-(failing tests will print, passing tests are silent)
+(failing tests will print some information, passing tests are silent)
 
 ```
 ###  Testing package: @magic/test
 
-Ran 2 tests. Passed 2/2 100%
+Ran 716 tests in 375.2ms. Passed 716/716 100%
 ```
 
 run coverage reports and get full test report including from passing tests:
