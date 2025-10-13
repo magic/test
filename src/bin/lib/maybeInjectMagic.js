@@ -7,7 +7,10 @@ import log from '@magic/log'
 
 const cwd = process.cwd()
 
-// ✅ helper to normalize Windows paths for dynamic imports
+/**
+ *
+ * @param {string} p
+ */
 const toImportPath = p => p.split(path.sep).join('/')
 
 /**
