@@ -960,6 +960,10 @@ update dependencies
 - readd npm run prepublishOnly task
 - update dependencies
 
-##### 0.2.24 - unreleased
+##### 0.2.24
+
+- fix @magic/core tests on windows.
+
+##### 0.2.25 - unreleased
 
 ...
