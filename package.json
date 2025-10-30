@@ -25,7 +25,8 @@
     "test": "node src/bin/t.js -p",
     "coverage": "node src/bin/t.js",
     "format": "f -w --exclude docs",
-    "format:check": "f --exclude docs"
+    "format:check": "f --exclude docs",
+    "lint": "tsc --noEmit"
   },
   "engines": {
     "node": ">=14.15.4"
