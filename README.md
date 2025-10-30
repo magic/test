@@ -968,6 +968,10 @@ update dependencies
 
 - update dependencies
 
-##### 0.2.26 - unreleased
+##### 0.2.26
+
+- update dependencies
+
+##### 0.2.27 - unreleased
 
 ...
