@@ -964,6 +964,10 @@ update dependencies
 
 - fix @magic/core tests on windows.
 
-##### 0.2.25 - unreleased
+##### 0.2.25
+
+- update dependencies
+
+##### 0.2.26 - unreleased
 
 ...
