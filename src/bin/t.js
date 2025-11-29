@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 
 import path from 'node:path'
+import url from 'node:url'
 
 import cli from '@magic/cli'
 import fs from '@magic/fs'
 import is from '@magic/types'
+
+const __filename = url.fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const cwd = process.cwd()
 const res = cli({
@@ -90,7 +94,13 @@ const run = async () => {
     argv = ['--all', ...argv]
   }
 
+  const loaderPath = path.join(__dirname, 'lib', 'tsLoader.js')
+
+  // argv = ['--loader', loaderPath, ...argv]
+  process.env.NODE_OPTIONS = `--loader ${loaderPath} ${process.env.NODE_OPTIONS || ''}`
+
   await cli.spawn(cmd, argv)
+  console.log({ cmd, argv })
 }
 
 run()
