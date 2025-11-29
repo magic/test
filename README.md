@@ -972,6 +972,11 @@ update dependencies
 
 - update dependencies
 
-##### 0.2.27 - unreleased
+##### 0.2.27
+
+- allow resolving .js files as .ts files, this mimics typescript .js file resolver
+- update @types/node
+
+##### 0.2.28 - unreleased
 
 ...
