@@ -94,13 +94,10 @@ const run = async () => {
     argv = ['--all', ...argv]
   }
 
-  const loaderPath = path.join(__dirname, 'lib', 'tsLoader.js')
-
-  // argv = ['--loader', loaderPath, ...argv]
-  process.env.NODE_OPTIONS = `--loader ${loaderPath} ${process.env.NODE_OPTIONS || ''}`
+  const registerPath = path.join(__dirname, 'lib', 'registerLoader.js')
+  process.env.NODE_OPTIONS = `--import ${registerPath} ${process.env.NODE_OPTIONS || ''}`
 
   await cli.spawn(cmd, argv)
-  console.log({ cmd, argv })
 }
 
 run()
