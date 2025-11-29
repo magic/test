@@ -977,6 +977,10 @@ update dependencies
 - allow resolving .js files as .ts files, this mimics typescript .js file resolver
 - update @types/node
 
-##### 0.2.28 - unreleased
+##### 0.2.28
+
+- use node:module register function for loader, allowing use of the --import flag instead of soon deprecated --loader.
+
+##### 0.2.29 - unreleased
 
 ...
