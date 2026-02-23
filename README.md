@@ -981,6 +981,11 @@ update dependencies
 
 - use node:module register function for loader, allowing use of the --import flag instead of soon deprecated --loader.
 
-##### 0.2.29 - unreleased
+##### 0.2.29
+
+- tryCatch: pass on empty args
+- update dependencies
+
+##### 0.2.30 - unreleased
 
 ...
