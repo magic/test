@@ -34,9 +34,14 @@ export const readRecursive = async (dir = '') => {
   /** @type {TestSuites} */
   let tests = {}
 
-  // first resolve test/{dir/?}index.js
+  // first resolve test/{dir/?}index.js or index.ts
   // if they exist, we require them and expect export structures to be user defined.
   let indexFilePath = path.join(targetDir, 'index.js')
+  let indexFileTsPath = path.join(targetDir, 'index.ts')
+
+  if (await fs.exists(indexFileTsPath)) {
+    indexFilePath = indexFileTsPath
+  }
 
   if (await fs.exists(indexFilePath)) {
     // if index.js exists, we will simply import it as is and do no recursion.
@@ -66,8 +71,8 @@ export const readRecursive = async (dir = '') => {
               ...deepTests,
             }
           } else if (stat.isFile()) {
-            if (!file.endsWith('js') && !file.endsWith('mjs')) {
-              // bail early if not js
+            if (!file.endsWith('js') && !file.endsWith('mjs') && !file.endsWith('ts')) {
+              // bail early if not js or TypeScript
               return
             }
 
