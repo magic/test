@@ -576,6 +576,8 @@ const spec = {
       map: 'fn',
       isSet: 'fn',
       set: 'fn',
+      sym: 'fn',
+      symbol: 'fn',
       isWeakMap: 'fn',
       weakMap: 'fn',
       isWeakSet: 'fn',
