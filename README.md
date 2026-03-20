@@ -986,6 +986,12 @@ update dependencies
 - tryCatch: pass on empty args
 - update dependencies
 
-##### 0.2.30 - unreleased
+##### 0.2.30
+
+- allow tests to be written using typescript, .ts files can be test files now.
+- add some internal tests
+- update dependencies
+
+##### 0.2.31 - unreleased
 
 ...
