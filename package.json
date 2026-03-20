@@ -50,7 +50,7 @@
     "@magic/error": "0.0.21",
     "@magic/fs": "0.0.37",
     "@magic/log": "0.1.21",
-    "@magic/types": "0.1.31",
+    "@magic/types": "0.1.32",
     "c8": "11.0.0"
   },
   "devDependencies": {
@@ -61,7 +61,7 @@
     "@magic-themes/docs": "0.0.15",
     "@magic/core": "0.0.156",
     "@magic/format": "0.0.72",
-    "@types/node": "25.3.2",
+    "@types/node": "25.5.0",
     "typescript": "5.9.3"
   },
   "contributors": [
