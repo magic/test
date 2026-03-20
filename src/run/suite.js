@@ -66,8 +66,8 @@ export const runSuite = async props => {
 
       if (
         tests &&
-        typeof tests === 'object' &&
-        !Array.isArray(tests) &&
+        is.object(tests) &&
+        !is.arr(tests) &&
         'beforeAll' in tests &&
         is.function(tests.beforeAll)
       ) {
@@ -148,8 +148,8 @@ export const runSuite = async props => {
 
       if (
         tests &&
-        typeof tests === 'object' &&
-        !Array.isArray(tests) &&
+        is.object(tests) &&
+        !is.arr(tests) &&
         'afterAll' in tests &&
         is.function(tests.afterAll)
       ) {

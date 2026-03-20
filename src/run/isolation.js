@@ -82,7 +82,7 @@ export class Isolation {
    * @returns {T}
    */
   deepClone(value, seen = new WeakMap()) {
-    if (value === null || typeof value !== 'object') {
+    if (value === null || !is.object(value)) {
       return value
     }
 
@@ -376,7 +376,7 @@ export class Isolation {
    * @returns {boolean}
    */
   shouldCaptureProperty(prop) {
-    const name = typeof prop === 'symbol' ? String(prop) : prop
+    const name = is.symbol(prop) ? String(prop) : prop
     if (skipProps.includes(name)) return false
 
     const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
