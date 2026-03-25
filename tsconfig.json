@@ -3,7 +3,6 @@
     "target": "ES2022",
     "lib": ["ES2022", "DOM"],
     "module": "ES2022",
-    "moduleResolution": "Node",
     "allowJs": true,
     "checkJs": true,
     "maxNodeModuleJsDepth": 2,
@@ -28,18 +27,16 @@
     "noImplicitOverride": true,
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
-    "baseUrl": "./",
     "paths": {
       "@magic/test": ["./src/index.js"],
       "@magic/test/*": ["./src/*"]
     },
-    "resolveJsonModule": true,
+    "types": ["@types/node"],
 
     // Emit
     "sourceMap": true,
     "removeComments": false,
     "importHelpers": false,
-    "downlevelIteration": true,
 
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
