@@ -7,7 +7,7 @@ import is from '@magic/types'
 export const click = (target, selector) => {
   const el = selector ? target.querySelector(selector) : target
   if (el && is.instance(el, HTMLElement)) {
-    /** @type {HTMLElement} */ ;(el).click()
+    /** @type {HTMLElement} */ el.click()
   }
 }
 
