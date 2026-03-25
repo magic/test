@@ -4,6 +4,7 @@ import { Buffer } from 'node:buffer'
 import { URL } from 'node:url'
 
 import { handleResponse } from './handleResponse.js'
+import is from '@magic/types'
 
 /**
  * @typedef {Record<string, any>} BodyObject
@@ -70,7 +71,7 @@ export const post = (url, body = '') =>
 
       let postData = ''
       if (body) {
-        postData = typeof body === 'string' ? body : JSON.stringify(body)
+        postData = is.str(body) ? body : JSON.stringify(body)
         headers['Content-Length'] = Buffer.byteLength(postData)
         headers['Content-Type'] = 'application/json'
       }
