@@ -67,13 +67,13 @@ export const mount = async (filePath, options = {}) => {
     rawProps !== undefined &&
     (typeof rawProps !== 'object' || rawProps === null || is.array(rawProps))
   ) {
-    throw new Error(`Props must be an object, got ${typeof rawProps}`)
+    throw new Error(`Props must be an object, not null and not an array got ${typeof rawProps}`)
   }
 
   const props = rawProps ?? {}
 
   for (const key of Object.keys(props)) {
-    if (typeof key !== 'string') {
+    if (!is.string(key)) {
       throw new Error(`Prop keys must be strings, got ${typeof key}`)
     }
   }
