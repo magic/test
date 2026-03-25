@@ -97,6 +97,17 @@ declare global {
      * Hook executed after the test finishes.
      */
     after?: () => void | Promise<void>
+
+    /**
+     * Component to mount for Svelte component tests.
+     * Can be a string path or [path, props] tuple.
+     */
+    component?: string | [string, Record<string, unknown>?]
+
+    /**
+     * Props to pass to the component (alternative to passing in component tuple).
+     */
+    props?: Record<string, unknown>
   }
 
   /**

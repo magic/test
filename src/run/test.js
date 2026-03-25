@@ -99,7 +99,7 @@ export const runTest = async test => {
           } = await mount(componentFile, { props: componentProps })
 
           try {
-            res = await fn({ target, component: instance, unmount })
+            res = await /** @type {Function} */ (fn)({ target, component: instance, unmount })
           } finally {
             await unmount()
           }
