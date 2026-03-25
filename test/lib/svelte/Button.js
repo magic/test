@@ -64,4 +64,10 @@ export default [
     },
     info: 'renders default slot content',
   },
+  {
+    component,
+    props: { variant: 'custom' },
+    fn: ({ target }) => html(target).includes('btn custom'),
+    info: 'renders button with custom variant',
+  },
 ]

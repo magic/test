@@ -69,4 +69,40 @@ export default [
     expect: true,
     info: 'isLarge is true when count > 5',
   },
+  {
+    component,
+    props: { items: [1, 2, 3] },
+    fn: async ({ component: instance }) => {
+      return instance.isLarge
+    },
+    expect: false,
+    info: 'isLarge is false when count <= 5',
+  },
+  {
+    component,
+    props: { items: [1, 2] },
+    fn: async ({ target }) => {
+      return html(target).includes('Double: 4')
+    },
+    expect: true,
+    info: 'renders doubleCount value',
+  },
+  {
+    component,
+    props: { items: [] },
+    fn: async ({ target }) => {
+      return html(target).includes('Double: 0')
+    },
+    expect: true,
+    info: 'renders doubleCount as 0 for empty items',
+  },
+  {
+    component,
+    props: { items: [] },
+    fn: async ({ target }) => {
+      return html(target).includes('Count: 0')
+    },
+    expect: true,
+    info: 'renders count as 0 for empty items',
+  },
 ]

@@ -64,4 +64,11 @@ export default [
     expect: 'Props must be an object, got object',
     info: 'throws when props is an array',
   },
+  {
+    component,
+    props: { tabs: [] },
+    fn: ({ target }) => html(target).includes('class="tabs"'),
+    expect: true,
+    info: 'renders tabs container with empty tabs',
+  },
 ]

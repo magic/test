@@ -44,4 +44,22 @@ export default [
     expect: true,
     info: 'changed becomes true after input',
   },
+  {
+    component,
+    props: { value: '' },
+    fn: async ({ target }) => {
+      return html(target).includes('Length: 0')
+    },
+    expect: true,
+    info: 'shows length 0 for empty input',
+  },
+  {
+    component,
+    props: { value: 'hello' },
+    fn: async ({ target }) => {
+      return html(target).includes('Length: 5')
+    },
+    expect: true,
+    info: 'shows correct length for input',
+  },
 ]

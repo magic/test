@@ -44,4 +44,16 @@ export default [
     expect: 5,
     info: 'decrement decreases count by step',
   },
+  {
+    component,
+    props: { initial: 0, step: 10 },
+    fn: async ({ target, component: instance }) => {
+      const incButton = target.querySelector('.inc')
+      incButton.click()
+      await new Promise(r => setTimeout(r, 10))
+      return instance.count
+    },
+    expect: 10,
+    info: 'increment with step 10 adds 10',
+  },
 ]
