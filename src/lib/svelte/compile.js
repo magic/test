@@ -1,5 +1,6 @@
 import { compile } from 'svelte/compiler'
 import fs from '@magic/fs'
+import is from '@magic/types'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { resolveAlias } from './vite-config.js'

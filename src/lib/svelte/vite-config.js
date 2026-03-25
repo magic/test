@@ -88,11 +88,13 @@ const parseViteConfig = async configPath => {
 
       const evaluated = new Function('path', `return (${cleaned})`)(path)
 
+      /** @type {(alias: any) => any} */
       const processedAlias = alias => {
         if (is.array(alias)) {
           return alias.map(processedAlias)
         }
         if (is.object(alias)) {
+          /** @type {any} */
           const result = { ...alias }
           if (is.string(result.find)) {
             const regexMatch = result.find.match(/^\/(.+)\/([a-z]*)$/)
