@@ -42,10 +42,10 @@ export const runTest = async test => {
 
     let componentFile, componentProps
     if (componentProp) {
-      if (typeof componentProp === 'string') {
+      if (is.string(componentProp)) {
         componentFile = componentProp
         componentProps = explicitProps || {}
-      } else if (Array.isArray(componentProp)) {
+      } else if (is.array(componentProp)) {
         componentFile = componentProp[0]
         componentProps = componentProp[1] || {}
       } else {

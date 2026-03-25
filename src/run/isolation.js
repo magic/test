@@ -100,14 +100,14 @@ export class Isolation {
       return /** @type {T} */ (copy)
     }
 
-    if (value instanceof Date) {
+    if (is.date(value)) {
       return /** @type {T} */ (new Date(value.getTime()))
     }
-    if (value instanceof RegExp) {
+    if (is.regex(value)) {
       return /** @type {T} */ (new RegExp(value.source, value.flags))
     }
 
-    if (value instanceof Set) {
+    if (is.set(value)) {
       const out = new Set()
       seen.set(value, out)
       for (const v of value) {
@@ -115,7 +115,7 @@ export class Isolation {
       }
       return /** @type {T} */ (out)
     }
-    if (value instanceof Map) {
+    if (is.map(value)) {
       const out = new Map()
       seen.set(value, out)
       for (const [k, v] of value) {
