@@ -63,5 +63,10 @@ export const run = async tests => {
     await Promise.all(afterAll.filter(is.fn).map(fn => fn(tests)))
   }
 
+  const tmpDir = path.join(cwd, 'test', '.tmp')
+  if (await fs.exists(tmpDir)) {
+    await fs.rmrf(tmpDir)
+  }
+
   stats.info(name, suites)
 }

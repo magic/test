@@ -26,7 +26,32 @@ export const runTest = async test => {
       }
     }
 
-    const { fn, name, pkg, before, parent, expect, runs = 1, tests, info } = test
+    const {
+      fn,
+      name,
+      pkg,
+      before,
+      parent,
+      expect,
+      runs = 1,
+      tests,
+      info,
+      component: componentProp,
+      props: explicitProps,
+    } = test
+
+    let componentFile, componentProps
+    if (componentProp) {
+      if (typeof componentProp === 'string') {
+        componentFile = componentProp
+        componentProps = explicitProps || {}
+      } else if (Array.isArray(componentProp)) {
+        componentFile = componentProp[0]
+        componentProps = componentProp[1] || {}
+      } else {
+        throw new Error('component must be a string or [string, props]')
+      }
+    }
 
     if (!is.ownProp(test, 'fn')) {
       if (is.object(test) && is.object(tests)) {
@@ -65,7 +90,20 @@ export const runTest = async test => {
 
     for (let i = 0; i < runs; i++) {
       try {
-        if (is.function(fn) || is.promise(fn)) {
+        if (componentFile) {
+          const { mount } = await import('../lib/svelte/mount.js')
+          const {
+            target,
+            component: instance,
+            unmount,
+          } = await mount(componentFile, { props: componentProps })
+
+          try {
+            res = await fn({ target, component: instance, unmount })
+          } finally {
+            await unmount()
+          }
+        } else if (is.function(fn) || is.promise(fn)) {
           await isolation.executeIsolated(key, async () => {
             if (is.function(fn)) {
               res = await fn()

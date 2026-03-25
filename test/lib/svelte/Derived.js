@@ -1,0 +1,72 @@
+import { mount, html, tryCatch } from '../../../src/lib/index.js'
+
+const component = './src/lib/svelte/components/Derived.svelte'
+
+export default [
+  {
+    component,
+    props: { items: [1, 2, 3] },
+    fn: async ({ target }) => {
+      const result = html(target)
+      return result.includes('Count: 3') && result.includes('Double: 6')
+    },
+    expect: true,
+    info: 'renders derived values',
+  },
+  {
+    component,
+    props: { items: [1, 2, 3] },
+    fn: async ({ component: instance }) => {
+      return instance.isEmpty
+    },
+    expect: false,
+    info: 'isEmpty is false when items exist',
+  },
+  {
+    component,
+    props: { items: [] },
+    fn: async ({ component: instance }) => {
+      return instance.isEmpty
+    },
+    expect: true,
+    info: 'isEmpty is true when no items',
+  },
+  {
+    fn: tryCatch(mount, component, { props: null }),
+    expect: t => t.message === 'Props must be an object, got object',
+    info: 'throws when props is null',
+  },
+  {
+    component,
+    props: { items: [1, 2, 3] },
+    fn: async ({ target, component: instance }) => {
+      const addButton = target.querySelector('.add')
+      addButton.click()
+      await new Promise(r => setTimeout(r, 10))
+      return instance.count
+    },
+    expect: 4,
+    info: 'add button increments count',
+  },
+  {
+    component,
+    props: { items: [1, 2, 3] },
+    fn: async ({ target, component: instance }) => {
+      const removeButton = target.querySelector('.remove')
+      removeButton.click()
+      await new Promise(r => setTimeout(r, 10))
+      return instance.count
+    },
+    expect: 2,
+    info: 'remove button decrements count',
+  },
+  {
+    component,
+    props: { items: [1, 2, 3, 4, 5, 6] },
+    fn: async ({ component: instance }) => {
+      return instance.isLarge
+    },
+    expect: true,
+    info: 'isLarge is true when count > 5',
+  },
+]

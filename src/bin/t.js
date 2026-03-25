@@ -67,7 +67,7 @@ const run = async () => {
   let argv = []
 
   const includeArgs = res.args.include || ['src']
-  const excludeArgs = res.args.exclude || ['.tmp']
+  const excludeArgs = res.args.exclude || []
 
   const include = is.array(includeArgs) ? includeArgs : [includeArgs]
   const exclude = is.array(excludeArgs) ? excludeArgs : [excludeArgs]
@@ -91,7 +91,17 @@ const run = async () => {
   if (!isProd) {
     const c8Cmd = isWin ? 'c8.cmd' : 'c8'
     cmd = path.join(cwd, 'node_modules', '.bin', c8Cmd)
-    argv = ['--all', ...argv]
+    argv = [
+      '--all',
+      '--extension',
+      '.js',
+      '--extension',
+      '.ts',
+      '--extension',
+      '.svelte',
+      '--exclude-after-remap',
+      ...argv,
+    ]
   }
 
   const registerPath = path.join(__dirname, 'lib', 'registerLoader.js')

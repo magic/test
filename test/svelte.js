@@ -1,0 +1,97 @@
+import { mount, html, component, click, trigger, scroll, props } from '../src/lib/index.js'
+import { flushSync } from 'svelte'
+
+export default [
+  {
+    fn: async () => {
+      const { target, unmount } = await mount('./src/lib/svelte/components/Counter.svelte')
+      const result = html(target)
+      await unmount()
+      return result
+    },
+    expect: '<div class="count">0</div> <button>increment</button>',
+    info: 'mount returns component with initial html',
+  },
+  {
+    fn: async () => {
+      const { component: instance, unmount } = await mount(
+        './src/lib/svelte/components/Counter.svelte',
+      )
+      const result = component(instance).count
+      await unmount()
+      return result
+    },
+    expect: 0,
+    info: 'component returns exported state',
+  },
+  {
+    fn: async () => {
+      const {
+        target,
+        component: instance,
+        unmount,
+      } = await mount('./src/lib/svelte/components/Counter.svelte')
+      instance.count = 5
+      flushSync()
+      const result = component(instance).count
+      await unmount()
+      return result
+    },
+    expect: 5,
+    info: 'component state can be modified directly',
+  },
+  {
+    fn: async () => {
+      let called = false
+      const { target, unmount } = await mount('./src/lib/svelte/components/Counter.svelte')
+      const button = target.querySelector('button')
+      button.addEventListener('click', () => {
+        called = true
+      })
+      trigger(button, 'click')
+      await unmount()
+      return called
+    },
+    expect: true,
+    info: 'trigger dispatches click event',
+  },
+  {
+    fn: async () => {
+      const { target, unmount } = await mount('./src/lib/svelte/components/Counter.svelte')
+      const div = target.querySelector('.count')
+      scroll(div, 0, 100)
+      flushSync()
+      const result = div.scrollTop
+      await unmount()
+      return result
+    },
+    expect: 100,
+    info: 'scroll sets scroll position',
+  },
+  {
+    fn: async () => {
+      let clicked = false
+      const { target, unmount } = await mount('./src/lib/svelte/components/Counter.svelte')
+      const button = target.querySelector('button')
+      button.addEventListener('click', () => {
+        clicked = true
+      })
+      click(target, 'button')
+      await unmount()
+      return clicked
+    },
+    expect: true,
+    info: 'click triggers click on element by selector',
+  },
+  {
+    fn: async () => {
+      const { target, unmount } = await mount('./src/lib/svelte/components/Counter.svelte')
+      const button = target.querySelector('button')
+      const result = props(button)
+      await unmount()
+      return result
+    },
+    expect: {},
+    info: 'props returns element attributes',
+  },
+]
