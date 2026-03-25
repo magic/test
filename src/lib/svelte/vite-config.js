@@ -74,7 +74,7 @@ const parseViteConfig = async configPath => {
   const configDir = path.dirname(configPath)
   const content = await fs.readFile(configPath, 'utf-8')
 
-  const aliasMatch = content.match(/alias:\s*(\{[\s\S]*?\})/)
+  const aliasMatch = content.match(/alias:\s*(\{[\s\S]*?\}|\[[\s\S]*?\])/)
   /** @type {any} */
   let config = {}
 
@@ -87,9 +87,29 @@ const parseViteConfig = async configPath => {
         .replace(/path\.resolve\(__filename/g, `path.resolve("${configDir}"`)
 
       const evaluated = new Function('path', `return (${cleaned})`)(path)
-      config.resolve = { alias: evaluated }
+
+      const processedAlias = alias => {
+        if (is.array(alias)) {
+          return alias.map(processedAlias)
+        }
+        if (is.object(alias)) {
+          const result = { ...alias }
+          if (is.string(result.find)) {
+            const regexMatch = result.find.match(/^\/(.+)\/([a-z]*)$/)
+            if (regexMatch) {
+              try {
+                result.find = new RegExp(regexMatch[1], regexMatch[2])
+              } catch {}
+            }
+          }
+          return result
+        }
+        return alias
+      }
+
+      config.resolve = { alias: processedAlias(evaluated) }
     } catch (e) {
-      const message = e instanceof Error ? e.message : String(e)
+      const message = is.error(e) ? e.message : String(e)
       console.warn(`[svelte-alias] Failed to parse vite.config alias: ${message}`)
     }
   }
@@ -132,8 +152,22 @@ const normalizeSingleAlias = (entry, configDir) => {
   }
 
   if (is.string(find)) {
+    const regexMatch = find.match(/^\/(.+)\/([a-z]*)$/)
+    if (regexMatch) {
+      try {
+        find = new RegExp(regexMatch[1], regexMatch[2])
+      } catch {
+        return { find: String(find), replacement }
+      }
+    }
+
+    if (is.regex(find)) {
+      return { find, replacement }
+    }
+
     const findPrefix = find.endsWith('*') ? find.slice(0, -1) : find
-    const replacementSuffix = replacement.endsWith('*') ? replacement.slice(0, -1) : replacement
+    const replacementSuffix =
+      is.string(replacement) && replacement.endsWith('*') ? replacement.slice(0, -1) : replacement
 
     if (find.endsWith('*') && !find.startsWith('^')) {
       const regex = new RegExp(`^${escapeRegex(findPrefix)}(.*)`)
@@ -146,7 +180,7 @@ const normalizeSingleAlias = (entry, configDir) => {
     return { find, replacement }
   }
 
-  if (find instanceof RegExp) {
+  if (is.regex(find)) {
     return { find, replacement }
   }
 
@@ -269,7 +303,7 @@ const parseTsConfig = async rootDir => {
     // @ts-expect-error - TypeScript doesn't understand the filter
     return filteredAliases
   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e)
+    const message = is.error(e) ? e.message : String(e)
     console.warn(`[svelte-alias] Failed to parse tsconfig.json: ${message}`)
     return []
   }
@@ -300,7 +334,7 @@ const loadViteAliases = async rootDir => {
     aliasCache.set(cacheKey, aliases)
     return aliases
   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e)
+    const message = is.error(e) ? e.message : String(e)
     console.warn(`[svelte-alias] Failed to parse vite.config: ${message}`)
     return []
   }
@@ -332,7 +366,7 @@ export const resolveAlias = async (importPath, sourceFilePath) => {
           resolved = importPath.replace(find, replacement)
         }
       }
-    } else if (find instanceof RegExp) {
+    } else if (is.regex(find)) {
       const match = importPath.match(find)
       if (match) {
         resolved = importPath.replace(find, replacement)
