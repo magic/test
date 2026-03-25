@@ -1,0 +1,6 @@
+export { compileSvelte } from './compile.js'
+export { initDOM } from './dom.js'
+export { mount } from './mount.js'
+export { html, text, component, props } from './assert.js'
+export { click, trigger, scroll } from './events.js'
+//# sourceMappingURL=index.d.ts.map
