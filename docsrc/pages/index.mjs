@@ -371,7 +371,7 @@ export default () => {
   p([
     '@magic-modules assume all html tags to be globally defined.',
     ' to create those globals for your test and check if a @magic-module returns the correct markup,',
-    ' just add an html: true flag to the test.',
+    ' just use one of those tags in your tests.',
   ]),
 
   Pre(`
