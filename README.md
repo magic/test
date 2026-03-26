@@ -43,9 +43,12 @@ incredibly fast.
 - [utility functions](#lib)
   - [curry](#lib-curry)
   - [vals](#lib-vals)
+  - [env](#lib-env)
   - [promises](#lib-promises)
+  - [http](#lib-http)
   - [css](#lib-css)
   - [tryCatch](#lib-trycatch)
+  - [svelte](#lib-svelte)
 - [Cli / Js Api Usage](#usage)
   - [js api](#usage-js)
   - [cli](#usage-cli)
@@ -338,10 +341,32 @@ export default [
   },
 ```
 
+**File-based Hooks:**
+
+You can also create `test/beforeAll.js` and `test/afterAll.js` files that run before/after all tests in a suite. If the exported function returns another function, it will be executed after the suite completes.
+
+```javascript
+// test/beforeAll.js
+export default () => {
+  global.setup = true
+  // optionally return a cleanup function
+  return () => {
+    global.setup = false
+  }
+}
+```
+
+```javascript
+// test/afterAll.js
+export default () => {
+  // cleanup after all tests
+}
+```
+
 ##### <a name="tests-magic-modules"></a>test @magic-modules
 
 @magic-modules assume all html tags to be globally defined.
-to create those globals for your test and check if a @magic-module returns the correct markup, just add an html: true flag to the test:
+to create those globals for your test and check if a @magic-module returns the correct markup, just call one of the tags in your test function:
 
 ```javascript
 export default [
@@ -374,7 +399,56 @@ export default {
 
 ###### <a name="lib-vals"></a> vals
 
-exports some javascript types. more to come. will sometime in the future be the base of a fuzzer.
+Exports JavaScript type constants for testing against any value. Useful for fuzzing and property-based testing.
+
+```javascript
+import { vals, is } from '@magic/test'
+
+export default [
+  { fn: () => 'test', expect: is.string, info: 'test if value is a string' },
+  { fn: () => vals.true, expect: true, info: 'boolean true value' },
+  { fn: () => vals.email, expect: is.email, info: 'valid email format' },
+  { fn: () => vals.error, expect: is.error, info: 'error instance' },
+]
+```
+
+**Available Constants:**
+
+| Category     | Constants                                                         |
+| ------------ | ----------------------------------------------------------------- |
+| Primitives   | `true`, `false`, `number`, `num`, `float`, `int`, `string`, `str` |
+| Empty values | `nil`, `emptystr`, `emptyobject`, `emptyarray`, `undef`           |
+| Collections  | `array`, `object`, `obj`                                          |
+| Time         | `date`, `time`                                                    |
+| Errors       | `error`, `err`                                                    |
+| Colors       | `rgb`, `rgba`, `hex3`, `hex6`, `hexa4`, `hexa8`                   |
+| Other        | `func`, `truthy`, `falsy`, `email`, `regexp`                      |
+
+##### <a name="lib-env"></a>env
+
+Environment detection utilities for conditional test behavior.
+
+```javascript
+import { env } from '@magic/test'
+
+export default [
+  {
+    fn: env.isNodeProd,
+    expect: process.env.NODE_ENV === 'production',
+    info: 'checks if NODE_ENV is production',
+  },
+  {
+    fn: env.isProd,
+    expect: process.argv.includes('-p'),
+    info: 'checks if -p flag is passed',
+  },
+  {
+    fn: env.isVerbose,
+    expect: process.argv.includes('-l'),
+    info: 'checks if -l flag is passed',
+  },
+]
+```
 
 ##### <a name="lib-promises"></a>promises
 
@@ -397,6 +471,58 @@ export default [
   },
 ]
 ```
+
+###### <a name="lib-http"></a>http
+
+HTTP utility for making requests in tests. Supports both HTTP and HTTPS.
+
+```javascript
+import { http } from '@magic/test'
+
+export default [
+  {
+    fn: http.get('https://api.example.com/data'),
+    expect: { success: true },
+    info: 'fetches data from API',
+  },
+  {
+    fn: http.post('https://api.example.com/users', { name: 'John' }),
+    expect: { id: 1, name: 'John' },
+    info: 'creates a new user',
+  },
+  {
+    fn: http.post('http://localhost:3000/data', 'raw string'),
+    expect: 'raw string',
+    info: 'posts raw string data',
+  },
+]
+```
+
+**Error Handling:**
+
+```javascript
+import { http, is } from '@magic/test'
+
+export default [
+  {
+    fn: http.get('https://invalid-domain-that-does-not-exist.com'),
+    expect: is.error,
+    info: 'rejects on network error',
+  },
+  {
+    fn: http.get('https://api.example.com/nonexistent'),
+    expect: res => res.status === 404,
+    info: 'handles 404 responses',
+  },
+]
+```
+
+**Note:** The HTTP module automatically handles:
+
+- Protocol detection (HTTP vs HTTPS)
+- JSON parsing for responses with `Content-Type: application/json`
+- Raw string returns for non-JSON responses
+- `rejectUnauthorized: false` for self-signed certificates
 
 ##### <a name="lib-css"></a>css
 
@@ -439,6 +565,100 @@ export default [
     fn: tryCatch(error('Message', 'E_NAME')),
     expect: e => e.name === 'E_NAME' && e.message === 'Message',
     info: 'Errors have messages and (optional) names.',
+  },
+]
+```
+
+###### <a name="lib-svelte"></a>Svelte Testing
+
+@magic/test includes built-in support for testing Svelte 5 components. It provides a complete testing harness that compiles Svelte components, mounts them in a DOM environment, and provides utilities for interacting with and asserting on component behavior.
+
+```javascript
+import { mount, html, tryCatch } from '@magic/test'
+
+const component = './path/to/MyComponent.svelte'
+
+export default [
+  {
+    component,
+    props: { message: 'Hello' },
+    fn: ({ target }) => html(target).includes('Hello'),
+    expect: true,
+    info: 'renders the message prop',
+  },
+]
+```
+
+**Exported Functions:**
+
+| Function                               | Description                                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `mount(filePath, options)`             | Mounts a Svelte component and returns the target, component instance, and unmount function |
+| `html(target)`                         | Returns the innerHTML of a mounted component's target element                              |
+| `text(target)`                         | Returns the textContent of a target element                                                |
+| `component(instance)`                  | Returns the component instance for accessing exported values                               |
+| `props(target)`                        | Returns an object of attribute name/value pairs from the target element                    |
+| `click(target, selector?)`             | Clicks an element (optionally filtered by CSS selector)                                    |
+| `trigger(target, eventType, options?)` | Dispatches a custom event on an element                                                    |
+| `scroll(target, x, y)`                 | Scrolls an element to x/y coordinates                                                      |
+
+**Test Properties:**
+
+| Property    | Type       | Description                                              |
+| ----------- | ---------- | -------------------------------------------------------- |
+| `component` | `string`   | Path to the .svelte file                                 |
+| `props`     | `object`   | Props to pass to the component                           |
+| `fn`        | `function` | Test function receiving `{ target, component, unmount }` |
+
+**Example: Accessing Component State**
+
+```javascript
+import { mount, html } from '@magic/test'
+import { tick } from 'svelte'
+
+const component = './src/lib/svelte/components/Counter.svelte'
+
+export default [
+  {
+    component,
+    fn: async ({ target, component: instance }) => {
+      // Access exported state from the component
+      return instance.count
+    },
+    expect: 0,
+    info: 'initial count is 0',
+  },
+  {
+    component,
+    fn: async ({ target, component: instance }) => {
+      // Click the increment button and check state
+      target.querySelector('.increment').click()
+      await tick()
+      return instance.count
+    },
+    expect: 1,
+    info: 'count increments on button click',
+  },
+]
+```
+
+**Example: Testing Error Handling**
+
+```javascript
+import { mount, tryCatch } from '@magic/test'
+
+const component = './src/lib/svelte/components/MyComponent.svelte'
+
+export default [
+  {
+    fn: tryCatch(mount, component, { props: null }),
+    expect: t => t.message === 'Props must be an object, got object',
+    info: 'throws when props is null',
+  },
+  {
+    fn: tryCatch(mount, component, { props: 'invalid' }),
+    expect: t => t.message === 'Props must be an object, got string',
+    info: 'throws when props is a string',
   },
 ]
 ```
@@ -500,6 +720,32 @@ and keeps your bash free of clutter
 
   // run tests in verbose mode
   t
+```
+
+**CLI Flags:**
+
+| Flag     | Aliases                  | Description                                  |
+| -------- | ------------------------ | -------------------------------------------- |
+| `-p`     | `--production`, `--prod` | Run tests without coverage (faster)          |
+| `-l`     | `--verbose`, `--loud`    | Show detailed output including passing tests |
+| `-i`     | `--include`              | Files to include in coverage                 |
+| `-e`     | `--exclude`              | Files to exclude from coverage               |
+| `--help` |                          | Show help text                               |
+
+**Common Usage:**
+
+```bash
+# Quick test run (no coverage, fails show errors)
+npm test        # or: t -p
+
+# Full test with coverage report
+npm run coverage  # or: t
+
+# Verbose output (shows passing tests)
+t -l
+
+# Test with coverage for specific files
+t -i "src/**/*.js"
 ```
 
 This library tests itself, have a look at [the tests](https://github.com/magic/test/tree/master/test)

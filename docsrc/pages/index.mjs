@@ -341,6 +341,31 @@ export default [
 ]
 `),
 
+  p('File-based Hooks:'),
+
+  p([
+    'You can also create test/beforeAll.js and test/afterAll.js files',
+    ' that run before/after all tests in a suite.',
+  ]),
+
+  Pre(`
+// test/beforeAll.js
+export default () => {
+  global.setup = true
+  // optionally return a cleanup function
+  return () => {
+    global.setup = false
+  }
+}
+`),
+
+  Pre(`
+// test/afterAll.js
+export default () => {
+  // cleanup after all tests
+}
+`),
+
   h3({ id: 'tests-magic-modules' }, 'magic modules'),
 
   p([
@@ -399,9 +424,105 @@ export default {
   h4({ id: 'lib-vals' }, 'vals'),
 
   p([
-    'exports some javascript types. more to come.',
-    ' will sometime in the future be the base of a fuzzer.',
+    'Exports JavaScript type constants for testing against any value.',
+    ' Useful for fuzzing and property-based testing.',
   ]),
+
+  Pre(`
+import { vals, is } from '@magic/test'
+
+export default [
+  { fn: () => 'test', expect: is.string, info: 'test if value is a string' },
+  { fn: () => vals.true, expect: true, info: 'boolean true value' },
+  { fn: () => vals.email, expect: is.email, info: 'valid email format' },
+  { fn: () => vals.error, expect: is.error, info: 'error instance' },
+]
+`),
+
+  p('Available Constants:'),
+
+  ul([
+    li('Primitives: true, false, number, num, float, int, string, str'),
+    li('Empty values: nil, emptystr, emptyobject, emptyarray, undef'),
+    li('Collections: array, object, obj'),
+    li('Time: date, time'),
+    li('Errors: error, err'),
+    li('Colors: rgb, rgba, hex3, hex6, hexa4, hexa8'),
+    li('Other: func, truthy, falsy, email, regexp'),
+  ]),
+
+  h4({ id: 'lib-env' }, 'env'),
+
+  p('Environment detection utilities for conditional test behavior.'),
+
+  Pre(`
+import { env } from '@magic/test'
+
+export default [
+  {
+    fn: env.isNodeProd,
+    expect: process.env.NODE_ENV === 'production',
+    info: 'checks if NODE_ENV is production',
+  },
+  {
+    fn: env.isProd,
+    expect: process.argv.includes('-p'),
+    info: 'checks if -p flag is passed',
+  },
+  {
+    fn: env.isVerbose,
+    expect: process.argv.includes('-l'),
+    info: 'checks if -l flag is passed',
+  },
+]
+`),
+
+  h3({ id: 'lib-http' }, 'http'),
+
+  p('HTTP utility for making requests in tests. Supports both HTTP and HTTPS.'),
+
+  Pre(`
+import { http } from '@magic/test'
+
+export default [
+  {
+    fn: http.get('https://api.example.com/data'),
+    expect: { success: true },
+    info: 'fetches data from API',
+  },
+  {
+    fn: http.post('https://api.example.com/users', { name: 'John' }),
+    expect: { id: 1, name: 'John' },
+    info: 'creates a new user',
+  },
+  {
+    fn: http.post('http://localhost:3000/data', 'raw string'),
+    expect: 'raw string',
+    info: 'posts raw string data',
+  },
+]
+`),
+
+  p('Error Handling:'),
+
+  Pre(`
+import { http, is } from '@magic/test'
+
+export default [
+  {
+    fn: http.get('https://invalid-domain-that-does-not-exist.com'),
+    expect: is.error,
+    info: 'rejects on network error',
+  },
+  {
+    fn: http.get('https://api.example.com/nonexistent'),
+    expect: res => res.status === 404,
+    info: 'handles 404 responses',
+  },
+]
+`),
+
+  p('Note: HTTP module automatically handles protocol detection, JSON parsing, and rejectUnauthorized: false'),
 
   h3({ id: 'lib-promises' }, 'promises'),
 
@@ -497,6 +618,86 @@ const spec = {
 export default version(lib, spec)
   `),
 
+  h4({ id: 'lib-svelte' }, 'svelte'),
+
+  p([
+    '@magic/test includes built-in support for testing Svelte 5 components.',
+    ' It compiles Svelte components, mounts them in a DOM environment,',
+    ' and provides utilities for interacting with and asserting on component behavior.',
+  ]),
+
+  Pre(`
+import { mount, html, tryCatch } from '@magic/test'
+
+const component = './path/to/MyComponent.svelte'
+
+export default [
+  {
+    component,
+    props: { message: 'Hello' },
+    fn: ({ target }) => html(target).includes('Hello'),
+    expect: true,
+    info: 'renders the message prop',
+  },
+]
+`),
+
+  p('Exported Functions:'),
+
+  ul([
+    li('mount(filePath, options) - Mounts a Svelte component'),
+    li('html(target) - Returns innerHTML'),
+    li('text(target) - Returns textContent'),
+    li('component(instance) - Returns component instance'),
+    li('props(target) - Returns attribute name/value pairs'),
+    li('click(target, selector) - Clicks an element'),
+    li('trigger(target, eventType, options) - Dispatches custom event'),
+    li('scroll(target, x, y) - Scrolls element to x/y'),
+  ]),
+
+  p('Test Properties:'),
+
+  ul([
+    li('component - Path to the .svelte file'),
+    li('props - Props to pass to the component'),
+    li('fn - Test function receiving { target, component, unmount }'),
+  ]),
+
+  p('Example: Accessing Component State'),
+
+  Pre(`
+import { mount, html } from '@magic/test'
+
+const component = './src/lib/svelte/components/Counter.svelte'
+
+export default [
+  {
+    component,
+    fn: async ({ target, component: instance }) => {
+      return instance.count
+    },
+    expect: 0,
+    info: 'initial count is 0',
+  },
+]
+`),
+
+  p('Example: Testing Error Handling'),
+
+  Pre(`
+import { mount, tryCatch } from '@magic/test'
+
+const component = './src/lib/svelte/components/MyComponent.svelte'
+
+export default [
+  {
+    fn: tryCatch(mount, component, { props: null }),
+    expect: t => t.message === 'Props must be an object, got object',
+    info: 'throws when props is null',
+  },
+]
+`),
+
   h2({ id: 'usage' }, 'usage'),
 
   h3({ id: 'usage-js' }, 'js'),
@@ -557,6 +758,34 @@ t -p
 
 // run tests and get coverage in verbose mode
 t
+`),
+
+  h4({ id: 'cli-flags' }, 'CLI Flags'),
+
+  p('Available command-line flags:'),
+
+  ul([
+    li('-p, --production, --prod - Run tests without coverage (faster)'),
+    li('-l, --verbose, --loud - Show detailed output including passing tests'),
+    li('-i, --include - Files to include in coverage'),
+    li('-e, --exclude - Files to exclude from coverage'),
+    li('--help - Show help text'),
+  ]),
+
+  p('Common Usage:'),
+
+  Pre(`
+# Quick test run (no coverage, fails show errors)
+npm test        # or: t -p
+
+# Full test with coverage report
+npm run coverage  # or: t
+
+# Verbose output (shows passing tests)
+t -l
+
+# Test with coverage for specific files
+t -i "src/**/*.js"
 `),
 
   p([

@@ -56,9 +56,12 @@ export const state = {
       items: [
         { to: '-curry', text: 'curry' },
         { to: '-vals', text: 'vals' },
+        { to: '-env', text: 'env' },
         { to: '-promises', text: 'promises' },
+        { to: '-http', text: 'http' },
         { to: '-css', text: 'css' },
         { to: '-trycatch', text: 'tryCatch' },
+        { to: '-svelte', text: 'svelte' },
       ],
     },
     {
