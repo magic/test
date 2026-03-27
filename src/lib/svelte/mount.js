@@ -1,6 +1,7 @@
 import path from 'node:path'
 import fs from '@magic/fs'
 import { pathToFileURL } from 'node:url'
+import { createRequire } from 'node:module'
 import { compileSvelteWithImports } from './compile.js'
 import { initDOM, getDocument, getWindow } from './dom.js'
 import is from '@magic/types'
@@ -11,6 +12,50 @@ const TMP_DIR = 'test/.tmp'
 let svelteMount
 /** @type {Function} */
 let svelteUnmount
+/** @type {Function} */
+let svelteCreateRawSnippet
+/** @type {Function} */
+let svelteTick
+
+let svelteInitialized = false
+
+const initSvelte = async () => {
+  if (svelteInitialized) return
+
+  // Ensure DOM globals are set before Svelte initializes
+  initDOM()
+
+  const sveltePath = path.join(process.cwd(), 'node_modules/svelte/src/index-client.js')
+  const require = createRequire(import.meta.url)
+  const svelte = require(sveltePath)
+  svelteMount = svelte.mount
+  svelteUnmount = svelte.unmount
+  svelteCreateRawSnippet = svelte.createRawSnippet
+  svelteTick = svelte.tick
+  svelteInitialized = true
+}
+
+// Initialize Svelte at module load so createSnippet works
+initSvelte()
+
+/**
+ * Create a raw snippet for passing as children prop
+ * @param {string} renderFn - Function that returns HTML string
+ */
+export const createSnippet = renderFn => {
+  if (!svelteCreateRawSnippet) {
+    throw new Error('Svelte not initialized. Make sure to call mount() first.')
+  }
+  return svelteCreateRawSnippet(() => ({ render: renderFn }))
+}
+
+/**
+ * Wait for Svelte to update the DOM after state changes
+ */
+export const tick = async () => {
+  await initSvelte()
+  await svelteTick()
+}
 
 /**
  * @param {string} filePath
@@ -19,23 +64,25 @@ let svelteUnmount
 export const mount = async (filePath, options = {}) => {
   initDOM()
 
-  const document = getDocument()
-  const happyWindow = getWindow()
-
-  // @ts-ignore - happy-dom types conflict with global types
-  globalThis.document = document
-  // @ts-ignore - happy-dom types conflict with global types
-  globalThis.window = happyWindow
-  // @ts-ignore - happy-dom types conflict with global types
-  globalThis.self = happyWindow
-
-  if (!svelteMount) {
-    const sveltePath = path.join(process.cwd(), 'node_modules/svelte/src/index-client.js')
-    const svelteUrl = pathToFileURL(sveltePath).href
-    const svelte = await import(svelteUrl)
-    svelteMount = svelte.mount
-    svelteUnmount = svelte.unmount
+  const doc = getDocument()
+  if (!doc) {
+    throw new Error('Failed to initialize DOM. Is happy-dom installed?')
   }
+
+  const win = getWindow()
+  if (!win) {
+    throw new Error('Failed to initialize window. Is happy-dom installed?')
+  }
+
+  // Ensure globals are set before Svelte initialization
+  // @ts-ignore - happy-dom types conflict with global types
+  globalThis.document = doc
+  // @ts-ignore - happy-dom types conflict with global types
+  globalThis.window = win
+  // @ts-ignore - happy-dom types conflict with global types
+  globalThis.self = win
+
+  await initSvelte()
 
   const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
 

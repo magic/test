@@ -56,4 +56,34 @@ export default [
     expect: 10,
     info: 'increment with step 10 adds 10',
   },
+  {
+    component,
+    fn: async ({ target, component: instance }) => {
+      return html(target).includes('+1') && html(target).includes('-1')
+    },
+    info: 'uses default step of 1',
+  },
+  {
+    component,
+    props: { step: 3 },
+    fn: async ({ target }) => {
+      return html(target).includes('+3') && html(target).includes('-3')
+    },
+    info: 'uses custom step value in button labels',
+  },
+  {
+    component,
+    props: { initial: 5 },
+    fn: async ({ target, component: instance }) => {
+      return instance.count === 5 && html(target).includes('5')
+    },
+    info: 'uses custom initial value',
+  },
+  {
+    component,
+    fn: async ({ target, component: instance }) => {
+      return html(target).includes('+1') && html(target).includes('-1') && instance.count === 0
+    },
+    info: 'uses default initial of 0 when not provided',
+  },
 ]

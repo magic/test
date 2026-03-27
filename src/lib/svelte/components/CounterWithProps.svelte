@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   let { initial = 0, step = 1 } = $props()
   let count = $state(initial)
   export { count }

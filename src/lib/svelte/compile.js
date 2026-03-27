@@ -1,9 +1,10 @@
-import { compile } from 'svelte/compiler'
+import { compile, preprocess } from 'svelte/compiler'
 import fs from '@magic/fs'
 import is from '@magic/types'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { resolveAlias } from './vite-config.js'
+import { testExportsPreprocessor, sveltekitMocksPreprocessor } from './preprocess.js'
 
 const cache = new Map()
 const importCache = new Map()
@@ -104,7 +105,11 @@ export const compileSvelte = async filePath => {
 
   const source = await fs.readFile(filePath, 'utf-8')
 
-  const result = compile(source, {
+  const preprocessors = [testExportsPreprocessor(), sveltekitMocksPreprocessor()]
+
+  const preprocessed = await preprocess(source, preprocessors)
+
+  const result = compile(preprocessed.code, {
     generate: 'client',
     dev: true,
     filename: filePath,

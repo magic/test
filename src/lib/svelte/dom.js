@@ -1,10 +1,10 @@
+import { createRequire } from 'node:module'
 import is from '@magic/types'
-import { Window } from 'happy-dom'
 
-/** @type {import('happy-dom').Window} */
-let happyWindow
-/** @type {import('happy-dom').Document} */
-let happyDocument
+/** @type {import('happy-dom').Window | null} */
+let happyWindow = null
+/** @type {import('happy-dom').Document | null} */
+let happyDocument = null
 
 /**
  * @param {object} target
@@ -20,11 +20,15 @@ const define = (target, key, value) => {
   })
 }
 
-const setupGlobals = () => {
-  if (!happyWindow) {
-    happyWindow = new Window()
-    happyDocument = happyWindow.document
-  }
+const initGlobals = () => {
+  if (happyWindow) return
+
+  // Dynamic import to make happy-dom optional
+  const require = createRequire(import.meta.url)
+  const { Window } = require('happy-dom')
+
+  happyWindow = new Window()
+  happyDocument = happyWindow.document
 
   define(globalThis, 'document', happyDocument)
   define(globalThis, 'window', happyWindow)
@@ -78,11 +82,18 @@ const setupGlobals = () => {
   define(globalThis, 'cancelAnimationFrame', happyWindow.cancelAnimationFrame)
 }
 
-setupGlobals()
-
 export const initDOM = () => {
-  setupGlobals()
+  initGlobals()
 }
 
-export const getDocument = () => happyDocument
-export const getWindow = () => happyWindow
+export const getDocument = () => {
+  initGlobals()
+  return happyDocument
+}
+
+export const getWindow = () => {
+  initGlobals()
+  return happyWindow
+}
+
+export const isInitialized = () => happyWindow !== null

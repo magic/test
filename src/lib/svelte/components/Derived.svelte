@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   let { items = [] } = $props()
 
   let count = $state(items.length)

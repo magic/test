@@ -15,6 +15,14 @@ export default [
   },
   {
     component,
+    fn: async ({ target }) => {
+      return html(target).includes('Type here...')
+    },
+    expect: true,
+    info: 'uses default placeholder when not provided',
+  },
+  {
+    component,
     props: { value: 'test' },
     fn: async ({ component: instance }) => {
       return instance.inputValue
@@ -61,5 +69,34 @@ export default [
     },
     expect: true,
     info: 'shows correct length for input',
+  },
+  {
+    component,
+    fn: async ({ target, component: instance }) => {
+      return html(target).includes('unchanged')
+    },
+    expect: true,
+    info: 'shows unchanged when no input yet',
+  },
+  {
+    component,
+    props: { value: 'typed' },
+    fn: async ({ target }) => {
+      return html(target).includes('changed')
+    },
+    expect: true,
+    info: 'shows changed when value prop is set',
+  },
+  {
+    component,
+    fn: async ({ target, component: instance }) => {
+      const input = target.querySelector('input')
+      input.value = 'new value'
+      trigger(input, 'input')
+      await new Promise(r => setTimeout(r, 10))
+      return instance.inputValue === 'new value' && instance.changed
+    },
+    expect: true,
+    info: 'input updates both value and changed state together',
   },
 ]

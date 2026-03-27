@@ -105,4 +105,52 @@ export default [
     expect: true,
     info: 'renders count as 0 for empty items',
   },
+  {
+    component,
+    props: { items: [] },
+    fn: async ({ target }) => {
+      return html(target).includes('empty')
+    },
+    expect: true,
+    info: 'renders empty text when isEmpty is true',
+  },
+  {
+    component,
+    props: { items: [1, 2, 3] },
+    fn: async ({ target }) => {
+      return html(target).includes('has items')
+    },
+    expect: true,
+    info: 'renders has items text when isEmpty is false',
+  },
+  {
+    component,
+    props: { items: [1, 2, 3, 4, 5, 6] },
+    fn: async ({ target }) => {
+      return html(target).includes('large')
+    },
+    expect: true,
+    info: 'renders large text when isLarge is true',
+  },
+  {
+    component,
+    props: { items: [1, 2, 3] },
+    fn: async ({ target }) => {
+      return html(target).includes('small')
+    },
+    expect: true,
+    info: 'renders small text when isLarge is false',
+  },
+  {
+    component,
+    props: { items: [] },
+    fn: async ({ target, component: instance }) => {
+      const removeButton = target.querySelector('.remove')
+      removeButton.click()
+      await new Promise(r => setTimeout(r, 10))
+      return instance.count
+    },
+    expect: 0,
+    info: 'remove button does not go below 0 when count is 0',
+  },
 ]

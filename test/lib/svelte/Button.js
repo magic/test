@@ -17,6 +17,12 @@ export default [
   },
   {
     component,
+    props: { disabled: false },
+    fn: ({ target }) => !target.querySelector('button').disabled,
+    info: 'button disabled property is false when explicitly set',
+  },
+  {
+    component,
     props: { variant: 'secondary' },
     fn: ({ target }) => html(target).includes('btn secondary'),
     info: 'renders button with secondary variant',
@@ -69,5 +75,25 @@ export default [
     props: { variant: 'custom' },
     fn: ({ target }) => html(target).includes('btn custom'),
     info: 'renders button with custom variant',
+  },
+  {
+    component,
+    props: { disabled: false, variant: 'primary' },
+    fn: ({ target }) =>
+      html(target).includes('btn primary') && !target.querySelector('button').disabled,
+    info: 'button is enabled with explicit false and variant',
+  },
+  {
+    component,
+    fn: async ({ target }) => {
+      return html(target).includes('btn primary')
+    },
+    info: 'default variant renders primary when no variant prop',
+  },
+  {
+    component,
+    props: { disabled: undefined, variant: undefined },
+    fn: ({ target }) => html(target).includes('btn') && !target.querySelector('button').disabled,
+    info: 'handles undefined props with defaults',
   },
 ]

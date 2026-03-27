@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   let { variant = 'primary', disabled = false, onclick } = $props()
 </script>
 

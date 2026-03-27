@@ -45,4 +45,49 @@ export default [
     expect: 1,
     info: 'remove button removes item from list',
   },
+  {
+    component,
+    props: { items: [] },
+    fn: async ({ target }) => {
+      return html(target).includes('Total: 0')
+    },
+    expect: true,
+    info: 'shows Total: 0 for empty list',
+  },
+  {
+    component,
+    props: { items: [{ id: 1, text: 'Item 1' }] },
+    fn: async ({ target }) => {
+      return html(target).includes('Total: 1')
+    },
+    expect: true,
+    info: 'shows correct total for list with items',
+  },
+  {
+    component,
+    props: { items: [{ id: 1, text: 'Item 1' }] },
+    fn: async ({ target }) => {
+      return html(target).includes('List')
+    },
+    expect: true,
+    info: 'uses default title when not provided',
+  },
+  {
+    component,
+    props: {
+      items: [
+        { id: 1, text: 'Item 1' },
+        { id: 2, text: 'Item 2' },
+        { id: 3, text: 'Item 3' },
+      ],
+    },
+    fn: async ({ target, component: instance }) => {
+      const removeButtons = target.querySelectorAll('.remove-btn')
+      removeButtons[0].click()
+      await new Promise(r => setTimeout(r, 10))
+      return instance.itemsList.length
+    },
+    expect: 2,
+    info: 'remove button correctly updates itemsList length',
+  },
 ]

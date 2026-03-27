@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   let { value = '', placeholder = 'Type here...' } = $props()
   let inputValue = $state(value)
   let changed = $state(false)
