@@ -99,4 +99,5 @@ export const test = (lib = {}, spec = {}, parent = '') => {
  * @param {string} [parent]
  * @returns {{ fn: boolean, info: string }[]}
  */
-export const version = (lib, spec, parent) => test(lib, spec, parent).flat(2000)
+export const version = (lib, spec, parent) =>
+  /** @type {{ fn: boolean, info: string }[]} */ (test(lib, spec, parent).flat(Infinity))
