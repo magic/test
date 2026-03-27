@@ -14,7 +14,7 @@ export const isProd = () => process.argv.includes('-p')
  * Check if the '-l' argument is present in process.argv
  * @returns {boolean}
  */
-export const isVerbose = () => process.argv.includes('-l')
+export const isVerbose = () => process.argv.includes('--verbose')
 
 export const env = {
   isNodeProd,
