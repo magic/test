@@ -32,7 +32,11 @@ export const createStaticPage = (initialData = {}) => {
       }
       return state[/** @type {keyof typeof state} */ (prop)]
     },
-    set: (/** @type {string} */ target, /** @type {string|symbol} */ prop, /** @type {any} */ value) => {
+    set: (
+      /** @type {string} */ target,
+      /** @type {string|symbol} */ prop,
+      /** @type {any} */ value,
+    ) => {
       if (prop === 'url') {
         state.url = value instanceof URL ? value : new URL(value)
       } else if (prop === 'params') {

@@ -7,7 +7,7 @@ import { parse } from 'svelte/compiler'
  */
 const walk = (node, handlers) => {
   /** @param {any} n */
-  const visit = (n) => {
+  const visit = n => {
     if (!n || typeof n !== 'object') return
 
     if (n.type) {

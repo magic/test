@@ -19,7 +19,7 @@
  * @param {Function} [implementation]
  * @returns {MockFn}
  */
-export const fn = (implementation) => {
+export const fn = implementation => {
   /** @type {MockFn} */
   const mockFn = function (/** @type {any[]} */ ...args) {
     mockFn.calls.push(args)
@@ -58,9 +58,15 @@ export const fn = (implementation) => {
     return mockFn
   }
 
-  mockFn.getCalls = function () { return mockFn.calls }
-  mockFn.getReturns = function () { return mockFn.returns }
-  mockFn.getErrors = function () { return mockFn.errors }
+  mockFn.getCalls = function () {
+    return mockFn.calls
+  }
+  mockFn.getReturns = function () {
+    return mockFn.returns
+  }
+  mockFn.getErrors = function () {
+    return mockFn.errors
+  }
 
   return mockFn
 }
