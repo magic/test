@@ -104,9 +104,6 @@ const run = async () => {
     ]
   }
 
-  const registerPath = path.join(__dirname, 'lib', 'registerLoader.js')
-  process.env.NODE_OPTIONS = `--import ${registerPath} ${process.env.NODE_OPTIONS || ''}`
-
   await cli.spawn(cmd, argv)
 }
 
