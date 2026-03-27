@@ -3,7 +3,7 @@ import is from '@magic/types'
 
 import { store } from './store.js'
 import { env } from './env.js'
-import { stringify } from './format.js'
+import { stringify } from './stringify.js'
 import { getDuration } from './getDuration.js'
 
 /**
