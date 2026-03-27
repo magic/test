@@ -1,10 +1,28 @@
 import log from '@magic/log'
-
-import { env } from '../env.js'
-import { stringify } from '../stringify.js'
-import { getDuration } from '../getDuration.js'
-import { store } from '../store.js'
 import is from '@magic/types'
+
+import { store } from './store.js'
+import { env } from './env.js'
+import { stringify } from './format.js'
+import { getDuration } from './getDuration.js'
+
+/**
+ * @typedef {Object} TestStats
+ * @property {number} all - Total number of tests
+ * @property {number} pass - Number of passing tests
+ */
+
+/**
+ * @typedef {Record<string, TestStats>} TestResults
+ */
+
+/**
+ * @typedef {Object} PartialTest
+ * @property {string} name
+ * @property {string} [pkg]
+ * @property {string} [parent]
+ * @property {boolean} pass
+ */
 
 /**
  * Type guard to check if a value is a TestResult.
@@ -45,6 +63,64 @@ export const printPercent = p => {
   const value = toMinimalFixed(p, 2)
 
   return log.color(color, value)
+}
+
+/**
+ * Record a test result in the store, updating statistics for the test,
+ * its parent, package, and global counters.
+ *
+ * @param {PartialTest} t - Test information to record
+ *
+ * @example
+ * test({ name: 'myTest', parent: 'suite', pkg: 'mylib', pass: true })
+ */
+export const test = t => {
+  /** @type {TestResults} */
+  const results = store.get('results', {}) || {}
+
+  const { name, parent, pass, pkg } = t
+
+  let currentName = name
+
+  if (parent && parent !== name) {
+    currentName = `${parent}.${name}`
+
+    if (!results[parent]) {
+      results[parent] = { all: 0, pass: 0 }
+    }
+    results[parent].all++
+    if (pass) {
+      results[parent].pass++
+    }
+  }
+
+  if (pkg && pkg !== parent) {
+    currentName = `${pkg}.${currentName}`
+
+    if (!results[pkg]) {
+      results[pkg] = { all: 0, pass: 0 }
+    }
+    results[pkg].all++
+    if (pass) {
+      results[pkg].pass++
+    }
+  }
+
+  if (!results[currentName]) {
+    results[currentName] = { all: 0, pass: 0 }
+  }
+  if (!results.__PACKAGE_ROOT__) {
+    results.__PACKAGE_ROOT__ = { all: 0, pass: 0 }
+  }
+
+  results.__PACKAGE_ROOT__.all++
+  results[currentName].all++
+  if (pass) {
+    results.__PACKAGE_ROOT__.pass++
+    results[currentName].pass++
+  }
+
+  store.set({ results })
 }
 
 /**
@@ -99,8 +175,8 @@ export const info = (pkg, suites) => {
           log.color('red', '* fail:'),
           key.replace(/\./g, '/'),
           `executed: "${msg.toString().slice(0, 40).concat('...')}"\n`,
-          `got: "${JSON.stringify(stringify(/** @type {import('../stringify.js').InputValue} */ (result)), null, 2)}"\n`,
-          `wanted: "${JSON.stringify(stringify(/** @type {import('../stringify.js').InputValue} */ (expString)), null, 2)}"\n`,
+          `got: "${JSON.stringify(stringify(/** @type {import('./stringify.js').InputValue} */ (result)), null, 2)}"\n`,
+          `wanted: "${JSON.stringify(stringify(/** @type {import('./stringify.js').InputValue} */ (expString)), null, 2)}"\n`,
           info ? `info: ${log.paint('grey', info)}\n` : '',
         )
       }
@@ -129,4 +205,11 @@ export const info = (pkg, suites) => {
 
   log(`Ran ${all} tests in ${duration}. Passed ${pass}/${all} ${percentage}%\n`)
   return true
+}
+
+/**
+ * Reset the store to default state.
+ */
+export const reset = () => {
+  store.reset()
 }
