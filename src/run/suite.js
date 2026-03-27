@@ -18,6 +18,108 @@ const defaultSuite = {
 }
 
 /**
+ * Handle suite-level beforeAll and afterAll hooks
+ * @param {Test[] | (Record<string, unknown> & TestsWithHooks)} tests
+ * @returns {Promise<{ beforeAllCleanup?: () => void | Promise<void>, afterAllCleanup?: () => void | Promise<void> }>}
+ */
+const handleSuiteHooks = async tests => {
+  /** @type {(() => (void | Promise<void>)) | void} */
+  let afterAllCleanup = () => {}
+
+  if (
+    tests &&
+    is.object(tests) &&
+    !is.arr(tests) &&
+    'beforeAll' in tests &&
+    is.function(tests.beforeAll)
+  ) {
+    const testsWithHooks = /** @type {Record<string, unknown> & TestsWithHooks} */ (tests)
+    const result = is.fn(testsWithHooks.beforeAll) && (await testsWithHooks.beforeAll())
+    if (is.function(result)) {
+      afterAllCleanup = result
+    }
+  }
+
+  return { afterAllCleanup }
+}
+
+/**
+ * Run an array of tests
+ * @param {Test[]} tests - Array of tests
+ * @param {boolean} needsIsolation - Whether to run tests sequentially
+ * @param {string} name - Suite name
+ * @param {string} parent - Parent name
+ * @param {string} pkg - Package name
+ * @returns {Promise<(TestResult | Suite)[]>}
+ */
+const runTestArray = async (tests, needsIsolation, name, parent, pkg) => {
+  if (needsIsolation) {
+    const results = []
+    for (const t of tests) {
+      /** @type {Test} */
+      const testToRun = {
+        ...t,
+        name: t.name || name,
+        parent: t.parent || parent,
+        pkg: t.pkg || pkg,
+      }
+      const res = await runTest(testToRun)
+      if (res) results.push(res)
+    }
+    return results
+  }
+
+  const promises = tests.map(t => {
+    /** @type {Test} */
+    const testToRun = {
+      ...t,
+      name: t.name || name,
+      parent: t.parent || parent,
+      pkg: t.pkg || pkg,
+    }
+    return runTest(testToRun)
+  })
+  const resolved = await Promise.all(promises)
+  return resolved.filter(r => !!r)
+}
+
+/**
+ * Run object-based tests
+ * @param {Record<string, unknown> & TestsWithHooks} testsObj
+ * @param {string} name - Suite name
+ * @param {string} parent - Parent name
+ * @param {string} pkg - Package name
+ * @returns {Promise<(TestResult | Suite)[]>}
+ */
+const runTestObject = async (testsObj, name, parent, pkg) => {
+  if (is.function(testsObj.fn)) {
+    const fns = getFNS()
+    if (!fns.includes(name)) return []
+
+    /** @type {Test} */
+    const test = { ...testsObj, name, parent, pkg }
+    const result = await runTest(test)
+    return result ? [result] : []
+  }
+
+  const entries = Object.entries(testsObj).filter(
+    ([key]) => key !== 'beforeAll' && key !== 'afterAll' && key !== 'fn',
+  )
+
+  const promises = entries.map(([suiteName, nestedTests]) =>
+    runSuite({
+      parent: name,
+      name: suiteName,
+      key: `${name}.${suiteName}`,
+      tests: /** @type {Test[] | (Record<string, unknown> & TestsWithHooks)} */ (nestedTests),
+      pkg,
+    }),
+  )
+  const resolved = await Promise.all(promises)
+  return resolved.filter(r => !!r)
+}
+
+/**
  * Run a suite of tests (recursively).
  *
  * @param {SuiteInput} props
@@ -61,89 +163,25 @@ export const runSuite = async props => {
     const needsIsolation = suiteNeedsIsolation(tests)
 
     const executeSuite = async () => {
-      /** @type {void | (() => (void | Promise<void>))} */
-      let afterAll = () => {}
-
-      if (
-        tests &&
-        is.object(tests) &&
-        !is.arr(tests) &&
-        'beforeAll' in tests &&
-        is.function(tests.beforeAll)
-      ) {
-        const testsWithHooks = /** @type {Record<string, unknown> & TestsWithHooks} */ (tests)
-        const result = is.fn(testsWithHooks.beforeAll) && (await testsWithHooks.beforeAll())
-        if (is.function(result)) {
-          afterAll = result
-        }
-      }
+      const { afterAllCleanup } = await handleSuiteHooks(tests)
 
       if (is.array(tests)) {
-        if (needsIsolation) {
-          results = []
-          for (const t of tests) {
-            /** @type {Test} */
-            const testToRun = {
-              ...t,
-              name: t.name || name,
-              parent: t.parent || parent,
-              pkg: t.pkg || pkg,
-            }
-            const res = await runTest(testToRun)
-            if (res) results.push(res)
-          }
-        } else {
-          const promises = tests.map(t => {
-            /** @type {Test} */
-            const testToRun = {
-              ...t,
-              name: t.name || name,
-              parent: t.parent || parent,
-              pkg: t.pkg || pkg,
-            }
-            return runTest(testToRun)
-          })
-          const resolved = await Promise.all(promises)
-          results = resolved.filter(r => !!r)
-        }
+        results = await runTestArray(tests, needsIsolation, name, parent, pkg)
       } else if (is.objectNative(tests)) {
-        const testsObj = /** @type {Record<string, unknown> & TestsWithHooks} */ (tests)
-
-        if (is.function(testsObj.fn)) {
-          const fns = getFNS()
-          if (!fns.includes(name)) return
-
-          /** @type {Test} */
-          const test = { ...testsObj, name, parent, pkg }
-          const result = await runTest(test)
-          results = result ? [result] : []
-        } else {
-          const entries = Object.entries(testsObj).filter(
-            ([key]) => key !== 'beforeAll' && key !== 'afterAll' && key !== 'fn',
-          )
-
-          const promises = entries.map(([suiteName, nestedTests]) =>
-            runSuite({
-              parent: name,
-              name: suiteName,
-              key: `${name}.${suiteName}`,
-              tests: /** @type {Test[] | (Record<string, unknown> & TestsWithHooks)} */ (
-                nestedTests
-              ),
-              pkg,
-            }),
-          )
-          const resolved = await Promise.all(promises)
-          results = resolved.filter(r => !!(/** @type {Suite} */ r))
-        }
+        results = await runTestObject(
+          /** @type {Record<string, unknown> & TestsWithHooks} */ (tests),
+          name,
+          parent,
+          pkg,
+        )
       }
 
       if (!is.undefined(results)) {
         suite.tests = results
       }
 
-      if (is.function(afterAll)) {
-        await afterAll()
+      if (is.function(afterAllCleanup)) {
+        await afterAllCleanup()
       }
 
       if (
