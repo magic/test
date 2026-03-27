@@ -1,3 +1,5 @@
+import { env } from './env.js'
+
 /**
  * @typedef {Object} MockFn
  * @property {number} callCount
@@ -93,4 +95,12 @@ export const spy = (object, methodName, implementation) => {
   }
 
   return /** @type {MockFn & { mockRestore: () => void }} */ (mockFn)
+}
+
+export const log = {
+  log: () => !env.isNodeProd(),
+  warn: () => !env.isNodeProd(),
+  error: () => true,
+  time: () => !env.isNodeProd(),
+  timeEnd: () => !env.isNodeProd(),
 }
