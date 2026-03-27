@@ -127,6 +127,8 @@ const spec = {
           timeEnd: 'fn',
         },
       ],
+      fn: 'fn',
+      spy: 'fn',
     },
   ],
   promise: 'fn',
