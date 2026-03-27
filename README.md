@@ -12,6 +12,7 @@ incredibly fast.
 [![Coverage Status][coveralls-image]][coveralls-url]
 [![Greenkeeper badge][greenkeeper-image]][greenkeeper-url]
 [![Known Vulnerabilities][snyk-image]][snyk-url]
+
 <!-- [![Linux Build Status][travis-image]][travis-url] -->
 <!-- [![Windows Build Status][appveyor-image]][appveyor-url] -->
 
@@ -80,9 +81,17 @@ export default [
   // note that the function will be called automagically. expect: true can be omitted.
   { fn: yourLibToTest.returnsTrue, /* expect: true, */ info: 'yourLibToTest returns true' },
   // if you need arguments, just call the function, this will also use async/await for promises.
-  { fn: yourLibToTest.withArgs('argument1', 'argument2'), expect: 'string', info: 'yourLibToTest.withArgs returns "string"' },
+  {
+    fn: yourLibToTest.withArgs('argument1', 'argument2'),
+    expect: 'string',
+    info: 'yourLibToTest.withArgs returns "string"',
+  },
   // if you absolutely need to nest your function in a function call
-  { fn: () => yourLibToTest.withArgs('argument1', 'argument2'), expect: true, info: 'nested functions work.' },
+  {
+    fn: () => yourLibToTest.withArgs('argument1', 'argument2'),
+    expect: true,
+    info: 'nested functions work.',
+  },
 ]
 ```
 
@@ -626,10 +635,7 @@ const spec = {
   ],
 
   // Test parent object without checking child properties
-  objectNoChildCheck: [
-    'obj',
-    false,
-  ],
+  objectNoChildCheck: ['obj', false],
 }
 
 export default version(lib, spec)

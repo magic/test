@@ -219,7 +219,12 @@ const convertSuite = async (tests, filePath) => {
     const converted = []
 
     for (const [key, value] of entries) {
-      if (key === 'beforeAll' || key === 'afterAll' || key === 'beforeEach' || key === 'afterEach') {
+      if (
+        key === 'beforeAll' ||
+        key === 'afterAll' ||
+        key === 'beforeEach' ||
+        key === 'afterEach'
+      ) {
         continue
       }
 
@@ -275,7 +280,11 @@ const processFile = async filePath => {
     const tests = await convertSuite(exportValue, filePath)
 
     if (tests.length > 0) {
-      suites.push({ name: `${fileName.replace(/\.(js|ts|mjs)$/, '')}_${exportName}`, tests, hooks: exportValue })
+      suites.push({
+        name: `${fileName.replace(/\.(js|ts|mjs)$/, '')}_${exportName}`,
+        tests,
+        hooks: exportValue,
+      })
     }
   }
 
@@ -283,8 +292,8 @@ const processFile = async filePath => {
 }
 
 const run = async () => {
-/** @type {{name: string, tests: {name: string, fn: () => Promise<void>, before?: Function}[], hooks: any}[]} */
-const allSuites = []
+  /** @type {{name: string, tests: {name: string, fn: () => Promise<void>, before?: Function}[], hooks: any}[]} */
+  const allSuites = []
   /** @type {any} */
   let beforeAllHook = null
   /** @type {any} */
