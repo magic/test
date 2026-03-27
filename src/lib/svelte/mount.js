@@ -2,11 +2,9 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { pathToFileURL } from 'node:url'
 import { createRequire } from 'node:module'
-import { compileSvelteWithImports } from './compile.js'
+import { compileSvelteWithWrite } from './compile.js'
 import { initDOM, getDocument, getWindow } from './dom.js'
 import is from '@magic/types'
-
-const TMP_DIR = 'test/.tmp'
 
 /** @type {Function} */
 let svelteMount
@@ -89,18 +87,11 @@ export const mount = async (filePath, options = {}) => {
     throw new Error(`Svelte component not found: ${resolvedPath}`)
   }
 
-  const { js, css } = await compileSvelteWithImports(resolvedPath)
-
-  const relPath = path.relative(process.cwd(), resolvedPath)
-  const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
-  const importPath = pathToFileURL(tmpFile).href
-
-  await fs.mkdirp(path.dirname(tmpFile))
-  await fs.writeFile(tmpFile, js.code)
+  const { js, css, importUrl } = await compileSvelteWithWrite(resolvedPath)
 
   let mod
   try {
-    mod = await import(importPath)
+    mod = await import(importUrl)
   } catch (importErr) {
     console.error('Failed to import compiled component:', importErr.message)
     throw importErr
