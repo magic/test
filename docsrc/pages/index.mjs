@@ -215,9 +215,31 @@ export default {
 }
 `),
 
+  h4({ id: 'tests-typescript' }, 'TypeScript support'),
+
+  p([
+    '@magic/test supports TypeScript test files.',
+    ' You can write tests in .ts files and they will be executed directly without transpilation.',
+  ]),
+
+  Pre(`
+// test/mytest.ts
+export default { fn: () => true, expect: true, info: 'TypeScript test works!' }
+`),
+
+  p('This requires Node.js 14.2.0 or later.'),
+
   h3({ id: 'tests-multiple' }, 'multiple tests'),
 
-  p('multiple tests can be created by exporting an array of single test objects.'),
+  p('multiple tests can be created by exporting an array or object of single test objects.'),
+
+  Pre(`
+export default [
+  { fn: () => true, expect: true, info: 'expect true to be true' },
+  { fn: () => false, expect: false, info: 'expect false to be false' },
+]`),
+
+  p('or exporting an object with named test arrays'),
 
   Pre(`
 export default {
@@ -226,15 +248,6 @@ export default {
     { fn: () => false, expect: false, info: 'expect false to be false' },
   ]
 }`),
-
-  p('multiple tests can also be created by exporting an array of tests.'),
-
-  Pre(`
-export default [
-  { fn: () => true, expect: true, info: 'expect true to be true' },
-  { fn: () => false, expect: false, info: 'expect false to be false' },
-]
-`),
 
   h3({ id: 'tests-promises' }, 'promises'),
 
@@ -455,6 +468,14 @@ export default [
 
   p('Environment detection utilities for conditional test behavior.'),
 
+  p('Available utilities:'),
+
+  ul([
+    li('isNodeProd - checks if NODE_ENV is set to production'),
+    li('isProd - checks if -p flag is passed to the CLI'),
+    li('isVerbose - checks if -l flag is passed to the CLI'),
+  ]),
+
   Pre(`
 import { env } from '@magic/test'
 
@@ -575,9 +596,93 @@ export default [
     fn: tryCatch(healthy()),
     expect: true,
     info: 'function does not throw'
+  ]
+`),
+
+  h4({ id: 'lib-error' }, 'error'),
+
+  p([
+    'exports ',
+    Link({ to: 'https://github.com/magic/error', text: '@magic/error' }),
+    ' which returns errors with optional names.',
+  ]),
+
+  Pre(`
+import { error } from '@magic/test'
+
+export default [
+  {
+    fn: tryCatch(error('Message', 'E_NAME')),
+    expect: e => e.name === 'E_NAME' && e.message === 'Message',
+    info: 'Errors have messages and (optional) names.',
   },
 ]
 `),
+
+  h4({ id: 'lib-mock' }, 'mock'),
+
+  p('Mock and spy utilities for function testing.'),
+
+  Pre(`
+import { mock, tryCatch } from '@magic/test'
+
+export default [
+  {
+    fn: () => {
+      const spy = mock.fn()
+      spy('arg1')
+      return spy.calls.length === 1 && spy.calls[0][0] === 'arg1'
+    },
+    expect: true,
+    info: 'mock.fn tracks call arguments',
+  },
+  {
+    fn: () => {
+      const spy = mock.fn().mockReturnValue('mocked')
+      return spy() === 'mocked'
+    },
+    expect: true,
+    info: 'mock.fn.mockReturnValue sets return value',
+  },
+  {
+    fn: async () => {
+      const spy = mock.fn().mockThrow(new Error('fail'))
+      const caught = await tryCatch(spy)()
+      return caught instanceof Error
+    },
+    expect: true,
+    info: 'mock.fn.mockThrow works with tryCatch',
+  },
+  {
+    fn: () => {
+      const obj = { greet: () => 'hello' }
+      const spy = mock.spy(obj, 'greet', () => 'world')
+      const result = obj.greet()
+      spy.mockRestore()
+      return result === 'world' && obj.greet() === 'hello'
+    },
+    expect: true,
+    info: 'mock.spy replaces and restores methods',
+  },
+]
+`),
+
+  p('mock.fn properties:'),
+  ul([
+    li('calls - Array of all call arguments'),
+    li('returns - Array of all return values'),
+    li('errors - Array of all thrown errors (null for non-throwing calls)'),
+    li('callCount - Number of times called'),
+  ]),
+
+  p('mock.fn methods:'),
+  ul([
+    li('mockReturnValue(value) - Set return value (chainable)'),
+    li('mockThrow(error) - Set error to throw (chainable)'),
+    li('getCalls() - Get all call arguments'),
+    li('getReturns() - Get all return values'),
+    li('getErrors() - Get all thrown errors'),
+  ]),
 
   h4({ id: 'lib-version' }, 'version'),
   p(
@@ -617,6 +722,8 @@ const spec = {
 
 export default version(lib, spec)
   `),
+
+  p('The spec supports testing parent objects without checking their child properties by using `false` as the second element:'),
 
   h4({ id: 'lib-svelte' }, 'svelte'),
 
@@ -681,6 +788,48 @@ export default [
   },
 ]
 `),
+
+  p('Automatic Test Exports'),
+
+  p([
+    'When testing Svelte 5 components, @magic/test automatically exports ',
+    '$state and $derived variables, making them accessible in tests without requiring manual exports.',
+  ]),
+
+  Pre(`
+<!-- Component.svelte -->
+<script>
+  let count = $state(0)
+  let doubled = $derived(count * 2)
+  <!-- No export needed! -->
+</script>
+
+<button class="inc">+</button>
+<span>{doubled}</span>
+`),
+
+  p('Test - works automatically!'),
+
+  Pre(`
+import { mount } from '@magic/test'
+
+export default [
+  {
+    component: './Component.svelte',
+    fn: async ({ component }) => component.count,  // 0
+    expect: 0,
+    info: 'access $state without manual export',
+  },
+  {
+    component: './Component.svelte',
+    fn: async ({ component }) => component.doubled,  // 0 (derived)
+    expect: 0,
+    info: 'access $derived without manual export',
+  },
+]
+`),
+
+  p('This works automatically for all $state and $derived runes. No configuration needed!'),
 
   p('Example: Testing Error Handling'),
 

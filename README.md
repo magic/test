@@ -9,11 +9,11 @@ incredibly fast.
 [html docs](https://magic.github.io/test)
 
 [![NPM version][npm-image]][npm-url]
-[![Linux Build Status][travis-image]][travis-url]
-[![Windows Build Status][appveyor-image]][appveyor-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
 [![Greenkeeper badge][greenkeeper-image]][greenkeeper-url]
 [![Known Vulnerabilities][snyk-image]][snyk-url]
+<!-- [![Linux Build Status][travis-image]][travis-url] -->
+<!-- [![Windows Build Status][appveyor-image]][appveyor-url] -->
 
 [npm-image]: https://img.shields.io/npm/v/@magic/test.svg
 [npm-url]: https://www.npmjs.com/package/@magic/test
@@ -34,6 +34,7 @@ incredibly fast.
 - [data/fs driven test suites](#test-suites)
 - [writing tests](#tests)
   - [js types](#tests-types)
+  - [typescript](#tests-typescript)
   - [multiple tests in one file](#tests-multiple)
   - [promises](#tests-promises)
   - [callback functions](#tests-cb)
@@ -48,6 +49,9 @@ incredibly fast.
   - [http](#lib-http)
   - [css](#lib-css)
   - [tryCatch](#lib-trycatch)
+  - [error](#lib-error)
+  - [version](#lib-version)
+  - [mock](#lib-mock)
   - [svelte](#lib-svelte)
 - [Cli / Js Api Usage](#usage)
   - [js api](#usage-js)
@@ -64,15 +68,21 @@ npm i --save-dev @magic/test
 mkdir test
 ```
 
-create test/index.js
+create ./test/yourLibToTest.{js,ts}, the filename is used in the test output,
+the path should be the same as the file in your sources.
 
 ```javascript
-import yourTest from '../path/to/your/file.js'
+// ./test/yourLibToTest.{js|ts}
+import yourLibToTest from '../path/to/your/lib.{js'
 
 export default [
   { fn: () => true, expect: true, info: 'true is true' },
-  // note that the function will be called automagically
-  { fn: yourTest, expect: true, info: 'hope this will work ;)' },
+  // note that the function will be called automagically. expect: true can be omitted.
+  { fn: yourLibToTest.returnsTrue, /* expect: true, */ info: 'yourLibToTest returns true' },
+  // if you need arguments, just call the function, this will also use async/await for promises.
+  { fn: yourLibToTest.withArgs('argument1', 'argument2'), expect: 'string', info: 'yourLibToTest.withArgs returns "string"' },
+  // if you absolutely need to nest your function in a function call
+  { fn: () => yourLibToTest.withArgs('argument1', 'argument2'), expect: true, info: 'nested functions work.' },
 ]
 ```
 
@@ -214,7 +224,7 @@ export default [
 ]
 ```
 
-###### caveat:
+###### Caveat:
 
 if you want to test if a function is a function, you need to wrap the function
 
@@ -228,11 +238,29 @@ export default {
 }
 ```
 
-##### <a name="tests-multiple"></a> multiple tests
+###### <a name="tests-typescript"></a> TypeScript support
 
-multiple tests can be created by exporting an array of single test objects.
+@magic/test supports TypeScript test files. You can write tests in `.ts` files and they will be executed directly without transpilation.
 
 ```javascript
+// test/mytest.ts
+export default { fn: () => true, expect: true, info: 'TypeScript test works!' }
+```
+
+This requires Node.js 14.2.0 or later.
+
+##### <a name="tests-multiple"></a> multiple tests
+
+multiple tests can be created by exporting an array or object of single test objects.
+
+```javascript
+// exporting an array
+export default [
+  { fn: () => true, expect: true, info: 'expect true to be true' },
+  { fn: () => false, expect: false, info: 'expect false to be false' },
+]
+
+// or exporting an object with named test arrays
 export default {
   multipleTests: [
     { fn: () => true, expect: true, info: 'expect true to be true' },
@@ -428,6 +456,12 @@ export default [
 
 Environment detection utilities for conditional test behavior.
 
+**Available utilities:**
+
+- `isNodeProd` - checks if NODE_ENV is set to production
+- `isProd` - checks if -p flag is passed to the CLI
+- `isVerbose` - checks if -l flag is passed to the CLI
+
 ```javascript
 import { env } from '@magic/test'
 
@@ -552,6 +586,120 @@ export default [
 ]
 ```
 
+###### <a name="lib-error"></a> error
+
+export [@magic/error](https://github.com/magic/error) which returns errors with optional names.
+
+```javascript
+import { error } from '@magic/test'
+
+export default [
+  {
+    fn: tryCatch(error('Message', 'E_NAME')),
+    expect: e => e.name === 'E_NAME' && e.message === 'Message',
+    info: 'Errors have messages and (optional) names.',
+  },
+]
+```
+
+###### <a name="lib-version"></a> version
+
+The version plugin checks your code according to a spec defined by you. This is designed to warn you on changes to your exports. Internally, the version function calls @magic/types and all functions exported from it are valid type strings in version specs.
+
+```javascript
+// test/spec.js
+import { version } from '@magic/test'
+
+// import your lib as your codebase requires
+// import * as lib from '../src/index.js'
+// import lib from '../src/index.js
+
+const spec = {
+  stringValue: 'string',
+  numberValue: 'number',
+
+  objectValue: [
+    'obj',
+    {
+      key: 'Willbechecked',
+    },
+  ],
+
+  // Test parent object without checking child properties
+  objectNoChildCheck: [
+    'obj',
+    false,
+  ],
+}
+
+export default version(lib, spec)
+```
+
+**Note:** Using `['obj', false]` in a spec will test that the parent is an object without checking the key/value pairs inside.
+
+###### <a name="lib-mock"></a> mock
+
+Mock and spy utilities for function testing.
+
+```javascript
+import { mock, tryCatch } from '@magic/test'
+
+export default [
+  {
+    fn: () => {
+      const spy = mock.fn()
+      spy('arg1')
+      return spy.calls.length === 1 && spy.calls[0][0] === 'arg1'
+    },
+    expect: true,
+    info: 'mock.fn tracks call arguments',
+  },
+  {
+    fn: () => {
+      const spy = mock.fn().mockReturnValue('mocked')
+      return spy() === 'mocked'
+    },
+    expect: true,
+    info: 'mock.fn.mockReturnValue sets return value',
+  },
+  {
+    fn: async () => {
+      const spy = mock.fn().mockThrow(new Error('fail'))
+      const caught = await tryCatch(spy)()
+      return caught instanceof Error
+    },
+    expect: true,
+    info: 'mock.fn.mockThrow works with tryCatch',
+  },
+  {
+    fn: () => {
+      const obj = { greet: () => 'hello' }
+      const spy = mock.spy(obj, 'greet', () => 'world')
+      const result = obj.greet()
+      spy.mockRestore()
+      return result === 'world' && obj.greet() === 'hello'
+    },
+    expect: true,
+    info: 'mock.spy replaces and restores methods',
+  },
+]
+```
+
+**mock.fn properties:**
+
+- `calls` - Array of all call arguments
+- `returns` - Array of all return values
+- `errors` - Array of all thrown errors (null for non-throwing calls)
+- `callCount` - Number of times called
+
+**mock.fn methods:**
+
+- `mockReturnValue(value)` - Set return value (chainable)
+- `mockThrow(error)` - Set error to throw (chainable)
+- `getCalls()` - Get all call arguments
+- `getReturns()` - Get all return values
+- `getErrors()` - Get all thrown errors
+
 ##### <a name="lib-error"></a>error
 
 export [@magic/error](https://github.com/magic/error)
@@ -588,6 +736,44 @@ export default [
   },
 ]
 ```
+
+**Automatic Test Exports**
+
+When testing Svelte 5 components, @magic/test automatically exports `$state` and `$derived` variables, making them accessible in tests without requiring manual exports in your components.
+
+```svelte
+<!-- Component.svelte -->
+<script>
+  let count = $state(0)
+  let doubled = $derived(count * 2)
+  // No export needed!
+</script>
+
+<button class="inc">+</button>
+<span>{doubled}</span>
+```
+
+```javascript
+// Test - works automatically!
+import { mount } from '@magic/test'
+
+export default [
+  {
+    component: './Component.svelte',
+    fn: async ({ component }) => component.count, // 0
+    expect: 0,
+    info: 'access $state without manual export',
+  },
+  {
+    component: './Component.svelte',
+    fn: async ({ component }) => component.doubled, // 0 (derived)
+    expect: 0,
+    info: 'access $derived without manual export',
+  },
+]
+```
+
+This works automatically for all `$state` and `$derived` runes in your component. No configuration needed - just write tests as usual.
 
 **Exported Functions:**
 
