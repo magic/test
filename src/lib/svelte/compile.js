@@ -83,7 +83,8 @@ const processImports = async (code, sourceFilePath) => {
       processedCode = processedCode.replace(importRegex, `import ${imported} from '${url}'`)
     } catch (e) {
       const message = is.error(e) ? e.message : String(e)
-      console.warn(`Could not resolve import ${importPath}: ${message}`)
+      console.error(`Could not resolve import ${importPath}: ${message}`)
+      throw e
     }
   }
 

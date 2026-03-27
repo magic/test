@@ -95,13 +95,16 @@ export const mount = async (filePath, options = {}) => {
   const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
   const importPath = pathToFileURL(tmpFile).href
 
-  const tmpExists = await fs.exists(importPath)
-  if (!tmpExists) {
-    await fs.mkdirp(path.dirname(tmpFile))
-    await fs.writeFile(tmpFile, js.code)
-  }
+  await fs.mkdirp(path.dirname(tmpFile))
+  await fs.writeFile(tmpFile, js.code)
 
-  const mod = await import(importPath)
+  let mod
+  try {
+    mod = await import(importPath)
+  } catch (importErr) {
+    console.error('Failed to import compiled component:', importErr.message)
+    throw importErr
+  }
   const Component = mod.default
 
   const target = document.createElement('div')
