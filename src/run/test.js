@@ -102,6 +102,7 @@ export const runTest = async test => {
             res = await /** @type {Function} */ (fn)({ target, component: instance, unmount })
           } finally {
             await unmount()
+            target.remove()
           }
         } else if (is.function(fn) || is.promise(fn)) {
           await isolation.executeIsolated(key, async () => {
