@@ -6,6 +6,117 @@ import { isolation } from './isolation.js'
 import { runSuite } from './suite.js'
 
 /**
+ * Prepare test by setting defaults and extracting component props
+ * @param {Test} test - The test definition
+ * @returns {{ componentFile?: string, componentProps?: object }}
+ */
+const prepareTest = test => {
+  if (!is.ownProp(test, 'expect')) {
+    if (is.ownProp(test, 'is')) {
+      test.expect = test.is
+    } else {
+      test.expect = true
+    }
+  }
+
+  const { component: componentProp, props: explicitProps } = test
+
+  if (!componentProp) {
+    return {}
+  }
+
+  if (is.string(componentProp)) {
+    return { componentFile: componentProp, componentProps: explicitProps || {} }
+  }
+
+  if (is.array(componentProp)) {
+    return { componentFile: componentProp[0], componentProps: componentProp[1] || {} }
+  }
+
+  throw new Error('component must be a string or [string, props]')
+}
+
+/**
+ * Execute a single test function with proper isolation
+ * @param {Function | Promise<any> | any} fn - Test function or value
+ * @param {string} key - Test key for isolation
+ * @param {string} [componentFile] - Svelte component path
+ * @param {object} [componentProps] - Props for Svelte component
+ * @returns {Promise<any>}
+ */
+const executeTest = async (fn, key, componentFile, componentProps) => {
+  if (componentFile) {
+    const { mount } = await import('../lib/svelte/mount.js')
+    const {
+      target,
+      component: instance,
+      unmount,
+    } = await mount(componentFile, { props: componentProps })
+
+    try {
+      return await fn({ target, component: instance, unmount })
+    } finally {
+      await unmount()
+      target.remove()
+    }
+  }
+
+  if (is.function(fn) || is.promise(fn)) {
+    return await isolation.executeIsolated(key, async () => {
+      if (is.function(fn)) {
+        return await fn()
+      }
+      if (is.promise(fn)) {
+        return await fn
+      }
+    })
+  }
+
+  return fn
+}
+
+/**
+ * Evaluate test result against expected value
+ * @param {any} res - Actual result
+ * @param {any} expect - Expected value (can be function, promise, or value)
+ * @returns {Promise<{ pass: boolean, exp: any, expString: any }>}
+ */
+const evaluateResult = async (res, expect) => {
+  let exp
+  let expString
+  let pass = false
+
+  if (is.function(expect)) {
+    /** @type {any[]} */
+    const combinedRes = [].concat(res)
+    if (combinedRes.length > 1) {
+      res = combinedRes
+    }
+    exp = await expect(res)
+    expString = cleanFunctionString(expect)
+    if (res !== true) {
+      pass = exp === res || exp === true
+    }
+  } else if (is.promise(expect)) {
+    exp = await expect
+    expString = expect
+  } else {
+    exp = expect
+    expString = expect
+  }
+
+  if (!pass) {
+    if (is.undefined(exp)) {
+      pass = exp === res
+    } else if (is.sameType(exp, res)) {
+      pass = is.deep.equal(exp, res)
+    }
+  }
+
+  return { pass, exp, expString }
+}
+
+/**
  * Run a test or delegate to a suite.
  *
  * - If `test.fn` exists → executes the test and returns a `TestResult`.
@@ -16,42 +127,9 @@ import { runSuite } from './suite.js'
  */
 export const runTest = async test => {
   try {
-    // expect can be undefined, we set expect to true to provide a default for tests
-    if (!is.ownProp(test, 'expect')) {
-      // alternative name for expect
-      if (is.ownProp(test, 'is')) {
-        test.expect = test.is
-      } else {
-        test.expect = true
-      }
-    }
+    const { componentFile, componentProps } = prepareTest(test)
 
-    const {
-      fn,
-      name,
-      pkg,
-      before,
-      parent,
-      expect,
-      runs = 1,
-      tests,
-      info,
-      component: componentProp,
-      props: explicitProps,
-    } = test
-
-    let componentFile, componentProps
-    if (componentProp) {
-      if (is.string(componentProp)) {
-        componentFile = componentProp
-        componentProps = explicitProps || {}
-      } else if (is.array(componentProp)) {
-        componentFile = componentProp[0]
-        componentProps = componentProp[1] || {}
-      } else {
-        throw new Error('component must be a string or [string, props]')
-      }
-    }
+    const { fn, name, pkg, before, parent, expect, runs = 1, tests, info } = test
 
     if (!is.ownProp(test, 'fn')) {
       if (is.object(test) && is.object(tests)) {
@@ -67,13 +145,16 @@ export const runTest = async test => {
       return
     }
 
+    const msg = cleanFunctionString(fn)
+    const key = getTestKey(pkg, parent, name)
+
     /** @type {(() => (void | Promise<void>)) | void | undefined} */
-    let after
+    let afterCleanup
     if (is.function(before)) {
       try {
         const result = await before(test)
         if (is.function(result)) {
-          after = /** @type {() => (void | Promise<void>)} */ (result)
+          afterCleanup = /** @type {() => (void | Promise<void>)} */ (result)
         }
       } catch (e) {
         log.error('test.before', test.before, e)
@@ -83,73 +164,24 @@ export const runTest = async test => {
     let result
     let exp
     let expString
-    const msg = cleanFunctionString(fn)
-    const key = getTestKey(pkg, parent, name)
     let pass = false
     let res
 
     for (let i = 0; i < runs; i++) {
       try {
-        if (componentFile) {
-          const { mount } = await import('../lib/svelte/mount.js')
-          const {
-            target,
-            component: instance,
-            unmount,
-          } = await mount(componentFile, { props: componentProps })
-
-          try {
-            res = await /** @type {Function} */ (fn)({ target, component: instance, unmount })
-          } finally {
-            await unmount()
-            target.remove()
-          }
-        } else if (is.function(fn) || is.promise(fn)) {
-          await isolation.executeIsolated(key, async () => {
-            if (is.function(fn)) {
-              res = await fn()
-            } else if (is.promise(fn)) {
-              res = await fn
-            }
-          })
-        } else {
-          res = fn
-        }
+        res = await executeTest(fn, key, componentFile, componentProps)
       } catch (e) {
         log.error('test.fn', key, cleanError(/** @type {Error} */ (e)))
       }
 
       try {
-        if (is.function(expect)) {
-          /** @type {unknown[]} */
-          const combinedRes = [].concat(/** @type {any} */ (res))
-          if (combinedRes.length > 1) {
-            res = combinedRes
-          }
-          exp = await expect(res)
-          expString = cleanFunctionString(expect)
-          if (res !== true) {
-            pass = exp === res || exp === true
-          }
-        } else if (is.promise(expect)) {
-          exp = await expect
-          expString = expect
-        } else {
-          exp = expect
-          expString = expect
-        }
-
-        if (!pass) {
-          if (is.undefined(exp)) {
-            pass = exp === res
-          } else if (is.sameType(exp, res)) {
-            pass = is.deep.equal(exp, res)
-          }
-        }
+        const evalResult = await evaluateResult(res, expect)
+        pass = evalResult.pass
+        exp = evalResult.exp
+        expString = evalResult.expString
 
         if (!pass) {
           result = res
-          // abort the run loop if the first iteration fails
           break
         }
       } catch (e) {
@@ -162,9 +194,9 @@ export const runTest = async test => {
       }
     }
 
-    if (is.function(after)) {
+    if (is.function(afterCleanup)) {
       try {
-        await after()
+        await afterCleanup()
       } catch (e) {
         log.error('test.after', key, e)
       }
