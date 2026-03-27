@@ -62,8 +62,6 @@ export const tick = async () => {
  * @param {{ props?: object }} [options]
  */
 export const mount = async (filePath, options = {}) => {
-  initDOM()
-
   const doc = getDocument()
   if (!doc) {
     throw new Error('Failed to initialize DOM. Is happy-dom installed?')
