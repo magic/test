@@ -1,4 +1,4 @@
-import { html } from '../../../src/lib/index.js'
+import { html, tick } from '../../../src/lib/index.js'
 
 const component = './src/lib/svelte/components/List.svelte'
 
@@ -39,7 +39,7 @@ export default [
     fn: async ({ target, component: instance }) => {
       const removeButtons = target.querySelectorAll('.remove-btn')
       removeButtons[0].click()
-      await new Promise(r => setTimeout(r, 10))
+      await tick()
       return instance.itemsList.length
     },
     expect: 1,
@@ -84,7 +84,7 @@ export default [
     fn: async ({ target, component: instance }) => {
       const removeButtons = target.querySelectorAll('.remove-btn')
       removeButtons[0].click()
-      await new Promise(r => setTimeout(r, 10))
+      await tick()
       return instance.itemsList.length
     },
     expect: 2,
