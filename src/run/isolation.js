@@ -273,8 +273,8 @@ export class Isolation {
         Object.defineProperty(globalThis, key, desc)
       } catch {
         try {
-          // @ts-expect-error - fallback assignment to globalThis
-          globalThis[key] = stored.value
+          const global = /** @type {Record<string, unknown>} */ (globalThis)
+          global[/** @type {string} */ (key)] = stored.value
         } catch {
           // ignore
         }
@@ -343,8 +343,8 @@ export class Isolation {
         Object.defineProperty(globalThis, key, desc)
       } catch {
         try {
-          // @ts-expect-error - fallback assignment to globalThis
-          globalThis[key] = stored.value
+          const global = /** @type {Record<string, unknown>} */ (globalThis)
+          global[/** @type {string} */ (key)] = stored.value
         } catch {
           // ignore
         }
