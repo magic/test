@@ -1,8 +1,7 @@
 export function runSuite(
   props: SuiteInput & {
-    store?: {
-      get: (key: string) => unknown
-    }
+    store?: Store
   },
 ): Promise<Suite | void | undefined>
+import { Store } from '../lib/store.js'
 //# sourceMappingURL=suite.d.ts.map
