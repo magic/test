@@ -11,7 +11,7 @@ export const http: {
 /**
  * An object representing JSON request body data.
  */
-export type BodyObject = Record<string, any>
+export type BodyObject = Record<string, unknown>
 /**
  * Either a string or an object to be JSON-stringified.
  */

@@ -4,8 +4,8 @@
  * @property {boolean} enumerable
  * @property {boolean} [writable]
  * @property {unknown} [value]
- * @property {(() => any) | undefined} [get]
- * @property {((v: any) => void) | undefined} [set]
+ * @property {(() => unknown) | undefined} [get]
+ * @property {((v: unknown) => void) | undefined} [set]
  */
 /**
  * @typedef {object} Snapshot
@@ -82,8 +82,8 @@ export type PropertyDescriptorRecord = {
   enumerable: boolean
   writable?: boolean | undefined
   value?: unknown
-  get?: (() => any) | undefined
-  set?: ((v: any) => void) | undefined
+  get?: (() => unknown) | undefined
+  set?: ((v: unknown) => void) | undefined
 }
 export type Snapshot = {
   props: Record<string, PropertyDescriptorRecord>

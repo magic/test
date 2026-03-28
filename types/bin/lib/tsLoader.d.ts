@@ -7,7 +7,7 @@ export function resolve(
   },
   nextResolve: (
     specifier: string,
-    context: any,
+    context: unknown,
   ) => Promise<{
     url: string
     format?: string

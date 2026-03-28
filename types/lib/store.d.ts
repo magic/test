@@ -6,14 +6,14 @@
  */
 /**
  * @typedef {Object} StateBase
- * @property {Record<string, any>} suites - Test suites
+ * @property {Record<string, unknown>} suites - Test suites
  * @property {Stats} stats - Test statistics
  * @property {string} pkg - Package name
  * @property {[number, number]} [startTime] - Start time timestamp
- * @property {Record<string, any>} [results] - Test results
+ * @property {Record<string, unknown>} [results] - Test results
  */
 /**
- * @typedef {StateBase & Record<string, any>} State
+ * @typedef {StateBase & Record<string, unknown>} State
  * State object with known properties and index signature for dynamic properties
  */
 /**
@@ -69,7 +69,7 @@ export type StateBase = {
   /**
    * - Test suites
    */
-  suites: Record<string, any>
+  suites: Record<string, unknown>
   /**
    * - Test statistics
    */
@@ -85,10 +85,10 @@ export type StateBase = {
   /**
    * - Test results
    */
-  results?: Record<string, any> | undefined
+  results?: Record<string, unknown> | undefined
 }
 /**
  * State object with known properties and index signature for dynamic properties
  */
-export type State = StateBase & Record<string, any>
+export type State = StateBase & Record<string, unknown>
 //# sourceMappingURL=store.d.ts.map

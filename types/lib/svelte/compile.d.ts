@@ -8,4 +8,12 @@ export function compileSvelteWithImports(filePath: string): Promise<{
   }
   css: any
 }>
+export function compileSvelteWithWrite(filePath: string): Promise<{
+  js: {
+    code: string
+  }
+  css: any
+  tmpFile: string
+  importUrl: string
+}>
 //# sourceMappingURL=compile.d.ts.map

@@ -1,8 +1,8 @@
-/** @type {Map<string, { config: any, mtime: number }>} */
+/** @type {Map<string, { config: unknown, mtime: number }>} */
 export const configCache: Map<
   string,
   {
-    config: any
+    config: unknown
     mtime: number
   }
 >

@@ -1,10 +1,12 @@
+export function createSnippet(renderFn: string): any
+export function tick(): Promise<void>
 export function mount(
   filePath: string,
   options?: {
-    props?: object
+    props?: Record<string, unknown>
   },
 ): Promise<{
-  target: import('happy-dom').HTMLDivElement
+  target: HTMLDivElement
   component: any
   unmount: () => Promise<void>
   css: any
