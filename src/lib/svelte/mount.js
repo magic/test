@@ -112,7 +112,7 @@ export const mount = async (filePath, options = {}) => {
 
   const props = rawProps ?? {}
 
-  for (const key of Object.keys(props)) {
+  for (const key of Reflect.ownKeys(props)) {
     if (!is.string(key)) {
       throw new Error(`Prop keys must be strings, got ${typeof key}`)
     }
