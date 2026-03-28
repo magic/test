@@ -1,10 +1,4 @@
 /**
- * @typedef {Object} Stats
- * @property {number} all - Total number of tests
- * @property {number} pass - Number of passing tests
- * @property {number} fail - Number of failing tests
- */
-/**
  * @typedef {Object} StateBase
  * @property {Record<string, unknown>} suites - Test suites
  * @property {Stats} stats - Test statistics
@@ -50,20 +44,6 @@ export namespace store {
    * Reset the store state to default
    */
   function reset(): void
-}
-export type Stats = {
-  /**
-   * - Total number of tests
-   */
-  all: number
-  /**
-   * - Number of passing tests
-   */
-  pass: number
-  /**
-   * - Number of failing tests
-   */
-  fail: number
 }
 export type StateBase = {
   /**

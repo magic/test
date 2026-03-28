@@ -1,6 +1,6 @@
 export function fn(implementation?: (...args: unknown[]) => unknown): MockFn
 export function spy(
-  object: Object,
+  obj: Record<string, unknown>,
   methodName: string,
   implementation?: (...args: unknown[]) => unknown,
 ): MockFn & {
