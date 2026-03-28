@@ -22,26 +22,68 @@ import is from '@magic/types'
  */
 
 /**
+ * @typedef {Object} HttpOptions
+ * @property {number} [timeout=30000] - Request timeout in milliseconds
+ * @property {boolean} [rejectUnauthorized] - Whether to reject self-signed certs (default: true)
+ */
+
+/**
+ * Determine if SSL certificate should be rejected.
+ * Defaults to true (secure) unless MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED=false
+ * @returns {boolean}
+ */
+const shouldRejectUnauthorized = () => {
+  const env = process.env.MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED
+  if (env === undefined || env === 'true' || env === '1') return true
+  if (env === 'false' || env === '0') return false
+  return true // default secure
+}
+
+/**
  * Perform an HTTP GET request.
  * Automatically handles both HTTP and HTTPS protocols based on URL.
  *
  * @param {string} url - The URL to request.
+ * @param {HttpOptions} [options] - Optional request options
  * @returns {Promise<ResponseData>} Resolves with the response data, rejects on error.
  *
  * @example
  * const data = await get('https://api.example.com/data')
  * console.log(data) // Parsed JSON or raw string
+ *
+ * @example
+ * const data = await get('https://self-signed.badssl.com', { rejectUnauthorized: false })
  */
-export const get = url =>
-  new Promise((resolve, reject) => {
-    const connector = url.startsWith('https://') ? nodeHttps : nodeHttp
+export const get = (url, options = {}) => {
+  const isHttps = url.startsWith('https://')
+  const connector = isHttps ? nodeHttps : nodeHttp
+  const timeout = options.timeout || 30000
+  const rejectUnauthorized = options.rejectUnauthorized ?? shouldRejectUnauthorized()
 
+  return new Promise((resolve, reject) => {
     try {
-      connector.get(url, res => handleResponse(res, resolve, reject))
+      if (isHttps) {
+        const request = connector.get(url, { rejectUnauthorized }, res =>
+          handleResponse(res, resolve, reject, url),
+        )
+        request.setTimeout(timeout, () => {
+          request.abort()
+          reject(new Error(`Request timeout: ${url} (${timeout}ms)`))
+        })
+        request.on('error', reject)
+      } else {
+        const request = connector.get(url, res => handleResponse(res, resolve, reject, url))
+        request.setTimeout(timeout, () => {
+          request.abort()
+          reject(new Error(`Request timeout: ${url} (${timeout}ms)`))
+        })
+        request.on('error', reject)
+      }
     } catch (e) {
       reject(e)
     }
   })
+}
 
 /**
  * Perform an HTTP POST request with optional JSON body.
@@ -50,6 +92,7 @@ export const get = url =>
  *
  * @param {string} url - The URL to request.
  * @param {RequestBody} [body=''] - Request body. Will be JSON-stringified if an object.
+ * @param {HttpOptions} [options] - Optional request options
  * @returns {Promise<ResponseData>} Resolves with the response data, rejects on error.
  *
  * @example
@@ -57,36 +100,56 @@ export const get = url =>
  *
  * @example
  * const result = await post('http://localhost:3000/data', 'raw string')
+ *
+ * @example
+ * const result = await post('https://self-signed.badssl.com', { data: 'test' }, { rejectUnauthorized: false })
  */
-export const post = (url, body = '') =>
-  new Promise((resolve, reject) => {
+export const post = (url, body = '', options = {}) => {
+  const urlObject = new URL(url)
+  const isHttps = urlObject.protocol === 'https:'
+  const connector = isHttps ? nodeHttps : nodeHttp
+
+  const { hostname, port, pathname } = urlObject
+
+  /** @type {Record<string, string | number>} */
+  const headers = {}
+
+  const timeout = options.timeout || 30000
+  const rejectUnauthorized = options.rejectUnauthorized ?? shouldRejectUnauthorized()
+
+  let postData = ''
+  if (body) {
+    postData = is.str(body) ? body : JSON.stringify(body)
+    headers['Content-Length'] = Buffer.byteLength(postData)
+    headers['Content-Type'] = 'application/json'
+  }
+
+  return new Promise((resolve, reject) => {
     try {
-      const urlObject = new URL(url)
-      const connector = urlObject.protocol === 'https:' ? nodeHttps : nodeHttp
-
-      const { protocol, hostname, port, pathname: path } = urlObject
-
-      /** @type {Record<string, string | number>} */
-      const headers = {}
-
-      let postData = ''
-      if (body) {
-        postData = is.str(body) ? body : JSON.stringify(body)
-        headers['Content-Length'] = Buffer.byteLength(postData)
-        headers['Content-Type'] = 'application/json'
-      }
-
-      const options = {
-        protocol,
+      const requestOptions = {
         hostname,
         port,
-        path,
+        path: pathname,
         method: 'POST',
         headers,
-        rejectUnauthorized: false,
       }
 
-      const request = connector.request(options, res => handleResponse(res, resolve, reject))
+      // Include rejectUnauthorized for HTTPS requests
+      if (isHttps) {
+        // @ts-expect-error - rejectUnauthorized is valid for https request options
+        requestOptions.rejectUnauthorized = rejectUnauthorized
+      }
+
+      const request = connector.request(requestOptions, res =>
+        handleResponse(res, resolve, reject, url),
+      )
+
+      request.setTimeout(timeout, () => {
+        request.abort()
+        reject(new Error(`Request timeout: ${url} (${timeout}ms)`))
+      })
+
+      request.on('error', reject)
 
       if (postData) {
         request.write(postData)
@@ -97,10 +160,11 @@ export const post = (url, body = '') =>
       reject(e)
     }
   })
+}
 
 /**
  * HTTP utility object with get and post methods.
- * @type {{ get: (url: string) => Promise<ResponseData>, post: (url: string, body?: RequestBody) => Promise<ResponseData> }}
+ * @type {{ get: (url: string, options?: HttpOptions) => Promise<ResponseData>, post: (url: string, body?: RequestBody, options?: HttpOptions) => Promise<ResponseData> }}
  */
 export const http = {
   get,
