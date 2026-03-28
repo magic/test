@@ -295,6 +295,24 @@ export default [
 ]
 `),
 
+  h3({ id: 'tests-runs' }, 'running tests multiple times'),
+
+  p('Use the runs property to run a test multiple times:'),
+
+  Pre(`
+let counter = 0
+const increment = () => counter++
+
+export default [
+  {
+    fn: increment,
+    expect: 1,
+    runs: 5,
+    info: 'runs the test 5 times and expects final value to be 5',
+  },
+]
+`),
+
   h3({ id: 'tests-hooks' }, 'hooks'),
 
   p('run functions before and/or after individual test'),
@@ -376,6 +394,31 @@ export default () => {
 // test/afterAll.js
 export default () => {
   // cleanup after all tests
+}
+`),
+
+  h3({ id: 'tests-each-hooks' }, 'beforeEach and afterEach hooks'),
+
+  p('Define beforeEach and afterEach hooks in your test objects that run before/after each individual test:'),
+
+  Pre(`
+const beforeEach = () => {
+  // Runs before each test in this suite
+  global.testState = { initialized: true }
+}
+
+const afterEach = (testResult) => {
+  // Runs after each test, receives the test result
+  console.log('Test completed:', testResult?.pass)
+}
+
+export default {
+  beforeEach,
+  afterEach,
+  tests: [
+    { fn: () => global.testState.initialized, expect: true },
+    { fn: () => true, expect: true },
+  ],
 }
 `),
 
@@ -498,7 +541,65 @@ export default [
 ]
 `),
 
-  h3({ id: 'lib-http' }, 'http'),
+  h3({ id: 'lib-promises' }, 'promises'),
+
+  p([
+    'Helper function to wrap nodejs callback functions and promises with ease.',
+    ' Handle the try/catch steps internally and return a resolved or rejected promise.',
+  ]),
+  Pre(`
+import { promise, is } from '@magic/test'
+
+export default [
+  {
+    fn: promise(cb => setTimeOut(() => cb(null, true), 200)),
+    expect: true,
+    info: 'handle promises in a nice way',
+  },
+  {
+    fn: promise(cb => setTimeOut(() => cb(new Error('error'), 200)),
+    expect: is.error,
+    info: 'handle promise errors in a nice way',
+  },
+]
+`),
+
+  h4({ id: 'lib-stringify' }, 'stringify'),
+
+  p('Converts values to strings for comparison testing.'),
+
+  Pre(`
+import { stringify } from '@magic/test'
+
+export default [
+  {
+    fn: () => stringify({ a: 1, b: 2 }),
+    expect: '{"a":1,"b":2}',
+    info: 'stringifies object to JSON',
+  },
+]
+`),
+
+  h4({ id: 'lib-handleResponse' }, 'handleResponse'),
+
+  p('Processes HTTP responses, automatically handling JSON parsing and error detection.'),
+
+  Pre(`
+import { handleResponse } from '@magic/test'
+
+export default [
+  {
+    fn: async () => {
+      const response = { ok: true, json: () => Promise.resolve({ data: 'test' }) }
+      return handleResponse(response)
+    },
+    expect: { data: 'test' },
+    info: 'handles JSON response',
+  },
+]
+`),
+
+  h4({ id: 'lib-http' }, 'http'),
 
   p('HTTP utility for making requests in tests. Supports both HTTP and HTTPS.'),
 
@@ -545,30 +646,7 @@ export default [
 
   p('Note: HTTP module automatically handles protocol detection, JSON parsing, and rejectUnauthorized: false'),
 
-  h3({ id: 'lib-promises' }, 'promises'),
-
-  p([
-    'Helper function to wrap nodejs callback functions and promises with ease.',
-    ' Handle the try/catch steps internally and return a resolved or rejected promise.',
-  ]),
-  Pre(`
-import { promise, is } from '@magic/test'
-
-export default [
-  {
-    fn: promise(cb => setTimeOut(() => cb(null, true), 200)),
-    expect: true,
-    info: 'handle promises in a nice way',
-  },
-  {
-    fn: promise(cb => setTimeOut(() => cb(new Error('error')), 200)),
-    expect: is.error,
-    info: 'handle promise errors in a nice way',
-  },
-]
-`),
-
-  h3({ id: 'lib-css' }, 'css'),
+  h4({ id: 'lib-css' }, 'css'),
 
   p([
     'exports ',
@@ -847,6 +925,112 @@ export default [
 ]
 `),
 
+  h2({ id: 'native-runner' }, 'Native Node.js Test Runner'),
+
+  p([
+    '@magic/test includes a native Node.js test runner that uses the built-in --test flag.',
+    ' This provides better integration with Node.js ecosystem tools and IDEs.',
+  ]),
+
+  h3({ id: 'native-usage' }, 'Usage'),
+
+  Pre(`
+# Run tests using Node.js native test runner
+npm run test:native
+`),
+
+  p('Add to your package.json:'),
+
+  Pre(`
+{
+  "scripts": {
+    "test": "t -p",
+    "test:native": "node --test src/node-test-runner.js"
+  }
+}
+`),
+
+  h3({ id: 'native-external' }, 'Using in External Libraries'),
+
+  p('To use the native test runner in your own library that depends on @magic/test:'),
+
+  p('1. Copy the runner file to your project:'),
+
+  Pre(`
+# Copy node-test-runner.js to your project
+cp node_modules/@magic/test/src/node-test-runner.js src/
+`),
+
+  p('2. Update the paths in the runner if needed (it uses relative paths to find the test directory)'),
+
+  p('3. Add the script to your package.json:'),
+
+  Pre(`
+{
+  "scripts": {
+    "test": "t -p",
+    "test:native": "node --test src/node-test-runner.js"
+  }
+}
+`),
+
+  h3({ id: 'native-features' }, 'Features'),
+
+  p('The native runner supports all the same features as the custom runner:'),
+
+  ul([
+    li('Test file discovery (.js, .mjs, .ts)'),
+    li('File-based hooks (beforeAll.js, afterAll.js)'),
+    li('Svelte component testing'),
+    li('All assertion types'),
+    li('Global magic modules'),
+  ]),
+
+  h3({ id: 'native-differences' }, 'Differences from Custom Runner'),
+
+  p('| Feature | Custom Runner | Native Runner |'),
+  p('|---------|--------------|---------------|'),
+  p('| Test discovery | Custom glob patterns | Node.js --test patterns |'),
+  p('| Output format | Colored CLI output | Node.js test format |'),
+  p('| Hooks | Full support | Full support |'),
+  p('| Coverage | Via c8 | Not available |'),
+
+  h3({ id: 'test-isolation' }, 'Test Isolation'),
+
+  p([
+    '@magic/test supports test isolation to prevent tests from affecting each other.',
+    ' Tests in the same suite can share state, but you can isolate them:',
+  ]),
+
+  Pre(`
+export default [
+  // This test runs in isolation from others
+  {
+    fn: () => {
+      const state = { counter: 0 }
+      state.counter++
+      return state.counter
+    },
+    expect: 1,
+    info: 'isolated test with local state',
+  },
+]
+`),
+
+  p('Global Isolation Mode:'),
+
+  p('By default, tests in the same file share global state. To enable strict isolation where each test gets a fresh environment:'),
+
+  Pre(`
+// This runs each test in isolation with fresh globals
+export const __isolate = true
+
+export default [
+  { fn: () => global.test = 1, expect: 1 },
+  { fn: () => global.test === undefined, expect: true, info: 'fresh global state' },
+]
+`),
+
   h2({ id: 'usage' }, 'usage'),
 
   h3({ id: 'usage-js' }, 'js'),
@@ -944,4 +1128,271 @@ t -i "src/**/*.js"
     Link({ to: 'https://github.com/magic/types/tree/master/test', text: '@magic/types' }),
     ' and the other magic libraries for more test examples.',
   ]),
+
+  h3({ id: 'exit-codes' }, 'Exit Codes'),
+
+  p('@magic/test returns specific exit codes to indicate test results:'),
+
+  p('| Exit Code | Meaning |'),
+  p('| --------- | ------- |'),
+  p('| 0 | All tests passed |'),
+  p('| 1 | One or more tests failed |'),
+
+  Pre(`
+# Run tests and check exit code
+npm test
+echo "Exit code: $?"  # 0 = success, 1 = failure
+`),
+
+  h3({ id: 'performance-tips' }, 'Performance Tips'),
+
+  p('Follow these tips to get the most out of @magic/test:'),
+
+  p('Use the -p flag for development:'),
+
+  Pre(`
+# Fast mode - no coverage, only shows failures
+npm test
+# or
+t -p
+`),
+
+  p('Run tests in parallel with native runner:'),
+
+  Pre(`
+# Native runner uses Node.js built-in test runner
+npm run test:native
+`),
+
+  p('Minimize async overhead:'),
+
+  Pre(`
+# Slower: unnecessary async
+export default {
+  fn: async () => {
+    return true
+  },
+  expect: true,
+}
+
+# Faster: sync test
+export default {
+  fn: () => true,
+  expect: true,
+}
+`),
+
+  p('Use local state instead of globals:'),
+
+  Pre(`
+# Slower: global state requires isolation
+export const __isolate = true
+
+# Faster: local state is naturally isolated
+export default [
+  {
+    fn: () => {
+      const counter = 0
+      return ++counter
+    },
+    expect: 1,
+  },
+]
+`),
+
+  p('Batch related tests:'),
+
+  Pre(`
+# Faster: single suite with multiple tests
+export default [
+  { fn: () => add(1, 2), expect: 3 },
+  { fn: () => add(0, 0), expect: 0 },
+  { fn: () => add(-1, 1), expect: 0 },
+]
+`),
+
+  h3({ id: 'verbose-output' }, 'Verbose Output'),
+
+  p('The -l (or --verbose, --loud) flag enables detailed output:'),
+
+  Pre(`
+# Shows all tests including passing ones
+t -l
+`),
+
+  p('What verbose mode shows:'),
+
+  ul([
+    li('All test results (not just failures)'),
+    li('Individual test execution time'),
+    li('Full test names with suite hierarchy'),
+    li('Detailed error messages with stack traces'),
+  ]),
+
+  p('Default mode (without -l):'),
+
+  ul([
+    li('Only shows failing tests'),
+    li('Shows summary only for passing suites'),
+    li('Faster output for large test suites'),
+  ]),
+
+  p('Example output without -l:'),
+
+  Pre(`
+### Testing package: my-lib
+/addition.js => Pass: 3/3 100%
+/multiplication.js => Pass: 4/4 100%
+Ran 7 tests in 12ms. Passed 7/7 100%
+`),
+
+  p('Example output with -l:'),
+
+  Pre(`
+### Testing package: my-lib
+▶ addition
+  ✔ adds two positive numbers (1.2ms)
+  ✔ handles zero correctly (0.8ms)
+  ✔ handles negative numbers (0.9ms)
+▶ multiplication
+  ✔ multiplies by zero (0.7ms)
+  ✔ multiplies by one (0.6ms)
+  ✔ multiplies two positives (0.8ms)
+  ✔ handles negative numbers (0.9ms)
+Ran 7 tests in 12ms. Passed 7/7 100%
+`),
+
+  h3({ id: 'common-pitfalls' }, 'Common Pitfalls'),
+
+  p('Avoid these common mistakes when writing tests:'),
+
+  p('1. Forgetting to return in async tests:'),
+
+  Pre(`
+# Wrong: promise resolves before test checks result
+export default {
+  fn: async () => {
+    const result = await someAsyncFunction()
+    # missing return!
+  },
+  expect: true,
+}
+
+# Correct:
+export default {
+  fn: async () => {
+    return await someAsyncFunction()
+  },
+  expect: true,
+}
+`),
+
+  p('2. Not wrapping callback functions:'),
+
+  Pre(`
+# Wrong: function gets called immediately
+export default {
+  fn: doSomething(),  # executes immediately!
+  expect: true,
+}
+
+# Correct: wrap in function to defer execution
+export default {
+  fn: () => doSomething(),
+  expect: true,
+}
+`),
+
+  p('3. Mutating shared state between tests:'),
+
+  Pre(`
+# Wrong: counter persists between tests
+let counter = 0
+export default [
+  { fn: () => ++counter, expect: 1 },
+  { fn: () => ++counter, expect: 2 }, # fails! counter is now 1
+]
+
+# Correct: use local state or reset in beforeEach
+let counter = 0
+const beforeEach = () => { counter = 0 }
+export default {
+  beforeEach,
+  tests: [
+    { fn: () => ++counter, expect: 1 },
+    { fn: () => ++counter, expect: 1 }, # passes - reset before each
+  ],
+}
+`),
+
+  p('4. Using the wrong equality check:'),
+
+  Pre(`
+# Wrong: checks reference equality
+export default {
+  fn: () => [1, 2, 3],
+  expect: [1, 2, 3], # fails! different arrays
+}
+
+# Correct: use @magic/types for deep comparison
+import { is } from '@magic/test'
+export default {
+  fn: () => [1, 2, 3],
+  expect: is.deep.equal([1, 2, 3]),
+}
+`),
+
+  p('5. Not awaiting async operations:'),
+
+  Pre(`
+# Wrong: test finishes before promise resolves
+export default {
+  fn: () => {
+    setTimeout(() => {
+      # This never gets checked!
+    }, 100)
+  },
+  expect: true,
+}
+
+# Correct: return the promise
+export default {
+  fn: () => new Promise(resolve => {
+    setTimeout(() => resolve(true), 100)
+  }),
+  expect: true,
+}
+
+# Or use the promise helper:
+import { promise } from '@magic/test'
+export default {
+  fn: promise(cb => setTimeout(() => cb(null, true), 100)),
+  expect: true,
+}
+`),
+
+  p('6. Incorrect hook usage:'),
+
+  Pre(`
+# Wrong: before/after hooks on individual tests, not suites
+export default [
+  {
+    fn: () => true,
+    beforeAll: () => {}, # wrong! beforeAll is for suites
+    afterAll: () => {},
+    expect: true,
+  },
+]
+
+# Correct: hooks at suite level
+const beforeAll = () => {}
+const afterAll = () => {}
+export default {
+  beforeAll,
+  afterAll,
+  tests: [
+    { fn: () => true, expect: true },
+  ],
+}
+`),
 ]
