@@ -9,15 +9,15 @@ import is from '@magic/types'
 
 /**
  * @typedef {Object} StateBase
- * @property {Record<string, any>} suites - Test suites
+ * @property {Record<string, unknown>} suites - Test suites
  * @property {Stats} stats - Test statistics
  * @property {string} pkg - Package name
  * @property {[number, number]} [startTime] - Start time timestamp
- * @property {Record<string, any>} [results] - Test results
+ * @property {Record<string, unknown>} [results] - Test results
  */
 
 /**
- * @typedef {StateBase & Record<string, any>} State
+ * @typedef {StateBase & Record<string, unknown>} State
  * State object with known properties and index signature for dynamic properties
  */
 
@@ -45,7 +45,7 @@ export const store = {
   set(val) {
     Object.entries(val).forEach(([key, val]) => {
       if (is.objectNative(val)) {
-        store.state[key] = { ...store.state[key], ...val }
+        store.state[key] = { .../** @type {object} */ (store.state[key]), ...val }
       } else {
         store.state[key] = val
       }
@@ -72,10 +72,9 @@ export const store = {
    */
   get(key, def = undefined) {
     if (!key) {
-      /* @ts-ignore - the types above express this return, typescript does not understand though. */
-      return store.state
+      return /** @type {T} */ (store.state)
     }
-    return is.ownProp(store.state, key) ? store.state[key] : def
+    return is.ownProp(store.state, key) ? /** @type {T | undefined} */ (store.state[key]) : def
   },
 
   /**

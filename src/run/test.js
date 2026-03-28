@@ -8,7 +8,7 @@ import { runSuite } from './suite.js'
 /**
  * Prepare test by setting defaults and extracting component props
  * @param {Test} test - The test definition
- * @returns {{ componentFile?: string, componentProps?: object }}
+ * @returns {{ componentFile?: string, componentProps?: Record<string, unknown> }}
  */
 const prepareTest = test => {
   if (!is.ownProp(test, 'expect')) {
@@ -26,11 +26,17 @@ const prepareTest = test => {
   }
 
   if (is.string(componentProp)) {
-    return { componentFile: componentProp, componentProps: explicitProps || {} }
+    return {
+      componentFile: componentProp,
+      componentProps: explicitProps || /** @type {Record<string, unknown>} */ ({}),
+    }
   }
 
   if (is.array(componentProp)) {
-    return { componentFile: componentProp[0], componentProps: componentProp[1] || {} }
+    return {
+      componentFile: componentProp[0],
+      componentProps: componentProp[1] || /** @type {Record<string, unknown>} */ ({}),
+    }
   }
 
   throw new Error('component must be a string or [string, props]')
@@ -38,11 +44,11 @@ const prepareTest = test => {
 
 /**
  * Execute a single test function with proper isolation
- * @param {Function | Promise<any> | any} fn - Test function or value
+ * @param {Function | Promise<unknown> | unknown} fn - Test function or value
  * @param {string} key - Test key for isolation
  * @param {string} [componentFile] - Svelte component path
- * @param {object} [componentProps] - Props for Svelte component
- * @returns {Promise<any>}
+ * @param {Record<string, unknown>} [componentProps] - Props for Svelte component
+ * @returns {Promise<unknown>}
  */
 const executeTest = async (fn, key, componentFile, componentProps) => {
   if (componentFile) {
@@ -54,7 +60,7 @@ const executeTest = async (fn, key, componentFile, componentProps) => {
     } = await mount(componentFile, { props: componentProps })
 
     try {
-      return await fn({ target, component: instance, unmount })
+      return await /** @type {Function} */ (fn)({ target, component: instance, unmount })
     } finally {
       await unmount()
       target.remove()
@@ -77,9 +83,9 @@ const executeTest = async (fn, key, componentFile, componentProps) => {
 
 /**
  * Evaluate test result against expected value
- * @param {any} res - Actual result
- * @param {any} expect - Expected value (can be function, promise, or value)
- * @returns {Promise<{ pass: boolean, exp: any, expString: any }>}
+ * @param {unknown} res - Actual result
+ * @param {unknown} expect - Expected value (can be function, promise, or value)
+ * @returns {Promise<{ pass: boolean, exp: unknown, expString: unknown }>}
  */
 const evaluateResult = async (res, expect) => {
   let exp
@@ -87,8 +93,7 @@ const evaluateResult = async (res, expect) => {
   let pass = false
 
   if (is.function(expect)) {
-    /** @type {any[]} */
-    const combinedRes = [].concat(res)
+    const combinedRes = [res]
     if (combinedRes.length > 1) {
       res = combinedRes
     }
@@ -169,7 +174,12 @@ export const runTest = async test => {
 
     for (let i = 0; i < runs; i++) {
       try {
-        res = await executeTest(fn, key, componentFile, componentProps)
+        res = await executeTest(
+          fn,
+          key,
+          componentFile,
+          /** @type {Record<string, unknown> | undefined} */ (componentProps),
+        )
       } catch (e) {
         log.error('test.fn', key, cleanError(/** @type {Error} */ (e)))
       }

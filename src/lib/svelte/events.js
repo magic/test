@@ -22,7 +22,7 @@ export const trigger = (target, eventType, options = {}) => {
 }
 
 /**
- * @param {Element & { scrollTo?: Function, scrollTop?: number, scrollLeft?: number }} target
+ * @param {Element & { scrollTo?: (options?: ScrollToOptions) => void, scrollTop?: number, scrollLeft?: number }} target
  * @param {number} [x]
  * @param {number} [y]
  */

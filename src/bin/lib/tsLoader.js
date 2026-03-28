@@ -5,7 +5,7 @@
  *   importAttributes: Record<string, string>,
  *   parentURL: string | undefined
  * }} context - The resolution context
- * @param {(specifier: string, context: any) => Promise<{
+ * @param {(specifier: string, context: unknown) => Promise<{
  *   url: string,
  *   format?: string,
  *   shortCircuit?: boolean

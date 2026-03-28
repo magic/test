@@ -16,7 +16,7 @@ declare global {
   var helpers: AppInstance['helpers'] | undefined
   var subscriptions: AppInstance['subscriptions'] | undefined
   var before: boolean | undefined
-  var tests: any
+  var tests: unknown
 
   // Allow dynamic property access on globalThis
   interface GlobalThis {
@@ -72,12 +72,12 @@ declare global {
     /**
      * The expected value, or a function/promise that produces it.
      */
-    expect?: Function | Promise<unknown> | unknown
+    expect?: ((...args: unknown[]) => unknown) | Promise<unknown> | unknown
 
     /**
      * Alias for `expect`.
      */
-    is?: Function | Promise<unknown> | unknown
+    is?: ((...args: unknown[]) => unknown) | Promise<unknown> | unknown
 
     /** Number of times to run the test. */
     runs?: number
@@ -187,6 +187,16 @@ declare global {
   }
 
   /**
+   * Simplified hooks interface for internal use.
+   */
+  export interface TestHooks {
+    beforeAll?: () => void | Promise<void>
+    afterAll?: () => void | Promise<void>
+    beforeEach?: () => void | Promise<void>
+    afterEach?: () => void | Promise<void>
+  }
+
+  /**
    * Definition of a test suite input.
    */
   export interface SuiteInput {
@@ -207,6 +217,109 @@ declare global {
 
     '/afterAll.js'?: (tests: Record<string, unknown>) => void | Promise<void>
   }
+
+  /* -------------------------------------------------------------
+   * Shared type definitions for test framework
+   * ----------------------------------------------------------- */
+
+  /**
+   * A single test function with its metadata.
+   */
+  export interface TestItem {
+    name: string
+    fn: () => Promise<void>
+    before?: HookFunction
+  }
+
+  /**
+   * A test suite containing multiple test items.
+   */
+  export interface TestSuite {
+    name: string
+    tests: TestItem[]
+    hooks: TestsWithHooks
+  }
+
+  /**
+   * A collection of tests, either an array or an object with hooks.
+   */
+  export type TestCollection = Test[] | (Record<string, unknown> & TestsWithHooks)
+
+  /**
+   * A function that can be used as a test hook (before/after).
+   */
+  export type HookFunction = () => void | Promise<void>
+
+  /**
+   * A partial test definition for internal use.
+   */
+  export interface PartialTest {
+    name: string
+    pkg?: string
+    parent?: string
+    pass: boolean
+  }
+
+  /**
+   * A module's exported values.
+   */
+  export type ModuleExport = Record<string, unknown>
+
+  /**
+   * Props passed to a component.
+   */
+  export type ComponentProps = Record<string, unknown>
+
+  /* -------------------------------------------------------------
+   * Shared type definitions for test framework
+   * ----------------------------------------------------------- */
+
+  /**
+   * Test execution statistics.
+   */
+  export interface Stats {
+    /** Total number of tests */
+    all: number
+    /** Number of passing tests */
+    pass: number
+    /** Number of failing tests */
+    fail: number
+  }
+
+  /**
+   * Test results by test key.
+   */
+  export type TestResults = Record<string, TestStats>
+
+  /**
+   * Statistics for a single test.
+   */
+  export interface TestStats {
+    /** Total number of tests */
+    all: number
+    /** Number of passing tests */
+    pass: number
+  }
+}
+
+export {
+  Test,
+  TestResult,
+  Suite,
+  TestsWithHooks,
+  TestHooks,
+  SuiteInput,
+  TestSuites,
+  TestItem,
+  TestSuite,
+  TestCollection,
+  ModuleExport,
+  ComponentProps,
+  Stats,
+  TestStats,
+  TestResults,
+  HookFunction,
+  PartialTest,
 }
 
 export {}

@@ -7,7 +7,7 @@ let happyWindow = null
 let happyDocument = null
 
 /**
- * @param {object} target
+ * @param {Record<string, unknown>} target
  * @param {string|symbol} key
  * @param {unknown} value
  */

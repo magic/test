@@ -17,7 +17,7 @@ const VITE_CONFIG_NAMES = [
   'vite.config.cjs',
 ]
 
-/** @type {Map<string, { config: any, mtime: number }>} */
+/** @type {Map<string, { config: unknown, mtime: number }>} */
 export const configCache = new Map()
 /** @type {Map<string, AliasEntry[]>} */
 export const aliasCache = new Map()
@@ -60,7 +60,7 @@ const findConfigFile = async (dir, configNames) => {
 
 /**
  * @param {string} configPath
- * @returns {Promise<any>}
+ * @returns {Promise<unknown>}
  */
 const parseViteConfig = async configPath => {
   const cached = configCache.get(configPath)
@@ -75,7 +75,7 @@ const parseViteConfig = async configPath => {
   const content = await fs.readFile(configPath, 'utf-8')
 
   const aliasMatch = content.match(/alias:\s*(\{[\s\S]*?\}|\[[\s\S]*?\])/)
-  /** @type {any} */
+  /** @type {Record<string, unknown>} */
   let config = {}
 
   if (aliasMatch) {
@@ -88,14 +88,14 @@ const parseViteConfig = async configPath => {
 
       const evaluated = new Function('path', `return (${cleaned})`)(path)
 
-      /** @type {(alias: any) => any} */
+      /** @type {(alias: unknown) => unknown} */
       const processedAlias = alias => {
         if (is.array(alias)) {
           return alias.map(processedAlias)
         }
         if (is.object(alias)) {
-          /** @type {any} */
-          const result = { ...alias }
+          /** @type {Record<string, unknown>} */
+          const result = { .../** @type {object} */ (alias) }
           if (is.string(result.find)) {
             const regexMatch = result.find.match(/^\/(.+)\/([a-z]*)$/)
             if (regexMatch) {
@@ -123,18 +123,18 @@ const parseViteConfig = async configPath => {
 }
 
 /**
- * @param {any} alias
+ * @param {unknown} alias
  * @param {string} configDir
  * @returns {AliasEntry[]}
  */
 const normalizeAlias = (alias, configDir) => {
   if (is.array(alias)) {
-    return alias.map(/** @param {any} a */ a => normalizeSingleAlias(a, configDir))
+    return alias.map(a => normalizeSingleAlias(/** @type {unknown} */ (a), configDir))
   }
 
   if (is.object(alias)) {
-    return Object.entries(alias).map(([find, replacement]) =>
-      normalizeSingleAlias({ find, replacement }, configDir),
+    return Object.entries(/** @type {Record<string, unknown>} */ (alias)).map(
+      ([find, replacement]) => normalizeSingleAlias({ find, replacement }, configDir),
     )
   }
 
@@ -142,36 +142,44 @@ const normalizeAlias = (alias, configDir) => {
 }
 
 /**
- * @param {any} entry
+ * @param {unknown} entry
  * @param {string} configDir
  * @returns {AliasEntry}
  */
 const normalizeSingleAlias = (entry, configDir) => {
-  let { find, replacement } = entry
+  const e = /** @type {Record<string, unknown>} */ (entry)
+  const find = e.find
+  const replacement = e.replacement
 
-  if (is.string(replacement) && !path.isAbsolute(replacement)) {
-    replacement = path.resolve(configDir, replacement)
+  /** @type {string | RegExp} */
+  let findVal = is.string(find) || is.regex(find) ? find : String(find)
+  /** @type {string} */
+  let replacementVal = is.string(replacement) ? replacement : String(replacement)
+
+  if (is.string(replacementVal) && !path.isAbsolute(replacementVal)) {
+    replacementVal = path.resolve(configDir, replacementVal)
   }
 
-  if (is.string(find)) {
-    const regexMatch = find.match(/^\/(.+)\/([a-z]*)$/)
+  if (is.string(findVal)) {
+    const regexMatch = findVal.match(/^\/(.+)\/([a-z]*)$/)
     if (regexMatch) {
       try {
-        find = new RegExp(regexMatch[1], regexMatch[2])
+        findVal = new RegExp(regexMatch[1], regexMatch[2])
       } catch {
-        return { find: String(find), replacement }
+        return { find: String(findVal), replacement: replacementVal }
       }
     }
 
-    if (is.regex(find)) {
-      return { find, replacement }
+    if (is.regex(findVal)) {
+      return { find: findVal, replacement: replacementVal }
     }
 
-    const findPrefix = find.endsWith('*') ? find.slice(0, -1) : find
-    const replacementSuffix =
-      is.string(replacement) && replacement.endsWith('*') ? replacement.slice(0, -1) : replacement
+    const findPrefix = findVal.endsWith('*') ? findVal.slice(0, -1) : findVal
+    const replacementSuffix = replacementVal.endsWith('*')
+      ? replacementVal.slice(0, -1)
+      : replacementVal
 
-    if (find.endsWith('*') && !find.startsWith('^')) {
+    if (findVal.endsWith('*') && !findVal.startsWith('^')) {
       const regex = new RegExp(`^${escapeRegex(findPrefix)}(.*)`)
       return {
         find: regex,
@@ -179,14 +187,14 @@ const normalizeSingleAlias = (entry, configDir) => {
       }
     }
 
-    return { find, replacement }
+    return { find: findVal, replacement: replacementVal }
   }
 
-  if (is.regex(find)) {
-    return { find, replacement }
+  if (is.regex(findVal)) {
+    return { find: findVal, replacement: replacementVal }
   }
 
-  return { find: String(find), replacement }
+  return { find: String(findVal), replacement: replacementVal }
 }
 
 /**
@@ -298,12 +306,9 @@ const parseTsConfig = async rootDir => {
       return { find, replacement }
     })
 
-    const filteredAliases = aliases.filter(/** @param {any} x */ x => x !== null)
-
-    // @ts-expect-error - TypeScript doesn't understand the filter
-    aliasCache.set(cacheKey, filteredAliases)
-    // @ts-expect-error - TypeScript doesn't understand the filter
-    return filteredAliases
+    const filteredAliases = aliases.filter(x => x !== null)
+    aliasCache.set(cacheKey, /** @type {AliasEntry[]} */ (filteredAliases))
+    return /** @type {AliasEntry[]} */ (filteredAliases)
   } catch (e) {
     const message = is.error(e) ? e.message : String(e)
     console.warn(`[svelte-alias] Failed to parse tsconfig.json: ${message}`)
@@ -330,9 +335,10 @@ const loadViteAliases = async rootDir => {
   }
 
   try {
-    const config = await parseViteConfig(configPath)
+    const config = /** @type {Record<string, unknown>} */ (await parseViteConfig(configPath))
     const configDir = path.dirname(configPath)
-    const aliases = normalizeAlias(config.resolve?.alias, configDir)
+    const resolveConfig = /** @type {Record<string, unknown> | undefined} */ (config.resolve)
+    const aliases = normalizeAlias(resolveConfig?.alias, configDir)
     aliasCache.set(cacheKey, aliases)
     return aliases
   } catch (e) {

@@ -57,8 +57,8 @@ const skipProps = [
  * @property {boolean} enumerable
  * @property {boolean} [writable]
  * @property {unknown} [value]
- * @property {(() => any) | undefined} [get]
- * @property {((v: any) => void) | undefined} [set]
+ * @property {(() => unknown) | undefined} [get]
+ * @property {((v: unknown) => void) | undefined} [set]
  */
 
 /**
@@ -247,7 +247,7 @@ export class Isolation {
         try {
           const desc = Object.getOwnPropertyDescriptor(globalThis, key)
           if (desc && desc.configurable !== false) {
-            // @ts-ignore dynamic delete
+            // @ts-expect-error - dynamic delete on globalThis
             delete globalThis[key]
           }
         } catch {
@@ -273,7 +273,7 @@ export class Isolation {
         Object.defineProperty(globalThis, key, desc)
       } catch {
         try {
-          // @ts-ignore assignment fallback
+          // @ts-expect-error - fallback assignment to globalThis
           globalThis[key] = stored.value
         } catch {
           // ignore
@@ -317,7 +317,7 @@ export class Isolation {
         try {
           const desc = Object.getOwnPropertyDescriptor(globalThis, key)
           if (desc && desc.configurable !== false) {
-            // @ts-ignore dynamic delete
+            // @ts-expect-error - dynamic delete on globalThis
             delete globalThis[key]
           }
         } catch {
@@ -343,7 +343,7 @@ export class Isolation {
         Object.defineProperty(globalThis, key, desc)
       } catch {
         try {
-          // @ts-ignore fallback assignment
+          // @ts-expect-error - fallback assignment to globalThis
           globalThis[key] = stored.value
         } catch {
           // ignore

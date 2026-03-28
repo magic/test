@@ -13,7 +13,7 @@ const TMP_DIR = 'test/.tmp'
 
 const fileLocks = new Map()
 
-const acquireLock = async filePath => {
+const acquireLock = async (/** @type {string} */ filePath) => {
   while (fileLocks.has(filePath)) {
     const lockPromise = fileLocks.get(filePath)
     if (lockPromise) {
@@ -22,6 +22,7 @@ const acquireLock = async filePath => {
     }
   }
 
+  /** @type {(value: unknown) => void} */
   let release
   const promise = new Promise(resolve => {
     release = resolve
@@ -30,7 +31,7 @@ const acquireLock = async filePath => {
 
   return () => {
     fileLocks.delete(filePath)
-    release()
+    release(undefined)
   }
 }
 

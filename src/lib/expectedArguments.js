@@ -3,7 +3,7 @@ import is from '@magic/types'
 /**
  *
  * @param {Function} [fn]
- * @returns
+ * @returns {string[]}
  */
 
 export const expectedArguments = fn => {

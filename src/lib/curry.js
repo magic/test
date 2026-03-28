@@ -7,7 +7,7 @@ const tooManyArgsMsg = 'too many arguments passed to curried function'
 /**
  * @template TArgs
  * @template TReturn
- * @typedef {(arg: any) => TReturn|CurryFunction<TArgs, TReturn>} CurryFunction
+ * @typedef {(arg: unknown) => TReturn|CurryFunction<TArgs, TReturn>} CurryFunction
  */
 
 /**
@@ -15,11 +15,11 @@ const tooManyArgsMsg = 'too many arguments passed to curried function'
  *
  * @template TArgs
  * @template TReturn
- * @param {...(Function|any)} a - Arguments to curry, including the target function
+ * @param {...(Function|unknown)} a - Arguments to curry, including the target function
  * @returns {TReturn|CurryFunction<TArgs, TReturn>}
  */
 export const curry = (...a) => {
-  /** @type {any[]} */
+  /** @type {unknown[]} */
   const args = []
 
   /** @type {Function|undefined} */

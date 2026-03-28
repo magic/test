@@ -3,27 +3,27 @@ import { env } from './env.js'
 /**
  * @typedef {Object} MockFn
  * @property {number} callCount
- * @property {any[]} calls
- * @property {any[]} returns
+ * @property {unknown[][]} calls
+ * @property {unknown[]} returns
  * @property {Array<Error|null>} errors
- * @property {any} _returnValue
+ * @property {unknown} _returnValue
  * @property {Error|null} _throwError
- * @property {(value: any) => MockFn} mockReturnValue
+ * @property {(value: unknown) => MockFn} mockReturnValue
  * @property {(error: Error) => MockFn} mockThrow
- * @property {() => any[]} getCalls
- * @property {() => any[]} getReturns
+ * @property {() => unknown[][]} getCalls
+ * @property {() => unknown[]} getReturns
  * @property {() => Array<Error|null>} getErrors
  * @property {() => void} [mockRestore]
  */
 
 /**
  * Create a mock function with call tracking.
- * @param {Function} [implementation]
+ * @param {(...args: unknown[]) => unknown} [implementation]
  * @returns {MockFn}
  */
 export const fn = implementation => {
   /** @type {MockFn} */
-  const mockFn = function (/** @type {any[]} */ ...args) {
+  const mockFn = function (/** @type {unknown[]} */ ...args) {
     mockFn.calls.push(args)
 
     if (mockFn._throwError) {
@@ -48,7 +48,7 @@ export const fn = implementation => {
   mockFn._returnValue = undefined
   mockFn._throwError = null
 
-  mockFn.mockReturnValue = function (/** @type {any} */ value) {
+  mockFn.mockReturnValue = function (/** @type {unknown} */ value) {
     mockFn._returnValue = value
     mockFn._throwError = null
     return mockFn
@@ -77,20 +77,20 @@ export const fn = implementation => {
  * Create a spy that wraps an object's method.
  * @param {Object} object
  * @param {string} methodName
- * @param {Function} [implementation]
+ * @param {(...args: unknown[]) => unknown} [implementation]
  * @returns {MockFn & { mockRestore: () => void }}
  */
 export const spy = (object, methodName, implementation) => {
-  /** @type {any} */
-  // @ts-ignore - dynamic property access
+  /** @type {unknown} */
+  // @ts-expect-error - dynamic property access on object
   const original = object[methodName]
   const mockFn = fn(implementation)
 
-  // @ts-ignore - dynamic property assignment
+  // @ts-expect-error - dynamic property assignment
   object[methodName] = mockFn
 
   mockFn.mockRestore = function () {
-    // @ts-ignore - dynamic property assignment
+    // @ts-expect-error - dynamic property assignment
     object[methodName] = original
   }
 

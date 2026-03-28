@@ -57,7 +57,7 @@ export const tick = async () => {
 
 /**
  * @param {string} filePath
- * @param {{ props?: object }} [options]
+ * @param {{ props?: Record<string, unknown> }} [options]
  */
 export const mount = async (filePath, options = {}) => {
   const doc = getDocument()
@@ -71,12 +71,12 @@ export const mount = async (filePath, options = {}) => {
   }
 
   // Ensure globals are set before Svelte initialization
-  // @ts-ignore - happy-dom types conflict with global types
-  globalThis.document = doc
-  // @ts-ignore - happy-dom types conflict with global types
-  globalThis.window = win
-  // @ts-ignore - happy-dom types conflict with global types
-  globalThis.self = win
+  // Using type assertion to handle happy-dom types conflicting with global types
+  Object.assign(globalThis, {
+    document: doc,
+    window: win,
+    self: win,
+  })
 
   await initSvelte()
 
@@ -92,9 +92,10 @@ export const mount = async (filePath, options = {}) => {
   let mod
   try {
     mod = await import(importUrl)
-  } catch (importErr) {
-    console.error('Failed to import compiled component:', importErr.message)
-    throw importErr
+  } catch (/** @type {unknown} */ importErr) {
+    const err = /** @type {Error} */ (importErr)
+    console.error('Failed to import compiled component:', err.message)
+    throw err
   }
   const Component = mod.default
 
@@ -123,14 +124,15 @@ export const mount = async (filePath, options = {}) => {
       target,
       props,
     })
-  } catch (/** @type {any} */ mountError) {
-    if (mountError.message.includes('can only be used during component initialisation')) {
+  } catch (/** @type {unknown} */ mountError) {
+    const err = /** @type {Error} */ (mountError)
+    if (err.message.includes('can only be used during component initialisation')) {
       throw new Error(
-        `Lifecycle error: ${mountError.message}. Make sure lifecycle functions are called at the top level of the component script.`,
-        { cause: mountError },
+        `Lifecycle error: ${err.message}. Make sure lifecycle functions are called at the top level of the component script.`,
+        { cause: err },
       )
     }
-    throw mountError
+    throw err
   }
 
   const unmount = async () => {

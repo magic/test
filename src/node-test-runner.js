@@ -52,7 +52,7 @@ discoveredFiles.sort()
 
 /**
  * @param {string} filePath
- * @returns {Promise<any>}
+ * @returns {Promise<Record<string, unknown> | null>}
  */
 const extractExport = async filePath => {
   try {
@@ -64,23 +64,25 @@ const extractExport = async filePath => {
 }
 
 /**
- * @param {any} testObj
+ * @param {unknown} testObj
  * @param {string} filePath
  * @param {number} index
  * @returns {string}
  */
 const getTestName = (testObj, filePath, index) => {
-  if (testObj.info) return testObj.info
-  if (testObj.name) return testObj.name
-  if (testObj.fn && testObj.fn.name) return testObj.fn.name
+  const obj = /** @type {Record<string, unknown>} */ (testObj)
+  if (obj.info) return String(obj.info)
+  if (obj.name) return String(obj.name)
+  if (obj.fn && /** @type {Record<string, unknown>} */ (obj.fn).name)
+    return String(/** @type {Record<string, unknown>} */ (obj.fn).name)
 
   const baseName = path.basename(filePath, path.extname(filePath))
   return `${baseName} ${index + 1}`
 }
 
 /**
- * @param {any} result
- * @param {any} expect
+ * @param {unknown} result
+ * @param {unknown} expect
  * @returns {Promise<boolean>}
  */
 const runAssertion = async (result, expect) => {
@@ -124,41 +126,42 @@ const runAssertion = async (result, expect) => {
 }
 
 /**
- * @param {any} testObj
+ * @param {unknown} testObj
  * @param {string} filePath
  * @param {number} index
- * @returns {Promise<{name: string, fn: () => Promise<void>, before?: Function}>}
+ * @returns {Promise<{name: string, fn: () => Promise<void>, before?: () => void | Promise<void>}>}
  */
 const convertTest = async (testObj, filePath, index) => {
+  const obj = /** @type {Record<string, unknown>} */ (testObj)
   const testName = getTestName(testObj, filePath, index)
 
   const testFn = async () => {
-    let fn = testObj.fn
+    let fn = obj.fn
 
-    const fnExists = 'fn' in testObj && !is.undefined(testObj.fn)
-    if (!fnExists && 'is' in testObj) {
-      fn = () => testObj.is
+    const fnExists = 'fn' in obj && !is.undefined(obj.fn)
+    if (!fnExists && 'is' in obj) {
+      fn = () => obj.is
     }
 
     let result
 
     if (!fnExists) {
       result = undefined
-    } else if (testObj.component) {
+    } else if (obj.component) {
       const { mount } = await import(path.join(__dirname, 'lib/svelte/mount.js'))
       let componentFile, componentProps
 
-      if (is.string(testObj.component)) {
-        componentFile = testObj.component
-        componentProps = testObj.props || {}
-      } else if (is.array(testObj.component)) {
-        componentFile = testObj.component[0]
-        componentProps = testObj.component[1] || {}
+      if (is.string(obj.component)) {
+        componentFile = String(obj.component)
+        componentProps = /** @type {Record<string, unknown>} */ (obj.props) || {}
+      } else if (is.array(obj.component)) {
+        componentFile = /** @type {string} */ (obj.component[0])
+        componentProps = /** @type {Record<string, unknown>} */ (obj.component[1]) || {}
       }
 
       const { target, component, unmount } = await mount(componentFile, { props: componentProps })
       try {
-        result = await fn({ target, component, unmount })
+        result = await /** @type {Function} */ (fn)({ target, component, unmount })
       } finally {
         await unmount()
       }
@@ -170,8 +173,8 @@ const convertTest = async (testObj, filePath, index) => {
       result = fn
     }
 
-    const hasOwnProperty = Object.prototype.hasOwnProperty.call(testObj, 'expect')
-    const expect = hasOwnProperty ? testObj.expect : true
+    const hasOwnProperty = Object.prototype.hasOwnProperty.call(obj, 'expect')
+    const expect = hasOwnProperty ? obj.expect : true
     const pass = await runAssertion(result, expect)
 
     if (!pass) {
@@ -179,11 +182,15 @@ const convertTest = async (testObj, filePath, index) => {
     }
   }
 
-  return { name: testName, fn: testFn, before: testObj.before }
+  return {
+    name: testName,
+    fn: testFn,
+    before: /** @type {() => void | Promise<void>} */ (obj.before),
+  }
 }
 
 /**
- * @param {any} tests
+ * @param {unknown} tests
  * @param {string} filePath
  * @returns {Promise<{name: string, fn: () => Promise<void>}[]>}
  */
@@ -251,7 +258,7 @@ const convertSuite = async (tests, filePath) => {
 
 /**
  * @param {string} filePath
- * @returns {Promise<{name: string, tests: {name: string, fn: () => Promise<void>, before?: Function}[], hooks: any}[]>}
+ * @returns {Promise<{name: string, tests: {name: string, fn: () => Promise<void>, before?: () => void | Promise<void>}[], hooks: TestHooks}[]>}
  */
 const processFile = async filePath => {
   const mod = await extractExport(filePath)
@@ -262,7 +269,7 @@ const processFile = async filePath => {
 
   if (mod === undefined || mod === null) return []
 
-  /** @type {{name: string, tests: {name: string, fn: () => Promise<void>}[], hooks: any}[]} */
+  /** @type {{name: string, tests: {name: string, fn: () => Promise<void>}[], hooks: TestHooks}[]} */
   const suites = []
 
   if (mod.default) {
@@ -283,7 +290,7 @@ const processFile = async filePath => {
       suites.push({
         name: `${fileName.replace(/\.(js|ts|mjs)$/, '')}_${exportName}`,
         tests,
-        hooks: exportValue,
+        hooks: /** @type {TestHooks} */ (exportValue),
       })
     }
   }
@@ -292,13 +299,13 @@ const processFile = async filePath => {
 }
 
 const run = async () => {
-  /** @type {{name: string, tests: {name: string, fn: () => Promise<void>, before?: Function}[], hooks: any}[]} */
+  /** @type {{name: string, tests: {name: string, fn: () => Promise<void>, before?: () => void | Promise<void>}[], hooks: TestHooks}[]} */
   const allSuites = []
-  /** @type {any} */
+  /** @type {unknown} */
   let beforeAllHook = null
-  /** @type {any} */
+  /** @type {unknown} */
   let afterAllHook = null
-  /** @type {any} */
+  /** @type {unknown} */
   let beforeAllTests = null
 
   for (const filePath of discoveredFiles) {
@@ -325,7 +332,7 @@ const run = async () => {
   }
 
   if (beforeAllHook) {
-    beforeAllTests = await beforeAllHook(allSuites)
+    beforeAllTests = await /** @type {(...args: unknown[]) => unknown} */ (beforeAllHook)(allSuites)
   }
 
   for (const suite of allSuites) {
@@ -334,16 +341,19 @@ const run = async () => {
     describe(suite.name, () => {
       if (hooks.beforeAll && is.function(hooks.beforeAll)) {
         before(async () => {
-          const result = await hooks.beforeAll(allSuites)
+          const result = await /** @type {(...args: unknown[]) => unknown} */ (hooks.beforeAll)(
+            allSuites,
+          )
           if (result && is.function(result)) {
             return result
           }
+          return undefined
         })
       }
 
       if (hooks.afterAll && is.function(hooks.afterAll)) {
         after(async () => {
-          await hooks.afterAll(allSuites)
+          await /** @type {(...args: unknown[]) => unknown} */ (hooks.afterAll)(allSuites)
         })
       }
 

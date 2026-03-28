@@ -7,7 +7,7 @@ import { handleResponse } from './handleResponse.js'
 import is from '@magic/types'
 
 /**
- * @typedef {Record<string, any>} BodyObject
+ * @typedef {Record<string, unknown>} BodyObject
  * An object representing JSON request body data.
  */
 

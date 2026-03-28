@@ -1,22 +1,28 @@
 import { parse } from 'svelte/compiler'
 
 /**
+ * @typedef {{ [key: string]: unknown; type: string }} ASTNode
+ */
+
+/**
  * Simple AST walker for Svelte AST
- * @param {any} node - AST node
- * @param {{ enter: (n: any) => void }} handlers - Handlers
+ * @param {unknown} node - AST node
+ * @param {{ enter: (n: ASTNode) => void }} handlers - Handlers
  */
 const walk = (node, handlers) => {
-  /** @param {any} n */
+  /** @param {unknown} n */
   const visit = n => {
     if (!n || typeof n !== 'object') return
 
-    if (n.type) {
-      handlers.enter(n)
+    const astNode = /** @type {ASTNode} */ (n)
+    if (astNode.type) {
+      handlers.enter(astNode)
     }
 
     for (const key of Object.keys(n)) {
       if (key !== '_visited') {
-        visit(n[key])
+        const val = /** @type {Record<string, unknown>} */ (n)[key]
+        visit(val)
       }
     }
   }
@@ -42,19 +48,25 @@ const extractRuneVariables = source => {
       return { state, derived }
     }
 
-    walk(ast.instance.content, {
+    walk(/** @type {unknown} */ (ast.instance.content), {
       enter(node) {
-        if (node.type === 'VariableDeclaration') {
-          for (const decl of node.declarations) {
-            if (decl.id.type !== 'Identifier') continue
+        const n = /** @type {ASTNode} */ (/** @type {unknown} */ (node))
+        if (n.type === 'VariableDeclaration') {
+          for (const decl of /** @type {Array<unknown>} */ (n.declarations)) {
+            const d = /** @type {ASTNode} */ (decl)
+            const id = /** @type {ASTNode} */ (d.id)
+            if (id.type !== 'Identifier') continue
 
-            const name = decl.id.name
-            const initType = decl.init?.type
+            const name = /** @type {{ name: string }} */ (/** @type {unknown} */ (id)).name
+            const init = /** @type {ASTNode | null} */ (d.init)
+            if (!init) continue
+            const initType = init.type
 
             if (initType === 'CallExpression') {
-              const callee = decl.init.callee
+              const callee = /** @type {ASTNode} */ (init.callee)
               if (callee.type === 'Identifier') {
-                const calleeName = callee.name
+                const calleeName = /** @type {{ name: string }} */ (/** @type {unknown} */ (callee))
+                  .name
                 if (calleeName === '$state') {
                   state.push(name)
                 } else if (calleeName === '$derived') {
@@ -66,8 +78,9 @@ const extractRuneVariables = source => {
         }
       },
     })
-  } catch (/** @type {any} */ e) {
-    console.warn('Failed to parse for test exports:', e.message)
+  } catch (/** @type {unknown} */ e) {
+    const err = /** @type {Error} */ (e)
+    console.warn('Failed to parse for test exports:', err.message)
   }
 
   return { state, derived }
