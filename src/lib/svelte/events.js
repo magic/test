@@ -207,7 +207,10 @@ export const change = (target, value) => {
 export const blur = (target, selector) => {
   const el = getElement(target, selector)
   if (el) {
-    el.dispatchEvent(new FocusEvent('blur', { bubbles: false, cancelable: false }))
+    const event = typeof FocusEvent !== 'undefined' 
+      ? new FocusEvent('blur', { bubbles: false, cancelable: false })
+      : new Event('blur', { bubbles: false, cancelable: false })
+    el.dispatchEvent(event)
   }
 }
 
@@ -218,15 +221,11 @@ export const blur = (target, selector) => {
 export const focus = (target, selector) => {
   const el = getElement(target, selector)
   if (el) {
-    el.dispatchEvent(new FocusEvent('focus', { bubbles: false, cancelable: false }))
+    const event = typeof FocusEvent !== 'undefined'
+      ? new FocusEvent('focus', { bubbles: false, cancelable: false })
+      : new Event('focus', { bubbles: false, cancelable: false })
+    el.dispatchEvent(event)
   }
-}
-
-/**
- * @param {HTMLFormElement | Element} target
- */
-export const submit = target => {
-  target.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
 }
 
 /**
@@ -236,7 +235,10 @@ export const submit = target => {
 export const focusIn = (target, selector) => {
   const el = getElement(target, selector)
   if (el) {
-    el.dispatchEvent(new FocusEvent('focusin', { bubbles: true, cancelable: false }))
+    const event = typeof FocusEvent !== 'undefined'
+      ? new FocusEvent('focusin', { bubbles: true, cancelable: false })
+      : new Event('focusin', { bubbles: true, cancelable: false })
+    el.dispatchEvent(event)
   }
 }
 
@@ -247,8 +249,18 @@ export const focusIn = (target, selector) => {
 export const focusOut = (target, selector) => {
   const el = getElement(target, selector)
   if (el) {
-    el.dispatchEvent(new FocusEvent('focusout', { bubbles: true, cancelable: false }))
+    const event = typeof FocusEvent !== 'undefined'
+      ? new FocusEvent('focusout', { bubbles: true, cancelable: false })
+      : new Event('focusout', { bubbles: true, cancelable: false })
+    el.dispatchEvent(event)
   }
+}
+
+/**
+ * @param {HTMLFormElement | Element} target
+ */
+export const submit = target => {
+  target.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
 }
 
 // Pointer Events
