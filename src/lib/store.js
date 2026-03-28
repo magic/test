@@ -1,13 +1,6 @@
 import is from '@magic/types'
 
 /**
- * @typedef {Object} Stats
- * @property {number} all - Total number of tests
- * @property {number} pass - Number of passing tests
- * @property {number} fail - Number of failing tests
- */
-
-/**
  * @typedef {Object} StateBase
  * @property {Record<string, unknown>} suites - Test suites
  * @property {Stats} stats - Test statistics

@@ -1,10 +1,6 @@
 import is from '@magic/types'
 
 /**
- * @typedef {Test[] | (Record<string, unknown> & TestsWithHooks)} TestCollection
- */
-
-/**
  * Check if any test in the suite needs isolation (has before/after hooks)
  * @param {TestCollection} tests - Collection of tests to check
  * @returns {boolean} - True if any test needs isolation

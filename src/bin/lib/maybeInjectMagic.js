@@ -62,7 +62,7 @@ export const maybeInjectMagic = async () => {
       config = await configModule.runConfig({ silent: true })
     }
   } catch (e) {
-    const err = /** @type {import('@magic/error').CustomError} */ (e)
+    const err = /** @type {CustomError} */ (e)
     if (err.code !== 'ERR_MODULE_NOT_FOUND') {
       log.error(err)
       return

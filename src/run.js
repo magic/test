@@ -54,7 +54,7 @@ export const run = async tests => {
           pkg: name,
           parent: name,
           name,
-          tests: /** @type {Test[] | (Record<string, unknown> & TestsWithHooks)} */ (testsValue),
+          tests: /** @type {TestCollection} */ (testsValue),
         }),
     ),
   )

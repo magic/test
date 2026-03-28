@@ -92,8 +92,8 @@ export const mount = async (filePath, options = {}) => {
   let mod
   try {
     mod = await import(importUrl)
-  } catch (/** @type {unknown} */ importErr) {
-    const err = /** @type {Error} */ (importErr)
+  } catch (e) {
+    const err = /** @type {Error} */ (e)
     console.error('Failed to import compiled component:', err.message)
     throw err
   }

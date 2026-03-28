@@ -7,24 +7,6 @@ import { stringify } from './stringify.js'
 import { getDuration } from './getDuration.js'
 
 /**
- * @typedef {Object} TestStats
- * @property {number} all - Total number of tests
- * @property {number} pass - Number of passing tests
- */
-
-/**
- * @typedef {Record<string, TestStats>} TestResults
- */
-
-/**
- * @typedef {Object} PartialTest
- * @property {string} name
- * @property {string} [pkg]
- * @property {string} [parent]
- * @property {boolean} pass
- */
-
-/**
  * Type guard to check if a value is a TestResult.
  * @param {Suite | TestResult} obj
  * @returns {obj is TestResult}
@@ -175,8 +157,8 @@ export const info = (pkg, suites) => {
           log.color('red', '* fail:'),
           key.replace(/\./g, '/'),
           `executed: "${msg.toString().slice(0, 40).concat('...')}"\n`,
-          `got: "${JSON.stringify(stringify(/** @type {import('./stringify.js').InputValue} */ (result)), null, 2)}"\n`,
-          `wanted: "${JSON.stringify(stringify(/** @type {import('./stringify.js').InputValue} */ (expString)), null, 2)}"\n`,
+          `got: "${JSON.stringify(stringify(/** @type {InputValue} */ (result)), null, 2)}"\n`,
+          `wanted: "${JSON.stringify(stringify(/** @type {InputValue} */ (expString)), null, 2)}"\n`,
           info ? `info: ${log.paint('grey', info)}\n` : '',
         )
       }

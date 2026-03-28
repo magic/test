@@ -1,19 +1,6 @@
 import is from '@magic/types'
 
 /**
- * @typedef {string | number | boolean | null | undefined | object} JsonSafe
- */
-
-/**
- * @typedef {JsonSafe | (() => unknown)} JsonSafeArg
- */
-
-/**
- * All acceptable input types to `stringify`, including functions and nested structures.
- * @typedef {JsonSafeArg | JsonSafeArg[]} InputValue
- */
-
-/**
  * Recursively stringifies parts of an input value to make it JSON-safe.
  * Useful for cleaning data before logging or serialization.
  *

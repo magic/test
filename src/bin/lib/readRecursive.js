@@ -5,7 +5,7 @@ import is from '@magic/types'
 
 /**
  * @param {string} filePath
- * @returns {Promise<Test[] | (Record<string, unknown> & TestsWithHooks)>}
+ * @returns {Promise<TestCollection>}
  */
 const importFile = async filePath => {
   let mod = await import(filePath)
@@ -14,7 +14,7 @@ const importFile = async filePath => {
   if (is.module(mod)) {
     const m = { ...mod }
     if (is.ownProp(m, 'default')) {
-      return /** @type {Test[] | (Record<string, unknown> & TestsWithHooks)} */ (m.default)
+      return /** @type {TestCollection} */ (m.default)
     } else {
       return m
     }
@@ -50,7 +50,7 @@ export const readRecursive = async (dir = '') => {
       indexFilePath = 'file:\\\\\\' + indexFilePath
     }
     const imported = await importFile(indexFilePath)
-    tests[fileP] = /** @type {Test[] | (Record<string, unknown> & TestsWithHooks)} */ (imported)
+    tests[fileP] = /** @type {TestCollection} */ (imported)
   } else {
     // if dir/index.js does not exist, require all files and subdirectories of files
     const files = await fs.readdir(targetDir)
@@ -87,7 +87,7 @@ export const readRecursive = async (dir = '') => {
             const test = await importFile(filePath)
 
             // write current file to tests cache
-            tests[fileP] = /** @type {Test[] | (Record<string, unknown> & TestsWithHooks)} */ (test)
+            tests[fileP] = /** @type {TestCollection} */ (test)
           }
         }),
     )

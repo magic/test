@@ -19,7 +19,7 @@ const defaultSuite = {
 
 /**
  * Handle suite-level beforeAll and afterAll hooks
- * @param {Test[] | (Record<string, unknown> & TestsWithHooks)} tests
+ * @param {TestCollection} tests
  * @returns {Promise<{ beforeAllCleanup?: () => void | Promise<void>, afterAllCleanup?: () => void | Promise<void> }>}
  */
 const handleSuiteHooks = async tests => {
@@ -33,7 +33,7 @@ const handleSuiteHooks = async tests => {
     'beforeAll' in tests &&
     is.function(tests.beforeAll)
   ) {
-    const testsWithHooks = /** @type {Record<string, unknown> & TestsWithHooks} */ (tests)
+    const testsWithHooks = /** @type {TestObject} */ (tests)
     const result = is.fn(testsWithHooks.beforeAll) && (await testsWithHooks.beforeAll())
     if (is.function(result)) {
       afterAllCleanup = result
@@ -85,7 +85,7 @@ const runTestArray = async (tests, needsIsolation, name, parent, pkg) => {
 
 /**
  * Run object-based tests
- * @param {Record<string, unknown> & TestsWithHooks} testsObj
+ * @param {TestObject} testsObj
  * @param {string} name - Suite name
  * @param {string} parent - Parent name
  * @param {string} pkg - Package name
@@ -111,7 +111,7 @@ const runTestObject = async (testsObj, name, parent, pkg) => {
       parent: name,
       name: suiteName,
       key: `${name}.${suiteName}`,
-      tests: /** @type {Test[] | (Record<string, unknown> & TestsWithHooks)} */ (nestedTests),
+      tests: /** @type {TestCollection} */ (nestedTests),
       pkg,
     }),
   )
@@ -168,12 +168,7 @@ export const runSuite = async props => {
       if (is.array(tests)) {
         results = await runTestArray(tests, needsIsolation, name, parent, pkg)
       } else if (is.objectNative(tests)) {
-        results = await runTestObject(
-          /** @type {Record<string, unknown> & TestsWithHooks} */ (tests),
-          name,
-          parent,
-          pkg,
-        )
+        results = await runTestObject(/** @type {TestObject} */ (tests), name, parent, pkg)
       }
 
       if (!is.undefined(results)) {
@@ -191,7 +186,7 @@ export const runSuite = async props => {
         'afterAll' in tests &&
         is.function(tests.afterAll)
       ) {
-        const testsWithHooks = /** @type {Record<string, unknown> & TestsWithHooks} */ (tests)
+        const testsWithHooks = /** @type {TestObject} */ (tests)
         if (is.fn(testsWithHooks.afterAll)) {
           await testsWithHooks.afterAll()
         }
@@ -216,7 +211,7 @@ export const runSuite = async props => {
 
     return suite
   } catch (e) {
-    const err = /** @type {import('@magic/error').CustomError} */ (e)
+    const err = /** @type {CustomError} */ (e)
     if (err.code === 'E_EMPTY_SUITE') {
       log.error(err.code, err.msg)
     } else {

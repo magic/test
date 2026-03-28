@@ -20,7 +20,7 @@ const init = async () => {
   try {
     await run(tests)
   } catch (e) {
-    const err = /** @type {import('@magic/error').CustomError} */ (e)
+    const err = /** @type {CustomError} */ (e)
     err.code = 'E_MAGIC_TEST'
     log.error(err)
   }

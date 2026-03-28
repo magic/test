@@ -2,6 +2,7 @@
 
 // Import the functions so we can infer types
 import type { runCmd } from '@magic/core/cluster/runCmd.mjs'
+import type { CustomError } from '@magic/error'
 
 // AppInstance = the result of `runCmd("prepare", App, config)`
 type AppInstance = Awaited<ReturnType<typeof runCmd>>
@@ -85,7 +86,7 @@ declare global {
     /**
      * Nested tests or child suites.
      */
-    tests?: Test[] | (Record<string, unknown> & TestsWithHooks)
+    tests?: TestCollection
 
     /**
      * Hook executed before running the test.
@@ -204,13 +205,13 @@ declare global {
     parent?: string
     pkg?: string
     key?: string
-    tests: Test[] | (Record<string, unknown> & TestsWithHooks)
+    tests: TestCollection
   }
 
   /**
    * Global test hooks object with special file-based keys.
    */
-  export type TestSuites = Record<string, Test[] | (Record<string, unknown> & TestsWithHooks)> & {
+  export type TestSuites = Record<string, TestCollection> & {
     '/beforeAll.js'?: (
       tests: Record<string, unknown>,
     ) => void | Promise<void | (() => void | Promise<void>)>
@@ -240,10 +241,26 @@ declare global {
     hooks: TestsWithHooks
   }
 
+  export type JsonSafe = string | number | boolean | null | undefined | object
+
+  export type JsonSafeArg = JsonSafe | (() => unknown)
+
+  /*
+   * All acceptable input types to `stringify`, including functions and nested structures.
+   */
+  export type InputValue = JsonSafeArg | JsonSafeArg[]
+
+  /*
+   * @magic/error CustomError Object
+   */
+  export type CustomError = MagicCustomError
+
+  export type TestObject = Record<string, unknown> & TestsWithHooks
+
   /**
    * A collection of tests, either an array or an object with hooks.
    */
-  export type TestCollection = Test[] | (Record<string, unknown> & TestsWithHooks)
+  export type TestCollection = Test[] | TestObject
 
   /**
    * A function that can be used as a test hook (before/after).
