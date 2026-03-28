@@ -173,9 +173,10 @@ export const runTest = async (test, store = createStore()) => {
     let exp
     let expString
     let pass = false
-    let res
 
+    const results = []
     for (let i = 0; i < runs; i++) {
+      let res
       try {
         res = await executeTest(
           fn,
@@ -185,26 +186,34 @@ export const runTest = async (test, store = createStore()) => {
         )
       } catch (e) {
         log.error('test.fn', key, cleanError(/** @type {Error} */ (e)))
+        results.push({ res, pass: false })
+        continue
       }
 
       try {
         const evalResult = await evaluateResult(res, expect)
-        pass = evalResult.pass
-        exp = evalResult.exp
-        expString = evalResult.expString
+        const runPass = evalResult.pass
 
-        if (!pass) {
+        results.push({ res, pass: runPass, exp: evalResult.exp, expString: evalResult.expString })
+
+        if (!runPass) {
+          pass = false
           result = res
-          break
+          exp = evalResult.exp
+          expString = evalResult.expString
         }
       } catch (e) {
         log.error('E_TEST_EXPECT', key, e)
+        results.push({ res, pass: false })
       }
+    }
 
-      if (i >= runs - 1) {
-        pass = true
-        result = res
-      }
+    pass = results.every(r => r.pass)
+    if (pass) {
+      result = runs > 1 ? results.map(r => r.res) : results[0].res
+      const lastExp = results[results.length - 1]
+      exp = lastExp.exp
+      expString = lastExp.expString
     }
 
     if (is.function(afterCleanup)) {
