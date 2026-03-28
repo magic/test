@@ -372,12 +372,14 @@ export default [
 ]
 `),
 
-  p('File-based Hooks:'),
+   p('File-based Hooks:'),
 
-  p([
-    'You can also create test/beforeAll.js and test/afterAll.js files',
-    ' that run before/after all tests in a suite.',
-  ]),
+   p([
+     'You can also create test/beforeAll.js and test/afterAll.js files',
+     ' that run before/after all tests in a suite.',
+   ]),
+
+   p('**Note:** These files must be placed at the **root** `test/` directory (not in subdirectories).'),
 
   Pre(`
 // test/beforeAll.js
@@ -869,10 +871,12 @@ export default [
 
   p('Automatic Test Exports'),
 
-  p([
-    'When testing Svelte 5 components, @magic/test automatically exports ',
-    '$state and $derived variables, making them accessible in tests without requiring manual exports.',
-  ]),
+   p([
+     'When testing Svelte 5 components, @magic/test automatically exports ',
+     '$state and $derived variables, making them accessible in tests without requiring manual exports.',
+   ]),
+
+   p('**Note:** This automatic export feature is specific to **Svelte 5** only. Svelte 4 components do not have this capability.'),
 
   Pre(`
 <!-- Component.svelte -->
@@ -1029,15 +1033,27 @@ export default [
   { fn: () => global.test = 1, expect: 1 },
   { fn: () => global.test === undefined, expect: true, info: 'fresh global state' },
 ]
+   `),
+
+   p('Programmatic Detection:'),
+
+   p('You can programmatically check if a suite requires isolation using the `suiteNeedsIsolation` utility:'),
+
+   Pre(`
+import { suiteNeedsIsolation } from '@magic/test'
+
+const needsIsolation = suiteNeedsIsolation(tests)
 `),
 
-  h2({ id: 'usage' }, 'usage'),
+   p('This is useful for custom runners or when building test tooling.'),
+
+   h2({ id: 'usage' }, 'usage'),
 
   h3({ id: 'usage-js' }, 'js'),
 
-  Pre(`
+   Pre(`
 // test/index.js
-import run from '@magic/test'
+import { run } from '@magic/test'
 
 const tests = {
   lib: [
@@ -1097,17 +1113,21 @@ t
 
   p('Available command-line flags:'),
 
-  ul([
-    li('-p, --production, --prod - Run tests without coverage (faster)'),
-    li('-l, --verbose, --loud - Show detailed output including passing tests'),
-    li('-i, --include - Files to include in coverage'),
-    li('-e, --exclude - Files to exclude from coverage'),
-    li('--help - Show help text'),
-  ]),
+   ul([
+     li('-p, --production, --prod - Run tests without coverage (faster)'),
+     li('-l, --verbose, --loud - Show detailed output including passing tests'),
+     li('-i, --include - Files to include in coverage'),
+     li('-e, --exclude - Files to exclude from coverage'),
+     li('--shards, --shard-count - Total number of shards to split tests across'),
+      li('--shard-id - Shard ID (0-indexed) to run'),
+      li('--help - Show help text'),
+    ]),
 
-  p('Common Usage:'),
+   p('Note: `--shards` and `--shard-id` must be used together. `--shard-id` is 0-indexed (0 to N-1).'),
 
-  Pre(`
+   p('Common Usage:'),
+
+   Pre(`
 # Quick test run (no coverage, fails show errors)
 npm test        # or: t -p
 
@@ -1119,12 +1139,61 @@ t -l
 
 # Test with coverage for specific files
 t -i "src/**/*.js"
+
+# Use glob patterns for include/exclude
+t -i "src/**/*.js" -e "**/*.spec.js"
+
+# Run tests with sharding (for parallel CI)
+t --shards 4 --shard-id 0
+    `),
+
+   h3({ id: 'sharding' }, 'Sharding Tests'),
+
+   p([
+     'Run tests in parallel across multiple processes to speed up large test suites.',
+   ]),
+
+   Pre(`
+# Run 4 shards, this is shard 0 (of 0-3)
+t --shards 4 --shard-id 0
+
+# Run shard 1
+t --shards 4 --shard-id 1
+
+# Combine with other flags
+t -p --shards 4 --shard-id 2
 `),
 
-  p([
-    'This library tests itself, have a look at ',
-    Link({ to: 'https://github.com/magic/test/tree/master/test', text: 'the tests' }),
-    ' Checkout ',
+   p([
+     'Tests are distributed deterministically using a hash of the test file path,',
+     ' ensuring each test always runs in the same shard.',
+   ]),
+
+   p('Add to your package.json for CI/CD:'),
+
+   Pre(`
+{
+  "scripts": {
+    "test": "t -p",
+    "test:shard:0": "t -p --shards 4 --shard-id 0",
+    "test:shard:1": "t -p --shards 4 --shard-id 1",
+    "test:shard:2": "t -p --shards 4 --shard-id 2",
+    "test:shard:3": "t -p --shards 4 --shard-id 3"
+  }
+}
+`),
+
+   p('Or use a single command to run all shards in parallel:'),
+
+   Pre(`
+# Run all 4 shards in parallel and wait for all to complete
+npm run test:shard:0 & npm run test:shard:1 & npm run test:shard:2 & npm run test:shard:3 & wait
+`),
+
+   p([
+     'This library tests itself, have a look at ',
+     Link({ to: 'https://github.com/magic/test/tree/master/test', text: 'the tests' }),
+     ' Checkout ',
     Link({ to: 'https://github.com/magic/types/tree/master/test', text: '@magic/types' }),
     ' and the other magic libraries for more test examples.',
   ]),
@@ -1393,6 +1462,44 @@ export default {
   tests: [
     { fn: () => true, expect: true },
   ],
+}
+   `),
+
+   h3({ id: 'error-codes' }, 'Error Codes'),
+
+   p([
+     '@magic/test uses error codes to help with debugging and programmatic error handling.',
+     ' You can import these constants from `@magic/test`:',
+   ]),
+
+   Pre(`
+import { ERRORS, errorify } from '@magic/test'
+`),
+
+   p('Available error codes:'),
+
+   ul([
+     li('ERRORS.E_EMPTY_SUITE - Test suite is not exporting any tests'),
+     li('ERRORS.E_RUN_SUITE_UNKNOWN - Unknown error occurred while running a suite'),
+     li('ERRORS.E_TEST_NO_FN - Test object is missing the fn property'),
+     li('ERRORS.E_TEST_EXPECT - Test expectation failed'),
+     li('ERRORS.E_TEST_BEFORE - Before hook failed'),
+     li('ERRORS.E_TEST_AFTER - After hook failed'),
+     li('ERRORS.E_TEST_FN - Test function threw an error'),
+     li('ERRORS.E_NO_TESTS - No test suites found'),
+     li('ERRORS.E_IMPORT - Failed to import a test file'),
+     li('ERRORS.E_MAGIC_TEST - General test execution error'),
+   ]),
+
+   p('Example usage:'),
+
+   Pre(`
+try {
+  // run tests
+} catch (e) {
+  if (e.code === ERRORS.E_TEST_NO_FN) {
+    console.error('Test is missing fn property:', e.message)
+  }
 }
 `),
 ]

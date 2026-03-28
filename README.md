@@ -87,8 +87,8 @@ create ./test/yourLibToTest.{js,ts}, the filename is used in the test output,
 the path should be the same as the file in your sources.
 
 ```javascript
-// ./test/yourLibToTest.{js|ts}
-import yourLibToTest from '../path/to/your/lib.{js'
+// ./test/yourLibToTest.{js,ts}
+import yourLibToTest from '../path/to/your/lib.js'
 
 export default [
   { fn: () => true, expect: true, info: 'true is true' },
@@ -412,6 +412,8 @@ export default [
 **File-based Hooks:**
 
 You can also create `test/beforeAll.js` and `test/afterAll.js` files that run before/after all tests in a suite. If the exported function returns another function, it will be executed after the suite completes.
+
+**Note:** These files must be placed at the **root** `test/` directory (not in subdirectories).
 
 ```javascript
 // test/beforeAll.js
@@ -849,7 +851,9 @@ export default [
 
 **Automatic Test Exports**
 
-When testing Svelte 5 components, @magic/test automatically exports `$state` and `$derived` variables, making them accessible in tests without requiring manual exports in your components.
+When testing Svelte 5 components, @magic/test automatically exports `$state` and `$derived` variables, making them accessible in tests without requiring manual exports.
+
+**Note:** This automatic export feature is specific to **Svelte 5** only. Svelte 4 components do not have this capability.
 
 ```svelte
 <!-- Component.svelte -->
@@ -1057,6 +1061,18 @@ export default [
 ]
 ```
 
+**Programmatic Detection:**
+
+You can programmatically check if a suite requires isolation using the `suiteNeedsIsolation` utility:
+
+```javascript
+import { suiteNeedsIsolation } from '@magic/test'
+
+const needsIsolation = suiteNeedsIsolation(tests)
+```
+
+This is useful for custom runners or when building test tooling.
+
 #### <a name="usage"></a>Usage
 
 #### <a name="usage-js"></a>js api:
@@ -1064,7 +1080,7 @@ export default [
 ```javascript
 // test/index.js
 
-import run from '@magic/test'
+import { run } from '@magic/test'
 
 const tests = {
   lib: [{ fn: () => true, expect: true, info: 'Expect true to be true' }],
@@ -1118,17 +1134,20 @@ and keeps your bash free of clutter
 
 **CLI Flags:**
 
-| Flag     | Aliases                  | Description                                  |
-| -------- | ------------------------ | -------------------------------------------- |
-| `-p`     | `--production`, `--prod` | Run tests without coverage (faster)          |
-| `-l`     | `--verbose`, `--loud`    | Show detailed output including passing tests |
-| `-i`     | `--include`              | Files to include in coverage                 |
-| `-e`     | `--exclude`              | Files to exclude from coverage               |
-| `--help` |                          | Show help text                               |
+| Flag         | Aliases                  | Description                                  |
+| ------------ | ------------------------ | -------------------------------------------- |
+| `-p`         | `--production`, `--prod` | Run tests without coverage (faster)          |
+| `-l`         | `--verbose`, `--loud`    | Show detailed output including passing tests |
+| `-i`         | `--include`              | Files to include in coverage                 |
+| `-e`         | `--exclude`              | Files to exclude from coverage               |
+| `--shard-id` |                          | Shard ID (0-indexed) to run                  |
+| `--help`     |                          | Show help text                               |
+
+**Note:** `--shards` and `--shard-id` must be used together. `--shard-id` is 0-indexed (0 to N-1).
 
 **Common Usage:**
 
-```bash
+````bash
 # Quick test run (no coverage, fails show errors)
 npm test        # or: t -p
 
@@ -1140,6 +1159,55 @@ t -l
 
 # Test with coverage for specific files
 t -i "src/**/*.js"
+
+# Use glob patterns for include/exclude
+t -i "src/**/*.js" -e "**/*.spec.js"
+
+# Run tests with sharding (for parallel CI)
+t --shards 4 --shard-id 0
+
+#### Sharding Tests
+
+Run tests in parallel across multiple processes to speed up large test suites:
+
+```bash
+# Run 4 shards, this is shard 0 (of 0-3)
+t --shards 4 --shard-id 0
+
+# Run shard 1
+t --shards 4 --shard-id 1
+
+# Combine with other flags
+t -p --shards 4 --shard-id 2
+````
+
+Tests are distributed deterministically using a hash of the test file path, ensuring:
+
+- Each test always runs in the same shard (consistent across runs)
+- No duplicate test execution across shards
+- Even distribution based on file paths
+
+This hash-based approach guarantees that sharding is reproducible and works well with CI caching.
+
+Add to your `package.json` for CI/CD:
+
+```json
+{
+  "scripts": {
+    "test": "t -p",
+    "test:shard:0": "t -p --shards 4 --shard-id 0",
+    "test:shard:1": "t -p --shards 4 --shard-id 1",
+    "test:shard:2": "t -p --shards 4 --shard-id 2",
+    "test:shard:3": "t -p --shards 4 --shard-id 3"
+  }
+}
+```
+
+Or use a single command to run all shards in parallel:
+
+```bash
+# Run all 4 shards in parallel and wait for all to complete
+npm run test:shard:0 & npm run test:shard:1 & npm run test:shard:2 & npm run test:shard:3 & wait
 ```
 
 This library tests itself, have a look at [the tests](https://github.com/magic/test/tree/master/test)
@@ -1173,6 +1241,13 @@ Follow these tips to get the most out of @magic/test:
 npm test
 # or
 t -p
+```
+
+**Shard large test suites:**
+
+```bash
+# Split tests across multiple processes
+t --shards 4 --shard-id 0
 ```
 
 **Run tests in parallel with native runner:**
@@ -1407,6 +1482,37 @@ export default {
   tests: [
     { fn: () => true, expect: true },
   ],
+}
+```
+
+#### Error Codes
+
+@magic/test uses error codes to help with debugging and programmatic error handling. You can import these constants from `@magic/test`:
+
+| Code                         | Description                                  |
+| ---------------------------- | -------------------------------------------- |
+| `ERRORS.E_EMPTY_SUITE`       | Test suite is not exporting any tests        |
+| `ERRORS.E_RUN_SUITE_UNKNOWN` | Unknown error occurred while running a suite |
+| `ERRORS.E_TEST_NO_FN`        | Test object is missing the `fn` property     |
+| `ERRORS.E_TEST_EXPECT`       | Test expectation failed                      |
+| `ERRORS.E_TEST_BEFORE`       | Before hook failed                           |
+| `ERRORS.E_TEST_AFTER`        | After hook failed                            |
+| `ERRORS.E_TEST_FN`           | Test function threw an error                 |
+| `ERRORS.E_NO_TESTS`          | No test suites found                         |
+| `ERRORS.E_IMPORT`            | Failed to import a test file                 |
+| `ERRORS.E_MAGIC_TEST`        | General test execution error                 |
+
+Example usage:
+
+```javascript
+import { ERRORS, errorify } from '@magic/test'
+
+try {
+  // run tests
+} catch (e) {
+  if (e.code === ERRORS.E_TEST_NO_FN) {
+    console.error('Test is missing fn property:', e.message)
+  }
 }
 ```
 
