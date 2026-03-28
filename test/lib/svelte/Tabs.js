@@ -71,4 +71,17 @@ export default [
     expect: true,
     info: 'renders tabs container with empty tabs',
   },
+  {
+    fn: async () => {
+      try {
+        const sym = Symbol('test')
+        await mount(component, { props: { [sym]: 'value' } })
+        return 'no error'
+      } catch (e) {
+        return e.message
+      }
+    },
+    expect: 'Prop keys must be strings, got symbol',
+    info: 'throws when prop key is a symbol',
+  },
 ]
