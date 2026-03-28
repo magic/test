@@ -1,5 +1,49 @@
 import { initDOM, getDocument } from '../../../src/lib/svelte/dom.js'
-import { fireEvent, click, dblClick, contextMenu, mouseDown, mouseUp, mouseMove, mouseEnter, mouseLeave, mouseOver, mouseOut, keyDown, keyPress, keyUp, type, input, change, blur, focus, focusIn, focusOut, submit, pointerDown, pointerUp, pointerMove, pointerOver, pointerOut, touchStart, touchEnd, touchMove, copy, cut, paste, dragStart, drag, dragEnd, dragOver, dragEnter, dragLeave, drop, resize, scroll, trigger } from '../../../src/lib/svelte/events.js'
+import {
+  fireEvent,
+  click,
+  dblClick,
+  contextMenu,
+  mouseDown,
+  mouseUp,
+  mouseMove,
+  mouseEnter,
+  mouseLeave,
+  mouseOver,
+  mouseOut,
+  keyDown,
+  keyPress,
+  keyUp,
+  type,
+  input,
+  change,
+  blur,
+  focus,
+  focusIn,
+  focusOut,
+  submit,
+  pointerDown,
+  pointerUp,
+  pointerMove,
+  pointerOver,
+  pointerOut,
+  touchStart,
+  touchEnd,
+  touchMove,
+  copy,
+  cut,
+  paste,
+  dragStart,
+  drag,
+  dragEnd,
+  dragOver,
+  dragEnter,
+  dragLeave,
+  drop,
+  resize,
+  scroll,
+  trigger,
+} from '../../../src/lib/svelte/events.js'
 
 initDOM()
 const doc = getDocument()
@@ -11,7 +55,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let clicked = false
-      div.addEventListener('click', () => { clicked = true })
+      div.addEventListener('click', () => {
+        clicked = true
+      })
       click(div)
       return clicked
     },
@@ -24,7 +70,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('dblclick', () => { fired = true })
+      div.addEventListener('dblclick', () => {
+        fired = true
+      })
       dblClick(div)
       return fired
     },
@@ -37,7 +85,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('contextmenu', () => { fired = true })
+      div.addEventListener('contextmenu', () => {
+        fired = true
+      })
       contextMenu(div)
       return fired
     },
@@ -50,7 +100,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('mousedown', () => { fired = true })
+      div.addEventListener('mousedown', () => {
+        fired = true
+      })
       mouseDown(div)
       return fired
     },
@@ -62,7 +114,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('mouseup', () => { fired = true })
+      div.addEventListener('mouseup', () => {
+        fired = true
+      })
       mouseUp(div)
       return fired
     },
@@ -74,7 +128,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('mousemove', () => { fired = true })
+      div.addEventListener('mousemove', () => {
+        fired = true
+      })
       mouseMove(div)
       return fired
     },
@@ -86,7 +142,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('mouseenter', () => { fired = true })
+      div.addEventListener('mouseenter', () => {
+        fired = true
+      })
       mouseEnter(div)
       return fired
     },
@@ -98,7 +156,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('mouseleave', () => { fired = true })
+      div.addEventListener('mouseleave', () => {
+        fired = true
+      })
       mouseLeave(div)
       return fired
     },
@@ -110,7 +170,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('mouseover', () => { fired = true })
+      div.addEventListener('mouseover', () => {
+        fired = true
+      })
       mouseOver(div)
       return fired
     },
@@ -122,7 +184,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('mouseout', () => { fired = true })
+      div.addEventListener('mouseout', () => {
+        fired = true
+      })
       mouseOut(div)
       return fired
     },
@@ -135,7 +199,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('keydown', () => { fired = true })
+      div.addEventListener('keydown', () => {
+        fired = true
+      })
       keyDown(div)
       return fired
     },
@@ -147,7 +213,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('keypress', () => { fired = true })
+      div.addEventListener('keypress', () => {
+        fired = true
+      })
       keyPress(div)
       return fired
     },
@@ -159,7 +227,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('keyup', () => { fired = true })
+      div.addEventListener('keyup', () => {
+        fired = true
+      })
       keyUp(div)
       return fired
     },
@@ -171,8 +241,12 @@ export default [
       const div = doc.createElement('input')
       doc.body.appendChild(div)
       let keys = []
-      div.addEventListener('keydown', e => { keys.push(e.key) })
-      div.addEventListener('keyup', e => { keys.push(e.key) })
+      div.addEventListener('keydown', e => {
+        keys.push(e.key)
+      })
+      div.addEventListener('keyup', e => {
+        keys.push(e.key)
+      })
       type(div, 'ab')
       return keys.join(',')
     },
@@ -185,7 +259,9 @@ export default [
       const el = doc.createElement('input')
       doc.body.appendChild(el)
       let fired = false
-      el.addEventListener('input', () => { fired = true })
+      el.addEventListener('input', () => {
+        fired = true
+      })
       input(el, 'test')
       return fired
     },
@@ -197,7 +273,9 @@ export default [
       const el = doc.createElement('input')
       doc.body.appendChild(el)
       let fired = false
-      el.addEventListener('change', () => { fired = true })
+      el.addEventListener('change', () => {
+        fired = true
+      })
       change(el, 'test')
       return fired
     },
@@ -209,7 +287,9 @@ export default [
       const el = doc.createElement('input')
       doc.body.appendChild(el)
       let fired = false
-      el.addEventListener('blur', () => { fired = true })
+      el.addEventListener('blur', () => {
+        fired = true
+      })
       blur(el)
       return fired
     },
@@ -222,7 +302,10 @@ export default [
       const form = doc.createElement('form')
       doc.body.appendChild(form)
       let fired = false
-      form.addEventListener('submit', e => { e.preventDefault(); fired = true })
+      form.addEventListener('submit', e => {
+        e.preventDefault()
+        fired = true
+      })
       submit(form)
       return fired
     },
@@ -235,7 +318,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('pointerdown', () => { fired = true })
+      div.addEventListener('pointerdown', () => {
+        fired = true
+      })
       pointerDown(div)
       return fired
     },
@@ -247,7 +332,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('pointerup', () => { fired = true })
+      div.addEventListener('pointerup', () => {
+        fired = true
+      })
       pointerUp(div)
       return fired
     },
@@ -259,7 +346,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('pointermove', () => { fired = true })
+      div.addEventListener('pointermove', () => {
+        fired = true
+      })
       pointerMove(div)
       return fired
     },
@@ -271,7 +360,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('pointerover', () => { fired = true })
+      div.addEventListener('pointerover', () => {
+        fired = true
+      })
       pointerOver(div)
       return fired
     },
@@ -283,7 +374,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('pointerout', () => { fired = true })
+      div.addEventListener('pointerout', () => {
+        fired = true
+      })
       pointerOut(div)
       return fired
     },
@@ -296,7 +389,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('touchstart', () => { fired = true })
+      div.addEventListener('touchstart', () => {
+        fired = true
+      })
       touchStart(div)
       return fired
     },
@@ -308,7 +403,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('touchend', () => { fired = true })
+      div.addEventListener('touchend', () => {
+        fired = true
+      })
       touchEnd(div)
       return fired
     },
@@ -320,7 +417,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('touchmove', () => { fired = true })
+      div.addEventListener('touchmove', () => {
+        fired = true
+      })
       touchMove(div)
       return fired
     },
@@ -335,7 +434,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('scroll', () => { fired = true })
+      div.addEventListener('scroll', () => {
+        fired = true
+      })
       scroll(div)
       return fired
     },
@@ -350,7 +451,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let eventFired = false
-      div.addEventListener('custom', () => { eventFired = true })
+      div.addEventListener('custom', () => {
+        eventFired = true
+      })
       trigger(div, 'custom')
       return eventFired
     },
@@ -363,7 +466,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('click', () => { fired = true })
+      div.addEventListener('click', () => {
+        fired = true
+      })
       fireEvent.click(div)
       return fired
     },
@@ -375,7 +480,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('input', () => { fired = true })
+      div.addEventListener('input', () => {
+        fired = true
+      })
       fireEvent.input(div, 'test')
       return fired
     },
@@ -387,7 +494,9 @@ export default [
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
-      div.addEventListener('keydown', () => { fired = true })
+      div.addEventListener('keydown', () => {
+        fired = true
+      })
       fireEvent.keyDown(div, { key: 'Enter' })
       return fired
     },
@@ -402,7 +511,9 @@ export default [
       container.appendChild(child)
       doc.body.appendChild(container)
       let fired = false
-      child.addEventListener('click', () => { fired = true })
+      child.addEventListener('click', () => {
+        fired = true
+      })
       fireEvent.click(container, 'button')
       return fired
     },
