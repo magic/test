@@ -3,7 +3,8 @@ import log from '@magic/log'
 import is from '@magic/types'
 
 import { runTest } from './test.js'
-import { store, getFNS, suiteNeedsIsolation } from '../lib/index.js'
+import { getFNS, suiteNeedsIsolation } from '../lib/index.js'
+import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
 
 /** @type {Suite} */
@@ -50,9 +51,10 @@ const handleSuiteHooks = async tests => {
  * @param {string} name - Suite name
  * @param {string} parent - Parent name
  * @param {string} pkg - Package name
+ * @param {any} store - The store instance
  * @returns {Promise<(TestResult | Suite)[]>}
  */
-const runTestArray = async (tests, needsIsolation, name, parent, pkg) => {
+const runTestArray = async (tests, needsIsolation, name, parent, pkg, store) => {
   if (needsIsolation) {
     const results = []
     for (const t of tests) {
@@ -63,7 +65,7 @@ const runTestArray = async (tests, needsIsolation, name, parent, pkg) => {
         parent: t.parent || parent,
         pkg: t.pkg || pkg,
       }
-      const res = await runTest(testToRun)
+      const res = await runTest(testToRun, store)
       if (res) results.push(res)
     }
     return results
@@ -77,7 +79,7 @@ const runTestArray = async (tests, needsIsolation, name, parent, pkg) => {
       parent: t.parent || parent,
       pkg: t.pkg || pkg,
     }
-    return runTest(testToRun)
+    return runTest(testToRun, store)
   })
   const resolved = await Promise.all(promises)
   return resolved.filter(r => !!r)
@@ -89,16 +91,17 @@ const runTestArray = async (tests, needsIsolation, name, parent, pkg) => {
  * @param {string} name - Suite name
  * @param {string} parent - Parent name
  * @param {string} pkg - Package name
+ * @param {Store} store - The store instance
  * @returns {Promise<(TestResult | Suite)[]>}
  */
-const runTestObject = async (testsObj, name, parent, pkg) => {
+const runTestObject = async (testsObj, name, parent, pkg, store) => {
   if (is.function(testsObj.fn)) {
     const fns = getFNS()
     if (!fns.includes(name)) return []
 
     /** @type {Test} */
     const test = { ...testsObj, name, parent, pkg }
-    const result = await runTest(test)
+    const result = await runTest(test, store)
     return result ? [result] : []
   }
 
@@ -122,10 +125,12 @@ const runTestObject = async (testsObj, name, parent, pkg) => {
 /**
  * Run a suite of tests (recursively).
  *
- * @param {SuiteInput} props
+ * @param {SuiteInput & {store?: {get: (key: string) => unknown}}} props
  * @returns {Promise<Suite|void|undefined>}
  */
 export const runSuite = async props => {
+  const store = props.store ?? new Store()
+
   /** @type {Suite} */
   const suite = {
     ...defaultSuite,
@@ -166,9 +171,15 @@ export const runSuite = async props => {
       const { afterAllCleanup } = await handleSuiteHooks(tests)
 
       if (is.array(tests)) {
-        results = await runTestArray(tests, needsIsolation, name, parent, pkg)
+        results = await runTestArray(tests, needsIsolation, name, parent, pkg, store)
       } else if (is.objectNative(tests)) {
-        results = await runTestObject(/** @type {TestObject} */ (tests), name, parent, pkg)
+        results = await runTestObject(
+          /** @type {TestObject} */ (tests),
+          name,
+          parent,
+          pkg,
+          /** @type {Store} */ (store),
+        )
       }
 
       if (!is.undefined(results)) {
@@ -206,8 +217,8 @@ export const runSuite = async props => {
       await executeSuite()
     }
 
-    const startTime = store.get('startTime')
-    suite.duration = log.timeTaken(startTime, { log: false })
+    const startTime = store?.get('startTime')
+    suite.duration = log.timeTaken(/** @type {[number, number]} */ (startTime), { log: false })
 
     return suite
   } catch (e) {

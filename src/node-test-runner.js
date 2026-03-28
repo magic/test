@@ -13,6 +13,8 @@ import fs from 'node:fs'
 import is from '@magic/types'
 import deep from '@magic/deep'
 
+import { maybeInjectMagic } from './bin/lib/index.js'
+
 const cwd = process.cwd()
 const testDir = path.join(cwd, 'test')
 
@@ -46,6 +48,8 @@ const scanDir = dir => {
   }
 }
 
+await maybeInjectMagic()
+
 scanDir(testDir)
 
 discoveredFiles.sort()
@@ -62,6 +66,33 @@ const extractExport = async filePath => {
     return null
   }
 }
+
+/** @type {((tests: unknown) => void | Promise<void>) | null} */
+let globalBeforeAll = null
+/** @type {((tests: unknown) => void | Promise<void>) | null} */
+let globalAfterAll = null
+
+const processSpecialFiles = async () => {
+  const filesToProcess = [...discoveredFiles]
+  for (const filePath of filesToProcess) {
+    const fileName = path.basename(filePath)
+    if (fileName === 'beforeAll.js') {
+      const mod = await extractExport(filePath)
+      if (mod && is.function(mod.default)) {
+        globalBeforeAll = /** @type {(tests: unknown) => void | Promise<void>} */ (mod.default)
+      }
+      discoveredFiles.splice(discoveredFiles.indexOf(filePath), 1)
+    } else if (fileName === 'afterAll.js') {
+      const mod = await extractExport(filePath)
+      if (mod && is.function(mod.default)) {
+        globalAfterAll = /** @type {(tests: unknown) => void | Promise<void>} */ (mod.default)
+      }
+      discoveredFiles.splice(discoveredFiles.indexOf(filePath), 1)
+    }
+  }
+}
+
+await processSpecialFiles()
 
 /**
  * @param {unknown} testObj
@@ -301,38 +332,20 @@ const processFile = async filePath => {
 const run = async () => {
   /** @type {{name: string, tests: {name: string, fn: () => Promise<void>, before?: () => void | Promise<void>}[], hooks: TestHooks}[]} */
   const allSuites = []
-  /** @type {unknown} */
-  let beforeAllHook = null
-  /** @type {unknown} */
-  let afterAllHook = null
-  /** @type {unknown} */
-  let beforeAllTests = null
 
   for (const filePath of discoveredFiles) {
-    const fileName = path.basename(filePath)
-
-    if (fileName === 'beforeAll.js') {
-      const mod = await extractExport(filePath)
-      if (mod && is.function(mod.default)) {
-        beforeAllHook = mod.default
-      }
-      continue
-    }
-
-    if (fileName === 'afterAll.js') {
-      const mod = await extractExport(filePath)
-      if (mod && is.function(mod.default)) {
-        afterAllHook = mod.default
-      }
-      continue
-    }
-
     const suites = await processFile(filePath)
     allSuites.push(...suites)
   }
 
-  if (beforeAllHook) {
-    beforeAllTests = await /** @type {(...args: unknown[]) => unknown} */ (beforeAllHook)(allSuites)
+  /** @type {unknown} */
+  let beforeAllGlobalCleanup = null
+
+  if (globalBeforeAll) {
+    const result = await globalBeforeAll(allSuites)
+    if (is.function(result)) {
+      beforeAllGlobalCleanup = result
+    }
   }
 
   for (const suite of allSuites) {
@@ -392,9 +405,17 @@ const run = async () => {
     })
   }
 
-  if (afterAllHook && is.function(afterAllHook)) {
+  if (globalAfterAll && is.function(globalAfterAll)) {
+    const afterAllFn = globalAfterAll
     after(async () => {
-      await afterAllHook(allSuites)
+      await afterAllFn(allSuites)
+    })
+  }
+
+  if (beforeAllGlobalCleanup) {
+    const cleanupFn = /** @type {() => void | Promise<void>} */ (beforeAllGlobalCleanup)
+    after(async () => {
+      await cleanupFn()
     })
   }
 }

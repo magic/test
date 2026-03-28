@@ -1,10 +1,10 @@
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { store } from './store.js'
 import { env } from './env.js'
 import { stringify } from './stringify.js'
 import { getDuration } from './getDuration.js'
+import { Store } from './store.js'
 
 /**
  * Type guard to check if a value is a TestResult.
@@ -56,7 +56,7 @@ export const printPercent = p => {
  * @example
  * test({ name: 'myTest', parent: 'suite', pkg: 'mylib', pass: true })
  */
-export const test = t => {
+export const test = (t, /** @type {Store} */ store) => {
   /** @type {TestResults} */
   const results = store.get('results', {}) || {}
 
@@ -112,7 +112,7 @@ export const test = t => {
  * @param {(Suite | undefined | void)[]} suites - Array of test suites.
  * @returns {boolean} Always returns true.
  */
-export const info = (pkg, suites) => {
+export const info = (pkg, suites, /** @type {Store} */ store) => {
   log(`###  Testing package: ${pkg}`)
 
   const results = store.get('results')
@@ -182,7 +182,7 @@ export const info = (pkg, suites) => {
 
   const result = results.__PACKAGE_ROOT__ || { pass: 0, all: 0 }
   const { pass, all } = result
-  const duration = getDuration()
+  const duration = getDuration(store)
   const percentage = all > 0 ? printPercent((pass / all) * 100) : printPercent(0)
 
   log(`Ran ${all} tests in ${duration}. Passed ${pass}/${all} ${percentage}%\n`)
@@ -192,6 +192,6 @@ export const info = (pkg, suites) => {
 /**
  * Reset the store to default state.
  */
-export const reset = () => {
+export const reset = (/** @type {Store} */ store) => {
   store.reset()
 }

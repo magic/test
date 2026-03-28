@@ -1,7 +1,8 @@
 import is from '@magic/types'
 import log from '@magic/log'
 
-import { cleanError, cleanFunctionString, getTestKey, stats } from '../lib/index.js'
+import { cleanError, cleanFunctionString, getTestKey, stats, createStore } from '../lib/index.js'
+import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
 import { runSuite } from './suite.js'
 
@@ -128,9 +129,10 @@ const evaluateResult = async (res, expect) => {
  * - If only `test.tests` exists → delegates to {@link runSuite}, which returns a `Suite`.
  *
  * @param {Test} test - The test definition.
+ * @param {Store} [store] - The store instance.
  * @returns {Promise<TestResult | Suite | undefined | void>} The result object or undefined on error.
  */
-export const runTest = async test => {
+export const runTest = async (test, store = createStore()) => {
   try {
     const { componentFile, componentProps } = prepareTest(test)
 
@@ -143,6 +145,7 @@ export const runTest = async test => {
           parent: name,
           name,
           tests,
+          store,
         })
       }
 
@@ -231,12 +234,15 @@ export const runTest = async test => {
       log.error('FAIL', testName, info)
     }
 
-    stats.test({
-      parent,
-      name,
-      pass,
-      pkg,
-    })
+    stats.test(
+      {
+        parent,
+        name,
+        pass,
+        pkg,
+      },
+      store,
+    )
 
     return {
       result,

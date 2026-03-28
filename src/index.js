@@ -7,7 +7,7 @@ export { default as error } from '@magic/error'
 
 export { run } from './run.js'
 
-export { curry, env, http, mock, promise, store, vals, version, tryCatch } from './lib/index.js'
+export { curry, env, http, mock, promise, Store, vals, version, tryCatch } from './lib/index.js'
 
 const { NODE_ENV = 'test' } = process.env
 // the logging library reads process.env

@@ -17,7 +17,7 @@ import is from '@magic/types'
 /**
  * @type {State}
  */
-export const defaultState = {
+const defaultState = {
   suites: {},
   stats: {
     all: 0,
@@ -27,9 +27,9 @@ export const defaultState = {
   pkg: '',
 }
 
-export const store = {
-  // make sure we get a copy by destructuring
-  state: /** @type {State} */ ({ ...defaultState }),
+export class Store {
+  /** @type {State} */
+  state = { ...defaultState }
 
   /**
    * Set values in the store state
@@ -38,12 +38,12 @@ export const store = {
   set(val) {
     Object.entries(val).forEach(([key, val]) => {
       if (is.objectNative(val)) {
-        store.state[key] = { .../** @type {object} */ (store.state[key]), ...val }
+        this.state[key] = { .../** @type {object} */ (this.state[key]), ...val }
       } else {
-        store.state[key] = val
+        this.state[key] = val
       }
     })
-  },
+  }
 
   /**
    * Get the entire store state (no key provided)
@@ -65,15 +65,21 @@ export const store = {
    */
   get(key, def = undefined) {
     if (!key) {
-      return /** @type {T} */ (store.state)
+      return /** @type {T} */ (this.state)
     }
-    return is.ownProp(store.state, key) ? /** @type {T | undefined} */ (store.state[key]) : def
-  },
+    return is.ownProp(this.state, key) ? /** @type {T | undefined} */ (this.state[key]) : def
+  }
 
   /**
    * Reset the store state to default
    */
   reset() {
-    store.state = { ...defaultState }
-  },
+    this.state = { ...defaultState }
+  }
 }
+
+/**
+ * Create a new store instance
+ * @returns {Store}
+ */
+export const createStore = () => new Store()

@@ -4,7 +4,7 @@ import is from '@magic/types'
 import log from '@magic/log'
 import fs from '@magic/fs'
 
-import { stats, store } from './lib/index.js'
+import { stats, createStore } from './lib/index.js'
 
 import { runSuite } from './run/suite.js'
 
@@ -16,6 +16,7 @@ const cwd = process.cwd()
  * @returns {Promise<Error | void>}
  */
 export const run = async tests => {
+  const store = createStore()
   const startTime = log.hrtime()
   store.set({ startTime })
 
@@ -55,6 +56,7 @@ export const run = async tests => {
           parent: name,
           name,
           tests: /** @type {TestCollection} */ (testsValue),
+          store,
         }),
     ),
   )
@@ -68,5 +70,5 @@ export const run = async tests => {
     await fs.rmrf(tmpDir)
   }
 
-  stats.info(name, suites)
+  stats.info(name, suites, store)
 }
