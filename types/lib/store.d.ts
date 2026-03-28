@@ -1,26 +1,11 @@
-/**
- * @typedef {Object} StateBase
- * @property {Record<string, unknown>} suites - Test suites
- * @property {Stats} stats - Test statistics
- * @property {string} pkg - Package name
- * @property {[number, number]} [startTime] - Start time timestamp
- * @property {Record<string, unknown>} [results] - Test results
- */
-/**
- * @typedef {StateBase & Record<string, unknown>} State
- * State object with known properties and index signature for dynamic properties
- */
-/**
- * @type {State}
- */
-export const defaultState: State
-export namespace store {
-  let state: State
+export class Store {
+  /** @type {State} */
+  state: State
   /**
    * Set values in the store state
    * @param {Partial<State>} val - Values to set
    */
-  function set(val: Partial<State>): void
+  set(val: Partial<State>): void
   /**
    * Get the entire store state (no key provided)
    * @returns {State}
@@ -39,12 +24,13 @@ export namespace store {
    * @param {T | undefined} [def] - Default value if key doesn't exist
    * @returns {T | undefined}
    */
-  function get<T>(key: string, def?: T | undefined): T | undefined
+  get<T>(key: string, def?: T | undefined): T | undefined
   /**
    * Reset the store state to default
    */
-  function reset(): void
+  reset(): void
 }
+export function createStore(): Store
 export type StateBase = {
   /**
    * - Test suites

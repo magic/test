@@ -7,5 +7,5 @@ export const log: import('@magic/log').Log
 export const isProd: boolean
 export const isTest: boolean
 export const isDev: boolean
-export { curry, env, http, mock, promise, store, vals, version, tryCatch } from './lib/index.js'
+export { curry, env, http, mock, promise, Store, vals, version, tryCatch } from './lib/index.js'
 //# sourceMappingURL=index.d.ts.map
