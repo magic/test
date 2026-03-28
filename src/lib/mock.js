@@ -23,7 +23,7 @@ import { env } from './env.js'
  */
 export const fn = implementation => {
   /** @type {MockFn} */
-  const mockFn = function (/** @type {unknown[]} */ ...args) {
+  const mockFn = (/** @type {unknown[]} */ ...args) => {
     mockFn.calls.push(args)
 
     if (mockFn._throwError) {
@@ -75,23 +75,19 @@ export const fn = implementation => {
 
 /**
  * Create a spy that wraps an object's method.
- * @param {Object} object
+ * @param {Record<string, unknown>} obj
  * @param {string} methodName
  * @param {(...args: unknown[]) => unknown} [implementation]
  * @returns {MockFn & { mockRestore: () => void }}
  */
-export const spy = (object, methodName, implementation) => {
-  /** @type {unknown} */
-  // @ts-expect-error - dynamic property access on object
-  const original = object[methodName]
+export const spy = (obj, methodName, implementation) => {
+  const original = obj[methodName]
   const mockFn = fn(implementation)
 
-  // @ts-expect-error - dynamic property assignment
-  object[methodName] = mockFn
+  obj[methodName] = mockFn
 
-  mockFn.mockRestore = function () {
-    // @ts-expect-error - dynamic property assignment
-    object[methodName] = original
+  mockFn.mockRestore = () => {
+    obj[methodName] = original
   }
 
   return /** @type {MockFn & { mockRestore: () => void }} */ (mockFn)
