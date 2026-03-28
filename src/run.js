@@ -4,7 +4,7 @@ import is from '@magic/types'
 import log from '@magic/log'
 import fs from '@magic/fs'
 
-import { stats, createStore } from './lib/index.js'
+import { stats, createStore, ERRORS } from './lib/index.js'
 
 import { runSuite } from './run/suite.js'
 
@@ -25,8 +25,8 @@ export const run = async tests => {
   }
 
   if (!is.object(tests)) {
-    log.error('NO TEST SUITES', tests)
-    return new Error('No Test Suites')
+    log.error(ERRORS.E_NO_TESTS, { received: tests })
+    return new Error(ERRORS.E_NO_TESTS)
   }
 
   const beforeAll = tests['/beforeAll.js']

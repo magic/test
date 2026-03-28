@@ -1,7 +1,14 @@
 import is from '@magic/types'
 import log from '@magic/log'
 
-import { cleanError, cleanFunctionString, getTestKey, stats, createStore } from '../lib/index.js'
+import {
+  cleanError,
+  cleanFunctionString,
+  getTestKey,
+  stats,
+  createStore,
+  ERRORS,
+} from '../lib/index.js'
 import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
 import { runSuite } from './suite.js'
@@ -133,6 +140,11 @@ const evaluateResult = async (res, expect) => {
  * @returns {Promise<TestResult | Suite | undefined | void>} The result object or undefined on error.
  */
 export const runTest = async (test, store = createStore()) => {
+  const testKey = test.key || ''
+  const testName = test.name || ''
+  const testParent = test.parent || ''
+  const testPkg = test.pkg || ''
+
   try {
     const { componentFile, componentProps } = prepareTest(test)
 
@@ -149,12 +161,18 @@ export const runTest = async (test, store = createStore()) => {
         })
       }
 
-      log.error('test.fn is not a function', test.key, test.info || '')
+      log.error(ERRORS.E_TEST_NO_FN, {
+        testKey: test.key,
+        testName: name,
+        parent: parent || '',
+        pkg: pkg || '',
+        info: test.info || '',
+      })
       return
     }
 
     const msg = cleanFunctionString(fn)
-    const key = getTestKey(pkg, parent, name)
+    const key = test.key || getTestKey(pkg, parent, name)
 
     /** @type {(() => (void | Promise<void>)) | void | undefined} */
     let afterCleanup
@@ -165,7 +183,12 @@ export const runTest = async (test, store = createStore()) => {
           afterCleanup = /** @type {() => (void | Promise<void>)} */ (result)
         }
       } catch (e) {
-        log.error('test.before', test.before, e)
+        log.error(ERRORS.E_TEST_BEFORE, {
+          testKey: key,
+          testName: name,
+          parent,
+          error: cleanError(/** @type {Error} */ (e)),
+        })
       }
     }
 
@@ -185,7 +208,12 @@ export const runTest = async (test, store = createStore()) => {
           /** @type {Record<string, unknown> | undefined} */ (componentProps),
         )
       } catch (e) {
-        log.error('test.fn', key, cleanError(/** @type {Error} */ (e)))
+        log.error(ERRORS.E_TEST_FN, {
+          testKey: key,
+          testName: name,
+          parent,
+          error: cleanError(/** @type {Error} */ (e)),
+        })
         results.push({ res, pass: false })
         continue
       }
@@ -203,7 +231,12 @@ export const runTest = async (test, store = createStore()) => {
           expString = evalResult.expString
         }
       } catch (e) {
-        log.error('E_TEST_EXPECT', key, e)
+        log.error(ERRORS.E_TEST_EXPECT, {
+          testKey: key,
+          testName: name,
+          parent,
+          error: cleanError(/** @type {Error} */ (e)),
+        })
         results.push({ res, pass: false })
       }
     }
@@ -220,7 +253,12 @@ export const runTest = async (test, store = createStore()) => {
       try {
         await afterCleanup()
       } catch (e) {
-        log.error('test.after', key, e)
+        log.error(ERRORS.E_TEST_AFTER, {
+          testKey: key,
+          testName: name,
+          parent,
+          error: cleanError(/** @type {Error} */ (e)),
+        })
       }
     }
 
@@ -228,7 +266,12 @@ export const runTest = async (test, store = createStore()) => {
       try {
         await test.after()
       } catch (e) {
-        log.error('test.after', key, e)
+        log.error(ERRORS.E_TEST_AFTER, {
+          testKey: key,
+          testName: name,
+          parent,
+          error: cleanError(/** @type {Error} */ (e)),
+        })
       }
     }
 
@@ -265,6 +308,11 @@ export const runTest = async (test, store = createStore()) => {
       info,
     }
   } catch (e) {
-    log.error('test error', e)
+    log.error(ERRORS.E_TEST_FN, {
+      testKey: testKey,
+      testName: testName,
+      parent: testParent,
+      error: cleanError(/** @type {Error} */ (e)),
+    })
   }
 }

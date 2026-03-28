@@ -3,7 +3,7 @@ import log from '@magic/log'
 import is from '@magic/types'
 
 import { runTest } from './test.js'
-import { getFNS, suiteNeedsIsolation } from '../lib/index.js'
+import { getFNS, suiteNeedsIsolation, ERRORS } from '../lib/index.js'
 import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
 
@@ -154,15 +154,12 @@ export const runSuite = async props => {
         return
       }
 
-      const errHeader = 'Error running Suite:\n'
-      const errMsg = '\nis not exporting tests.'
-
       let suiteName = suite.name
       if (suite.parent !== suite.name) {
         suiteName = `${suite.parent}/${suite.name}`
       }
 
-      throw error(`${errHeader} ${suiteName} ${errMsg}`, 'E_EMPTY_SUITE')
+      throw error(`Error running Suite: ${suiteName} is not exporting tests.`, ERRORS.E_EMPTY_SUITE)
     }
 
     const suiteKey = `${pkg}.${parent}.${name}`
@@ -224,10 +221,10 @@ export const runSuite = async props => {
     return suite
   } catch (e) {
     const err = /** @type {CustomError} */ (e)
-    if (err.code === 'E_EMPTY_SUITE') {
-      log.error(err.code, err.msg)
+    if (err.code === ERRORS.E_EMPTY_SUITE) {
+      log.error(err.code, err.message)
     } else {
-      log.error('E_RUN_SUITE_UNKNOWN', name, e)
+      log.error(ERRORS.E_RUN_SUITE_UNKNOWN, { suite: name, error: e })
     }
   }
 }
