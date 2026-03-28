@@ -97,18 +97,18 @@ export default [
   },
   {
     fn: async () => {
-      let error
+      let result
       const { res, wait } = createMockResponse(201, 'application/json', '{"created":true}')
       handleResponse(
         res,
-        v => v,
-        e => (error = e),
+        v => (result = v),
+        e => e,
       )
       await wait
-      return error
+      return result
     },
-    expect: is.string,
-    info: 'rejects 201 status code',
+    expect: { created: true },
+    info: 'accepts 201 status code (Created)',
   },
   {
     fn: async () => {
