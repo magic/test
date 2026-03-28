@@ -51,7 +51,7 @@ const handleSuiteHooks = async tests => {
  * @param {string} name - Suite name
  * @param {string} parent - Parent name
  * @param {string} pkg - Package name
- * @param {any} store - The store instance
+ * @param {Store} store - The store instance
  * @returns {Promise<(TestResult | Suite)[]>}
  */
 const runTestArray = async (tests, needsIsolation, name, parent, pkg, store) => {
@@ -116,6 +116,7 @@ const runTestObject = async (testsObj, name, parent, pkg, store) => {
       key: `${name}.${suiteName}`,
       tests: /** @type {TestCollection} */ (nestedTests),
       pkg,
+      store,
     }),
   )
   const resolved = await Promise.all(promises)
@@ -125,7 +126,7 @@ const runTestObject = async (testsObj, name, parent, pkg, store) => {
 /**
  * Run a suite of tests (recursively).
  *
- * @param {SuiteInput & {store?: {get: (key: string) => unknown}}} props
+ * @param {SuiteInput & {store?: Store}} props
  * @returns {Promise<Suite|void|undefined>}
  */
 export const runSuite = async props => {
