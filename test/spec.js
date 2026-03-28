@@ -132,22 +132,7 @@ const spec = {
     },
   ],
   promise: 'fn',
-  store: [
-    'obj',
-    {
-      state: [
-        'obj',
-        {
-          suites: ['object', {}],
-          stats: ['object', { all: 'num', pass: 'num', fail: 'num' }],
-          pkg: 'string',
-        },
-      ],
-      set: 'fn',
-      get: 'fn',
-      reset: 'fn',
-    },
-  ],
+  Store: 'fn',
   vals: [
     'obj',
     {

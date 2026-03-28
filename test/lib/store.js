@@ -1,6 +1,8 @@
 import is from '@magic/types'
 
-import { store } from '../../src/lib/index.js'
+import { createStore } from '../../src/lib/index.js'
+
+const store = createStore()
 
 const before = () => () => store.set({ key: undefined })
 
@@ -13,12 +15,6 @@ export default [
     expect: is.obj,
     info: 'suites are collected in an object',
   },
-  // this is not needed anymore.
-  // {
-  //   fn: () => store.get('module'),
-  //   expect: '@magic/test',
-  //   info: 'module @magic/test exists',
-  // },
   {
     fn: () => store.get('stats'),
     expect: is.obj,
