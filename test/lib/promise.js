@@ -35,4 +35,9 @@ export default [
     expect: r => r.every(is.err),
     info: 'returns two errors if two are passed',
   },
+  {
+    fn: promise(r => r(null, undefined)),
+    expect: is.undefined,
+    info: 'returns undefined when all args are null/undefined',
+  },
 ]
