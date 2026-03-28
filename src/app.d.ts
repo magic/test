@@ -206,6 +206,19 @@ declare global {
     pkg?: string
     key?: string
     tests: TestCollection
+    store?: Store
+  }
+
+  /**
+   * State interface for store
+   */
+  export interface State {
+    suites: Record<string, unknown>
+    stats: Stats
+    pkg: string
+    startTime?: [number, number]
+    results?: Record<string, unknown>
+    [key: string]: unknown
   }
 
   /**
@@ -337,6 +350,7 @@ export {
   TestResults,
   HookFunction,
   PartialTest,
+  State,
 }
 
 export {}
