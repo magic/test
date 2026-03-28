@@ -339,13 +339,16 @@ const run = async () => {
     const hooks = suite.hooks || {}
 
     describe(suite.name, () => {
+      /** @type {(() => void | Promise<void>) | null} */
+      let beforeAllCleanup = null
+
       if (hooks.beforeAll && is.function(hooks.beforeAll)) {
         before(async () => {
           const result = await /** @type {(...args: unknown[]) => unknown} */ (hooks.beforeAll)(
             allSuites,
           )
           if (result && is.function(result)) {
-            return result
+            beforeAllCleanup = /** @type {() => void | Promise<void>} */ (result)
           }
           return undefined
         })
@@ -354,6 +357,14 @@ const run = async () => {
       if (hooks.afterAll && is.function(hooks.afterAll)) {
         after(async () => {
           await /** @type {(...args: unknown[]) => unknown} */ (hooks.afterAll)(allSuites)
+        })
+      }
+
+      if (hooks.beforeAll && is.function(hooks.beforeAll)) {
+        after(async () => {
+          if (beforeAllCleanup && is.function(beforeAllCleanup)) {
+            await /** @type {(...args: unknown[]) => unknown} */ (beforeAllCleanup)()
+          }
         })
       }
 
