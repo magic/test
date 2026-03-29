@@ -55,6 +55,21 @@ const shouldRejectUnauthorized = () => {
  * const data = await get('https://self-signed.badssl.com', { rejectUnauthorized: false })
  */
 export const get = (url, options = {}) => {
+  if (!url || typeof url !== 'string') {
+    throw new Error(`Invalid URL: ${url}`)
+  }
+
+  let parsedUrl
+  try {
+    parsedUrl = new URL(url)
+  } catch {
+    throw new Error(`Invalid URL format: "${url}". URL must be a valid absolute URL (e.g., https://example.com)`)
+  }
+
+  if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+    throw new Error(`Unsupported protocol: "${parsedUrl.protocol}". Only http and https are supported.`)
+  }
+
   const isHttps = url.startsWith('https://')
   const connector = isHttps ? nodeHttps : nodeHttp
   const timeout = options.timeout || 30000
@@ -105,7 +120,21 @@ export const get = (url, options = {}) => {
  * const result = await post('https://self-signed.badssl.com', { data: 'test' }, { rejectUnauthorized: false })
  */
 export const post = (url, body = '', options = {}) => {
-  const urlObject = new URL(url)
+  if (!url || typeof url !== 'string') {
+    throw new Error(`Invalid URL: ${url}`)
+  }
+
+  let urlObject
+  try {
+    urlObject = new URL(url)
+  } catch {
+    throw new Error(`Invalid URL format: "${url}". URL must be a valid absolute URL (e.g., https://example.com)`)
+  }
+
+  if (!['http:', 'https:'].includes(urlObject.protocol)) {
+    throw new Error(`Unsupported protocol: "${urlObject.protocol}". Only http and https are supported.`)
+  }
+
   const isHttps = urlObject.protocol === 'https:'
   const connector = isHttps ? nodeHttps : nodeHttp
 
