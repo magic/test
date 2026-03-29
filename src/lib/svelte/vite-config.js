@@ -101,7 +101,9 @@ const parseViteConfig = async configPath => {
             if (regexMatch) {
               try {
                 result.find = new RegExp(regexMatch[1], regexMatch[2])
-              } catch {}
+              } catch (e) {
+                console.warn(`[svelte-alias] Invalid regex pattern: ${regexMatch[0]}`, e)
+              }
             }
           }
           return result
