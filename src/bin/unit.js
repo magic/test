@@ -29,17 +29,15 @@ const getShardConfig = () => {
  * @param {number} totalShards
  * @returns {number}
  */
-// Simple hash function to distribute tests deterministically
+// FNV-1a hash function for better distribution
 const getShardForTest = (testPath, totalShards) => {
-  let hash = 0
+  let hash = 2166136261 // FNV offset basis
   for (let i = 0; i < testPath.length; i++) {
-    const char = testPath.charCodeAt(i)
-    hash = (hash << 5) - hash + char
-    hash = hash & hash // Convert to 32bit integer
+    hash ^= testPath.charCodeAt(i)
+    hash = Math.imul(hash, 16777619) // FNV prime
   }
-  // Ensure positive hash
-  hash = Math.abs(hash)
-  return hash % totalShards
+  // Ensure positive and within range
+  return (hash >>> 0) % totalShards
 }
 
 const init = async () => {
