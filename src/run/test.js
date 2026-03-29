@@ -137,7 +137,7 @@ const evaluateResult = async (res, expect) => {
  *
  * @param {Test} test - The test definition.
  * @param {Store} [store] - The store instance.
- * @returns {Promise<TestResult | Suite | undefined | void>} The result object or undefined on error.
+ * @returns {Promise<TestResult | Suite | undefined>} The result object or undefined on error.
  */
 export const runTest = async (test, store = createStore()) => {
   const testKey = test.key || ''
@@ -315,4 +315,6 @@ export const runTest = async (test, store = createStore()) => {
       error: cleanError(/** @type {Error} */ (e)),
     })
   }
+
+  return
 }
