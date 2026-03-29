@@ -91,12 +91,13 @@ export class Isolation {
     }
 
     if (is.arr(value)) {
+      /** @type {unknown[]} */
       const copy = []
+      seen.set(value, copy)
       for (const v of value) {
         copy.push(this.deepClone(v, seen))
       }
 
-      seen.set(value, copy)
       return /** @type {T} */ (copy)
     }
 
