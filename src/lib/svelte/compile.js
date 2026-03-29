@@ -1,15 +1,68 @@
-import { compile, preprocess } from 'svelte/compiler'
-import fs from '@magic/fs'
-import is from '@magic/types'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+
+import { compile, preprocess } from 'svelte/compiler'
+import fs from '@magic/fs'
+import log from '@magic/log'
+import is from '@magic/types'
+
 import { resolveAlias } from './vite-config.js'
 import { testExportsPreprocessor, sveltekitMocksPreprocessor } from './preprocess.js'
+import { LRUCache } from './LRUCache.js'
 
-const cache = new Map()
-const importCache = new Map()
+/** @typedef {{ code: string; map: import('magic-string').SourceMap; hasGlobal: boolean; }} CssObject */
+
+/**
+ * @typedef {Object} CompileCacheEntry
+ * @property {{ code: string }} js
+ * @property {CssObject | null} css
+ * @property {number} mtime
+ */
+
+/**
+ * @typedef {Object} ImportCacheEntry
+ * @property {string} code
+ * @property {string} url
+ * @property {number} mtime
+ */
+
+/** @type {LRUCache<CompileCacheEntry>} */
+const cache = new LRUCache(100)
+
+/** @type {LRUCache<ImportCacheEntry>} */
+const importCache = new LRUCache(100)
 
 const TMP_DIR = 'test/.tmp'
+
+let cleanupDone = false
+
+const cleanTempFiles = async () => {
+  if (cleanupDone) return
+  cleanupDone = true
+
+  try {
+    const tmpDir = path.join(process.cwd(), TMP_DIR)
+    if (!fs.existsSync(tmpDir)) return
+
+    const files = fs.readdirSync(tmpDir)
+    const now = Date.now()
+    const MAX_AGE = 24 * 60 * 60 * 1000 // 24 hours
+
+    for (const file of files) {
+      const filePath = path.join(tmpDir, file)
+      try {
+        const stat = fs.statSync(filePath)
+        if (now - stat.mtimeMs > MAX_AGE) {
+          fs.unlinkSync(filePath)
+        }
+      } catch {
+        // Ignore errors for individual files
+      }
+    }
+  } catch {
+    // Ignore cleanup errors
+  }
+}
 
 const fileLocks = new Map()
 
@@ -79,11 +132,11 @@ const resolveAndCompileImport = async (importPath, sourceDir, sourceFilePath) =>
     const stats = await fs.stat(resolvedPath)
     importCache.set(resolvedPath, {
       code: processed.code,
-      url: importUrl,
+      url: importUrl.href,
       mtime: stats.mtime.getTime(),
     })
 
-    return { filePath: resolvedPath, js: processed.code, url: importUrl }
+    return { filePath: resolvedPath, js: processed.code, url: importUrl.href }
   } finally {
     release()
   }
@@ -114,7 +167,7 @@ const processImports = async (code, sourceFilePath) => {
       processedCode = processedCode.replace(importRegex, `import ${imported} from '${url}'`)
     } catch (e) {
       const message = is.error(e) ? e.message : String(e)
-      console.error(`Could not resolve import ${importPath}: ${message}`)
+      log.error('Could not resolve import', importPath, message)
       throw e
     }
   }
@@ -126,6 +179,8 @@ const processImports = async (code, sourceFilePath) => {
  * @param {string} filePath
  */
 export const compileSvelte = async filePath => {
+  await cleanTempFiles()
+
   const relPath = path.relative(process.cwd(), filePath)
   const mapFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.map'))
 
@@ -153,8 +208,12 @@ export const compileSvelte = async filePath => {
       filename: filePath,
     })
 
-    let jsCode = result.js.code
-    const css = result.css
+    if (!result.js) {
+      throw new Error('Compilation failed: no JS output')
+    }
+
+    let jsCodeString = String(result.js.code)
+    const { css } = result
 
     if (result.js.map) {
       const sourcemap = result.js.map
@@ -163,13 +222,16 @@ export const compileSvelte = async filePath => {
 
       await fs.mkdirp(path.dirname(mapFile))
       await fs.writeFile(mapFile, JSON.stringify(sourcemap))
-      jsCode = jsCode + '\n//# sourceMappingURL=' + path.basename(mapFile)
+      jsCodeString = jsCodeString + '\n//# sourceMappingURL=' + path.basename(mapFile)
     }
 
     const stats = await fs.stat(filePath)
-    cache.set(filePath, { js: { code: jsCode }, css, mtime: stats.mtime.getTime() })
+    const jsCodeFinal = jsCodeString
+    /** @type {CompileCacheEntry} */
+    const cacheEntry = { js: { code: jsCodeFinal }, css, mtime: stats.mtime.getTime() }
+    cache.set(filePath, cacheEntry)
 
-    return { js: { code: jsCode }, css }
+    return { js: { code: jsCodeFinal }, css }
   } finally {
     release()
   }
@@ -189,6 +251,8 @@ export const compileSvelteWithImports = async filePath => {
  * @param {string} filePath
  */
 export const compileSvelteWithWrite = async filePath => {
+  await cleanTempFiles()
+
   const { js, css } = await compileSvelteWithImports(filePath)
 
   const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
