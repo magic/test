@@ -37,7 +37,7 @@ const importFile = async filePath => {
     }
   } catch (err) {
     // Enhance error with file context
-    const error = err instanceof Error ? err : new Error(String(err))
+    const error = is.error(err) ? err : new Error(String(err))
     error.message = `Failed to import test file: ${filePath}\n${error.message}`
     throw error
   }
@@ -76,7 +76,7 @@ export const readRecursive = async (dir = '') => {
       const imported = await importFile(importPath)
       tests[fileP] = imported
     } catch (err) {
-      errors.push({ file: fileP, error: err instanceof Error ? err : new Error(String(err)) })
+      errors.push({ file: fileP, error: is.error(err) ? err : new Error(String(err)) })
     }
   } else {
     // if dir/index.js does not exist, require all files and subdirectories of files
@@ -110,7 +110,7 @@ export const readRecursive = async (dir = '') => {
           return { type: 'directory', file, tests: deepTests }
         } catch (err) {
           const relPath = path.join(dir || '', file)
-          const error = err instanceof Error ? err : new Error(String(err))
+          const error = is.error(err) ? err : new Error(String(err))
           return { type: 'error', file: relPath, error }
         }
       } else if (stat.isFile()) {
@@ -126,7 +126,7 @@ export const readRecursive = async (dir = '') => {
           const test = await importFile(importPath)
           return { type: 'file', file: fileP, test }
         } catch (err) {
-          const error = err instanceof Error ? err : new Error(String(err))
+          const error = is.error(err) ? err : new Error(String(err))
           return { type: 'error', file: fileP, error }
         }
       }

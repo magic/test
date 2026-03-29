@@ -1,4 +1,5 @@
 import { parse } from 'svelte/compiler'
+import is from '@magic/types'
 
 /**
  * @typedef {{ [key: string]: unknown; type: string }} ASTNode
@@ -12,7 +13,7 @@ import { parse } from 'svelte/compiler'
 const walk = (node, handlers) => {
   /** @param {unknown} n */
   const visit = n => {
-    if (!n || typeof n !== 'object') return
+    if (!n || !is.object(n)) return
 
     const astNode = /** @type {ASTNode} */ (n)
     if (astNode.type) {

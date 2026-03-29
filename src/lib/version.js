@@ -32,7 +32,7 @@ const createLibTest = (lib, spec, fullName) => {
 
   return {
     fn: /** @type {Function} */ (fn)(lib),
-    info: `Spec for ${fullName} is wrong, expected: ${spec}, actual type is ${typeof lib}`,
+    info: `Spec for ${fullName} is wrong, expected: ${spec}, actual type is ${is.type(lib)}`,
   }
 }
 

@@ -1,4 +1,5 @@
 import logging from '@magic/log'
+import is from '@magic/types'
 
 export { default as is } from '@magic/types'
 export { default as deep } from '@magic/deep'
@@ -34,7 +35,7 @@ const handleError = (type, err) => {
 }
 
 process.on('unhandledRejection', reason => {
-  handleError('unhandledRejection', reason instanceof Error ? reason : new Error(String(reason)))
+  handleError('unhandledRejection', is.error(reason) ? reason : new Error(String(reason)))
 })
 
 process.on('uncaughtException', error => {

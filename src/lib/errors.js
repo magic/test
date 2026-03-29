@@ -1,3 +1,5 @@
+import is from '@magic/types'
+
 /**
  * @typedef {Record<string, string>} ErrorCodeMap
  */
@@ -58,9 +60,9 @@ export const errorify = (code, data) => {
   const msgTemplate = ERROR_MESSAGES[code]
   let msg = ''
 
-  if (typeof msgTemplate === 'function') {
+  if (is.fn(msgTemplate)) {
     msg = msgTemplate(data)
-  } else if (typeof msgTemplate === 'string') {
+  } else if (is.string(msgTemplate)) {
     msg = msgTemplate
   } else {
     msg = String(data)

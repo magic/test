@@ -55,7 +55,7 @@ const shouldRejectUnauthorized = () => {
  * const data = await get('https://self-signed.badssl.com', { rejectUnauthorized: false })
  */
 export const get = (url, options = {}) => {
-  if (!url || typeof url !== 'string') {
+  if (!url || !is.string(url)) {
     throw new Error(`Invalid URL: ${url}`)
   }
 
@@ -124,7 +124,7 @@ export const get = (url, options = {}) => {
  * const result = await post('https://self-signed.badssl.com', { data: 'test' }, { rejectUnauthorized: false })
  */
 export const post = (url, body = '', options = {}) => {
-  if (!url || typeof url !== 'string') {
+  if (!url || !is.string(url)) {
     throw new Error(`Invalid URL: ${url}`)
   }
 

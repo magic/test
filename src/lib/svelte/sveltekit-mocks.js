@@ -1,3 +1,5 @@
+import is from '@magic/types'
+
 /**
  * @typedef {Object} PageProxy
  * @property {URL} url
@@ -35,14 +37,14 @@ export const createStaticPage = (initialData = {}) => {
     set: (
       /** @type {string} */ _target,
       /** @type {string|symbol} */ prop,
-      /** @type {unknown} */ value,
+      /** @type {string | URL | Object} */ value,
     ) => {
-      if (prop === 'url') {
-        state.url = value instanceof URL ? value : new URL(/** @type {string} */ (value))
-      } else if (prop === 'params') {
-        state.params = /** @type {Object} */ (value)
-      } else if (prop === 'state') {
-        state.state = /** @type {Object} */ (value)
+      if ((prop === 'url' && is.instance(value, URL)) || is.string(value)) {
+        state.url = is.instance(value, URL) ? value : new URL(value)
+      } else if (prop === 'params' && is.object(value)) {
+        state.params = value
+      } else if (prop === 'state' && is.object(value)) {
+        state.state = value
       }
       return true
     },

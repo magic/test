@@ -191,7 +191,7 @@ export const runSuite = async props => {
       if (is.function(afterAllCleanup)) {
         const cleanupResult = afterAllCleanup()
         // If the cleanup returns a Promise, await it; otherwise continue synchronously
-        if (cleanupResult && typeof cleanupResult.then === 'function') {
+        if (cleanupResult && is.promise(cleanupResult)) {
           await cleanupResult
         }
       }

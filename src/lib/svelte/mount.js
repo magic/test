@@ -105,10 +105,7 @@ export const mount = async (filePath, options = {}) => {
 
   const rawProps = options.props
 
-  if (
-    rawProps !== undefined &&
-    (typeof rawProps !== 'object' || rawProps === null || is.array(rawProps))
-  ) {
+  if (rawProps !== undefined && (!is.object(rawProps) || is.null(rawProps) || is.array(rawProps))) {
     throw new Error(`Props must be an object, got ${typeof rawProps}`)
   }
 
