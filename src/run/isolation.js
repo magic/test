@@ -272,7 +272,9 @@ export class Isolation {
         desc.enumerable = !!stored.enumerable
         if ('value' in stored) {
           desc.writable = !!stored.writable
-          desc.value = this.deepClone(stored.value)
+          // Restore value directly without deep cloning for performance
+          // (snapshot already contains cloned values from capture)
+          desc.value = stored.value
         } else {
           desc.get = stored.get
           desc.set = stored.set
@@ -342,7 +344,9 @@ export class Isolation {
         desc.enumerable = !!stored.enumerable
         if ('value' in stored) {
           desc.writable = !!stored.writable
-          desc.value = this.deepClone(stored.value)
+          // Restore value directly without deep cloning for performance
+          // (snapshot already contains cloned values from capture)
+          desc.value = stored.value
         } else {
           desc.get = stored.get
           desc.set = stored.set
