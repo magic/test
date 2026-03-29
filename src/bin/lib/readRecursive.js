@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url'
 
 import fs from '@magic/fs'
 import is from '@magic/types'
-import { limitedPromiseAllSettled } from './promiseAllSettledWithLimit.js'
+import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js'
 
 const CONCURRENCY_LIMIT = 50
 
