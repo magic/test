@@ -16,6 +16,8 @@ const res = cli({
     ['--verbose', '--loud', '--l', '-l'],
     ['--include', '--inc', '--i', '-i'],
     ['--exclude', '--e', '-e'],
+    ['--shards', '--shard-count'],
+    ['--shard-id'],
   ],
   env: [[['--production', '--prod', '--p', '-p'], 'NODE_ENV', 'production']],
   help: {
@@ -25,6 +27,8 @@ const res = cli({
       '--verbose': 'more output',
       '--include': 'files to include in coverage',
       '--exclude': 'files to exclude from coverage',
+      '--shards': 'total number of shards',
+      '--shard-id': 'shard id (0-indexed)',
     },
     header: `
 simple unit testing. runs all tests found in {cwd}/test/
@@ -68,6 +72,8 @@ const run = async () => {
 
   const includeArgs = res.args.include || ['src']
   const excludeArgs = res.args.exclude || []
+  const shards = res.args.shards
+  const shardId = res.args.shardId
 
   const include = is.array(includeArgs) ? includeArgs : [includeArgs]
   const exclude = is.array(excludeArgs) ? excludeArgs : [excludeArgs]
@@ -81,6 +87,15 @@ const run = async () => {
       argv = ['--include', inc, ...argv]
     })
   }
+
+  // Set shard environment variables
+  if (shards) {
+    process.env.MAGIC_TEST_SHARDS = shards
+  }
+  if (shardId) {
+    process.env.MAGIC_TEST_SHARD_ID = shardId
+  }
+
   argv.push(binFile)
 
   if (process.argv.length > 2) {
@@ -89,6 +104,15 @@ const run = async () => {
   }
 
   if (!isProd) {
+    // Insert 'node' before the script so c8 can execute it properly
+    const binIndex = argv.indexOf(binFile)
+    if (binIndex !== -1) {
+      argv.splice(binIndex, 0, 'node')
+    } else {
+      // If binFile not found (shouldn't happen), prepend node
+      argv = ['node', ...argv]
+    }
+
     const c8Cmd = isWin ? 'c8.cmd' : 'c8'
     cmd = path.join(cwd, 'node_modules', '.bin', c8Cmd)
     argv = [
