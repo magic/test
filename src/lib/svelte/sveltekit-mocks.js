@@ -33,16 +33,16 @@ export const createStaticPage = (initialData = {}) => {
       return state[/** @type {keyof typeof state} */ (prop)]
     },
     set: (
-      /** @type {string} */ target,
+      /** @type {string} */ _target,
       /** @type {string|symbol} */ prop,
-      /** @type {any} */ value,
+      /** @type {unknown} */ value,
     ) => {
       if (prop === 'url') {
-        state.url = value instanceof URL ? value : new URL(value)
+        state.url = value instanceof URL ? value : new URL(/** @type {string} */ (value))
       } else if (prop === 'params') {
-        state.params = value
+        state.params = /** @type {Object} */ (value)
       } else if (prop === 'state') {
-        state.state = value
+        state.state = /** @type {Object} */ (value)
       }
       return true
     },

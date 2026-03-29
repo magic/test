@@ -9,7 +9,7 @@ const CONCURRENCY_LIMIT = 50
 
 /**
  * @typedef {Object} ImportResult
- * @property {string} file
+ * @property {string} [file]
  * @property {unknown} [test]
  * @property {object} [tests]
  * @property {Error} [error]
@@ -138,10 +138,10 @@ export const readRecursive = async (dir = '') => {
     for (const result of results) {
       if (!result) continue
       if (result.status === 'fulfilled') {
-        const value = /** @type {any} */ (result.value)
+        const value = /** @type {ImportResult} */ (result.value)
 
-        if (value.type === 'file' && value.test !== undefined) {
-          tests[value.file] = value.test
+        if (value.type === 'file' && value.test !== undefined && value.file) {
+          tests[value.file] = /** @type {TestCollection} */ (value.test)
         } else if (value.type === 'directory' && value.tests !== undefined) {
           tests = {
             ...tests,
@@ -151,7 +151,7 @@ export const readRecursive = async (dir = '') => {
           // value.error is defined for error type, but TS needs help
           /** @type {Error} */
           const err = value.error || new Error('Unknown import error')
-          errors.push({ file: value.file, error: err })
+          errors.push({ file: value.file || 'unknown', error: err })
         }
         // skip type is ignored
       } else {

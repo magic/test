@@ -126,7 +126,9 @@ export class Isolation {
     }
 
     if (ArrayBuffer.isView(value) || is.instance(value, ArrayBuffer)) {
-      return /** @type {any} */ (value).slice(0)
+      // Clone typed arrays and ArrayBuffers
+      // The slice method exists on both TypedArrays and ArrayBuffer
+      return /** @type {any} */ (value).slice()
     }
 
     if (is.error(value)) {
