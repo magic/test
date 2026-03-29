@@ -128,9 +128,9 @@ export const run = async (tests, options = {}) => {
   const content = await fs.readFile(packagePath, 'utf8')
   const { name } = JSON.parse(content)
 
-  const suites = await Promise.all(
-    Object.entries(testsObj)
-      .map(async ([name, testsValue]) => {
+  const suites = (
+    await Promise.all(
+      Object.entries(testsObj).map(async ([name, testsValue]) => {
         if (aborted) {
           return
         }
@@ -141,9 +141,9 @@ export const run = async (tests, options = {}) => {
           tests: /** @type {TestCollection} */ (testsValue),
           store,
         })
-      })
-      .filter(a => is.undef(a)),
-  )
+      }),
+    )
+  ).filter(s => !is.undef(s))
 
   if (aborted) {
     log.warn('Test run was aborted')
