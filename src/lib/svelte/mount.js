@@ -1,10 +1,12 @@
-import path from 'node:path'
-import fs from '@magic/fs'
-import { pathToFileURL } from 'node:url'
 import { createRequire } from 'node:module'
+import path from 'node:path'
+
+import fs from '@magic/fs'
+import log from '@magic/log'
+import is from '@magic/types'
+
 import { compileSvelteWithWrite } from './compile.js'
 import { initDOM, getDocument, getWindow } from './dom.js'
-import is from '@magic/types'
 
 /** @type {Function} */
 let svelteMount
@@ -94,7 +96,7 @@ export const mount = async (filePath, options = {}) => {
     mod = await import(importUrl)
   } catch (e) {
     const err = /** @type {Error} */ (e)
-    console.error('Failed to import compiled component:', err.message)
+    log.error('Failed to import compiled component:', err.message)
     throw err
   }
   const Component = mod.default
