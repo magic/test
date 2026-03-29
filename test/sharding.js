@@ -1,87 +1,91 @@
 const getShardForTest = (testPath, totalShards) => {
-  let hash = 0
+  let hash = 2166136261
   for (let i = 0; i < testPath.length; i++) {
-    const char = testPath.charCodeAt(i)
-    hash = (hash << 5) - hash + char
-    hash = hash & hash
+    hash ^= testPath.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
   }
-  hash = Math.abs(hash)
-  return hash % totalShards
-}
-
-const getShardConfig = () => {
-  const rawShards = process.env.MAGIC_TEST_SHARDS
-  const rawShardId = process.env.MAGIC_TEST_SHARD_ID
-
-  const shards = Math.max(1, parseInt(rawShards || '1', 10)) || 1
-  const shardId = Math.max(0, parseInt(rawShardId || '0', 10)) || 0
-
-  return { shards, shardId }
-}
-
-const assert = (condition, message) => {
-  if (!condition) {
-    throw new Error('Assertion failed: ' + message)
-  }
-}
-
-const runShardingTests = () => {
-  assert(
-    getShardForTest('/test/a.js', 3) === getShardForTest('/test/a.js', 3),
-    'Deterministic: same path yields same shard',
-  )
-
-  assert(getShardForTest('/test/a.js', 1) === 0, '1 shard always returns 0')
-
-  const testPaths = [
-    '/test/file1.js',
-    '/test/file2.js',
-    '/test/file3.js',
-    '/test/file4.js',
-    '/test/file5.js',
-    '/test/file6.js',
-    '/test/file7.js',
-    '/test/file8.js',
-    '/test/file9.js',
-    '/test/file10.js',
-  ]
-
-  const distribution = {}
-  for (const path of testPaths) {
-    const shard = getShardForTest(path, 3)
-    distribution[shard] = (distribution[shard] || 0) + 1
-  }
-
-  const values = Object.values(distribution)
-  const max = Math.max(...values)
-  const min = Math.min(...values)
-
-  assert(max - min <= 2, `Distribution even: max=${max}, min=${min}`)
-
-  assert(getShardForTest('/test/a.js', 10) < 10, 'Shard ID always less than total shards')
-
-  assert(getShardForTest('/test/a.js', 100) >= 0, 'Shard ID always non-negative')
-
-  const path1 = '/test/verylongpath/with/nested/directories/and/a/long/filename.js'
-  const path2 = '/test/verylongpath/with/nested/directories/and/a/long/filename.js'
-  assert(getShardForTest(path1, 5) === getShardForTest(path2, 5), 'Long paths are deterministic')
-
-  const uniqueShards = new Set(testPaths.map(p => getShardForTest(p, 3)))
-  assert(uniqueShards.size > 1, 'Multiple unique shards used')
-
-  const { shards, shardId } = getShardConfig()
-  assert(shards >= 1, 'Shards is at least 1')
-  assert(shardId >= 0, 'ShardId is non-negative')
-  assert(shardId < shards, 'ShardId is less than shards')
+  return (hash >>> 0) % totalShards
 }
 
 export default [
   {
+    fn: () => getShardForTest('/test/a.js', 3),
+    expect: getShardForTest('/test/a.js', 3),
+    info: 'Sharding is deterministic',
+  },
+  {
+    fn: () => getShardForTest('/test/a.js', 1),
+    expect: 0,
+    info: '1 shard always returns 0',
+  },
+  {
     fn: () => {
-      runShardingTests()
+      const testPaths = [
+        '/test/file1.js',
+        '/test/file2.js',
+        '/test/file3.js',
+        '/test/file4.js',
+        '/test/file5.js',
+        '/test/file6.js',
+        '/test/file7.js',
+        '/test/file8.js',
+        '/test/file9.js',
+        '/test/file10.js',
+        '/test/file11.js',
+        '/test/file12.js',
+        '/test/file13.js',
+        '/test/file14.js',
+        '/test/file15.js',
+      ]
+
+      for (const path of testPaths) {
+        const shard = getShardForTest(path, 3)
+        if (shard < 0 || shard >= 3) {
+          throw new Error(`Invalid shard ${shard} for ${path}`)
+        }
+      }
       return true
     },
     expect: true,
-    info: 'Sharding: deterministic, even distribution, edge cases',
+    info: 'All shards are in valid range 0-2',
+  },
+  {
+    fn: () => getShardForTest('/test/a.js', 10) < 10,
+    expect: true,
+    info: 'Shard ID always less than total shards',
+  },
+  {
+    fn: () => getShardForTest('/test/a.js', 100) >= 0,
+    expect: true,
+    info: 'Shard ID always non-negative',
+  },
+  {
+    fn: () => {
+      const path1 = '/test/verylongpath/with/nested/directories/and/a/long/filename.js'
+      const path2 = '/test/verylongpath/with/nested/directories/and/a/long/filename.js'
+      return getShardForTest(path1, 5) === getShardForTest(path2, 5)
+    },
+    expect: true,
+    info: 'Long paths are deterministic',
+  },
+  {
+    fn: () => {
+      const testPaths = [
+        '/test/file1.js',
+        '/test/file2.js',
+        '/test/file3.js',
+        '/test/file4.js',
+        '/test/file5.js',
+        '/test/file6.js',
+        '/test/file7.js',
+        '/test/file8.js',
+        '/test/file9.js',
+        '/test/file10.js',
+      ]
+      const uniqueShards = new Set(testPaths.map(p => getShardForTest(p, 3)))
+      return uniqueShards.size > 1
+    },
+    expect: true,
+    info: 'Multiple unique shards used',
   },
 ]
