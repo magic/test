@@ -28,9 +28,11 @@ export const stringify = object => {
   } else if (is.array(object)) {
     return object.map(o => /** @type {InputValue} */ (o)).map(stringify)
   } else if (is.objectNative(object)) {
-    Object.entries(object).forEach(([k, v]) => {
-      object[k] = stringify(/** @type {InputValue} */ (v))
-    })
+    const copy = { ...object }
+    for (const [k, v] of Object.entries(copy)) {
+      copy[k] = stringify(/** @type {InputValue} */ (v))
+    }
+    return copy
   }
 
   return object
