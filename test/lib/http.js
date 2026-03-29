@@ -10,6 +10,17 @@ const beforeAll = async () => {
       if (req.method === 'GET' && req.url === '/get') {
         res.writeHead(200, { 'Content-Type': 'application/json' })
         res.end(JSON.stringify({ success: true, method: 'GET' }))
+      } else if (req.method === 'GET' && req.url === '/created') {
+        res.writeHead(201, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ status: 'created' }))
+      } else if (req.method === 'GET' && req.url === '/no-content') {
+        res.writeHead(204)
+        res.end()
+      } else if (req.method === 'GET' && req.url === '/timeout') {
+        setTimeout(() => {
+          res.writeHead(200)
+          res.end('late response')
+        }, 5000)
       } else if (req.method === 'POST' && req.url === '/post') {
         let body = ''
         req.on('data', chunk => (body += chunk))
@@ -23,6 +34,15 @@ const beforeAll = async () => {
           }
           res.end(JSON.stringify({ success: true, method: 'POST', body: parsedBody }))
         })
+      } else if (req.method === 'GET' && req.url === '/notfound') {
+        res.writeHead(404, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ error: 'Not found' }))
+      } else if (req.method === 'GET' && req.url === '/server-error') {
+        res.writeHead(500, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ error: 'Server error' }))
+      } else if (req.method === 'GET' && req.url === '/text') {
+        res.writeHead(200, { 'Content-Type': 'text/plain' })
+        res.end('plain text response')
       } else {
         res.writeHead(404)
         res.end()
@@ -75,6 +95,99 @@ export default {
       },
       expect: r => r.success === true && r.body === 'plain string',
       info: 'http.post works with string body',
+    },
+    {
+      fn: async () => {
+        const result = await httpModule.get(`http://localhost:${globalThis.httpTestPort}/created`)
+        return result
+      },
+      expect: r => r.status === 'created',
+      info: 'http.get handles 201 Created',
+    },
+    {
+      fn: async () => {
+        const result = await httpModule.get(
+          `http://localhost:${globalThis.httpTestPort}/no-content`,
+        )
+        return result
+      },
+      expect: r => r === '',
+      info: 'http.get handles 204 No Content',
+    },
+    {
+      fn: async () => {
+        const result = await httpModule.get(`http://localhost:${globalThis.httpTestPort}/text`)
+        return result
+      },
+      expect: r => r === 'plain text response',
+      info: 'http.get handles text/plain response',
+    },
+    {
+      fn: async () => {
+        let error = null
+        try {
+          await httpModule.get(`http://localhost:${globalThis.httpTestPort}/notfound`)
+        } catch (e) {
+          error = e
+        }
+        return error ? error.message.includes('404') : false
+      },
+      expect: r => r === true,
+      info: 'http.get rejects on 404',
+    },
+    {
+      fn: async () => {
+        let error = null
+        try {
+          await httpModule.get(`http://localhost:${globalThis.httpTestPort}/server-error`)
+        } catch (e) {
+          error = e
+        }
+        return error ? error.message.includes('500') : false
+      },
+      expect: r => r === true,
+      info: 'http.get rejects on 500',
+    },
+    {
+      fn: async () => {
+        let error = null
+        try {
+          await httpModule.get(`http://localhost:${globalThis.httpTestPort}/timeout`, {
+            timeout: 100,
+          })
+        } catch (e) {
+          error = e
+        }
+        return error ? error.message.includes('timeout') : false
+      },
+      expect: r => r === true,
+      info: 'http.get times out with custom timeout',
+    },
+    {
+      fn: async () => {
+        let error = null
+        try {
+          await httpModule.get('not-a-valid-url')
+        } catch (e) {
+          error = e
+        }
+        return error ? error.message.includes('Invalid URL') : false
+      },
+      expect: r => r === true,
+      info: 'http.get throws on invalid URL',
+    },
+    {
+      fn: async () => {
+        let error = null
+        try {
+          await httpModule.get('ftp://example.com')
+        } catch (e) {
+          error = e
+        }
+        return error ? error.message.includes('Unsupported protocol') : false
+      },
+      expect: r => r === true,
+      info: 'http.get throws on unsupported protocol',
     },
   ],
 }

@@ -62,7 +62,7 @@ export default [
       await wait
       return error
     },
-    expect: is.string,
+    expect: is.error,
     info: 'rejects non-200 status code',
   },
   {
@@ -122,7 +122,7 @@ export default [
       await wait
       return error
     },
-    expect: is.string,
+    expect: is.error,
     info: 'rejects 500 status code',
   },
 ]
