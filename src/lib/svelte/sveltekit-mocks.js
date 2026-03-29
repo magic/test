@@ -22,7 +22,7 @@ export const createStaticPage = (initialData = {}) => {
 
   /** @type {ProxyHandler<Object>} */
   const handler = {
-    get: (/** @type {string} */ target, /** @type {string|symbol} */ prop) => {
+    get: (/** @type {string|symbol} */ prop) => {
       if (prop === 'url') {
         return state.url
       }
@@ -34,11 +34,7 @@ export const createStaticPage = (initialData = {}) => {
       }
       return state[/** @type {keyof typeof state} */ (prop)]
     },
-    set: (
-      /** @type {string} */ _target,
-      /** @type {string|symbol} */ prop,
-      /** @type {string | URL | Object} */ value,
-    ) => {
+    set: (/** @type {string|symbol} */ prop, /** @type {string | URL | Object} */ value) => {
       if ((prop === 'url' && is.instance(value, URL)) || is.string(value)) {
         state.url = is.instance(value, URL) ? value : new URL(value)
       } else if (prop === 'params' && is.object(value)) {
