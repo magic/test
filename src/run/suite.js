@@ -35,9 +35,12 @@ const handleSuiteHooks = async tests => {
     is.function(tests.beforeAll)
   ) {
     const testsWithHooks = /** @type {TestObject} */ (tests)
-    const result = is.fn(testsWithHooks.beforeAll) && (await testsWithHooks.beforeAll())
-    if (is.function(result)) {
-      afterAllCleanup = result
+    const beforeAllFn = testsWithHooks.beforeAll
+    if (is.fn(beforeAllFn)) {
+      const beforeResult = await beforeAllFn()
+      if (is.function(beforeResult)) {
+        afterAllCleanup = beforeResult
+      }
     }
   }
 
@@ -184,20 +187,19 @@ export const runSuite = async props => {
         suite.tests = results
       }
 
+      // Run cleanup from beforeAll's returned function FIRST
       if (is.function(afterAllCleanup)) {
-        await afterAllCleanup()
+        const cleanupResult = afterAllCleanup()
+        // If the cleanup returns a Promise, await it; otherwise continue synchronously
+        if (cleanupResult && typeof cleanupResult.then === 'function') {
+          await cleanupResult
+        }
       }
 
-      if (
-        tests &&
-        is.object(tests) &&
-        !is.arr(tests) &&
-        'afterAll' in tests &&
-        is.function(tests.afterAll)
-      ) {
-        const testsWithHooks = /** @type {TestObject} */ (tests)
-        if (is.fn(testsWithHooks.afterAll)) {
-          await testsWithHooks.afterAll()
+      // Then run afterAll hook
+      if (is.objectNative(tests) && is.function(tests.afterAll)) {
+        if (is.fn(tests.afterAll)) {
+          await tests.afterAll()
         }
       }
 
