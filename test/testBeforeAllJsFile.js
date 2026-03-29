@@ -1,17 +1,19 @@
+import log from '@magic/log'
+
 // This test can not make sure that both afterAll functions actually get executed.
 export default {
   beforeAll: () => {
     globalThis.beforeAll = 'beforeAll'
     globalThis.testing = true
+
     return () => {
-      globalThis.afterAllInBeforeAll = 'afterAll in beforeAll'
       globalThis.testing = 'afterAll'
     }
   },
   afterAll: () => {
     if (globalThis.testing !== 'afterAll') {
-      console.error(
-        `AfterAll globalThis.testing not matching ${globalThis.testing} expected: 'afterAll'`,
+      log.error(
+        `AfterAll globalThis.testing not matching, is "${globalThis.testing}" expected: 'afterAll'`,
       )
     }
   },
