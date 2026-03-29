@@ -1,7 +1,5 @@
 import log from '@magic/log'
 
-import is from '@magic/types'
-
 /**
  * Get the duration since the stored start time
  * @param {{get: (key: string) => unknown}} storeObj - Store object with get method
