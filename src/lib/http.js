@@ -63,11 +63,15 @@ export const get = (url, options = {}) => {
   try {
     parsedUrl = new URL(url)
   } catch {
-    throw new Error(`Invalid URL format: "${url}". URL must be a valid absolute URL (e.g., https://example.com)`)
+    throw new Error(
+      `Invalid URL format: "${url}". URL must be a valid absolute URL (e.g., https://example.com)`,
+    )
   }
 
   if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-    throw new Error(`Unsupported protocol: "${parsedUrl.protocol}". Only http and https are supported.`)
+    throw new Error(
+      `Unsupported protocol: "${parsedUrl.protocol}". Only http and https are supported.`,
+    )
   }
 
   const isHttps = url.startsWith('https://')
@@ -128,11 +132,15 @@ export const post = (url, body = '', options = {}) => {
   try {
     urlObject = new URL(url)
   } catch {
-    throw new Error(`Invalid URL format: "${url}". URL must be a valid absolute URL (e.g., https://example.com)`)
+    throw new Error(
+      `Invalid URL format: "${url}". URL must be a valid absolute URL (e.g., https://example.com)`,
+    )
   }
 
   if (!['http:', 'https:'].includes(urlObject.protocol)) {
-    throw new Error(`Unsupported protocol: "${urlObject.protocol}". Only http and https are supported.`)
+    throw new Error(
+      `Unsupported protocol: "${urlObject.protocol}". Only http and https are supported.`,
+    )
   }
 
   const isHttps = urlObject.protocol === 'https:'
