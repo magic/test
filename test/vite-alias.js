@@ -9,8 +9,8 @@ import path from 'path'
 export default defineConfig({
   resolve: {
     alias: [
-      { find: '$test', replacement: './test-alias-dir' },
-      { find: /^@org\\/(.*)/, replacement: './replacement-dir/$1' },
+      { find: '$test', replacement: './test/.tmp/test-alias-dir' },
+      { find: /^@org\\/(.*)/, replacement: './test/.tmp/replacement-dir/$1' },
     ]
   }
 })
@@ -23,7 +23,7 @@ import Button from '$test/ViteAlias.svelte'
 <Button />
 `
 
-const TEST_ALIAS_DIR = 'test-alias-dir'
+const TEST_ALIAS_DIR = 'test/.tmp/test-alias-dir'
 const TEST_BUTTON_CONTENT = `<script>
 export let count = 0
 </script>
@@ -31,10 +31,10 @@ export let count = 0
 <button>{count}</button>
 `
 
-const REGEX_ALIAS_DIR = 'replacement-dir'
+const REGEX_ALIAS_DIR = 'test/.tmp/replacement-dir'
 const REGEX_FILE_CONTENT = `export const test = 1`
 
-const REGEX_PACKAGE_FILE = 'replacement-dir/package'
+const REGEX_PACKAGE_FILE = 'test/.tmp/replacement-dir/package'
 const REGEX_PACKAGE_CONTENT = 'export const pkg = 1'
 
 export default {
@@ -44,7 +44,7 @@ export default {
     await fs.mkdir(REGEX_ALIAS_DIR, { recursive: true })
     await fs.writeFile(path.join(REGEX_ALIAS_DIR, 'TestRegex.svelte'), REGEX_FILE_CONTENT)
     await fs.writeFile(REGEX_PACKAGE_FILE, REGEX_PACKAGE_CONTENT)
-    await fs.writeFile('test-alias-component.svelte', TEST_COMPONENT_CONTENT)
+    await fs.writeFile('test/.tmp/test-alias-component.svelte', TEST_COMPONENT_CONTENT)
     await fs.writeFile('vite.config.js', VITE_CONFIG)
 
     const { configCache, aliasCache } = await import('../src/lib/svelte/vite-config.js')
@@ -56,7 +56,7 @@ export default {
       await fs.rm(REGEX_ALIAS_DIR, { recursive: true, force: true })
       await fs.unlink('vite.config.js')
       try {
-        await fs.unlink('test-alias-component.svelte')
+        await fs.unlink('test/.tmp/test-alias-component.svelte')
       } catch {}
 
       configCache.clear()
@@ -66,17 +66,17 @@ export default {
   tests: [
     {
       fn: () => resolveAlias('$test/ViteAlias.svelte', 'test/test-file.svelte'),
-      expect: path.resolve('test-alias-dir/ViteAlias.svelte'),
+      expect: path.resolve('test/.tmp/test-alias-dir/ViteAlias.svelte'),
       info: 'resolves $test alias to test-alias-dir',
     },
     {
       fn: () => resolveAlias('$test', 'test/test-file.svelte'),
-      expect: path.resolve('test-alias-dir'),
+      expect: path.resolve('test/.tmp/test-alias-dir'),
       info: 'resolves exact $test alias match',
     },
     {
-      fn: () => resolveAlias('@org/package', 'test/test-file.svelte'),
-      expect: path.resolve('replacement-dir/package'),
+      fn: async () => resolveAlias('@org/package', 'test/test-file.svelte'),
+      expect: path.resolve(REGEX_PACKAGE_FILE),
       info: 'resolves regex alias pattern',
     },
     {
@@ -94,7 +94,7 @@ export default {
     },
     {
       fn: async () => {
-        const { target, unmount } = await mount('./test-alias-component.svelte')
+        const { target, unmount } = await mount('./test/.tmp/test-alias-component.svelte')
 
         const button = target.querySelector('button')
         const result = button?.textContent
