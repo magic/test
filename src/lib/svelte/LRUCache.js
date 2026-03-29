@@ -1,3 +1,5 @@
+import is from '@magic/types'
+
 /**
  * Simple LRU-style cache with max size
  * @template T
@@ -20,9 +22,15 @@ export class LRUCache {
    * @returns {T | undefined}
    */
   get(key) {
-    if (!this.cache.has(key)) return undefined
+    if (!this.cache.has(key)) {
+      return undefined
+    }
+
     const value = this.cache.get(key)
-    if (value === undefined) return undefined
+    if (is.undefined(value)) {
+      return undefined
+    }
+
     this.cache.delete(key)
     this.cache.set(key, value)
     return value
@@ -41,6 +49,7 @@ export class LRUCache {
         this.cache.delete(firstKey)
       }
     }
+
     this.cache.set(key, value)
   }
 
