@@ -90,10 +90,10 @@ const run = async () => {
 
   // Set shard environment variables
   if (shards) {
-    process.env.MAGIC_TEST_SHARDS = shards
+    process.env.MAGIC_TEST_SHARDING_SHARDS = shards
   }
   if (shardId) {
-    process.env.MAGIC_TEST_SHARD_ID = shardId
+    process.env.MAGIC_TEST_SHARDING_ID = shardId
   }
 
   argv.push(binFile)

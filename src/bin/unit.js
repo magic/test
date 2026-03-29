@@ -8,17 +8,17 @@ import { run } from '../run.js'
 import { maybeInjectMagic, readRecursive } from './lib/index.js'
 
 const getShardConfig = () => {
-  const rawShards = process.env.MAGIC_TEST_SHARDS
-  const rawShardId = process.env.MAGIC_TEST_SHARD_ID
+  const rawShards = process.env.MAGIC_TEST_SHARDING_SHARDS
+  const rawShardId = process.env.MAGIC_TEST_SHARDING_ID
 
   const shards = Math.max(1, parseInt(rawShards || '1', 10)) || 1
   const shardId = Math.max(0, parseInt(rawShardId || '0', 10)) || 0
 
   if (rawShards && isNaN(parseInt(rawShards, 10))) {
-    log.warn(`Invalid MAGIC_TEST_SHARDS: ${rawShards}, using default: 1`)
+    log.warn(`Invalid MAGIC_TEST_SHARDING_SHARDS: ${rawShards}, using default: 1`)
   }
   if (rawShardId && isNaN(parseInt(rawShardId, 10))) {
-    log.warn(`Invalid MAGIC_TEST_SHARD_ID: ${rawShardId}, using default: 0`)
+    log.warn(`Invalid MAGIC_TEST_SHARDING_ID: ${rawShardId}, using default: 0`)
   }
 
   return { shards, shardId }
@@ -52,8 +52,8 @@ const init = async () => {
 
   const { shards, shardId } = getShardConfig()
 
-  const hasShardsEnv = 'MAGIC_TEST_SHARDS' in process.env
-  const hasShardIdEnv = 'MAGIC_TEST_SHARD_ID' in process.env
+  const hasShardsEnv = 'MAGIC_TEST_SHARDING_SHARDS' in process.env
+  const hasShardIdEnv = 'MAGIC_TEST_SHARDING_ID' in process.env
   if (hasShardsEnv !== hasShardIdEnv) {
     log.warn('Both --shards and --shard-id should be specified together for consistent behavior')
   }
