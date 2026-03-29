@@ -24,6 +24,7 @@ import is from '@magic/types'
  * @typedef {Object} HttpOptions
  * @property {number} [timeout=30000] - Request timeout in milliseconds
  * @property {boolean} [rejectUnauthorized] - Whether to reject self-signed certs (default: true)
+ * @property {number} [maxSize] - Maximum response size in bytes
  */
 
 /**
@@ -73,16 +74,17 @@ export const get = (url, options = {}) => {
     )
   }
 
-  const isHttps = url.startsWith('https://')
+  const isHttps = parsedUrl.protocol === 'https:'
   const connector = isHttps ? nodeHttps : nodeHttp
   const timeout = options.timeout || 30000
   const rejectUnauthorized = options.rejectUnauthorized ?? shouldRejectUnauthorized()
+  const maxSize = options.maxSize
 
   return new Promise((resolve, reject) => {
     try {
       if (isHttps) {
         const request = connector.get(url, { rejectUnauthorized }, res =>
-          handleResponse(res, resolve, reject, url),
+          handleResponse(res, resolve, reject, url, maxSize),
         )
         request.setTimeout(timeout, () => {
           request.abort()
@@ -90,7 +92,9 @@ export const get = (url, options = {}) => {
         })
         request.on('error', reject)
       } else {
-        const request = connector.get(url, res => handleResponse(res, resolve, reject, url))
+        const request = connector.get(url, res =>
+          handleResponse(res, resolve, reject, url, maxSize),
+        )
         request.setTimeout(timeout, () => {
           request.abort()
           reject(new Error(`Request timeout: ${url} (${timeout}ms)`))
@@ -152,6 +156,7 @@ export const post = (url, body = '', options = {}) => {
 
   const timeout = options.timeout || 30000
   const rejectUnauthorized = options.rejectUnauthorized ?? shouldRejectUnauthorized()
+  const maxSize = options.maxSize
 
   let postData = ''
   if (body) {
@@ -177,7 +182,7 @@ export const post = (url, body = '', options = {}) => {
       }
 
       const request = connector.request(requestOptions, res =>
-        handleResponse(res, resolve, reject, url),
+        handleResponse(res, resolve, reject, url, maxSize),
       )
 
       request.setTimeout(timeout, () => {
