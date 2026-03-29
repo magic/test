@@ -1,13 +1,17 @@
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import fs from '@magic/fs'
 import is from '@magic/types'
+import { limitedPromiseAllSettled } from './promiseAllSettledWithLimit.js'
+
+const CONCURRENCY_LIMIT = 50
 
 /**
  * @typedef {Object} ImportResult
  * @property {string} file
- * @property {any} [test]
- * @property {TestSuites} [tests]
+ * @property {unknown} [test]
+ * @property {object} [tests]
  * @property {Error} [error]
  * @property {'file'|'directory'|'error'|'skip'} type
  */
@@ -65,11 +69,9 @@ export const readRecursive = async (dir = '') => {
   if (await fs.exists(indexFilePath)) {
     // if index.js exists, we will simply import it as is and do no recursion.
     const fileP = indexFilePath.replace(testDir, '')
-    if (path.sep === '\\') {
-      indexFilePath = 'file:\\\\\\' + indexFilePath
-    }
+    const importPath = pathToFileURL(indexFilePath).href
     try {
-      const imported = await importFile(indexFilePath)
+      const imported = await importFile(importPath)
       tests[fileP] = imported
     } catch (err) {
       errors.push({ file: fileP, error: err instanceof Error ? err : new Error(String(err)) })
@@ -77,55 +79,49 @@ export const readRecursive = async (dir = '') => {
   } else {
     // if dir/index.js does not exist, require all files and subdirectories of files
     const files = await fs.readdir(targetDir)
+    const filteredFiles = files.filter(f => !f.startsWith('.'))
 
-    // Use allSettled to continue despite individual file errors
-    const results = await Promise.allSettled(
-      files
-        .filter(f => !f.startsWith('.'))
-        .map(async file => {
-          let filePath = path.join(targetDir, file)
-          const stat = await fs.stat(filePath)
+    // Use allSettled with concurrency limit to prevent file descriptor exhaustion
+    const results = await limitedPromiseAllSettled(filteredFiles, CONCURRENCY_LIMIT, async file => {
+      let filePath = path.join(targetDir, file)
+      const stat = await fs.stat(filePath)
 
-          if (stat.isDirectory()) {
-            try {
-              const deepTests = await readRecursive(dir ? path.join(dir, file) : file)
-              return { type: 'directory', file, tests: deepTests }
-            } catch (err) {
-              const relPath = path.join(dir || '', file)
-              const error = err instanceof Error ? err : new Error(String(err))
-              return { type: 'error', file: relPath, error }
-            }
-          } else if (stat.isFile()) {
-            if (!file.endsWith('js') && !file.endsWith('mjs') && !file.endsWith('ts')) {
-              // bail early if not js or TypeScript
-              return { type: 'skip', file }
-            }
-
-            let fileP = filePath.replace(testDir, '')
-
-            // windows fix
-            if (path.sep === '\\') {
-              filePath = 'file:\\\\\\' + filePath
-              fileP = `/${fileP.substring(1)}`
-            }
-
-            try {
-              const test = await importFile(filePath)
-              return { type: 'file', file: fileP, test }
-            } catch (err) {
-              const error = err instanceof Error ? err : new Error(String(err))
-              return { type: 'error', file: fileP, error }
-            }
-          }
-
+      if (stat.isDirectory()) {
+        try {
+          const deepTests = await readRecursive(dir ? path.join(dir, file) : file)
+          return { type: 'directory', file, tests: deepTests }
+        } catch (err) {
+          const relPath = path.join(dir || '', file)
+          const error = err instanceof Error ? err : new Error(String(err))
+          return { type: 'error', file: relPath, error }
+        }
+      } else if (stat.isFile()) {
+        if (!file.endsWith('js') && !file.endsWith('mjs') && !file.endsWith('ts')) {
           return { type: 'skip', file }
-        }),
-    )
+        }
+
+        let fileP = filePath.replace(testDir, '')
+
+        const importPath = pathToFileURL(filePath).href
+
+        try {
+          const test = await importFile(importPath)
+          return { type: 'file', file: fileP, test }
+        } catch (err) {
+          const error = err instanceof Error ? err : new Error(String(err))
+          return { type: 'error', file: fileP, error }
+        }
+      }
+
+      return { type: 'skip', file }
+    })
 
     // Process results
     for (const result of results) {
+      if (!result) continue
       if (result.status === 'fulfilled') {
-        const value = result.value
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const value = /** @type {any} */ (result.value)
 
         if (value.type === 'file' && value.test !== undefined) {
           tests[value.file] = value.test
