@@ -120,7 +120,6 @@ export const readRecursive = async (dir = '') => {
     for (const result of results) {
       if (!result) continue
       if (result.status === 'fulfilled') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const value = /** @type {any} */ (result.value)
 
         if (value.type === 'file' && value.test !== undefined) {
