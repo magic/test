@@ -130,7 +130,7 @@ const runTestObject = async (testsObj, name, parent, pkg, store) => {
  * Run a suite of tests (recursively).
  *
  * @param {SuiteInput & {store?: Store}} props
- * @returns {Promise<Suite|void|undefined>}
+ * @returns {Promise<Suite | undefined>}
  */
 export const runSuite = async props => {
   const store = props.store ?? new Store()
@@ -229,4 +229,6 @@ export const runSuite = async props => {
       log.error(ERRORS.E_RUN_SUITE_UNKNOWN, { suite: name, error: e })
     }
   }
+
+  return
 }
