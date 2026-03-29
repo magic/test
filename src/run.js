@@ -129,18 +129,20 @@ export const run = async (tests, options = {}) => {
   const { name } = JSON.parse(content)
 
   const suites = await Promise.all(
-    Object.entries(testsObj).map(async ([name, testsValue]) => {
-      if (aborted) {
-        return
-      }
-      return await runSuite({
-        pkg: name,
-        parent: name,
-        name,
-        tests: /** @type {TestCollection} */ (testsValue),
-        store,
+    Object.entries(testsObj)
+      .map(async ([name, testsValue]) => {
+        if (aborted) {
+          return
+        }
+        return await runSuite({
+          pkg: name,
+          parent: name,
+          name,
+          tests: /** @type {TestCollection} */ (testsValue),
+          store,
+        })
       })
-    }),
+      .filter(a => is.undef(a)),
   )
 
   if (aborted) {
