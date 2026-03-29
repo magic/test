@@ -47,6 +47,8 @@ const importFile = async filePath => {
  * @param {string} [dir='']
  * @returns {Promise<TestSuites>}
  */
+const visitedDirs = new Set()
+
 export const readRecursive = async (dir = '') => {
   const testDir = path.join(process.cwd(), 'test')
   const targetDir = path.join(testDir, dir)
@@ -84,9 +86,25 @@ export const readRecursive = async (dir = '') => {
     // Use allSettled with concurrency limit to prevent file descriptor exhaustion
     const results = await limitedPromiseAllSettled(filteredFiles, CONCURRENCY_LIMIT, async file => {
       let filePath = path.join(targetDir, file)
+
+      // Check for symlink cycles using realpath
+      let realPath
+      try {
+        realPath = await fs.realpath(filePath)
+      } catch {
+        // If realpath fails, skip this file/directory
+        return { type: 'skip', file }
+      }
+
+      // Check if we've already visited this real path (circular symlink protection)
+      if (visitedDirs.has(realPath)) {
+        return { type: 'skip', file }
+      }
+
       const stat = await fs.stat(filePath)
 
       if (stat.isDirectory()) {
+        visitedDirs.add(realPath)
         try {
           const deepTests = await readRecursive(dir ? path.join(dir, file) : file)
           return { type: 'directory', file, tests: deepTests }
