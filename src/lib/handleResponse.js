@@ -1,4 +1,8 @@
 /**
+ * @typedef {Error & { statusCode?: number }} HttpError
+ */
+
+/**
  * Handles an HTTP response, collecting data and resolving or rejecting a promise.
  * Automatically parses JSON responses based on content-type header.
  * Accepts any 2xx status code as successful.
@@ -31,10 +35,13 @@ export const handleResponse = (res, resolve, reject, url) => {
       body += chunk
     })
     res.on('end', () => {
+      let errorMessage = err
       if (body) {
-        err += `\nResponse body: ${body.substring(0, 500)}`
+        errorMessage += `\nResponse body: ${body.substring(0, 500)}`
       }
-      reject(err)
+      const error = /** @type {HttpError} */ (new Error(errorMessage))
+      error.statusCode = statusCode
+      reject(error)
     })
     return // ensure we stop processing
   }
