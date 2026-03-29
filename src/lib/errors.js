@@ -3,7 +3,7 @@
  */
 
 /**
- * @typedef {Record<string, string | ((...args: any[]) => string)>} ErrorMessageMap
+ * @typedef {Record<string, string | ((...args: unknown[]) => string)>} ErrorMessageMap
  */
 
 /**
