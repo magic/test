@@ -200,7 +200,8 @@ export class Isolation {
       if ('value' in desc) {
         try {
           stored.value = this.deepClone(desc.value)
-        } catch {
+        } catch (e) {
+          console.warn('Isolation: failed to deep clone property value for', String(key), ':', e)
           stored.value = desc.value
         }
       } else {
@@ -222,8 +223,9 @@ export class Isolation {
     try {
       const snapshot = this.buildSnapshot()
       this.suiteSnapshots.set(suiteKey, snapshot)
-    } catch {
-      // ignore
+    } catch (e) {
+      console.warn('Isolation: failed to capture suite snapshot for', suiteKey, ':', e)
+      // Still ignore to not break tests, but make visible
     }
   }
 
@@ -231,30 +233,31 @@ export class Isolation {
    * @param {string} suiteKey
    * @returns {void}
    */
-  restoreSuiteSnapshot(suiteKey) {
-    const snapshot = this.suiteSnapshots.get(suiteKey)
-    if (!snapshot) return
+   restoreSuiteSnapshot(suiteKey) {
+     const snapshot = this.suiteSnapshots.get(suiteKey)
+     if (!snapshot) return
 
-    /** @type {(string | symbol)[]} */
-    const currentNames = /** @type {(string | symbol)[]} */ (
-      Object.getOwnPropertyNames(globalThis)
-    ).concat(Object.getOwnPropertySymbols(globalThis))
-    const snapshotNames = new Set(Object.keys(snapshot.props))
+     /** @type {(string | symbol)[]} */
+     const currentNames = /** @type {(string | symbol)[]} */ (
+       Object.getOwnPropertyNames(globalThis)
+     ).concat(Object.getOwnPropertySymbols(globalThis))
+     const snapshotNames = new Set(Object.keys(snapshot.props))
 
-    for (const key of currentNames) {
-      if (!this.shouldCaptureProperty(key)) continue
-      if (!snapshotNames.has(String(key))) {
-        try {
-          const desc = Object.getOwnPropertyDescriptor(globalThis, key)
-          if (desc && desc.configurable !== false) {
-            // @ts-expect-error - dynamic delete on globalThis
-            delete globalThis[key]
-          }
-        } catch {
-          // ignore
-        }
-      }
-    }
+     for (const key of currentNames) {
+       if (!this.shouldCaptureProperty(key)) continue
+       if (!snapshotNames.has(String(key))) {
+         try {
+           const desc = Object.getOwnPropertyDescriptor(globalThis, key)
+           if (desc && desc.configurable !== false) {
+             // @ts-expect-error - dynamic delete on globalThis
+             delete globalThis[key]
+           }
+         } catch (e) {
+           console.warn('Isolation: failed to delete extra property in suite snapshot:', String(key), e)
+           // Still ignore to not break tests
+         }
+       }
+     }
 
     for (const [keyStr, stored] of Object.entries(snapshot.props)) {
       const key = this._reviveKeyFromString(keyStr)
