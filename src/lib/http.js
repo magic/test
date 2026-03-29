@@ -1,6 +1,5 @@
 import nodeHttp from 'node:http'
 import nodeHttps from 'node:https'
-import { Buffer } from 'node:buffer'
 import { URL } from 'node:url'
 
 import { handleResponse } from './handleResponse.js'
