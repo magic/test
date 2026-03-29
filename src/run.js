@@ -10,6 +10,10 @@ import { runSuite } from './run/suite.js'
 
 const cwd = process.cwd()
 
+/**
+ * @typedef {Record<string, unknown>} TestSuitesRecord
+ */
+
 /** @type {boolean} */
 export let aborted = false
 
@@ -37,35 +41,83 @@ export const resetAbort = () => {
 }
 
 /**
+ * @typedef {Object} RunOptions
+ * @property {number} [shards] - Number of shards to split tests into
+ * @property {number} [shardId] - Which shard to run (0-indexed)
+ */
+
+/**
+ * FNV-1a hash function for sharding
+ * @param {string} testPath
+ * @param {number} totalShards
+ * @returns {number}
+ */
+const getShardForTest = (testPath, totalShards) => {
+  let hash = 2166136261
+  for (let i = 0; i < testPath.length; i++) {
+    hash ^= testPath.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+  return (hash >>> 0) % totalShards
+}
+
+/**
  * Run all test suites
  * @param {TestSuites | (() => TestSuites)} tests - Test suites object or function that returns one
+ * @param {RunOptions} [options] - Run options including sharding
  * @returns {Promise<Error | void>}
  */
-export const run = async tests => {
+export const run = async (tests, options = {}) => {
+  const { shards = 1, shardId = 0 } = options
+
+  // Set environment variables for sharding (used by unit.js and t.js)
+  if (shards > 1) {
+    process.env.MAGIC_TEST_SHARDING_SHARDS = String(shards)
+    process.env.MAGIC_TEST_SHARDING_ID = String(shardId)
+  }
+
   resetAbort()
 
   const store = createStore()
   const startTime = log.hrtime()
   store.set({ startTime })
 
+  /** @type {TestSuitesRecord} */
+  let testsObj
+
   if (is.function(tests)) {
-    tests = tests()
+    testsObj = tests()
+  } else {
+    testsObj = tests
   }
 
-  if (!is.object(tests)) {
-    log.error(ERRORS.E_NO_TESTS, { received: tests })
+  if (!is.object(testsObj)) {
+    log.error(ERRORS.E_NO_TESTS, { received: testsObj })
     return new Error(ERRORS.E_NO_TESTS)
   }
 
-  const beforeAll = tests['/beforeAll.js']
-  let afterAll = tests['/afterAll.js'] ? [tests['/afterAll.js']] : []
+  const beforeAll = testsObj['/beforeAll.js']
+  let afterAll = testsObj['/afterAll.js'] ? [testsObj['/afterAll.js']] : []
 
-  delete tests['/beforeAll.js']
-  delete tests['/afterAll.js']
+  delete testsObj['/beforeAll.js']
+  delete testsObj['/afterAll.js']
+
+  // Filter tests by shard if sharding is enabled
+  if (shards > 1) {
+    /** @type {TestSuitesRecord} */
+    const filtered = {}
+    for (const [key, value] of Object.entries(testsObj)) {
+      const shard = getShardForTest(key, shards)
+      if (shard === shardId) {
+        filtered[key] = value
+      }
+    }
+    testsObj = filtered
+  }
 
   // execute beforeall and save the result in the afterAll array for later
   if (is.fn(beforeAll)) {
-    const after = await beforeAll(tests)
+    const after = await beforeAll(testsObj)
     if (after) {
       afterAll.push(after)
     }
@@ -77,7 +129,7 @@ export const run = async tests => {
   const { name } = JSON.parse(content)
 
   const suites = await Promise.all(
-    Object.entries(tests).map(async ([name, testsValue]) => {
+    Object.entries(testsObj).map(async ([name, testsValue]) => {
       if (aborted) {
         return
       }
@@ -97,7 +149,7 @@ export const run = async tests => {
   }
 
   if (afterAll) {
-    await Promise.all(afterAll.filter(is.fn).map(fn => fn(tests)))
+    await Promise.all(afterAll.filter(is.fn).map(fn => fn(testsObj)))
   }
 
   const tmpDir = path.join(cwd, 'test', '.tmp')
