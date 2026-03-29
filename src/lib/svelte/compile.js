@@ -37,23 +37,28 @@ const TMP_DIR = 'test/.tmp'
 let cleanupDone = false
 
 const cleanTempFiles = async () => {
-  if (cleanupDone) return
+  if (cleanupDone) {
+    return
+  }
   cleanupDone = true
 
   try {
     const tmpDir = path.join(process.cwd(), TMP_DIR)
-    if (!fs.existsSync(tmpDir)) return
+    const exists = await fs.exists(tmpDir)
+    if (!exists) {
+      return
+    }
 
-    const files = fs.readdirSync(tmpDir)
+    const files = await fs.readdir(tmpDir)
     const now = Date.now()
     const MAX_AGE = 24 * 60 * 60 * 1000 // 24 hours
 
     for (const file of files) {
       const filePath = path.join(tmpDir, file)
       try {
-        const stat = fs.statSync(filePath)
+        const stat = await fs.stat(filePath)
         if (now - stat.mtimeMs > MAX_AGE) {
-          fs.unlinkSync(filePath)
+          fs.rmrf(filePath)
         }
       } catch {
         // Ignore errors for individual files
