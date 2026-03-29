@@ -237,7 +237,16 @@ export class Isolation {
    * @returns {void}
    */
   restoreSuiteSnapshot(suiteKey) {
-    const snapshot = this.suiteSnapshots.get(suiteKey)
+    this.restoreSnapshotFromMap(this.suiteSnapshots, suiteKey)
+  }
+
+  /**
+   * @param {Map<string, Snapshot>} snapshotMap
+   * @param {string} key
+   * @returns {void}
+   */
+  restoreSnapshotFromMap(snapshotMap, key) {
+    const snapshot = snapshotMap.get(key)
     if (!snapshot) return
 
     /** @type {(string | symbol)[]} */
@@ -246,28 +255,23 @@ export class Isolation {
     ).concat(Object.getOwnPropertySymbols(globalThis))
     const snapshotNames = new Set(Object.keys(snapshot.props))
 
-    for (const key of currentNames) {
-      if (!this.shouldCaptureProperty(key)) continue
-      if (!snapshotNames.has(String(key))) {
+    for (const prop of currentNames) {
+      if (!this.shouldCaptureProperty(prop)) continue
+      if (!snapshotNames.has(String(prop))) {
         try {
-          const desc = Object.getOwnPropertyDescriptor(globalThis, key)
+          const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
           if (desc && desc.configurable !== false) {
             // @ts-expect-error - dynamic delete on globalThis
-            delete globalThis[key]
+            delete globalThis[prop]
           }
-        } catch (e) {
-          console.warn(
-            'Isolation: failed to delete extra property in suite snapshot:',
-            String(key),
-            e,
-          )
-          // Still ignore to not break tests
+        } catch {
+          // ignore
         }
       }
     }
 
     for (const [keyStr, stored] of Object.entries(snapshot.props)) {
-      const key = this._reviveKeyFromString(keyStr)
+      const prop = this._reviveKeyFromString(keyStr)
       try {
         /** @type {PropertyDescriptor} */
         const desc = {}
@@ -275,25 +279,23 @@ export class Isolation {
         desc.enumerable = !!stored.enumerable
         if ('value' in stored) {
           desc.writable = !!stored.writable
-          // Restore value directly without deep cloning for performance
-          // (snapshot already contains cloned values from capture)
           desc.value = stored.value
         } else {
           desc.get = stored.get
           desc.set = stored.set
         }
-        Object.defineProperty(globalThis, key, desc)
+        Object.defineProperty(globalThis, prop, desc)
       } catch {
         try {
           const global = /** @type {Record<string, unknown>} */ (globalThis)
-          global[/** @type {string} */ (key)] = stored.value
+          global[/** @type {string} */ (prop)] = stored.value
         } catch {
           // ignore
         }
       }
     }
 
-    this.suiteSnapshots.delete(suiteKey)
+    snapshotMap.delete(key)
   }
 
   /**
@@ -314,58 +316,7 @@ export class Isolation {
    * @returns {void}
    */
   restoreSnapshot(testKey) {
-    const snapshot = this.snapshots.get(testKey)
-    if (!snapshot) return
-
-    /** @type {(string | symbol)[]} */
-    const currentNames = /** @type {(string | symbol)[]} */ (
-      Object.getOwnPropertyNames(globalThis)
-    ).concat(Object.getOwnPropertySymbols(globalThis))
-    const snapshotNames = new Set(Object.keys(snapshot.props))
-
-    for (const key of currentNames) {
-      if (!this.shouldCaptureProperty(key)) continue
-      if (!snapshotNames.has(String(key))) {
-        try {
-          const desc = Object.getOwnPropertyDescriptor(globalThis, key)
-          if (desc && desc.configurable !== false) {
-            // @ts-expect-error - dynamic delete on globalThis
-            delete globalThis[key]
-          }
-        } catch {
-          // ignore
-        }
-      }
-    }
-
-    for (const [keyStr, stored] of Object.entries(snapshot.props)) {
-      const key = this._reviveKeyFromString(keyStr)
-      try {
-        /** @type {PropertyDescriptor} */
-        const desc = {}
-        desc.configurable = !!stored.configurable
-        desc.enumerable = !!stored.enumerable
-        if ('value' in stored) {
-          desc.writable = !!stored.writable
-          // Restore value directly without deep cloning for performance
-          // (snapshot already contains cloned values from capture)
-          desc.value = stored.value
-        } else {
-          desc.get = stored.get
-          desc.set = stored.set
-        }
-        Object.defineProperty(globalThis, key, desc)
-      } catch {
-        try {
-          const global = /** @type {Record<string, unknown>} */ (globalThis)
-          global[/** @type {string} */ (key)] = stored.value
-        } catch {
-          // ignore
-        }
-      }
-    }
-
-    this.snapshots.delete(testKey)
+    this.restoreSnapshotFromMap(this.snapshots, testKey)
   }
 
   /**
