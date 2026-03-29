@@ -6,6 +6,9 @@ import url from 'node:url'
 import cli from '@magic/cli'
 import fs from '@magic/fs'
 import is from '@magic/types'
+import log from '@magic/log'
+
+import { abort } from '../run.js'
 
 const __filename = url.fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -132,3 +135,11 @@ const run = async () => {
 }
 
 run()
+
+const shutdown = async () => {
+  log.warn('Received shutdown signal, aborting tests...')
+  await abort()
+  process.exit(1)
+}
+
+process.on('SIGTERM', shutdown).on('SIGINT', shutdown)

@@ -10,12 +10,40 @@ import { runSuite } from './run/suite.js'
 
 const cwd = process.cwd()
 
+/** @type {boolean} */
+export let aborted = false
+
+/**
+ * Abort the current test run and clean up temp directories
+ */
+export const abort = async () => {
+  aborted = true
+
+  const tmpDir = path.join(cwd, 'test', '.tmp')
+  try {
+    if (await fs.exists(tmpDir)) {
+      await fs.rmrf(tmpDir)
+    }
+  } catch {
+    // Ignore cleanup errors during abort
+  }
+}
+
+/**
+ * Reset abort flag
+ */
+export const resetAbort = () => {
+  aborted = false
+}
+
 /**
  * Run all test suites
  * @param {TestSuites | (() => TestSuites)} tests - Test suites object or function that returns one
  * @returns {Promise<Error | void>}
  */
 export const run = async tests => {
+  resetAbort()
+
   const store = createStore()
   const startTime = log.hrtime()
   store.set({ startTime })
@@ -49,17 +77,24 @@ export const run = async tests => {
   const { name } = JSON.parse(content)
 
   const suites = await Promise.all(
-    Object.entries(tests).map(
-      async ([name, testsValue]) =>
-        await runSuite({
-          pkg: name,
-          parent: name,
-          name,
-          tests: /** @type {TestCollection} */ (testsValue),
-          store,
-        }),
-    ),
+    Object.entries(tests).map(async ([name, testsValue]) => {
+      if (aborted) {
+        return
+      }
+      return await runSuite({
+        pkg: name,
+        parent: name,
+        name,
+        tests: /** @type {TestCollection} */ (testsValue),
+        store,
+      })
+    }),
   )
+
+  if (aborted) {
+    log.warn('Test run was aborted')
+    return
+  }
 
   if (afterAll) {
     await Promise.all(afterAll.filter(is.fn).map(fn => fn(tests)))

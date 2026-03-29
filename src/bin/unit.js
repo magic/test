@@ -3,7 +3,7 @@
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { run } from '../run.js'
+import { run, abort } from '../run.js'
 
 import { maybeInjectMagic, readRecursive } from './lib/index.js'
 
@@ -121,3 +121,11 @@ const handleError = error => {
 }
 
 process.on('unhandledRejection', handleError).on('uncaughtException', handleError)
+
+const shutdown = async () => {
+  log.warn('Received shutdown signal, aborting tests...')
+  await abort()
+  process.exit(1)
+}
+
+process.on('SIGTERM', shutdown).on('SIGINT', shutdown)
