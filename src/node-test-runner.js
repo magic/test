@@ -8,8 +8,8 @@ const __dirname = path.dirname(__filename)
 
 import(path.join(__dirname, 'bin/lib/registerLoader.js'))
 
-import { test, describe, before, after, beforeEach, afterEach, it } from 'node:test'
-import fs from 'node:fs'
+import { describe, before, after, it } from 'node:test'
+import fs from '@magic/fs'
 import is from '@magic/types'
 import deep from '@magic/deep'
 
@@ -27,17 +27,18 @@ const discoveredFiles = []
 /**
  * @param {string} dir
  */
-const scanDir = dir => {
-  if (!fs.existsSync(dir)) return
+const scanDir = async dir => {
+  const exists = await fs.exists(dir)
+  if (!exists) return
 
-  const entries = fs.readdirSync(dir, { withFileTypes: true })
+  const entries = await fs.readdir(dir, { withFileTypes: true })
 
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name)
 
     if (entry.isDirectory()) {
       if (!EXCLUDED_DIRS.includes(entry.name) && !entry.name.startsWith('.')) {
-        scanDir(fullPath)
+        await scanDir(fullPath)
       }
     } else if (entry.isFile()) {
       const ext = path.extname(entry.name)
@@ -50,7 +51,7 @@ const scanDir = dir => {
 
 await maybeInjectMagic()
 
-scanDir(testDir)
+await scanDir(testDir)
 
 discoveredFiles.sort()
 
@@ -418,6 +419,14 @@ const run = async () => {
       await cleanupFn()
     })
   }
+
+  after(async () => {
+    const tmpDir = path.join(cwd, 'test', '.tmp')
+    const exists = await fs.exists(tmpDir)
+    if (exists) {
+      fs.rmrf(tmpDir)
+    }
+  })
 }
 
 run()
