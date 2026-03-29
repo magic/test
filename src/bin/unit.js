@@ -71,15 +71,15 @@ const init = async () => {
   }
 
   // Filter tests to only those assigned to this shard
-  /** @type {any} */
-  const filtered = Object.fromEntries(
-    Object.entries(tests).filter(([key]) => {
-      const shard = getShardForTest(key, shards)
-      return shard === shardId
-    }),
-  )
   /** @type {TestSuites} */
-  const shardTests = filtered
+  const shardTests = /** @type {TestSuites} */ (
+    Object.fromEntries(
+      Object.entries(tests).filter(([key]) => {
+        const shard = getShardForTest(key, shards)
+        return shard === shardId
+      }),
+    )
+  )
 
   if (Object.keys(shardTests).length === 0) {
     log.info(`Shard ${shardId} has no tests assigned`)
