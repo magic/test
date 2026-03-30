@@ -15,6 +15,24 @@ import deep from '@magic/deep'
 
 import { maybeInjectMagic } from './bin/lib/index.js'
 
+/**
+ * Internal test item type for node-test-runner
+ * @typedef {Object} TestItem
+ * @property {string} name
+ * @property {() => Promise<void>} fn
+ * @property {HookFunction | undefined} [before]
+ * @property {HookFunction | undefined} [after]
+ * @typedef {() => void | Promise<void>} HookFunction
+ */
+
+/**
+ * Internal suite type for node-test-runner
+ * @typedef {Object} RunnerSuite
+ * @property {string} name
+ * @property {TestItem[]} tests
+ * @property {TestHooks} hooks
+ */
+
 const cwd = process.cwd()
 const testDir = path.join(cwd, 'test')
 
@@ -158,37 +176,36 @@ const runAssertion = async (result, expect) => {
 }
 
 /**
- * @param {unknown} testObj
+ * @param {Record<string, unknown>} testObj
  * @param {string} filePath
  * @param {number} index
- * @returns {Promise<{name: string, fn: () => Promise<void>, before?: () => void | Promise<void>}>}
+ * @returns {Promise<TestItem>}
  */
 const convertTest = async (testObj, filePath, index) => {
-  const obj = /** @type {Record<string, unknown>} */ (testObj)
   const testName = getTestName(testObj, filePath, index)
 
   const testFn = async () => {
-    let fn = obj.fn
+    let fn = testObj.fn
 
-    const fnExists = 'fn' in obj && !is.undefined(obj.fn)
-    if (!fnExists && 'is' in obj) {
-      fn = () => obj.is
+    const fnExists = 'fn' in testObj && !is.undefined(testObj.fn)
+    if (!fnExists && 'is' in testObj) {
+      fn = () => testObj.is
     }
 
     let result
 
     if (!fnExists) {
       result = undefined
-    } else if (obj.component) {
+    } else if (testObj.component) {
       const { mount } = await import(path.join(__dirname, 'lib/svelte/mount.js'))
       let componentFile, componentProps
 
-      if (is.string(obj.component)) {
-        componentFile = String(obj.component)
-        componentProps = /** @type {Record<string, unknown>} */ (obj.props) || {}
-      } else if (is.array(obj.component)) {
-        componentFile = /** @type {string} */ (obj.component[0])
-        componentProps = /** @type {Record<string, unknown>} */ (obj.component[1]) || {}
+      if (is.string(testObj.component)) {
+        componentFile = String(testObj.component)
+        componentProps = testObj.props || {}
+      } else if (is.array(testObj.component)) {
+        componentFile = /** @type {string} */ (testObj.component[0])
+        componentProps = /** @type {Record<string, unknown>} */ (testObj.component[1]) || {}
       }
 
       const { target, component, unmount } = await mount(componentFile, { props: componentProps })
@@ -205,8 +222,8 @@ const convertTest = async (testObj, filePath, index) => {
       result = fn
     }
 
-    const hasOwnProperty = Object.prototype.hasOwnProperty.call(obj, 'expect')
-    const expect = hasOwnProperty ? obj.expect : true
+    const hasExpect = 'expect' in testObj
+    const expect = hasExpect ? testObj.expect : true
     const pass = await runAssertion(result, expect)
 
     if (!pass) {
@@ -217,14 +234,15 @@ const convertTest = async (testObj, filePath, index) => {
   return {
     name: testName,
     fn: testFn,
-    before: /** @type {() => void | Promise<void>} */ (obj.before),
+    before: /** @type {HookFunction} */ (testObj.before),
+    after: /** @type {HookFunction} */ (testObj.after),
   }
 }
 
 /**
  * @param {unknown} tests
  * @param {string} filePath
- * @returns {Promise<{name: string, fn: () => Promise<void>}[]>}
+ * @returns {Promise<TestItem[]>}
  */
 const convertSuite = async (tests, filePath) => {
   if (!tests) return []
@@ -238,12 +256,16 @@ const convertSuite = async (tests, filePath) => {
   }
 
   if (is.array(tests)) {
-    /** @type {{name: string, fn: () => Promise<void>}[]} */
+    /** @type {TestItem[]} */
     const converted = []
     for (let i = 0; i < tests.length; i++) {
       const testObj = tests[i]
       if (testObj && is.object(testObj)) {
-        const convertedTest = await convertTest(testObj, filePath, i)
+        const convertedTest = await convertTest(
+          /** @type {Record<string, unknown>} */ (testObj),
+          filePath,
+          i,
+        )
         if (convertedTest) {
           converted.push(convertedTest)
         }
@@ -254,7 +276,7 @@ const convertSuite = async (tests, filePath) => {
 
   if (is.objectNative(tests)) {
     const entries = Object.entries(tests)
-    /** @type {{name: string, fn: () => Promise<void>}[]} */
+    /** @type {TestItem[]} */
     const converted = []
 
     for (const [key, value] of entries) {
@@ -290,7 +312,7 @@ const convertSuite = async (tests, filePath) => {
 
 /**
  * @param {string} filePath
- * @returns {Promise<{name: string, tests: {name: string, fn: () => Promise<void>, before?: () => void | Promise<void>}[], hooks: TestHooks}[]>}
+ * @returns {Promise<RunnerSuite[]>}
  */
 const processFile = async filePath => {
   const mod = await extractExport(filePath)
@@ -301,7 +323,7 @@ const processFile = async filePath => {
 
   if (mod === undefined || mod === null) return []
 
-  /** @type {{name: string, tests: {name: string, fn: () => Promise<void>}[], hooks: TestHooks}[]} */
+  /** @type {RunnerSuite[]} */
   const suites = []
 
   if (mod.default) {
@@ -322,7 +344,7 @@ const processFile = async filePath => {
       suites.push({
         name: `${fileName.replace(/\.(js|ts|mjs)$/, '')}_${exportName}`,
         tests,
-        hooks: /** @type {TestHooks} */ (exportValue),
+        hooks: /** @type {any} */ (exportValue),
       })
     }
   }
@@ -331,7 +353,7 @@ const processFile = async filePath => {
 }
 
 const run = async () => {
-  /** @type {{name: string, tests: {name: string, fn: () => Promise<void>, before?: () => void | Promise<void>}[], hooks: TestHooks}[]} */
+  /** @type {RunnerSuite[]} */
   const allSuites = []
 
   for (const filePath of discoveredFiles) {
@@ -340,29 +362,30 @@ const run = async () => {
   }
 
   /** @type {unknown} */
-  let beforeAllGlobalCleanup = null
+  let beforeAllGlobalCleanup = undefined
 
   if (globalBeforeAll) {
-    const result = await globalBeforeAll(allSuites)
-    if (is.function(result)) {
-      beforeAllGlobalCleanup = result
+    const beforeAllResult = globalBeforeAll(allSuites)
+    if (is.function(beforeAllResult)) {
+      beforeAllGlobalCleanup = /** @type {unknown} */ (beforeAllResult)
+    } else if (beforeAllResult && is.function(beforeAllResult.then)) {
+      await beforeAllResult
     }
   }
 
   for (const suite of allSuites) {
-    const hooks = suite.hooks || {}
+    /** @type {Record<string, unknown>} */
+    const hooks = /** @type {Record<string, unknown>} */ (suite.hooks) || {}
 
     describe(suite.name, () => {
-      /** @type {(() => void | Promise<void>) | null} */
+      /** @type {HookFunction | null} */
       let beforeAllCleanup = null
 
       if (hooks.beforeAll && is.function(hooks.beforeAll)) {
         before(async () => {
-          const result = await /** @type {(...args: unknown[]) => unknown} */ (hooks.beforeAll)(
-            allSuites,
-          )
+          const result = await /** @type {Function} */ (hooks.beforeAll)(allSuites)
           if (result && is.function(result)) {
-            beforeAllCleanup = /** @type {() => void | Promise<void>} */ (result)
+            beforeAllCleanup = /** @type {HookFunction} */ (result)
           }
           return undefined
         })
@@ -370,25 +393,24 @@ const run = async () => {
 
       if (hooks.afterAll && is.function(hooks.afterAll)) {
         after(async () => {
-          await /** @type {(...args: unknown[]) => unknown} */ (hooks.afterAll)(allSuites)
+          await /** @type {Function} */ (hooks.afterAll)(allSuites)
         })
       }
 
       if (hooks.beforeAll && is.function(hooks.beforeAll)) {
         after(async () => {
           if (beforeAllCleanup && is.function(beforeAllCleanup)) {
-            await /** @type {(...args: unknown[]) => unknown} */ (beforeAllCleanup)()
+            await /** @type {Function} */ (beforeAllCleanup)()
           }
         })
       }
 
       for (const testObj of suite.tests) {
         it(testObj.name, async () => {
-          const testBefore = testObj.before
           let testAfter
 
-          if (testBefore && is.function(testBefore)) {
-            const result = testBefore()
+          if (testObj.before && is.function(testObj.before)) {
+            const result = testObj.before()
             if (is.function(result)) {
               testAfter = result
             }
@@ -397,8 +419,12 @@ const run = async () => {
           try {
             await testObj.fn()
           } finally {
-            if (testAfter && is.function(testAfter)) {
+            if (testAfter) {
               testAfter()
+            }
+
+            if (testObj.after) {
+              testObj.after()
             }
           }
         })
@@ -406,21 +432,15 @@ const run = async () => {
     })
   }
 
-  if (globalAfterAll && is.function(globalAfterAll)) {
-    const afterAllFn = globalAfterAll
-    after(async () => {
-      await afterAllFn(allSuites)
-    })
-  }
-
-  if (beforeAllGlobalCleanup) {
-    const cleanupFn = /** @type {() => void | Promise<void>} */ (beforeAllGlobalCleanup)
-    after(async () => {
-      await cleanupFn()
-    })
-  }
-
   after(async () => {
+    if (beforeAllGlobalCleanup) {
+      await /** @type {Function} */ (beforeAllGlobalCleanup)()
+    }
+
+    if (globalAfterAll) {
+      await globalAfterAll(allSuites)
+    }
+
     const tmpDir = path.join(cwd, 'test', '.tmp')
     const exists = await fs.exists(tmpDir)
     if (exists) {
