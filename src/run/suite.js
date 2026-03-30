@@ -278,22 +278,36 @@ export const runSuite = async props => {
       const testFileUrl = pathToFileURL(path.join(process.cwd(), 'test', pkg)).href
 
       // Determine if we can use workers for isolated tests
-      // Workers are only beneficial when there's a beforeAll hook that sets up shared state
-      // Per-test before/after hooks don't benefit from workers since each test runs in isolation anyway
+      // Workers have their own globalThis, so:
+      // - beforeAll modifying globalThis: workers with snapshot (pass state)
+      // - before modifying globalThis: workers (each gets fresh globalThis)
+      // - before modifying module state: NO workers (need shared module)
       let useWorkers = false
       let suiteSnapshot
-      if (hasBeforeAll) {
-        suiteSnapshot = isolation.buildSnapshot()
-        try {
-          // Ensure snapshot can be cloned to workers (structuredClone checks for non-serializable values)
-          structuredClone(suiteSnapshot)
+      const beforeAllModifiesGlobal =
+        hasBeforeAll && /globalThis|^global\b/.test(/** @type {any} */ (tests).beforeAll.toString())
+      const testArray = /** @type {any[]} */ (is.array(tests) ? tests : [])
+      const beforeModifiesGlobal = testArray.some(
+        t => t.before && /globalThis|^global\b/.test(t.before.toString()),
+      )
+
+      if (needsIsolation) {
+        if (hasBeforeAll && beforeAllModifiesGlobal) {
+          suiteSnapshot = isolation.buildSnapshot()
+          try {
+            structuredClone(suiteSnapshot)
+          } catch (e) {
+            console.warn(
+              'Isolation: snapshot not cloneable, falling back to sequential isolated tests:',
+              e,
+            )
+            useWorkers = false
+          }
+        }
+        // Use workers if beforeAll modifies globalThis, OR if before hooks modify globalThis
+        // Don't use workers if only before hooks that don't reference globalThis (they likely modify module state)
+        if (hasBeforeAll || beforeModifiesGlobal) {
           useWorkers = true
-        } catch (e) {
-          console.warn(
-            'Isolation: snapshot not cloneable, falling back to sequential isolated tests:',
-            e,
-          )
-          useWorkers = false
         }
       }
 
