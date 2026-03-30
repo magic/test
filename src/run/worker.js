@@ -134,9 +134,9 @@ const runTestFn = async (test, key) => {
     let res
     try {
       if (is.function(fn)) {
-        res = await isolation.executeIsolated(key, async () => await fn())
+        res = await fn()
       } else if (is.promise(fn)) {
-        res = await isolation.executeIsolated(key, async () => await fn)
+        res = await fn
       } else {
         res = fn
       }
