@@ -1,10 +1,16 @@
+import { Worker } from 'node:worker_threads'
+
 import is from '@magic/types'
 
 const skipProps = [
+  // Node/CommonJS built-ins
   'console',
   'process',
   'Buffer',
   'global',
+  'globalThis',
+  'window',
+  'self',
   'setTimeout',
   'setInterval',
   'clearTimeout',
@@ -16,6 +22,7 @@ const skipProps = [
   'require',
   'module',
   'exports',
+  // Constructors and intrinsics
   'Array',
   'Object',
   'String',
@@ -49,6 +56,76 @@ const skipProps = [
   'encodeURIComponent',
   'escape',
   'unescape',
+  // @magic/core globals (injected by maybeInjectMagic)
+  'CHECK_PROPS',
+  'modules',
+  'actions',
+  'effects',
+  'helpers',
+  'subscriptions',
+  'lib',
+  'renderToString',
+  'compile',
+  // DOM globals (from happy-dom, set by dom.js)
+  'document',
+  'navigator',
+  'location',
+  'history',
+  'Node',
+  'Element',
+  'HTMLElement',
+  'SVGElement',
+  'Document',
+  'DocumentFragment',
+  'Comment',
+  'Text',
+  'Event',
+  'CustomEvent',
+  'MouseEvent',
+  'KeyboardEvent',
+  'InputEvent',
+  'TouchEvent',
+  'PointerEvent',
+  'FormData',
+  'File',
+  'FileList',
+  'Blob',
+  'URL',
+  'URLSearchParams',
+  'MutationObserver',
+  'IntersectionObserver',
+  'ResizeObserver',
+  'PerformanceObserver',
+  // Typed arrays and buffers
+  'ArrayBuffer',
+  'DataView',
+  'Int8Array',
+  'Int16Array',
+  'Int32Array',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'Uint16Array',
+  'Uint32Array',
+  'Float32Array',
+  'Float64Array',
+  'BigInt64Array',
+  'BigUint64Array',
+  // Other built-ins
+  'Reflect',
+  'Proxy',
+  'BigInt',
+  'performance',
+  // Additional globals that shouldn't be captured
+  'Function',
+  'eval',
+  'WeakRef',
+  'queueMicrotask',
+  'FinalizationRegistry',
+  'structuredClone',
+  'atob',
+  'btoa',
+  'fetch',
+  'DOMException',
 ]
 
 /**
@@ -95,7 +172,11 @@ export class Isolation {
       const copy = []
       seen.set(value, copy)
       for (const v of value) {
-        copy.push(this.deepClone(v, seen))
+        const cloned = this.deepClone(v, seen)
+        // Skip functions; they cannot be transferred to workers
+        if (!is.function(cloned)) {
+          copy.push(cloned)
+        }
       }
 
       return /** @type {T} */ (copy)
@@ -112,7 +193,11 @@ export class Isolation {
       const out = new Set()
       seen.set(value, out)
       for (const v of value) {
-        out.add(this.deepClone(v, seen))
+        const cloned = this.deepClone(v, seen)
+        // Skip functions
+        if (!is.function(cloned)) {
+          out.add(cloned)
+        }
       }
       return /** @type {T} */ (out)
     }
@@ -120,7 +205,12 @@ export class Isolation {
       const out = new Map()
       seen.set(value, out)
       for (const [k, v] of value) {
-        out.set(this.deepClone(k, seen), this.deepClone(v, seen))
+        const clonedK = this.deepClone(k, seen)
+        const clonedV = this.deepClone(v, seen)
+        // Skip entries where key or value is a function
+        if (!is.function(clonedK) && !is.function(clonedV)) {
+          out.set(clonedK, clonedV)
+        }
       }
       return /** @type {T} */ (out)
     }
@@ -150,6 +240,7 @@ export class Isolation {
     for (const key of allKeys) {
       const desc = Object.getOwnPropertyDescriptor(value, key)
       if (!desc) continue
+
       if (desc.get || desc.set) {
         Object.defineProperty(copy, key, {
           configurable: desc.configurable,
@@ -158,10 +249,12 @@ export class Isolation {
           set: desc.set,
         })
       } else {
+        // Skip function-valued data properties; they cannot be transferred to workers
+        if (typeof desc.value === 'function') continue
         Object.defineProperty(copy, key, {
           configurable: desc.configurable,
           enumerable: desc.enumerable,
-          writable: desc.writable,
+          writable: 'writable' in desc ? !!desc.writable : undefined,
           value: this.deepClone(desc.value, seen),
         })
       }
@@ -189,6 +282,11 @@ export class Isolation {
       const desc = Object.getOwnPropertyDescriptor(globalThis, key)
       if (!desc) continue
       if (desc.configurable === false) continue
+
+      // Skip function-valued data properties (cannot be cloned)
+      if ('value' in desc && typeof desc.value === 'function') continue
+      // Skip accessor properties (get/set are functions and cannot be cloned)
+      if (desc.get || desc.set) continue
 
       /** @type {PropertyDescriptorRecord} */
       const stored = {
@@ -347,6 +445,8 @@ export class Isolation {
     const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
     if (!desc) return false
     if (desc.configurable === false) return false
+    if ('value' in desc && typeof desc.value === 'function') return false
+    if (desc.get || desc.set) return false
     return true
   }
 
@@ -377,6 +477,100 @@ export class Isolation {
       return await fn()
     } finally {
       this.restoreSnapshot(testKey)
+    }
+  }
+
+  /**
+   * Run a test in a worker thread for true isolation
+   * @param {object} options
+   * @param {string} options.testFileUrl
+   * @param {number} options.testIndex
+   * @param {string} options.testPkg
+   * @param {string} options.testParent
+   * @param {string} options.testName
+   * @param {Snapshot} [options.suiteSnapshot]
+   * @returns {Promise<import('../app.d.ts').TestResult>}
+   */
+  executeInWorker({ testFileUrl, testIndex, testPkg, testParent, testName, suiteSnapshot }) {
+    return new Promise((resolve, reject) => {
+      const worker = new Worker(new URL('./worker.js', import.meta.url), {
+        workerData: { testFileUrl, testIndex, testPkg, testParent, testName, suiteSnapshot },
+      })
+
+      let settled = false
+      worker.on('message', result => {
+        if (settled) return
+        settled = true
+        resolve(result)
+      })
+      worker.on('error', err => {
+        if (settled) return
+        settled = true
+        reject(err)
+      })
+      worker.on('exit', code => {
+        if (settled) return
+        if (code !== 0) {
+          settled = true
+          reject(new Error(`Worker exited with code ${code}`))
+        }
+      })
+    })
+  }
+}
+
+/**
+ * Apply a snapshot to the current globalThis context.
+ * Deletes properties not in the snapshot, restores properties from snapshot.
+ * Standalone version for use in worker threads.
+ * @param {Snapshot} snapshot
+ * @returns {void}
+ */
+export const restoreFromSnapshot = snapshot => {
+  if (!snapshot) return
+
+  const currentNames = /** @type {(string | symbol)[]} */ (
+    Object.getOwnPropertyNames(globalThis)
+  ).concat(Object.getOwnPropertySymbols(globalThis))
+  const snapshotNames = new Set(Object.keys(snapshot.props))
+
+  for (const prop of currentNames) {
+    if (!isolation.shouldCaptureProperty(prop)) continue
+    if (!snapshotNames.has(String(prop))) {
+      try {
+        const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
+        if (desc && desc.configurable !== false) {
+          // @ts-expect-error - dynamic delete on globalThis
+          delete globalThis[prop]
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  for (const [keyStr, stored] of Object.entries(snapshot.props)) {
+    const prop = isolation._reviveKeyFromString(keyStr)
+    try {
+      /** @type {PropertyDescriptor} */
+      const desc = {}
+      desc.configurable = !!stored.configurable
+      desc.enumerable = !!stored.enumerable
+      if ('value' in stored) {
+        desc.writable = !!stored.writable
+        desc.value = stored.value
+      } else {
+        desc.get = stored.get
+        desc.set = stored.set
+      }
+      Object.defineProperty(globalThis, prop, desc)
+    } catch {
+      try {
+        const global = /** @type {Record<string, unknown>} */ (globalThis)
+        global[/** @type {string} */ (prop)] = stored.value
+      } catch {
+        // ignore
+      }
     }
   }
 }

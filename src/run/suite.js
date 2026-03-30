@@ -1,9 +1,12 @@
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
+
 import error from '@magic/error'
 import log from '@magic/log'
 import is from '@magic/types'
 
 import { runTest } from './test.js'
-import { getFNS, suiteNeedsIsolation, ERRORS } from '../lib/index.js'
+import { getFNS, getTestKey, cleanError, stats, suiteNeedsIsolation, ERRORS } from '../lib/index.js'
 import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
 
@@ -16,6 +19,24 @@ const defaultSuite = {
   parent: '',
   pkg: '',
   tests: [],
+}
+
+/**
+ * Check if suite has a beforeAll hook
+ * @param {TestCollection} tests
+ * @returns {boolean}
+ */
+const suiteHasBeforeAll = tests => {
+  if (
+    tests &&
+    is.object(tests) &&
+    !is.arr(tests) &&
+    'beforeAll' in tests &&
+    is.fn(tests.beforeAll)
+  ) {
+    return true
+  }
+  return false
 }
 
 /**
@@ -50,14 +71,94 @@ const handleSuiteHooks = async tests => {
 /**
  * Run an array of tests
  * @param {Test[]} tests - Array of tests
- * @param {boolean} needsIsolation - Whether to run tests sequentially
+ * @param {boolean} needsIsolation - Whether tests have before/after hooks
  * @param {string} name - Suite name
  * @param {string} parent - Parent name
  * @param {string} pkg - Package name
  * @param {Store} store - The store instance
+ * @param {string} testFileUrl - URL of the test file (for worker imports)
+ * @param {boolean} useWorkers - Whether to use worker threads for parallel isolated execution
+ * @param {import('./isolation.js').Snapshot} [suiteSnapshot=undefined] - Snapshot from beforeAll (if any)
  * @returns {Promise<(TestResult | Suite)[]>}
  */
-const runTestArray = async (tests, needsIsolation, name, parent, pkg, store) => {
+const runTestArray = async (
+  tests,
+  needsIsolation,
+  name,
+  parent,
+  pkg,
+  store,
+  testFileUrl,
+  useWorkers,
+  suiteSnapshot = undefined,
+) => {
+  if (needsIsolation && useWorkers) {
+    // Run tests in parallel using worker threads
+    const promises = tests.map((t, i) => {
+      /** @type {Test} */
+      const testToRun = {
+        ...t,
+        name: t.name || name,
+        parent: t.parent || parent,
+        pkg: t.pkg || pkg,
+      }
+
+      // Component tests require DOM, can't run in workers (happy-dom singleton)
+      if (t.component) {
+        return runTest(testToRun, store)
+      }
+
+      const keyForResult =
+        testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name)
+      return isolation
+        .executeInWorker({
+          testFileUrl,
+          testIndex: i,
+          testPkg: testToRun.pkg,
+          testParent: testToRun.parent,
+          testName: testToRun.name,
+          suiteSnapshot,
+        })
+        .then(
+          result => {
+            // Manually update stats (workers don't have store access)
+            if (result && result.pass !== undefined) {
+              stats.test(
+                { parent: result.parent, name: result.name, pass: result.pass, pkg: result.pkg },
+                store,
+              )
+            }
+            return result
+          },
+          err => {
+            // Worker failed; create a failing TestResult
+            log.error(ERRORS.E_TEST_FN, {
+              testKey: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
+              testName: testToRun.name,
+              parent: testToRun.parent,
+              error: cleanError(err),
+            })
+            return {
+              result: undefined,
+              msg: '',
+              pass: false,
+              parent: testToRun.parent || '',
+              name: testToRun.name,
+              expect: undefined,
+              expString: undefined,
+              key: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
+              info: testToRun.info || '',
+              pkg: testToRun.pkg,
+            }
+          },
+        )
+    })
+
+    const resolved = await Promise.all(promises)
+    return resolved.filter(r => !!r)
+  }
+
+  // If isolation needed but not using workers, fall back to sequential execution with executeIsolated (existing behavior)
   if (needsIsolation) {
     const results = []
     for (const t of tests) {
@@ -74,6 +175,7 @@ const runTestArray = async (tests, needsIsolation, name, parent, pkg, store) => 
     return results
   }
 
+  // No isolation needed: run in parallel without isolation
   const promises = tests.map(t => {
     /** @type {Test} */
     const testToRun = {
@@ -167,12 +269,46 @@ export const runSuite = async props => {
 
     const suiteKey = `${pkg}.${parent}.${name}`
     const needsIsolation = suiteNeedsIsolation(tests)
+    const hasBeforeAll = suiteHasBeforeAll(tests)
 
     const executeSuite = async () => {
       const { afterAllCleanup } = await handleSuiteHooks(tests)
 
+      // Compute test file URL for potential worker usage
+      const testFileUrl = pathToFileURL(path.join(process.cwd(), 'test', pkg)).href
+
+      // Determine if we can use workers for isolated tests
+      // Workers are only beneficial when there's a beforeAll hook that sets up shared state
+      // Per-test before/after hooks don't benefit from workers since each test runs in isolation anyway
+      let useWorkers = false
+      let suiteSnapshot
+      if (hasBeforeAll) {
+        suiteSnapshot = isolation.buildSnapshot()
+        try {
+          // Ensure snapshot can be cloned to workers (structuredClone checks for non-serializable values)
+          structuredClone(suiteSnapshot)
+          useWorkers = true
+        } catch (e) {
+          console.warn(
+            'Isolation: snapshot not cloneable, falling back to sequential isolated tests:',
+            e,
+          )
+          useWorkers = false
+        }
+      }
+
       if (is.array(tests)) {
-        results = await runTestArray(tests, needsIsolation, name, parent, pkg, store)
+        results = await runTestArray(
+          tests,
+          needsIsolation,
+          name,
+          parent,
+          pkg,
+          store,
+          testFileUrl,
+          useWorkers,
+          suiteSnapshot,
+        )
       } else if (is.objectNative(tests)) {
         results = await runTestObject(
           /** @type {TestObject} */ (tests),
