@@ -243,6 +243,7 @@ declare global {
     name: string
     fn: () => Promise<void>
     before?: HookFunction
+    after?: HookFunction
   }
 
   /**
@@ -330,6 +331,42 @@ declare global {
     /** Number of passing tests */
     pass: number
   }
+
+  /**
+   * Result of evaluating a test against its expected value.
+   */
+  export interface EvaluateResult {
+    pass: boolean
+    exp: unknown
+    expString: unknown
+  }
+
+  /**
+   * Property descriptor for globalThis snapshot/restore.
+   */
+  export interface PropertyDescriptorRecord {
+    configurable: boolean
+    enumerable: boolean
+    writable?: boolean
+    value?: unknown
+    get?: () => unknown
+    set?: (v: unknown) => void
+  }
+
+  /**
+   * Snapshot of globalThis state for isolation.
+   */
+  export interface Snapshot {
+    props: Record<string, PropertyDescriptorRecord>
+  }
+
+  /**
+   * Result of running suite hooks.
+   */
+  export interface CleanupResult {
+    beforeAllCleanup?: HookFunction
+    afterAllCleanup?: HookFunction
+  }
 }
 
 export {
@@ -351,6 +388,10 @@ export {
   HookFunction,
   PartialTest,
   State,
+  EvaluateResult,
+  PropertyDescriptorRecord,
+  Snapshot,
+  CleanupResult,
 }
 
 export {}
