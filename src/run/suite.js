@@ -78,7 +78,7 @@ const handleSuiteHooks = async tests => {
  * @param {Store} store - The store instance
  * @param {string} testFileUrl - URL of the test file (for worker imports)
  * @param {boolean} useWorkers - Whether to use worker threads for parallel isolated execution
- * @param {import('./isolation.js').Snapshot} [suiteSnapshot=undefined] - Snapshot from beforeAll (if any)
+ * @param {Snapshot} [suiteSnapshot=undefined] - Snapshot from beforeAll (if any)
  * @returns {Promise<(TestResult | Suite)[]>}
  */
 const runTestArray = async (

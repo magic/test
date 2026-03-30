@@ -16,17 +16,8 @@ import deep from '@magic/deep'
 import { maybeInjectMagic } from './bin/lib/index.js'
 
 /**
- * Internal test item type for node-test-runner
- * @typedef {Object} TestItem
- * @property {string} name
- * @property {() => Promise<void>} fn
- * @property {HookFunction | undefined} [before]
- * @property {HookFunction | undefined} [after]
- * @typedef {() => void | Promise<void>} HookFunction
- */
-
-/**
  * Internal suite type for node-test-runner
+ * Uses TestSuite hooks but with TestHooks interface
  * @typedef {Object} RunnerSuite
  * @property {string} name
  * @property {TestItem[]} tests

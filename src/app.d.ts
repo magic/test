@@ -182,8 +182,8 @@ declare global {
    * Optional setup and teardown hooks for test collections.
    */
   export interface TestsWithHooks {
-    beforeAll?: () => void | Promise<void | (() => void | Promise<void>)>
-    afterAll?: () => void | Promise<void>
+    beforeAll?: HookFunctionWithCleanup
+    afterAll?: HookFunction
     fn?: () => unknown | Promise<unknown>
   }
 
@@ -252,7 +252,7 @@ declare global {
   export interface TestSuite {
     name: string
     tests: TestItem[]
-    hooks: TestsWithHooks
+    hooks: TestHooks
   }
 
   export type JsonSafe = string | number | boolean | null | undefined | object
@@ -280,6 +280,11 @@ declare global {
    * A function that can be used as a test hook (before/after).
    */
   export type HookFunction = () => void | Promise<void>
+
+  /**
+   * A hook function that returns a cleanup function.
+   */
+  export type HookFunctionWithCleanup = () => void | Promise<void> | HookFunction
 
   /**
    * A partial test definition for internal use.
@@ -386,6 +391,7 @@ export {
   TestStats,
   TestResults,
   HookFunction,
+  HookFunctionWithCleanup,
   PartialTest,
   State,
   EvaluateResult,

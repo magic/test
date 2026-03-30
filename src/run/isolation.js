@@ -128,21 +128,6 @@ const skipProps = [
   'DOMException',
 ]
 
-/**
- * @typedef {object} PropertyDescriptorRecord
- * @property {boolean} configurable
- * @property {boolean} enumerable
- * @property {boolean} [writable]
- * @property {unknown} [value]
- * @property {(() => unknown) | undefined} [get]
- * @property {((v: unknown) => void) | undefined} [set]
- */
-
-/**
- * @typedef {object} Snapshot
- * @property {Record<string, PropertyDescriptorRecord>} props
- */
-
 export class Isolation {
   constructor() {
     /** @type {Map<string, Snapshot>} */

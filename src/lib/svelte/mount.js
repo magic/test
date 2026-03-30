@@ -60,7 +60,6 @@ export const tick = async () => {
 /**
  * @param {string} filePath
  * @param {{ props?: ComponentProps }} [options]
- * @typedef {Record<string, unknown>} ComponentProps
  */
 export const mount = async (filePath, options = {}) => {
   const doc = getDocument()
