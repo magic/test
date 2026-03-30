@@ -6,10 +6,18 @@ import { cleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/inde
 import { isolation, restoreFromSnapshot } from './isolation.js'
 
 /**
+ * @typedef {Object} RunFnResult
+ * @property {unknown} result
+ * @property {boolean} pass
+ * @property {unknown} exp
+ * @property {unknown} expString
+ */
+
+/**
  * Convert a value to a structuredClone-safe representation.
  * Tries to keep the value as-is if it's cloneable; otherwise reduces to a string/primitive.
- * @param {any} value
- * @returns {any}
+ * @param {unknown} value
+ * @returns {unknown}
  */
 const makeSafe = value => {
   try {
@@ -85,21 +93,15 @@ const evaluateResult = async (res, expect) => {
 
 /**
  * @param {string} filePath
- * @returns {Promise<any>}
+ * @returns {Promise<unknown>}
  */
 const importFile = async filePath => {
   try {
-    let mod = await import(filePath)
-    if (is.module(mod)) {
-      const m = { ...mod }
-      if (is.ownProp(m, 'default')) {
-        return m.default
-      } else {
-        return m
-      }
-    } else {
-      return mod
+    const mod = await import(filePath)
+    if (mod && mod.default) {
+      return mod.default
     }
+    return mod
   } catch (err) {
     const error = is.error(err) ? err : new Error(String(err))
     error.message = `Failed to import test file: ${filePath}\n${error.message}`
@@ -108,19 +110,19 @@ const importFile = async filePath => {
 }
 
 /**
- * @param {any} test
+ * @param {Test} test
  * @param {string} key
- * @returns {Promise<unknown>}
+ * @returns {Promise<RunFnResult>}
  */
 const runTestFn = async (test, key) => {
   const { fn, before, after, expect, runs = 1 } = test
 
-  /** @type {(() => (void | Promise<void>)) | void | undefined} */
+  /** @type {CleanupFunction | undefined} */
   let afterCleanup
   if (is.function(before)) {
     const result = await before(test)
     if (is.function(result)) {
-      afterCleanup = result
+      afterCleanup = /** @type {CleanupFunction} */ (result)
     }
   }
 
@@ -192,12 +194,12 @@ const runTestFn = async (test, key) => {
 }
 
 /**
- * @param {any} test
+ * @param {Test} test
  * @param {string} testKey
  * @param {string} testPkg
  * @param {string} testParent
  * @param {string} testName
- * @returns {Promise<import('../app.d.ts').TestResult>}
+ * @returns {Promise<TestResult>}
  */
 const runSingleTest = async (test, testKey, testPkg, testParent, testName) => {
   const { fn, expect, info } = test
@@ -225,10 +227,7 @@ const runSingleTest = async (test, testKey, testPkg, testParent, testName) => {
   let pass = false
 
   try {
-    const testResult =
-      /** @type {{ result: unknown, pass: boolean, exp: unknown, expString: unknown }} */ (
-        await runTestFn(test, testKey)
-      )
+    const testResult = await runTestFn(/** @type {Test} */ (test), testKey)
     result = testResult.result
     pass = testResult.pass
     exp = testResult.exp
@@ -252,12 +251,12 @@ const runSingleTest = async (test, testKey, testPkg, testParent, testName) => {
 }
 
 /**
- * @param {any[]} tests
+ * @param {Test[]} tests
  * @param {string} testKey
- * @returns {any | undefined}
+ * @returns {Test | undefined}
  */
 const findTestByKey = (tests, testKey) => {
-  for (const t of /** @type {any[]} */ (tests)) {
+  for (const t of tests) {
     const key = getTestKey(t.pkg, t.parent, t.name)
     if (key === testKey) return t
   }
@@ -274,12 +273,12 @@ const main = async () => {
 
     const tests = await importFile(testFileUrl)
 
-    /** @type {any} */
+    /** @type {Test | TestObject | undefined} */
     let test
     if (is.array(tests)) {
-      test = tests[testIndex]
+      test = /** @type {Test} */ (tests[testIndex])
     } else if (is.objectNative(tests)) {
-      test = tests
+      test = /** @type {TestObject} */ (tests)
     }
 
     if (!test) {

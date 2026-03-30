@@ -45,7 +45,7 @@ const suiteHasBeforeAll = tests => {
  * @returns {Promise<CleanupResult>}
  */
 const handleSuiteHooks = async tests => {
-  /** @type {HookFunction} */
+  /** @type {CleanupFunction} */
   let afterAllCleanup = () => {}
 
   if (
@@ -271,9 +271,9 @@ export const runSuite = async props => {
       if (needsIsolation) {
         useWorkers = true
         if (hasBeforeAll) {
-          const beforeAllModifiesGlobal = /globalThis|^global\b/.test(
-            /** @type {any} */ (tests).beforeAll.toString(),
-          )
+          const beforeAllFn = /** @type {TestsWithHooks} */ (tests).beforeAll
+          const beforeAllModifiesGlobal =
+            beforeAllFn && /globalThis|^global\b/.test(beforeAllFn.toString())
           if (beforeAllModifiesGlobal) {
             suiteSnapshot = isolation.buildSnapshot()
             try {

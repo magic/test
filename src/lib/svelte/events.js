@@ -1,20 +1,26 @@
 import is from '@magic/types'
 
 /**
+ * @typedef {Element | {
+ *   querySelector: (selector: string) => Element | null
+ * }} QueryableElement
+ */
+
+/**
  * Get element by selector or return target
- * @param {any} target
+ * @param {QueryableElement} target
  * @param {string} [selector]
- * @returns {any}
+ * @returns {Element | null}
  */
 const getElement = (target, selector) => {
   if (selector) {
     return target.querySelector(selector)
   }
-  return target
+  return /** @type {Element} */ (target)
 }
 
 /**
- * @param {any} target
+ * @param {QueryableElement} target
  * @param {string} [selector]
  */
 export const click = (target, selector) => {

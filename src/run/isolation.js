@@ -2,6 +2,10 @@ import { Worker } from 'node:worker_threads'
 
 import is from '@magic/types'
 
+/**
+ * @typedef {ArrayBuffer | Uint8Array | Uint8ClampedArray | Int8Array | Uint16Array | Int16Array | Uint32Array | Int32Array | Float32Array | Float64Array | BigInt64Array | BigUint64Array} SliceableBuffer
+ */
+
 const skipProps = [
   // Node/CommonJS built-ins
   'console',
@@ -202,7 +206,8 @@ export class Isolation {
 
     if (ArrayBuffer.isView(value) || is.instance(value, ArrayBuffer)) {
       // Clone typed arrays and ArrayBuffers
-      // The slice method exists on both TypedArrays and ArrayBuffer
+      // Both have slice() but no common TypeScript type
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return /** @type {any} */ (value).slice()
     }
 
@@ -474,7 +479,7 @@ export class Isolation {
    * @param {string} options.testParent
    * @param {string} options.testName
    * @param {Snapshot} [options.suiteSnapshot]
-   * @returns {Promise<import('../app.d.ts').TestResult>}
+   * @returns {Promise<TestResult>}
    */
   executeInWorker({ testFileUrl, testIndex, testPkg, testParent, testName, suiteSnapshot }) {
     return new Promise((resolve, reject) => {

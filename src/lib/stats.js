@@ -7,6 +7,10 @@ import { getDuration } from './getDuration.js'
 import { Store } from './store.js'
 
 /**
+ * @typedef {State} StoreState
+ */
+
+/**
  * Type guard to check if a value is a TestResult.
  * @param {Suite | TestResult} obj
  * @returns {obj is TestResult}
@@ -56,9 +60,10 @@ export const printPercent = p => {
  * @example
  * test({ name: 'myTest', parent: 'suite', pkg: 'mylib', pass: true })
  */
-export const test = (t, /** @type {Store} */ store) => {
+export const test = (t, /** @type {IStore} */ store) => {
+  const storeResults = store.get('results')
   /** @type {TestResults} */
-  const results = store.get('results', {}) || {}
+  const results = storeResults || { __PACKAGE_ROOT__: { all: 0, pass: 0 } }
 
   const { name, parent, pass, pkg } = t
 
@@ -112,7 +117,7 @@ export const test = (t, /** @type {Store} */ store) => {
  * @param {(Suite | undefined | void)[]} suites - Array of test suites.
  * @returns {boolean} Always returns true.
  */
-export const info = (pkg, suites, /** @type {Store} */ store) => {
+export const info = (pkg, suites, /** @type {IStore} */ store) => {
   log(`###  Testing package: ${pkg}`)
 
   const results = store.get('results')
@@ -131,6 +136,7 @@ export const info = (pkg, suites, /** @type {Store} */ store) => {
       return
     }
 
+    /** @type {TestStats} */
     const result = results[name] || { all: 0, pass: 0 }
     const { pass, all } = result
     const percentage = all > 0 ? (pass / all) * 100 : 0
@@ -192,6 +198,6 @@ export const info = (pkg, suites, /** @type {Store} */ store) => {
 /**
  * Reset the store to default state.
  */
-export const reset = (/** @type {Store} */ store) => {
+export const reset = (/** @type {IStore} */ store) => {
   store.reset()
 }

@@ -36,14 +36,14 @@ const prepareTest = test => {
   if (is.string(componentProp)) {
     return {
       componentFile: componentProp,
-      componentProps: explicitProps || /** @type {Record<string, unknown>} */ ({}),
+      componentProps: explicitProps || /** @type {ComponentProps} */ ({}),
     }
   }
 
   if (is.array(componentProp)) {
     return {
       componentFile: componentProp[0],
-      componentProps: componentProp[1] || /** @type {Record<string, unknown>} */ ({}),
+      componentProps: componentProp[1] || /** @type {ComponentProps} */ ({}),
     }
   }
 
@@ -68,7 +68,9 @@ const executeTest = async (fn, key, componentFile, componentProps) => {
     } = await mount(componentFile, { props: componentProps })
 
     try {
-      return await /** @type {Function} */ (fn)({ target, component: instance, unmount })
+      if (is.function(fn)) {
+        return await fn({ target, component: instance, unmount })
+      }
     } finally {
       await unmount()
       target.remove()

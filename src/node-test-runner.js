@@ -77,7 +77,7 @@ const extractExport = async filePath => {
   }
 }
 
-/** @type {((tests: unknown) => void | Promise<void>) | null} */
+/** @type {((tests: unknown) => void | Promise<void | CleanupFunction>) | null} */
 let globalBeforeAll = null
 /** @type {((tests: unknown) => void | Promise<void>) | null} */
 let globalAfterAll = null
@@ -105,17 +105,16 @@ const processSpecialFiles = async () => {
 await processSpecialFiles()
 
 /**
- * @param {unknown} testObj
+ * @param {Test} testObj
  * @param {string} filePath
  * @param {number} index
  * @returns {string}
  */
 const getTestName = (testObj, filePath, index) => {
-  const obj = /** @type {Record<string, unknown>} */ (testObj)
-  if (obj.info) return String(obj.info)
-  if (obj.name) return String(obj.name)
-  if (obj.fn && /** @type {Record<string, unknown>} */ (obj.fn).name)
-    return String(/** @type {Record<string, unknown>} */ (obj.fn).name)
+  if (testObj.info) return String(testObj.info)
+  if (testObj.name) return String(testObj.name)
+  if (testObj.fn && typeof testObj.fn === 'function' && testObj.fn.name)
+    return String(testObj.fn.name)
 
   const baseName = path.basename(filePath, path.extname(filePath))
   return `${baseName} ${index + 1}`
@@ -167,7 +166,7 @@ const runAssertion = async (result, expect) => {
 }
 
 /**
- * @param {Record<string, unknown>} testObj
+ * @param {Test} testObj
  * @param {string} filePath
  * @param {number} index
  * @returns {Promise<TestItem>}
@@ -196,12 +195,14 @@ const convertTest = async (testObj, filePath, index) => {
         componentProps = testObj.props || {}
       } else if (is.array(testObj.component)) {
         componentFile = /** @type {string} */ (testObj.component[0])
-        componentProps = /** @type {Record<string, unknown>} */ (testObj.component[1]) || {}
+        componentProps = /** @type {ComponentProps} */ (testObj.component[1]) || {}
       }
 
       const { target, component, unmount } = await mount(componentFile, { props: componentProps })
       try {
-        result = await /** @type {Function} */ (fn)({ target, component, unmount })
+        if (is.function(fn)) {
+          result = await fn({ target, component, unmount })
+        }
       } finally {
         await unmount()
       }
@@ -225,8 +226,8 @@ const convertTest = async (testObj, filePath, index) => {
   return {
     name: testName,
     fn: testFn,
-    before: /** @type {HookFunction} */ (testObj.before),
-    after: /** @type {HookFunction} */ (testObj.after),
+    before: testObj.before,
+    after: testObj.after,
   }
 }
 
@@ -252,11 +253,7 @@ const convertSuite = async (tests, filePath) => {
     for (let i = 0; i < tests.length; i++) {
       const testObj = tests[i]
       if (testObj && is.object(testObj)) {
-        const convertedTest = await convertTest(
-          /** @type {Record<string, unknown>} */ (testObj),
-          filePath,
-          i,
-        )
+        const convertedTest = await convertTest(/** @type {Test} */ (testObj), filePath, i)
         if (convertedTest) {
           converted.push(convertedTest)
         }
@@ -335,7 +332,7 @@ const processFile = async filePath => {
       suites.push({
         name: `${fileName.replace(/\.(js|ts|mjs)$/, '')}_${exportName}`,
         tests,
-        hooks: /** @type {any} */ (exportValue),
+        hooks: /** @type {TestHooks} */ (exportValue),
       })
     }
   }
@@ -352,31 +349,33 @@ const run = async () => {
     allSuites.push(...suites)
   }
 
-  /** @type {unknown} */
+  /** @type {CleanupFunction | undefined} */
   let beforeAllGlobalCleanup = undefined
 
   if (globalBeforeAll) {
     const beforeAllResult = globalBeforeAll(allSuites)
     if (is.function(beforeAllResult)) {
-      beforeAllGlobalCleanup = /** @type {unknown} */ (beforeAllResult)
+      beforeAllGlobalCleanup = () => {
+        /** @type {Function} */ beforeAllResult()
+      }
     } else if (beforeAllResult && is.function(beforeAllResult.then)) {
       await beforeAllResult
     }
   }
 
   for (const suite of allSuites) {
-    /** @type {Record<string, unknown>} */
-    const hooks = /** @type {Record<string, unknown>} */ (suite.hooks) || {}
+    /** @type {TestHooks} */
+    const hooks = /** @type {TestHooks} */ (suite.hooks) || {}
 
     describe(suite.name, () => {
-      /** @type {HookFunction | null} */
+      /** @type {CleanupFunction | null} */
       let beforeAllCleanup = null
 
       if (hooks.beforeAll && is.function(hooks.beforeAll)) {
         before(async () => {
-          const result = await /** @type {Function} */ (hooks.beforeAll)(allSuites)
+          const result = await /** @type {SuiteHookWithArg} */ (hooks.beforeAll)(allSuites)
           if (result && is.function(result)) {
-            beforeAllCleanup = /** @type {HookFunction} */ (result)
+            beforeAllCleanup = /** @type {CleanupFunction} */ (result)
           }
           return undefined
         })
@@ -384,14 +383,14 @@ const run = async () => {
 
       if (hooks.afterAll && is.function(hooks.afterAll)) {
         after(async () => {
-          await /** @type {Function} */ (hooks.afterAll)(allSuites)
+          await /** @type {SuiteHookWithArg} */ (hooks.afterAll)(allSuites)
         })
       }
 
       if (hooks.beforeAll && is.function(hooks.beforeAll)) {
         after(async () => {
           if (beforeAllCleanup && is.function(beforeAllCleanup)) {
-            await /** @type {Function} */ (beforeAllCleanup)()
+            await beforeAllCleanup()
           }
         })
       }
@@ -401,9 +400,9 @@ const run = async () => {
           let testAfter
 
           if (testObj.before && is.function(testObj.before)) {
-            const result = testObj.before()
+            const result = await testObj.before(testObj)
             if (is.function(result)) {
-              testAfter = result
+              testAfter = /** @type {CleanupFunction} */ (result)
             }
           }
 
@@ -425,7 +424,7 @@ const run = async () => {
 
   after(async () => {
     if (beforeAllGlobalCleanup) {
-      await /** @type {Function} */ (beforeAllGlobalCleanup)()
+      await beforeAllGlobalCleanup()
     }
 
     if (globalAfterAll) {

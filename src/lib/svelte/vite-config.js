@@ -131,7 +131,7 @@ const parseViteConfig = async configPath => {
  */
 const normalizeAlias = (alias, configDir) => {
   if (is.array(alias)) {
-    return alias.map(a => normalizeSingleAlias(/** @type {unknown} */ (a), configDir))
+    return alias.map(a => normalizeSingleAlias(a, configDir))
   }
 
   if (is.object(alias)) {

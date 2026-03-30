@@ -1,20 +1,6 @@
 import is from '@magic/types'
 
 /**
- * @typedef {Object} StateBase
- * @property {Record<string, unknown>} suites - Test suites
- * @property {Stats} stats - Test statistics
- * @property {string} pkg - Package name
- * @property {[number, number]} [startTime] - Start time timestamp
- * @property {Record<string, unknown>} [results] - Test results
- */
-
-/**
- * @typedef {StateBase & Record<string, unknown>} State
- * State object with known properties and index signature for dynamic properties
- */
-
-/**
  * @type {State}
  */
 const defaultState = {
@@ -51,10 +37,10 @@ export class Store {
    */
   /**
    * Get a value from the store state by key
-   * @template {keyof StateBase} K
+   * @template {keyof State} K
    * @param {K} key - The key to get
-   * @param {StateBase[K]} [def] - Default value if key doesn't exist
-   * @returns {StateBase[K] | undefined}
+   * @param {State[K]} [def] - Default value if key doesn't exist
+   * @returns {State[K] | undefined}
    */
   /**
    * Get a value from the store state with custom default type

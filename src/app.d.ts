@@ -92,12 +92,12 @@ declare global {
      * Hook executed before running the test.
      * Can return a cleanup function.
      */
-    before?: (test: Test) => void | Function | Promise<void | Function>
+    before?: TestBeforeHook
 
     /**
      * Hook executed after the test finishes.
      */
-    after?: () => void | Promise<void>
+    after?: TestAfterHook
 
     /**
      * Component to mount for Svelte component tests.
@@ -182,8 +182,8 @@ declare global {
    * Optional setup and teardown hooks for test collections.
    */
   export interface TestsWithHooks {
-    beforeAll?: HookFunctionWithCleanup
-    afterAll?: HookFunction
+    beforeAll?: SuiteHook
+    afterAll?: CleanupFunction
     fn?: () => unknown | Promise<unknown>
   }
 
@@ -191,10 +191,10 @@ declare global {
    * Simplified hooks interface for internal use.
    */
   export interface TestHooks {
-    beforeAll?: () => void | Promise<void>
-    afterAll?: () => void | Promise<void>
-    beforeEach?: () => void | Promise<void>
-    afterEach?: () => void | Promise<void>
+    beforeAll?: CleanupFunction
+    afterAll?: CleanupFunction
+    beforeEach?: CleanupFunction
+    afterEach?: CleanupFunction
   }
 
   /**
@@ -217,7 +217,7 @@ declare global {
     stats: Stats
     pkg: string
     startTime?: [number, number]
-    results?: Record<string, unknown>
+    results?: TestResults
     [key: string]: unknown
   }
 
@@ -225,11 +225,9 @@ declare global {
    * Global test hooks object with special file-based keys.
    */
   export type TestSuites = Record<string, TestCollection> & {
-    '/beforeAll.js'?: (
-      tests: Record<string, unknown>,
-    ) => void | Promise<void | (() => void | Promise<void>)>
+    '/beforeAll.js'?: (tests: TestSuites) => void | Promise<void | CleanupFunction>
 
-    '/afterAll.js'?: (tests: Record<string, unknown>) => void | Promise<void>
+    '/afterAll.js'?: (tests: TestSuites) => void | Promise<void>
   }
 
   /* -------------------------------------------------------------
@@ -242,8 +240,8 @@ declare global {
   export interface TestItem {
     name: string
     fn: () => Promise<void>
-    before?: HookFunction
-    after?: HookFunction
+    before?: TestBeforeHook
+    after?: TestAfterHook
   }
 
   /**
@@ -277,14 +275,35 @@ declare global {
   export type TestCollection = Test[] | TestObject
 
   /**
-   * A function that can be used as a test hook (before/after).
+   * Simple cleanup function returned by before hooks.
    */
-  export type HookFunction = () => void | Promise<void>
+  export type CleanupFunction = () => void | Promise<void>
 
   /**
-   * A hook function that returns a cleanup function.
+   * Suite-level hook (beforeAll/afterAll/beforeEach/afterEach).
+   * No params. beforeAll can return cleanup function.
    */
-  export type HookFunctionWithCleanup = () => void | Promise<void> | HookFunction
+  export type SuiteHook = () => void | Promise<void | CleanupFunction>
+
+  /**
+   * Suite-level hook that accepts optional test suites parameter.
+   * Used when running in test runner context.
+   */
+  export type SuiteHookWithArg = (tests?: unknown) => void | Promise<void | CleanupFunction>
+
+  /**
+   * Test-level before hook.
+   * Takes test parameter, can return cleanup function.
+   */
+  export type TestBeforeHook = (
+    test?: Test | TestItem,
+  ) => void | CleanupFunction | Promise<void | CleanupFunction>
+
+  /**
+   * Test-level after hook.
+   * No params, no cleanup.
+   */
+  export type TestAfterHook = () => void | Promise<void>
 
   /**
    * A partial test definition for internal use.
@@ -324,8 +343,11 @@ declare global {
 
   /**
    * Test results by test key.
+   * Uses interface with index signature for proper typing.
    */
-  export type TestResults = Record<string, TestStats>
+  export interface TestResults {
+    [key: string]: TestStats
+  }
 
   /**
    * Statistics for a single test.
@@ -369,8 +391,19 @@ declare global {
    * Result of running suite hooks.
    */
   export interface CleanupResult {
-    beforeAllCleanup?: HookFunction
-    afterAllCleanup?: HookFunction
+    beforeAllCleanup?: CleanupFunction
+    afterAllCleanup?: CleanupFunction
+  }
+
+  /**
+   * Store class interface for test state management.
+   */
+  export interface IStore {
+    state: State
+    set(val: Partial<State>): void
+    get<K extends keyof State>(key: K, def?: State[K]): State[K] | undefined
+    get(key: string, def?: unknown): unknown
+    reset(): void
   }
 }
 
@@ -390,14 +423,18 @@ export {
   Stats,
   TestStats,
   TestResults,
-  HookFunction,
-  HookFunctionWithCleanup,
+  CleanupFunction,
+  SuiteHook,
+  SuiteHookWithArg,
+  TestBeforeHook,
+  TestAfterHook,
   PartialTest,
   State,
   EvaluateResult,
   PropertyDescriptorRecord,
   Snapshot,
   CleanupResult,
+  IStore,
 }
 
 export {}
