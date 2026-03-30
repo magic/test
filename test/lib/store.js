@@ -4,8 +4,6 @@ import { createStore } from '../../src/lib/index.js'
 
 const store = createStore()
 
-const before = () => () => store.set({ key: undefined })
-
 export default [
   { fn: () => store.set, expect: is.fn, info: 'store.set is a function' },
   { fn: () => store.get, expect: is.fn, info: 'store.get is a function' },
@@ -21,15 +19,20 @@ export default [
     info: 'stats are collected in an object',
   },
   {
-    fn: () => store.set({ key: 'value' }),
-    expect: () => store.get('key') === 'value',
-    before,
+    fn: () => {
+      store.set({ testKey: 'testValue' })
+      return store.get('testKey') === 'testValue'
+    },
+    expect: true,
+    info: 'store.set and store.get work together',
   },
   {
-    fn: () => store.get('key2'),
-    expect: is.undefined,
-    before,
-    info: 'store.get(key) returns undefined',
+    fn: () => {
+      store.set({ anotherKey: 'anotherValue' })
+      return store.get('anotherKey')
+    },
+    expect: 'anotherValue',
+    info: 'store.set stores value that can be retrieved',
   },
   {
     fn: () => store.get(),

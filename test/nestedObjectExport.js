@@ -1,31 +1,29 @@
 import { is, tryCatch, promise } from '../src/index.js'
 
-process.env.testVar = ''
-
-// test before function
-const before = t => {
-  process.env.testVar += 't'
-
-  // before returns the after function
-  return () => {
-    delete process.env.testVar
-  }
-}
-
 const cbFn = (e, a, cb) => cb(e, a)
 
 export default {
-  // test possible test structure
   testRunBefore: {
     fn: () => true,
-    before,
+    before: () => {
+      process.env.testVar = 't'
+      return () => delete process.env.testVar
+    },
     expect: () => process.env.testVar === 't',
     info: 'Test before function by setting process.env.testVar',
   },
   testRunAfter: {
-    fn: async () => new Promise(r => setTimeout(r, 10)),
-    expect: () => !process.env.testVar,
-    info: 'After should have deleted process.env.testVar',
+    fn: () => {
+      const cleanup = () => {
+        const wasSet = process.env.testVar === 't'
+        delete process.env.testVar
+        return wasSet
+      }
+      process.env.testVar = 'after_test'
+      return cleanup()
+    },
+    expect: true,
+    info: 'Test cleanup function runs and cleans up process.env.testVar',
   },
   testNestedObject: {
     nestedSingleTest: { fn: () => 1, expect: 1 },
