@@ -1,1 +1,1 @@
-{"version":3,"file":"mount.d.ts","sourceRoot":"","sources":["../../../src/lib/svelte/mount.js"],"names":[],"mappings":"AA0CO,wCAFI,MAAM,OAOhB;AAKM,sCAGN;AAMM,gCAHI,MAAM,YACN;IAAE,KAAK,CAAC,EAAE,MAAM,CAAC,MAAM,EAAE,OAAO,CAAC,CAAA;CAAE;;;;;GAmF7C"}
+{"version":3,"file":"mount.d.ts","sourceRoot":"","sources":["../../../src/lib/svelte/mount.js"],"names":[],"mappings":"AA4CO,wCAFI,MAAM,OAOhB;AAKM,sCAGN;AAOM,gCAJI,MAAM,YACN;IAAE,KAAK,CAAC,EAAE,cAAc,CAAA;CAAE;;;;;GAiFpC;6BAhFY,MAAM,CAAC,MAAM,EAAE,OAAO,CAAC"}

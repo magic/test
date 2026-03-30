@@ -40,6 +40,12 @@ export class Isolation {
    */
   restoreSuiteSnapshot(suiteKey: string): void
   /**
+   * @param {Map<string, Snapshot>} snapshotMap
+   * @param {string} key
+   * @returns {void}
+   */
+  restoreSnapshotFromMap(snapshotMap: Map<string, Snapshot>, key: string): void
+  /**
    * @param {string} testKey
    * @returns {void}
    */
@@ -75,7 +81,34 @@ export class Isolation {
    * @returns {Promise<T>}
    */
   executeIsolated<T>(testKey: string, fn: () => Promise<T>): Promise<T>
+  /**
+   * Run a test in a worker thread for true isolation
+   * @param {object} options
+   * @param {string} options.testFileUrl
+   * @param {number} options.testIndex
+   * @param {string} options.testPkg
+   * @param {string} options.testParent
+   * @param {string} options.testName
+   * @param {Snapshot} [options.suiteSnapshot]
+   * @returns {Promise<import('../app.d.ts').TestResult>}
+   */
+  executeInWorker({
+    testFileUrl,
+    testIndex,
+    testPkg,
+    testParent,
+    testName,
+    suiteSnapshot,
+  }: {
+    testFileUrl: string
+    testIndex: number
+    testPkg: string
+    testParent: string
+    testName: string
+    suiteSnapshot?: Snapshot | undefined
+  }): Promise<import('../app.d.ts').TestResult>
 }
+export function restoreFromSnapshot(snapshot: Snapshot): void
 export const isolation: Isolation
 export type PropertyDescriptorRecord = {
   configurable: boolean

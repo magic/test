@@ -1,12 +1,12 @@
-export function get(url: string): Promise<ResponseData>
-export function post(url: string, body?: RequestBody): Promise<ResponseData>
+export function get(url: string, options?: HttpOptions): Promise<ResponseData>
+export function post(url: string, body?: RequestBody, options?: HttpOptions): Promise<ResponseData>
 /**
  * HTTP utility object with get and post methods.
- * @type {{ get: (url: string) => Promise<ResponseData>, post: (url: string, body?: RequestBody) => Promise<ResponseData> }}
+ * @type {{ get: (url: string, options?: HttpOptions) => Promise<ResponseData>, post: (url: string, body?: RequestBody, options?: HttpOptions) => Promise<ResponseData> }}
  */
 export const http: {
-  get: (url: string) => Promise<ResponseData>
-  post: (url: string, body?: RequestBody) => Promise<ResponseData>
+  get: (url: string, options?: HttpOptions) => Promise<ResponseData>
+  post: (url: string, body?: RequestBody, options?: HttpOptions) => Promise<ResponseData>
 }
 /**
  * An object representing JSON request body data.
@@ -20,4 +20,18 @@ export type RequestBody = string | BodyObject
  * The parsed response data (could be JSON or string).
  */
 export type ResponseData = unknown
+export type HttpOptions = {
+  /**
+   * - Request timeout in milliseconds
+   */
+  timeout?: number | undefined
+  /**
+   * - Whether to reject self-signed certs (default: true)
+   */
+  rejectUnauthorized?: boolean | undefined
+  /**
+   * - Maximum response size in bytes
+   */
+  maxSize?: number | undefined
+}
 //# sourceMappingURL=http.d.ts.map

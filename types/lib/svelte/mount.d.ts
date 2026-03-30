@@ -3,12 +3,13 @@ export function tick(): Promise<void>
 export function mount(
   filePath: string,
   options?: {
-    props?: Record<string, unknown>
+    props?: ComponentProps
   },
 ): Promise<{
   target: HTMLDivElement
   component: any
   unmount: () => Promise<void>
-  css: any
+  css: import('./compile.js').CssObject | null
 }>
+export type ComponentProps = Record<string, unknown>
 //# sourceMappingURL=mount.d.ts.map
