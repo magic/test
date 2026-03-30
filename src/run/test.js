@@ -16,7 +16,8 @@ import { runSuite } from './suite.js'
 /**
  * Prepare test by setting defaults and extracting component props
  * @param {Test} test - The test definition
- * @returns {{ componentFile?: string, componentProps?: Record<string, unknown> }}
+ * @returns {{ componentFile?: string, componentProps?: ComponentProps }}
+ * @typedef {Record<string, unknown>} ComponentProps
  */
 const prepareTest = test => {
   if (!is.ownProp(test, 'expect')) {
@@ -93,7 +94,11 @@ const executeTest = async (fn, key, componentFile, componentProps) => {
  * Evaluate test result against expected value
  * @param {unknown} res - Actual result
  * @param {unknown} expect - Expected value (can be function, promise, or value)
- * @returns {Promise<{ pass: boolean, exp: unknown, expString: unknown }>}
+ * @returns {Promise<EvaluateResult>}
+ * @typedef {Object} EvaluateResult
+ * @property {boolean} pass
+ * @property {unknown} exp
+ * @property {unknown} expString
  */
 const evaluateResult = async (res, expect) => {
   let exp

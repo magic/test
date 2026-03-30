@@ -47,7 +47,11 @@ const makeSafe = value => {
 /**
  * @param {unknown} res
  * @param {unknown} expect
- * @returns {Promise<{ pass: boolean, exp: unknown, expString: unknown }>}
+ * @returns {Promise<EvaluateResult>}
+ * @typedef {Object} EvaluateResult
+ * @property {boolean} pass
+ * @property {unknown} exp
+ * @property {unknown} expString
  */
 const evaluateResult = async (res, expect) => {
   let exp

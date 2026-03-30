@@ -42,10 +42,10 @@ const suiteHasBeforeAll = tests => {
 /**
  * Handle suite-level beforeAll and afterAll hooks
  * @param {TestCollection} tests
- * @returns {Promise<{ beforeAllCleanup?: () => void | Promise<void>, afterAllCleanup?: () => void | Promise<void> }>}
+ * @returns {Promise<CleanupResult>}
  */
 const handleSuiteHooks = async tests => {
-  /** @type {(() => (void | Promise<void>)) | void} */
+  /** @type {HookFunction} */
   let afterAllCleanup = () => {}
 
   if (
