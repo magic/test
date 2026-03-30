@@ -158,23 +158,6 @@ const runTestArray = async (
     return resolved.filter(r => !!r)
   }
 
-  // If isolation needed but not using workers, fall back to sequential execution with executeIsolated (existing behavior)
-  if (needsIsolation) {
-    const results = []
-    for (const t of tests) {
-      /** @type {Test} */
-      const testToRun = {
-        ...t,
-        name: t.name || name,
-        parent: t.parent || parent,
-        pkg: t.pkg || pkg,
-      }
-      const res = await runTest(testToRun, store)
-      if (res) results.push(res)
-    }
-    return results
-  }
-
   // No isolation needed: run in parallel without isolation
   const promises = tests.map(t => {
     /** @type {Test} */
@@ -277,37 +260,28 @@ export const runSuite = async props => {
       // Compute test file URL for potential worker usage
       const testFileUrl = pathToFileURL(path.join(process.cwd(), 'test', pkg)).href
 
-      // Determine if we can use workers for isolated tests
-      // Workers have their own globalThis, so:
-      // - beforeAll modifying globalThis: workers with snapshot (pass state)
-      // - before modifying globalThis: workers (each gets fresh globalThis)
-      // - before modifying module state: NO workers (need shared module)
+      // Use workers for ALL isolated tests
+      // Each worker has its own globalThis and fresh module imports, providing better isolation
+      // Exception: tests that modify module-level state need sequential execution (shared module)
       let useWorkers = false
       let suiteSnapshot
-      const beforeAllModifiesGlobal =
-        hasBeforeAll && /globalThis|^global\b/.test(/** @type {any} */ (tests).beforeAll.toString())
-      const testArray = /** @type {any[]} */ (is.array(tests) ? tests : [])
-      const beforeModifiesGlobal = testArray.some(
-        t => t.before && /globalThis|^global\b/.test(t.before.toString()),
-      )
-
+      // Use workers for ALL isolated tests (tests with before/after hooks)
+      // Each worker has its own globalThis and fresh module imports
+      // Snapshot is only needed for beforeAll to pass state to workers
       if (needsIsolation) {
-        if (hasBeforeAll && beforeAllModifiesGlobal) {
-          suiteSnapshot = isolation.buildSnapshot()
-          try {
-            structuredClone(suiteSnapshot)
-          } catch (e) {
-            console.warn(
-              'Isolation: snapshot not cloneable, falling back to sequential isolated tests:',
-              e,
-            )
-            useWorkers = false
+        useWorkers = true
+        if (hasBeforeAll) {
+          const beforeAllModifiesGlobal = /globalThis|^global\b/.test(
+            /** @type {any} */ (tests).beforeAll.toString(),
+          )
+          if (beforeAllModifiesGlobal) {
+            suiteSnapshot = isolation.buildSnapshot()
+            try {
+              structuredClone(suiteSnapshot)
+            } catch {
+              // Snapshot not cloneable, workers still work without snapshot
+            }
           }
-        }
-        // Use workers if beforeAll modifies globalThis, OR if before hooks modify globalThis
-        // Don't use workers if only before hooks that don't reference globalThis (they likely modify module state)
-        if (hasBeforeAll || beforeModifiesGlobal) {
-          useWorkers = true
         }
       }
 
