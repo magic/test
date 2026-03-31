@@ -113,8 +113,7 @@ await processSpecialFiles()
 const getTestName = (testObj, filePath, index) => {
   if (testObj.info) return String(testObj.info)
   if (testObj.name) return String(testObj.name)
-  if (testObj.fn && typeof testObj.fn === 'function' && testObj.fn.name)
-    return String(testObj.fn.name)
+  if (testObj.fn && is.function(testObj.fn) && testObj.fn.name) return String(testObj.fn.name)
 
   const baseName = path.basename(filePath, path.extname(filePath))
   return `${baseName} ${index + 1}`
@@ -353,13 +352,9 @@ const run = async () => {
   let beforeAllGlobalCleanup = undefined
 
   if (globalBeforeAll) {
-    const beforeAllResult = globalBeforeAll(allSuites)
+    const beforeAllResult = await globalBeforeAll(allSuites)
     if (is.function(beforeAllResult)) {
-      beforeAllGlobalCleanup = () => {
-        /** @type {Function} */ beforeAllResult()
-      }
-    } else if (beforeAllResult && is.function(beforeAllResult.then)) {
-      await beforeAllResult
+      beforeAllGlobalCleanup = beforeAllResult
     }
   }
 
