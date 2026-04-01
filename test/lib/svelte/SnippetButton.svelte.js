@@ -6,7 +6,7 @@ export default [
   {
     component,
     props: {
-      children: createSnippet(() => 'Click me'),
+      children: createSnippet(() => '<span>Click me</span>'),
     },
     fn: ({ target }) => html(target).includes('Click me'),
     info: 'renders snippet content',
@@ -23,7 +23,7 @@ export default [
   {
     component,
     props: {
-      children: createSnippet(() => 'Disabled Button'),
+      children: createSnippet(() => '<span>Disabled Button</span>'),
       disabled: true,
     },
     fn: ({ target }) => target.querySelector('button').disabled,
@@ -32,7 +32,7 @@ export default [
   {
     component,
     props: {
-      children: createSnippet(() => 'Enabled Button'),
+      children: createSnippet(() => '<span>Enabled Button</span>'),
       disabled: false,
     },
     fn: ({ target }) => !target.querySelector('button').disabled,
@@ -41,7 +41,7 @@ export default [
   {
     component,
     props: {
-      children: createSnippet(() => 'Variant Test'),
+      children: createSnippet(() => '<span>Variant Test</span>'),
       variant: 'secondary',
     },
     fn: ({ target }) => html(target).includes('btn secondary'),
@@ -50,7 +50,7 @@ export default [
   {
     component,
     props: {
-      children: createSnippet(() => 'Click Handler Test'),
+      children: createSnippet(() => '<span>Click Handler Test</span>'),
       onclick: () => {},
     },
     fn: async ({ target }) => {
@@ -67,7 +67,7 @@ export default [
   {
     component,
     props: {
-      children: createSnippet(() => 'Primary Button'),
+      children: createSnippet(() => '<span>Primary Button</span>'),
       variant: 'primary',
     },
     fn: ({ target }) => html(target).includes('btn primary'),
@@ -76,7 +76,7 @@ export default [
   {
     component,
     props: {
-      children: createSnippet(() => 'Custom Variant'),
+      children: createSnippet(() => '<span>Custom Variant</span>'),
       variant: 'custom',
     },
     fn: ({ target }) => html(target).includes('btn custom'),
@@ -85,7 +85,7 @@ export default [
   {
     component,
     props: {
-      children: createSnippet(() => 'Default disabled'),
+      children: createSnippet(() => '<span>Default disabled</span>'),
     },
     fn: ({ target }) => !target.querySelector('button').disabled,
     info: 'button is enabled by default when disabled not provided',
@@ -93,7 +93,7 @@ export default [
   {
     component,
     props: {
-      children: createSnippet(() => 'All undefined'),
+      children: createSnippet(() => '<span>All undefined</span>'),
       variant: undefined,
       disabled: undefined,
     },
