@@ -168,6 +168,7 @@ export const post = (url, body = '', options = {}) => {
 
   return new Promise((resolve, reject) => {
     try {
+      /** @type {import('node:https').RequestOptions} */
       const requestOptions = {
         hostname,
         port,
@@ -178,7 +179,6 @@ export const post = (url, body = '', options = {}) => {
 
       // Include rejectUnauthorized for HTTPS requests
       if (isHttps) {
-        /** @type {import('node:https').RequestOptions} */
         requestOptions.rejectUnauthorized = rejectUnauthorized
       }
 
