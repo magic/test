@@ -189,5 +189,34 @@ export default {
       expect: r => r === true,
       info: 'http.get throws on unsupported protocol',
     },
+    {
+      fn: async () => {
+        let error = null
+        try {
+          await httpModule.post(
+            `http://localhost:${globalThis.httpTestPort}/timeout`,
+            { test: 'data' },
+            { timeout: 100 },
+          )
+        } catch (e) {
+          error = e
+        }
+        return error ? error.message.includes('timeout') : false
+      },
+      expect: r => r === true,
+      info: 'http.post times out with custom timeout',
+    },
+    {
+      fn: async () => {
+        const result = await httpModule.post(
+          `http://localhost:${globalThis.httpTestPort}/post`,
+          { test: 'https-reject' },
+          { rejectUnauthorized: false },
+        )
+        return result.success === true && result.body.test === 'https-reject'
+      },
+      expect: r => r === true,
+      info: 'http.post accepts rejectUnauthorized option',
+    },
   ],
 }

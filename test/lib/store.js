@@ -39,4 +39,13 @@ export default [
     expect: is.object,
     info: 'store.get() returns object',
   },
+  {
+    fn: () => {
+      store.set({ testKey: 'value' })
+      store.reset()
+      return store.get('testKey') === undefined
+    },
+    expect: true,
+    info: 'store.reset clears all state',
+  },
 ]

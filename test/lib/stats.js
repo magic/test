@@ -2,6 +2,7 @@ import is from '@magic/types'
 
 import { stats } from '../../src/lib/index.js'
 import { info, reset, test } from '../../src/lib/stats.js'
+import { Store } from '../../src/lib/store.js'
 
 export default [
   { fn: () => stats, expect: is.obj, info: 'stats exports a function' },
@@ -22,5 +23,17 @@ export default [
     fn: () => info,
     expect: is.deep.equal(stats.info),
     info: 'lib.stats.info and stats.info are the same export',
+  },
+  {
+    fn: () => {
+      const store = new Store()
+      store.set({ results: {} })
+      test({ name: 'test1', parent: 'suite1', pkg: 'pkg1', pass: true }, store)
+      test({ name: 'test2', parent: 'suite1', pkg: 'pkg1', pass: false }, store)
+      const results = store.get('results')
+      return results.suite1.all === 2 && results.suite1.pass === 1
+    },
+    expect: r => r === true,
+    info: 'test() records parent suite results',
   },
 ]

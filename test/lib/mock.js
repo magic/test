@@ -146,4 +146,15 @@ export default [
     expect: true,
     info: 'multiple mockReturnValue calls update value',
   },
+  {
+    fn: () => {
+      const spy = mock.fn()
+      spy()
+      spy()
+      const errors = spy.getErrors()
+      return errors.length === 2 && errors[0] === null
+    },
+    expect: true,
+    info: 'getErrors returns correct array',
+  },
 ]

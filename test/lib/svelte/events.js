@@ -43,6 +43,8 @@ import {
   resize,
   scroll,
   trigger,
+  volumeChange,
+  checked,
 } from '../../../src/lib/svelte/events.js'
 
 initDOM()
@@ -519,5 +521,62 @@ export default [
     },
     expect: true,
     info: 'fireEvent can trigger on child via selector',
+  },
+  // fireEvent with custom detail
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      let receivedDetail = null
+      div.addEventListener('custom', e => {
+        receivedDetail = e.detail
+      })
+      fireEvent(div, 'custom', { detail: { foo: 'bar' } })
+      return receivedDetail?.foo === 'bar'
+    },
+    expect: true,
+    info: 'fireEvent can dispatch custom event with detail',
+  },
+  // checked for checkboxes
+  {
+    fn: () => {
+      const checkbox = doc.createElement('input')
+      checkbox.type = 'checkbox'
+      doc.body.appendChild(checkbox)
+      let fired = false
+      checkbox.addEventListener('change', () => {
+        fired = true
+      })
+      checked(checkbox)
+      return fired
+    },
+    expect: true,
+    info: 'checked triggers change event on checkbox',
+  },
+  // fireEvent with selector that doesn't match (warning case)
+  {
+    fn: () => {
+      const container = doc.createElement('div')
+      doc.body.appendChild(container)
+      const result = fireEvent.click(container, '.nonexistent')
+      return result === undefined
+    },
+    expect: true,
+    info: 'fireEvent returns undefined when selector not found',
+  },
+  // volumeChange for media elements
+  {
+    fn: () => {
+      const audio = doc.createElement('audio')
+      doc.body.appendChild(audio)
+      let fired = false
+      audio.addEventListener('volumechange', () => {
+        fired = true
+      })
+      volumeChange(audio)
+      return fired
+    },
+    expect: true,
+    info: 'volumeChange triggers volumechange event',
   },
 ]
