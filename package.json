@@ -64,10 +64,10 @@
     "@magic-modules/pre": "0.0.12",
     "@magic-themes/docs": "0.0.15",
     "@magic/core": "0.0.156",
-    "@magic/format": "0.0.72",
+    "@magic/format": "0.0.73",
     "@types/node": "25.5.0",
     "prettier-plugin-svelte": "3.5.1",
-    "svelte": "5.55.0",
+    "svelte": "5.55.1",
     "typescript": "6.0.2",
     "vite": "8.0.3"
   },
