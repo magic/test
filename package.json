@@ -12,7 +12,7 @@
   "bin": {
     "t": "src/bin/t.js",
     "magic-test": "src/bin/t.js",
-    "magic-test-native": "src/node-test-runner.js"
+    "magic-test-native": "src/bin/node-test-runner.js"
   },
   "scripts": {
     "start": "node src/bin/t.js -p",
@@ -24,7 +24,7 @@
     "serve": "magic serve",
     "dev": "magic dev",
     "test": "node src/bin/t.js",
-    "test:native": "node --test src/node-test-runner.js",
+    "test:native": "node --test src/bin/node-test-runner.js",
     "test:ci": "node src/bin/t.js -p",
     "coverage": "node src/bin/t.js",
     "format": "f -w --exclude docs",

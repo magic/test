@@ -6,14 +6,14 @@ import { fileURLToPath } from 'node:url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-import(path.join(__dirname, 'bin/lib/registerLoader.js'))
+import(path.join(__dirname, 'lib/registerLoader.js'))
 
 import { describe, before, after, it } from 'node:test'
 import fs from '@magic/fs'
 import is from '@magic/types'
 import deep from '@magic/deep'
 
-import { maybeInjectMagic } from './bin/lib/index.js'
+import { maybeInjectMagic } from './lib/index.js'
 
 /**
  * Internal suite type for node-test-runner
@@ -186,7 +186,7 @@ const convertTest = async (testObj, filePath, index) => {
     if (!fnExists) {
       result = undefined
     } else if (testObj.component) {
-      const { mount } = await import(path.join(__dirname, 'lib/svelte/mount.js'))
+      const { mount } = await import(path.join(__dirname, '..', 'lib', 'svelte', 'mount.js'))
       let componentFile, componentProps
 
       if (is.string(testObj.component)) {

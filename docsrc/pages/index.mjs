@@ -949,7 +949,7 @@ npm run test:native
 {
   "scripts": {
     "test": "t -p",
-    "test:native": "node --test src/node-test-runner.js"
+    "test:native": "node --test src/bin/node-test-runner.js"
   }
 }
 `),
@@ -962,7 +962,7 @@ npm run test:native
 
   Pre(`
 # Copy node-test-runner.js to your project
-cp node_modules/@magic/test/src/node-test-runner.js src/
+cp node_modules/@magic/test/src/bin/node-test-runner.js src/
 `),
 
   p('2. Update the paths in the runner if needed (it uses relative paths to find the test directory)'),
@@ -973,7 +973,7 @@ cp node_modules/@magic/test/src/node-test-runner.js src/
 {
   "scripts": {
     "test": "t -p",
-    "test:native": "node --test src/node-test-runner.js"
+    "test:native": "node --test src/bin/node-test-runner.js"
   }
 }
 `),

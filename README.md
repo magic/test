@@ -980,7 +980,7 @@ Add to your `package.json`:
 {
   scripts: {
     test: 't -p',
-    'test:native': 'node --test src/node-test-runner.js',
+    'test:native': 'node --test src/bin/node-test-runner.js',
   },
 }
 ```
@@ -993,7 +993,7 @@ To use the native test runner in your own library that depends on @magic/test:
 
 ```bash
 # Copy node-test-runner.js to your project
-cp node_modules/@magic/test/src/node-test-runner.js src/
+cp node_modules/@magic/test/src/bin/node-test-runner.js src/
 ```
 
 2. **Update the paths** in the runner if needed (it uses relative paths to find the test directory)
@@ -1004,7 +1004,7 @@ cp node_modules/@magic/test/src/node-test-runner.js src/
 {
   "scripts": {
     "test": "t -p",
-    "test:native": "node --test src/node-test-runner.js"
+    "test:native": "node --test src/bin/node-test-runner.js"
   }
 }
 ```
