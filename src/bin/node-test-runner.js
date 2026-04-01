@@ -376,17 +376,17 @@ const run = async () => {
         })
       }
 
-      if (hooks.afterAll && is.function(hooks.afterAll)) {
-        after(async () => {
-          await /** @type {SuiteHookWithArg} */ (hooks.afterAll)(allSuites)
-        })
-      }
-
       if (hooks.beforeAll && is.function(hooks.beforeAll)) {
         after(async () => {
           if (beforeAllCleanup && is.function(beforeAllCleanup)) {
             await beforeAllCleanup()
           }
+        })
+      }
+
+      if (hooks.afterAll && is.function(hooks.afterAll)) {
+        after(async () => {
+          await /** @type {SuiteHookWithArg} */ (hooks.afterAll)(allSuites)
         })
       }
 
