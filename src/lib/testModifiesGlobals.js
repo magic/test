@@ -40,19 +40,27 @@ export const testModifiesGlobals = test => {
  */
 export const suiteModifiesGlobals = tests => {
   if (is.array(tests)) {
-    return tests.some(/** @param {unknown} test */ test => testModifiesGlobals(/** @type {{ before?: Function, after?: Function }} */ (test)))
+    return tests.some(
+      /** @param {unknown} test */ test =>
+        testModifiesGlobals(/** @type {{ before?: Function, after?: Function }} */ (test)),
+    )
   }
 
   if (is.objectNative(tests)) {
-    return Object.values(/** @type {Record<string, unknown>} */ (tests)).some(/** @param {unknown} test */ test => {
-      if (is.objectNative(test) && testModifiesGlobals(/** @type {{ before?: Function, after?: Function }} */ (test))) {
-        return true
-      }
-      if (is.objectNative(test) && test.tests) {
-        return suiteModifiesGlobals(test.tests)
-      }
-      return false
-    })
+    return Object.values(/** @type {Record<string, unknown>} */ (tests)).some(
+      /** @param {unknown} test */ test => {
+        if (
+          is.objectNative(test) &&
+          testModifiesGlobals(/** @type {{ before?: Function, after?: Function }} */ (test))
+        ) {
+          return true
+        }
+        if (is.objectNative(test) && test.tests) {
+          return suiteModifiesGlobals(test.tests)
+        }
+        return false
+      },
+    )
   }
 
   return false
@@ -186,14 +194,22 @@ export const testImportsMutableModuleState = async (tests, testFilePath) => {
    */
   const checkTestsInObject = testObj => {
     if (is.array(testObj)) {
-      return testObj.some(/** @param {unknown} t */ t => checkTest(/** @type {{ before?: Function, after?: Function, tests?: unknown }} */ (t)))
+      return testObj.some(
+        /** @param {unknown} t */ t =>
+          checkTest(/** @type {{ before?: Function, after?: Function, tests?: unknown }} */ (t)),
+      )
     }
     if (is.objectNative(testObj)) {
-      return Object.values(/** @type {Record<string, unknown>} */ (testObj)).some(/** @param {unknown} t */ t => {
-        if (is.objectNative(t) && t.tests) return checkTestsInObject(t.tests)
-        if (is.objectNative(t)) return checkTest(/** @type {{ before?: Function, after?: Function, tests?: unknown }} */ (t))
-        return false
-      })
+      return Object.values(/** @type {Record<string, unknown>} */ (testObj)).some(
+        /** @param {unknown} t */ t => {
+          if (is.objectNative(t) && t.tests) return checkTestsInObject(t.tests)
+          if (is.objectNative(t))
+            return checkTest(
+              /** @type {{ before?: Function, after?: Function, tests?: unknown }} */ (t),
+            )
+          return false
+        },
+      )
     }
     return false
   }
@@ -209,13 +225,18 @@ export const testImportsMutableModuleState = async (tests, testFilePath) => {
     return false
   }
 
-  const testsObj = /** @type {{ beforeAll?: Function, afterAll?: Function, tests?: unknown }} */ (tests)
+  const testsObj = /** @type {{ beforeAll?: Function, afterAll?: Function, tests?: unknown }} */ (
+    tests
+  )
 
   if (checkHook(testsObj.beforeAll)) return true
   if (checkHook(testsObj.afterAll)) return true
 
   if (is.array(tests)) {
-    return tests.some(/** @param {unknown} t */ t => checkTest(/** @type {{ before?: Function, after?: Function, tests?: unknown }} */ (t)))
+    return tests.some(
+      /** @param {unknown} t */ t =>
+        checkTest(/** @type {{ before?: Function, after?: Function, tests?: unknown }} */ (t)),
+    )
   }
 
   if (is.objectNative(tests) && testsObj.tests) {
@@ -290,7 +311,9 @@ const getFilePaths = code => {
  * @returns {boolean}
  */
 export const testUsesFixedPorts = tests => {
-  const testsObj = /** @type {{ beforeAll?: Function, afterAll?: Function, tests?: unknown }} */ (tests)
+  const testsObj = /** @type {{ beforeAll?: Function, afterAll?: Function, tests?: unknown }} */ (
+    tests
+  )
 
   /**
    * @param {unknown} hook
@@ -318,12 +341,18 @@ export const testUsesFixedPorts = tests => {
   if (checkHook(testsObj.afterAll)) return true
 
   if (is.array(tests)) {
-    return tests.some(/** @param {unknown} t */ t => checkTest(/** @type {{ before?: Function, after?: Function }} */ (t)))
+    return tests.some(
+      /** @param {unknown} t */ t =>
+        checkTest(/** @type {{ before?: Function, after?: Function }} */ (t)),
+    )
   }
 
   if (is.objectNative(tests)) {
     if (testsObj.tests) {
-      return Object.values(/** @type {Record<string, unknown>} */ (testsObj.tests)).some(/** @param {unknown} t */ t => checkTest(/** @type {{ before?: Function, after?: Function }} */ (t)))
+      return Object.values(/** @type {Record<string, unknown>} */ (testsObj.tests)).some(
+        /** @param {unknown} t */ t =>
+          checkTest(/** @type {{ before?: Function, after?: Function }} */ (t)),
+      )
     }
     return checkTest(/** @type {{ before?: Function, after?: Function }} */ (tests))
   }
@@ -340,7 +369,9 @@ export const testUsesSharedFiles = tests => {
   /** @type {Set<string>} */
   const allFiles = new Set()
 
-  const testsObj = /** @type {{ beforeAll?: Function, afterAll?: Function, tests?: unknown }} */ (tests)
+  const testsObj = /** @type {{ beforeAll?: Function, afterAll?: Function, tests?: unknown }} */ (
+    tests
+  )
 
   /**
    * @param {unknown} hook
@@ -374,12 +405,18 @@ export const testUsesSharedFiles = tests => {
   if (checkHook(testsObj.afterAll)) return true
 
   if (is.array(tests)) {
-    return tests.some(/** @param {unknown} t */ t => checkTest(/** @type {{ before?: Function, fn?: Function, after?: Function }} */ (t)))
+    return tests.some(
+      /** @param {unknown} t */ t =>
+        checkTest(/** @type {{ before?: Function, fn?: Function, after?: Function }} */ (t)),
+    )
   }
 
   if (is.objectNative(tests)) {
     if (testsObj.tests) {
-      return Object.values(/** @type {Record<string, unknown>} */ (testsObj.tests)).some(/** @param {unknown} t */ t => checkTest(/** @type {{ before?: Function, fn?: Function, after?: Function }} */ (t)))
+      return Object.values(/** @type {Record<string, unknown>} */ (testsObj.tests)).some(
+        /** @param {unknown} t */ t =>
+          checkTest(/** @type {{ before?: Function, fn?: Function, after?: Function }} */ (t)),
+      )
     }
     return checkTest(/** @type {{ before?: Function, fn?: Function, after?: Function }} */ (tests))
   }

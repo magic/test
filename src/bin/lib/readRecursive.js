@@ -169,7 +169,9 @@ export const readRecursive = async (dir = '') => {
     // Build aggregated error message
     const errorMessages = errors.map(e => `${e.file}: ${e.error.message}`).join('\n')
     /** @type {TestAggregateError} */
-    const aggError = /** @type {any} */ (new Error(`Failed to load ${errors.length} test file(s):\n${errorMessages}`))
+    const aggError = /** @type {any} */ (
+      new Error(`Failed to load ${errors.length} test file(s):\n${errorMessages}`)
+    )
     aggError.name = 'E_IMPORT_AGGREGATED'
     // Attach individual errors for programmatic access
     aggError.errors = errors

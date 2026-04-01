@@ -1,7 +1,7 @@
 /**
  * @param {TestObject} tests
  */
-export default (tests) => {
+export default tests => {
   globalThis.before = true
   globalThis.tests = tests
 
