@@ -13,6 +13,37 @@ import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
 import { runSuite } from './suite.js'
 
+const DEFAULT_TEST_TIMEOUT = 10000
+
+/**
+ * Wrap a promise with a timeout
+ * @param {Promise<unknown>} promise - The promise to wrap
+ * @param {number} timeoutMs - Timeout in milliseconds
+ * @param {string} testKey - Test key for error message
+ * @returns {Promise<unknown>}
+ */
+const withTimeout = (promise, timeoutMs, testKey) => {
+  if (!timeoutMs || timeoutMs <= 0) {
+    return promise
+  }
+
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`Test timed out after ${timeoutMs}ms: ${testKey}`))
+    }, timeoutMs)
+
+    promise
+      .then(result => {
+        clearTimeout(timer)
+        resolve(result)
+      })
+      .catch(err => {
+        clearTimeout(timer)
+        reject(err)
+      })
+  })
+}
+
 /**
  * Prepare test by setting defaults and extracting component props
  * @param {Test} test - The test definition
@@ -150,7 +181,10 @@ export const runTest = async (test, store = createStore()) => {
   try {
     const { componentFile, componentProps } = prepareTest(test)
 
-    const { fn, name, pkg, before, parent, expect, runs = 1, tests, info } = test
+    const { fn, name, pkg, before, parent, expect, runs = 1, tests, info, timeout } = test
+
+    // Determine timeout: per-test override takes precedence
+    const timeoutMs = timeout > 0 ? timeout : DEFAULT_TEST_TIMEOUT
 
     if (!is.ownProp(test, 'fn')) {
       if (is.object(test) && is.object(tests)) {
@@ -203,12 +237,13 @@ export const runTest = async (test, store = createStore()) => {
     for (let i = 0; i < runs; i++) {
       let res
       try {
-        res = await executeTest(
+        const testPromise = executeTest(
           fn,
           key,
           componentFile,
           /** @type {Record<string, unknown> | undefined} */ (componentProps),
         )
+        res = await withTimeout(testPromise, timeoutMs, key)
       } catch (e) {
         log.error(ERRORS.E_TEST_FN, {
           testKey: key,
