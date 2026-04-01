@@ -179,7 +179,7 @@ export const post = (url, body = '', options = {}) => {
       // Include rejectUnauthorized for HTTPS requests
       if (isHttps) {
         /** @type {import('node:https').RequestOptions} */
-        ;(requestOptions).rejectUnauthorized = rejectUnauthorized
+        requestOptions.rejectUnauthorized = rejectUnauthorized
       }
 
       const request = connector.request(requestOptions, res =>
