@@ -11,6 +11,8 @@ import { isolation, restoreFromSnapshot } from './isolation.js'
  * @property {boolean} pass
  * @property {unknown} exp
  * @property {unknown} expString
+ * @property {unknown} afterCleanupError
+ * @property {unknown} afterError
  */
 
 /**
@@ -174,23 +176,26 @@ const runTestFn = async (test, key) => {
     expString = lastExp.expString
   }
 
+  let afterCleanupError = null
+  let afterError = null
+
   if (is.function(afterCleanup)) {
     try {
       await afterCleanup()
-    } catch {
-      // ignore cleanup errors
+    } catch (e) {
+      afterCleanupError = cleanError(/** @type {Error} */ (e))
     }
   }
 
   if (is.function(after)) {
     try {
       await after()
-    } catch {
-      // ignore after errors
+    } catch (e) {
+      afterError = cleanError(/** @type {Error} */ (e))
     }
   }
 
-  return { result, pass, exp, expString }
+  return { result, pass, exp, expString, afterCleanupError, afterError }
 }
 
 /**

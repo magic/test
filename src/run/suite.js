@@ -140,6 +140,15 @@ const runTestArray = async (
                 store,
               )
             }
+
+            // Log cleanup errors from worker
+            if (result && result.afterCleanupError) {
+              log.warn('afterCleanup error in', result.name || testToRun.name, result.afterCleanupError)
+            }
+            if (result && result.afterError) {
+              log.warn('after error in', result.name || testToRun.name, result.afterError)
+            }
+
             return result
           },
           err => {

@@ -147,6 +147,12 @@ declare global {
 
     /** Extra metadata or documentation. */
     info?: string
+
+    /** Error from afterCleanup hook (if any) */
+    afterCleanupError?: unknown
+
+    /** Error from after hook (if any) */
+    afterError?: unknown
   }
 
   /**
