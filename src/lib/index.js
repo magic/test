@@ -15,5 +15,14 @@ export * as mock from './mock.js'
 
 export { getFNS } from './getFNS.js'
 export { suiteNeedsIsolation } from './suiteNeedsIsolation.js'
+export {
+  testModifiesGlobals,
+  suiteModifiesGlobals,
+  suiteBeforeAllModifiesGlobals,
+  suiteAfterAllModifiesGlobals,
+  testImportsMutableModuleState,
+  testUsesFixedPorts,
+  testUsesSharedFiles,
+} from './testModifiesGlobals.js'
 export * from './svelte/index.js'
 export * from './errors.js'

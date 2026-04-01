@@ -6,7 +6,19 @@ import log from '@magic/log'
 import is from '@magic/types'
 
 import { runTest } from './test.js'
-import { getFNS, getTestKey, cleanError, stats, suiteNeedsIsolation, ERRORS } from '../lib/index.js'
+import {
+  getFNS,
+  getTestKey,
+  cleanError,
+  stats,
+  suiteNeedsIsolation,
+  testModifiesGlobals,
+  suiteModifiesGlobals,
+  testImportsMutableModuleState,
+  testUsesFixedPorts,
+  testUsesSharedFiles,
+  ERRORS,
+} from '../lib/index.js'
 import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
 
@@ -253,33 +265,45 @@ export const runSuite = async props => {
     const suiteKey = `${pkg}.${parent}.${name}`
     const needsIsolation = suiteNeedsIsolation(tests)
     const hasBeforeAll = suiteHasBeforeAll(tests)
+    const modifiesGlobals = suiteModifiesGlobals(tests)
 
     const executeSuite = async () => {
       const { afterAllCleanup } = await handleSuiteHooks(tests)
 
       // Compute test file URL for potential worker usage
       const testFileUrl = pathToFileURL(path.join(process.cwd(), 'test', pkg)).href
+      const testFilePath = testFileUrl ? new URL(testFileUrl).pathname : ''
 
-      // Use workers for ALL isolated tests
+      // Check for module import mutations
+      const usesModuleMutation = testFilePath
+        ? await testImportsMutableModuleState(tests, testFilePath)
+        : false
+
+      // Check for fixed port usage
+      const usesFixedPorts = testUsesFixedPorts(tests)
+
+      // Check for shared file usage
+      const usesSharedFiles = testUsesSharedFiles(tests)
+
+      // Use workers ONLY for tests that modify globals OR imported module state OR use fixed ports/files
       // Each worker has its own globalThis and fresh module imports, providing better isolation
-      // Exception: tests that modify module-level state need sequential execution (shared module)
+      // Tests with hooks but no global modification run in main thread for better performance
       let useWorkers = false
       let suiteSnapshot
-      // Use workers for ALL isolated tests (tests with before/after hooks)
-      // Each worker has its own globalThis and fresh module imports
-      // Snapshot is only needed for beforeAll to pass state to workers
       if (needsIsolation) {
-        useWorkers = true
-        if (hasBeforeAll) {
-          const beforeAllFn = /** @type {TestsWithHooks} */ (tests).beforeAll
-          const beforeAllModifiesGlobal =
-            beforeAllFn && /globalThis|^global\b/.test(beforeAllFn.toString())
-          if (beforeAllModifiesGlobal) {
-            suiteSnapshot = isolation.buildSnapshot()
-            try {
-              structuredClone(suiteSnapshot)
-            } catch {
-              // Snapshot not cloneable, workers still work without snapshot
+        if (modifiesGlobals || usesModuleMutation || usesFixedPorts || usesSharedFiles) {
+          useWorkers = true
+          if (hasBeforeAll) {
+            const beforeAllFn = /** @type {TestsWithHooks} */ (tests).beforeAll
+            const beforeAllModifiesGlobal =
+              beforeAllFn && /globalThis|^global\b/.test(beforeAllFn.toString())
+            if (beforeAllModifiesGlobal) {
+              suiteSnapshot = isolation.buildSnapshot()
+              try {
+                structuredClone(suiteSnapshot)
+              } catch {
+                // Snapshot not cloneable, workers still work without snapshot
+              }
             }
           }
         }
