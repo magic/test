@@ -204,11 +204,16 @@ export class Isolation {
       return /** @type {T} */ (out)
     }
 
-    if (ArrayBuffer.isView(value) || is.instance(value, ArrayBuffer)) {
-      // Clone typed arrays and ArrayBuffers
-      // Both have slice() but no common TypeScript type
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return /** @type {any} */ (value).slice()
+    if (ArrayBuffer.isView(value)) {
+      // TypedArray - cast to any to access slice, then cast result back
+      const result = /** @type {any} */ (value).slice()
+      return /** @type {T} */ (result)
+    }
+
+    if (is.instance(value, ArrayBuffer)) {
+      // ArrayBuffer has slice method
+      const result = /** @type {any} */ (value).slice()
+      return /** @type {T} */ (result)
     }
 
     if (is.error(value)) {
@@ -349,8 +354,8 @@ export class Isolation {
         try {
           const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
           if (desc && desc.configurable !== false) {
-            // @ts-expect-error - dynamic delete on globalThis
-            delete globalThis[prop]
+            // @ts-expect-error - dynamic property delete on globalThis, prop is validated as string
+            delete globalThis[/** @type {string} */ (prop)]
           }
         } catch {
           // ignore
@@ -530,8 +535,8 @@ export const restoreFromSnapshot = snapshot => {
       try {
         const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
         if (desc && desc.configurable !== false) {
-          // @ts-expect-error - dynamic delete on globalThis
-          delete globalThis[prop]
+          // @ts-expect-error - dynamic property delete on globalThis, prop is validated as string
+          delete globalThis[/** @type {string} */ (prop)]
         }
       } catch {
         // ignore

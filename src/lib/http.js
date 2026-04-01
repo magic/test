@@ -25,6 +25,7 @@ import is from '@magic/types'
  * @property {number} [timeout=30000] - Request timeout in milliseconds
  * @property {boolean} [rejectUnauthorized] - Whether to reject self-signed certs (default: true)
  * @property {number} [maxSize] - Maximum response size in bytes
+ * @property {import('node:http').RequestOptions & import('node:https').RequestOptions} [requestOptions] - Extended options for http/https
  */
 
 /**
@@ -177,8 +178,8 @@ export const post = (url, body = '', options = {}) => {
 
       // Include rejectUnauthorized for HTTPS requests
       if (isHttps) {
-        // @ts-expect-error - rejectUnauthorized is valid for https request options
-        requestOptions.rejectUnauthorized = rejectUnauthorized
+        /** @type {import('node:https').RequestOptions} */
+        (requestOptions).rejectUnauthorized = rejectUnauthorized
       }
 
       const request = connector.request(requestOptions, res =>

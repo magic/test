@@ -13,7 +13,11 @@ const CONCURRENCY_LIMIT = 50
  * @property {unknown} [test]
  * @property {object} [tests]
  * @property {Error} [error]
- * @property {'file'|'directory'|'error'|'skip'} type
+ * @property {'file'|'directory'|'error'|'skip'} [type]
+ */
+
+/**
+ * @typedef {Error & { name: string, errors?: ImportResult[] }} TestAggregateError
  */
 
 /**
@@ -164,10 +168,10 @@ export const readRecursive = async (dir = '') => {
   if (errors.length > 0) {
     // Build aggregated error message
     const errorMessages = errors.map(e => `${e.file}: ${e.error.message}`).join('\n')
-    const aggError = new Error(`Failed to load ${errors.length} test file(s):\n${errorMessages}`)
+    /** @type {TestAggregateError} */
+    const aggError = /** @type {any} */ (new Error(`Failed to load ${errors.length} test file(s):\n${errorMessages}`))
     aggError.name = 'E_IMPORT_AGGREGATED'
     // Attach individual errors for programmatic access
-    // @ts-ignore - adding custom property to Error
     aggError.errors = errors
     throw aggError
   }

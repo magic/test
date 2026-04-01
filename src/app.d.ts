@@ -83,6 +83,9 @@ declare global {
     /** Number of times to run the test. */
     runs?: number
 
+    /** Timeout in milliseconds for the test */
+    timeout?: number
+
     /**
      * Nested tests or child suites.
      */
