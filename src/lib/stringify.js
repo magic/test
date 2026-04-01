@@ -1,10 +1,14 @@
 import is from '@magic/types'
 
+import { env } from './env.js'
+
 /**
  * Recursively stringifies parts of an input value to make it JSON-safe.
  * Useful for cleaning data before logging or serialization.
  *
- * - Strings are truncated to 70 characters max
+ * - Strings are truncated based on MAGIC_TEST_ERROR_LENGTH env var (default 70)
+ * - If --verbose is set, no truncation occurs
+ * - If --error-length N is set, strings are truncated to N characters
  * - Functions (or anything with `.toString`) are converted to strings
  * - Arrays and objects are processed recursively
  * - Primitives (boolean, number, null, undefined) are returned unchanged
@@ -22,7 +26,17 @@ import is from '@magic/types'
  */
 export const stringify = object => {
   if (is.string(object)) {
-    return object.substring(0, 70)
+    const errorLength = env.getErrorLength()
+
+    if (errorLength === 0) {
+      return object
+    }
+
+    const limit = errorLength || 70
+    if (object.length <= limit) {
+      return object
+    }
+    return object.substring(0, limit)
   } else if (is.function(object)) {
     return object.toString()
   } else if (is.array(object)) {

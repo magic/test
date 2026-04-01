@@ -81,6 +81,7 @@ const spec = {
       isNodeProd: 'fn',
       isProd: 'fn',
       isVerbose: 'fn',
+      getErrorLength: 'fn',
     },
   ],
 

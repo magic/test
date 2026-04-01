@@ -21,6 +21,7 @@ const res = cli({
     ['--exclude', '--e', '-e'],
     ['--shards', '--shard-count'],
     ['--shard-id'],
+    ['--error-length'],
   ],
   env: [[['--production', '--prod', '--p', '-p'], 'NODE_ENV', 'production']],
   help: {
@@ -32,6 +33,7 @@ const res = cli({
       '--exclude': 'files to exclude from coverage',
       '--shards': 'total number of shards',
       '--shard-id': 'shard id (0-indexed)',
+      '--error-length': 'max length for error strings (default 70, 0 = no limit)',
     },
     header: `
 simple unit testing. runs all tests found in {cwd}/test/
@@ -77,6 +79,7 @@ const run = async () => {
   const excludeArgs = res.args.exclude || []
   const shards = res.args.shards
   const shardId = res.args.shardId
+  const errorLength = res.args.errorLength
 
   const include = is.array(includeArgs) ? includeArgs : [includeArgs]
   const exclude = is.array(excludeArgs) ? excludeArgs : [excludeArgs]
@@ -97,6 +100,9 @@ const run = async () => {
   }
   if (shardId) {
     process.env.MAGIC_TEST_SHARDING_ID = shardId
+  }
+  if (errorLength !== undefined) {
+    process.env.MAGIC_TEST_ERROR_LENGTH = String(errorLength)
   }
 
   argv.push(binFile)
