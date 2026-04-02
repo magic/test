@@ -1,5 +1,4 @@
-import { html } from '../../../src/lib/index.js'
-import { trigger } from '../../../src/lib/svelte/events.js'
+import { html, trigger } from '../../../src/lib/svelte/index.js'
 
 const component = './src/lib/svelte/components/Input.svelte'
 

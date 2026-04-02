@@ -1,4 +1,4 @@
-import { cleanFunctionString } from '../../src/lib/index.js'
+import { cleanFunctionString } from '../../src/lib/cleanFunctionString.js'
 
 export default [
   { fn: () => cleanFunctionString(async () => true), expect: 'true' },

@@ -1,5 +1,5 @@
 import { is } from '../../src/index.js'
-import { cleanError } from '../../src/lib/index.js'
+import { cleanError } from '../../src/lib/cleanError.js'
 
 export default [
   { fn: cleanError, expect: undefined, info: 'empty argument returns argument' },

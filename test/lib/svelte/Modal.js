@@ -1,4 +1,4 @@
-import { html } from '../../../src/lib/index.js'
+import { html } from '../../../src/lib/svelte/index.js'
 
 const component = './src/lib/svelte/components/Modal.svelte'
 

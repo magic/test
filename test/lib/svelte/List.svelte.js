@@ -1,4 +1,4 @@
-import { html, tick } from '../../../src/lib/index.js'
+import { html, tick } from '../../../src/lib/svelte/index.js'
 
 const component = './src/lib/svelte/components/List.svelte'
 

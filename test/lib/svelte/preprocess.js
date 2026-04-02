@@ -1,4 +1,4 @@
-import { testExportsPreprocessor } from '../../../src/lib/index.js'
+import { testExportsPreprocessor } from '../../../src/lib/svelte/index.js'
 
 const sourceWithState = `
 <script>

@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { fs } from '@magic/fs'
-import { mount } from '../src/lib/index.js'
+import { mount } from '../src/index.js'
 import { resolveAlias, getProjectRoot } from '../src/lib/svelte/vite-config.js'
 
 const VITE_CONFIG = `import { defineConfig } from 'vite'

@@ -1,6 +1,6 @@
 import is from '@magic/types'
 
-import { curry, tryCatch } from '../../src/lib/index.js'
+import { curry, tryCatch } from '../../src/index.js'
 
 const fn = v => v
 

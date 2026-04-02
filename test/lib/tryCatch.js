@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { tryCatch } from '../../src/lib/index.js'
+import { tryCatch } from '../../src/index.js'
 
 const catchFn = (...args) => args
 

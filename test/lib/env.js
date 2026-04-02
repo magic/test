@@ -1,6 +1,6 @@
 import is from '@magic/types'
 
-import { env } from '../../src/lib/index.js'
+import { env } from '../../src/index.js'
 
 export default [
   {

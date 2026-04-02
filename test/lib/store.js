@@ -1,6 +1,6 @@
 import is from '@magic/types'
 
-import { createStore } from '../../src/lib/index.js'
+import { createStore } from '../../src/lib/store.js'
 
 const store = createStore()
 

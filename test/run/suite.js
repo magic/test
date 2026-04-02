@@ -1,6 +1,6 @@
 import log from '@magic/log'
 import { runSuite } from '../../src/run/suite.js'
-import { createStore } from '../../src/lib/index.js'
+import { createStore } from '../../src/lib/store.js'
 
 export default [
   {

@@ -1,4 +1,4 @@
-import { mock, tryCatch } from '../../src/lib/index.js'
+import { mock, tryCatch } from '../../src/index.js'
 
 export default [
   {

@@ -1,4 +1,4 @@
-import { mount } from '../../../src/lib/index.js'
+import { mount } from '../../../src/lib/svelte/index.js'
 
 const counterComponent = './src/lib/svelte/components/Counter.svelte'
 const derivedComponent = './src/lib/svelte/components/Derived.svelte'
