@@ -178,8 +178,9 @@ export const runTest = async (test, store = createStore()) => {
   const testParent = test.parent || ''
   const testPkg = test.pkg || ''
 
+  const { componentFile, componentProps } = prepareTest(test)
+
   try {
-    const { componentFile, componentProps } = prepareTest(test)
 
     const { fn, name, pkg, before, parent, expect, runs = 1, tests, info, timeout } = test
 
@@ -253,6 +254,7 @@ export const runTest = async (test, store = createStore()) => {
           testKey: key,
           testName: name,
           parent,
+          component: componentFile,
           error: cleanError(/** @type {Error} */ (e)),
         })
         results.push({ res, pass: false })
@@ -353,6 +355,7 @@ export const runTest = async (test, store = createStore()) => {
       testKey: testKey,
       testName: testName,
       parent: testParent,
+      component: componentFile,
       error: cleanError(/** @type {Error} */ (e)),
     })
   }
