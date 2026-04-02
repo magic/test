@@ -12,7 +12,6 @@ import {
   cleanError,
   stats,
   suiteNeedsIsolation,
-  testModifiesGlobals,
   suiteModifiesGlobals,
   testImportsMutableModuleState,
   testUsesFixedPorts,
