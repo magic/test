@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// Register TypeScript loader before other imports
+import './lib/registerLoader.js'
+
 import log from '@magic/log'
 import is from '@magic/types'
 
