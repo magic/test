@@ -1,6 +1,8 @@
 import { parse } from 'svelte/compiler'
 import is from '@magic/types'
 
+import { getViteDefine } from './vite-config.js'
+
 /**
  * @typedef {{ [key: string]: unknown; type: string }} ASTNode
  */
@@ -128,12 +130,64 @@ export const sveltekitMocksPreprocessor = () => {
         "import { browser, dev, prod } from '@magic/test'",
       )
 
+      // Mock $app/state page import - create simple object that won't be shadowed
       processed = processed.replace(
         /import\s+\{[^}]*\bpage\b[^}]*\}\s+from\s+['"]\$app\/state['"]/g,
-        "import { page } from '@magic/test'",
+        "const page = { url: { origin: 'http://localhost' } }",
+      )
+
+      // Mock @systemkollektiv/i18n imports - localizeHref adds trailing slash to http URLs
+      processed = processed.replace(
+        /import\s+\{[^}]*\}\s+from\s+['"]@systemkollektiv\/i18n['"]/g,
+        "const localizeHref = (/** @type {string} */ href) => href && href.startsWith('http') && !href.endsWith('/') ? href + '/' : href || ''\nconst reroute = /** @type {any} */ (x => x)",
       )
 
       return { code: processed }
+    },
+  }
+}
+
+export const viteDefinePreprocessor = () => {
+  return {
+    name: 'magic-vite-define',
+    /** @param {{ content: string, filename?: string }} params */
+    script: async ({ content, filename }) => {
+      if (!filename) {
+        return { code: content }
+      }
+
+      const defines = await getViteDefine(filename)
+
+      if (!defines || Object.keys(defines).length === 0) {
+        return { code: content }
+      }
+
+      /** @type {string[]} */
+      const declarations = []
+
+      for (const [key, value] of Object.entries(defines)) {
+        const valueStr = is.string(value) ? value : String(value)
+        declarations.push(`const ${key} = ${valueStr};`)
+      }
+
+      if (declarations.length === 0) {
+        return { code: content }
+      }
+
+      const defineStatements = '\n' + declarations.join('\n') + '\n'
+
+      if (!content.includes('<script')) {
+        return { code: defineStatements + content }
+      }
+
+      const scriptEnd = content.lastIndexOf('</script>')
+      if (scriptEnd === -1) {
+        return { code: content + defineStatements }
+      }
+
+      const newContent = content.slice(0, scriptEnd) + defineStatements + content.slice(scriptEnd)
+
+      return { code: newContent }
     },
   }
 }

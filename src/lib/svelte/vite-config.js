@@ -21,6 +21,8 @@ const VITE_CONFIG_NAMES = [
 export const configCache = new Map()
 /** @type {Map<string, AliasEntry[]>} */
 export const aliasCache = new Map()
+/** @type {Map<string, Record<string, unknown>>} */
+export const defineCache = new Map()
 
 /**
  * @param {string} sourceDir
@@ -115,6 +117,23 @@ const parseViteConfig = async configPath => {
     } catch (e) {
       const message = is.error(e) ? e.message : String(e)
       console.warn(`[svelte-alias] Failed to parse vite.config alias: ${message}`)
+    }
+  }
+
+  const defineMatch = content.match(/define:\s*(\{[\s\S]*?\}|\[[\s\S]*?\])/)
+  if (defineMatch) {
+    try {
+      const defineStr = defineMatch[1]
+      const cleaned = defineStr
+        .replace(/import\s*\([^)]*\)\s*as\s*\w+/g, '')
+        .replace(/process\.env\./g, 'process.env.')
+
+      const evaluated = new Function('process', `return (${cleaned})`)(process)
+
+      config.define = evaluated
+    } catch (e) {
+      const message = is.error(e) ? e.message : String(e)
+      console.warn(`[svelte-alias] Failed to parse vite.config define: ${message}`)
     }
   }
 
@@ -273,7 +292,34 @@ const parseTsConfig = async rootDir => {
     const content = stripJsonComments(rawContent)
     const tsconfig = JSON.parse(content)
     const baseUrl = tsconfig.compilerOptions?.baseUrl || '.'
-    const paths = tsconfig.compilerOptions?.paths || {}
+    let paths = tsconfig.compilerOptions?.paths || {}
+
+    // Also check .svelte-kit/tsconfig.json for additional paths (like $lib)
+    const svelteKitTsconfigPath = path.join(rootDir, '.svelte-kit', 'tsconfig.json')
+    const svelteKitExists = await fs.exists(svelteKitTsconfigPath)
+
+    if (svelteKitExists) {
+      const svelteKitRaw = await fs.readFile(svelteKitTsconfigPath, 'utf-8')
+      const svelteKitConfig = JSON.parse(svelteKitRaw)
+      const svelteKitPaths = svelteKitConfig.compilerOptions?.paths || {}
+
+      // Normalize svelte-kit paths that use ../ to point to correct location
+      /** @type {Record<string, string[]>} */
+      const normalizedSvelteKitPaths = {}
+      for (const [key, value] of Object.entries(svelteKitPaths)) {
+        if (Array.isArray(value) && value[0]?.startsWith('../')) {
+          // ../src/lib/* -> the ../ is relative to .svelte-kit/, so we need to go UP one level
+          // then back to src/lib/. So ../src/lib/* becomes src/lib/*
+          let normalizedTarget = value[0].replace(/^\.\.\//, '')
+          normalizedSvelteKitPaths[key] = [normalizedTarget]
+        } else {
+          normalizedSvelteKitPaths[key] = value
+        }
+      }
+
+      // Merge paths, with svelte-kit paths taking precedence
+      paths = { ...paths, ...normalizedSvelteKitPaths }
+    }
 
     const resolvedBaseUrl = path.isAbsolute(baseUrl) ? baseUrl : path.resolve(rootDir, baseUrl)
 
@@ -296,7 +342,16 @@ const parseTsConfig = async rootDir => {
 
         if (hasTargetWildcard) {
           const targetPrefix = target.slice(0, -1)
-          replacement = path.resolve(resolvedBaseUrl, targetPrefix) + '$1'
+          // If target is absolute (starts with /), use it directly without path.sep
+          // Otherwise resolve relative to baseUrl
+          if (targetPrefix.startsWith('/')) {
+            replacement = targetPrefix + '$1'
+          } else {
+            replacement = path.resolve(resolvedBaseUrl, targetPrefix) + path.sep + '$1'
+          }
+        } else if (target.startsWith('/')) {
+          // Absolute path without wildcard
+          replacement = target
         } else {
           replacement = path.resolve(resolvedBaseUrl, target)
         }
@@ -351,6 +406,36 @@ const loadViteAliases = async rootDir => {
 }
 
 /**
+ * @param {string} rootDir
+ * @returns {Promise<Record<string, unknown>>}
+ */
+const loadViteDefine = async rootDir => {
+  const cacheKey = rootDir + ':vite-define'
+  const cached = defineCache.get(cacheKey)
+  if (cached) {
+    return cached
+  }
+
+  const configPath = await findConfigFile(rootDir, VITE_CONFIG_NAMES)
+
+  if (!configPath) {
+    defineCache.set(cacheKey, {})
+    return {}
+  }
+
+  try {
+    const config = /** @type {Record<string, unknown>} */ (await parseViteConfig(configPath))
+    const defineConfig = /** @type {Record<string, unknown> | undefined} */ (config.define)
+    defineCache.set(cacheKey, defineConfig || {})
+    return defineConfig || {}
+  } catch (e) {
+    const message = is.error(e) ? e.message : String(e)
+    console.warn(`[svelte-alias] Failed to parse vite.config define: ${message}`)
+    return {}
+  }
+}
+
+/**
  * @param {string} importPath
  * @param {string} sourceFilePath
  * @returns {Promise<string|null>}
@@ -389,15 +474,35 @@ export const resolveAlias = async (importPath, sourceFilePath) => {
         return resolved
       }
 
-      const withExtensions = ['', '.js', '.svelte', '.ts', '/index.js', '/index.svelte']
+      // Try with extensions, handling .js->.ts conversion
+      const withExtensions = ['', '.js', '.svelte', '.ts', '/index.js', '/index.svelte', '/index.ts']
+
+      // Also try removing .js extension and adding .ts
+      let baseResolved = resolved
+      if (resolved.endsWith('.js')) {
+        baseResolved = resolved.slice(0, -3) // remove .js
+      }
+
       for (const ext of withExtensions) {
         const withExt = resolved + ext
         const exists = await fs.exists(withExt)
         if (exists) {
           return withExt
         }
+        // Also try without .js
+        if (baseResolved !== resolved) {
+          const noJsExt = baseResolved + ext
+          if (await fs.exists(noJsExt)) {
+            return noJsExt
+          }
+        }
       }
     }
+  }
+
+  // Skip resolution for scoped packages (@scope/package) - let tsLoader handle node_modules
+  if (importPath.startsWith('@')) {
+    return null
   }
 
   if (importPath.startsWith('$')) {
@@ -432,3 +537,14 @@ export const resolveAlias = async (importPath, sourceFilePath) => {
  * @returns {Promise<string>}
  */
 export const getProjectRoot = async sourceDir => await findProjectRoot(sourceDir)
+
+/**
+ * Get vite define variables for a source file
+ * @param {string} sourceFilePath
+ * @returns {Promise<Record<string, unknown>>}
+ */
+export const getViteDefine = async sourceFilePath => {
+  const sourceDir = path.dirname(sourceFilePath)
+  const rootDir = await findProjectRoot(sourceDir)
+  return await loadViteDefine(rootDir)
+}

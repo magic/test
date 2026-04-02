@@ -4,6 +4,7 @@ import is from '@magic/types'
 
 import { cleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/index.js'
 import { isolation, restoreFromSnapshot } from './isolation.js'
+import { getViteDefine } from '../lib/svelte/vite-config.js'
 
 /**
  * @typedef {Object} RunFnResult
@@ -99,6 +100,12 @@ const evaluateResult = async (res, expect) => {
  */
 const importFile = async filePath => {
   try {
+    const defines = await getViteDefine(filePath)
+    for (const [key, value] of Object.entries(defines)) {
+      // @ts-expect-error - dynamic globalThis property assignment
+      globalThis[key] = value
+    }
+
     const mod = await import(filePath)
     if (mod && mod.default) {
       return mod.default

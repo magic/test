@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url'
 import fs from '@magic/fs'
 import is from '@magic/types'
 import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js'
+import { getViteDefine } from '../../lib/svelte/vite-config.js'
 
 const CONCURRENCY_LIMIT = 50
 
@@ -77,6 +78,12 @@ export const readRecursive = async (dir = '') => {
     const fileP = indexFilePath.replace(testDir, '')
     const importPath = pathToFileURL(indexFilePath).href
     try {
+      const defines = await getViteDefine(indexFilePath)
+      for (const [key, value] of Object.entries(defines)) {
+        // @ts-expect-error - dynamic globalThis property assignment
+        globalThis[key] = value
+      }
+
       const imported = await importFile(importPath)
       tests[fileP] = imported
     } catch (err) {
@@ -127,6 +134,12 @@ export const readRecursive = async (dir = '') => {
         const importPath = pathToFileURL(filePath).href
 
         try {
+          const defines = await getViteDefine(filePath)
+          for (const [key, value] of Object.entries(defines)) {
+            // @ts-expect-error - dynamic globalThis property assignment
+            globalThis[key] = value
+          }
+
           const test = await importFile(importPath)
           return { type: 'file', file: fileP, test }
         } catch (err) {
