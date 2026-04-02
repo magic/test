@@ -475,7 +475,15 @@ export const resolveAlias = async (importPath, sourceFilePath) => {
       }
 
       // Try with extensions, handling .js->.ts conversion
-      const withExtensions = ['', '.js', '.svelte', '.ts', '/index.js', '/index.svelte', '/index.ts']
+      const withExtensions = [
+        '',
+        '.js',
+        '.svelte',
+        '.ts',
+        '/index.js',
+        '/index.svelte',
+        '/index.ts',
+      ]
 
       // Also try removing .js extension and adding .ts
       let baseResolved = resolved

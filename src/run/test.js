@@ -181,7 +181,6 @@ export const runTest = async (test, store = createStore()) => {
   const { componentFile, componentProps } = prepareTest(test)
 
   try {
-
     const { fn, name, pkg, before, parent, expect, runs = 1, tests, info, timeout } = test
 
     // Determine timeout: per-test override takes precedence
