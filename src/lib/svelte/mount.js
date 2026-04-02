@@ -95,7 +95,7 @@ export const mount = async (filePath, options = {}) => {
     mod = await import(importUrl)
   } catch (e) {
     const err = /** @type {Error} */ (e)
-    log.error('Failed to import compiled component:', err.message)
+    log.error('Failed to import compiled component:', resolvedPath, err.message)
     throw err
   }
   const Component = mod.default
@@ -126,10 +126,15 @@ export const mount = async (filePath, options = {}) => {
     const err = /** @type {Error} */ (mountError)
     if (err.message.includes('can only be used during component initialisation')) {
       throw new Error(
-        `Lifecycle error: ${err.message}. Make sure lifecycle functions are called at the top level of the component script.`,
+        `Lifecycle error in ${resolvedPath}: ${err.message}. Make sure lifecycle functions are called at the top level of the component script.`,
         { cause: err },
       )
     }
+
+    if (err.message.includes('https://svelte.dev/')) {
+      throw new Error(`[svelte] ${err.message} ${resolvedPath}`, { cause: err })
+    }
+
     throw err
   }
 
