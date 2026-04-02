@@ -7,7 +7,11 @@ import log from '@magic/log'
 import is from '@magic/types'
 
 import { resolveAlias } from './vite-config.js'
-import { testExportsPreprocessor, sveltekitMocksPreprocessor } from './preprocess.js'
+import {
+  testExportsPreprocessor,
+  sveltekitMocksPreprocessor,
+  viteDefinePreprocessor,
+} from './preprocess.js'
 import { LRUCache } from './LRUCache.js'
 
 /** @typedef {{ code: string; map: import('magic-string').SourceMap; hasGlobal: boolean; }} CssObject */
@@ -93,8 +97,12 @@ const acquireLock = async (/** @type {string} */ filePath) => {
   }
 }
 
-const SVELTE_IMPORT_REGEX =
-  /import\s+((?:\{[^}]*\}|\* as \w+|\w+))\s+from\s+['"]([^'"]+\.svelte)['"]/g
+const SVELTE_IMPORT_REGEX = /import\s+((?:\{[^}]*\}|\* as \w+|\w+))\s+from\s+['"]([^'"]+)['"]/g
+
+const isSvelteFile = (/** @type {string} */ filePath) => {
+  const ext = path.extname(filePath)
+  return ext === '.svelte' || ext === '.svx'
+}
 
 /**
  * @param {string} importPath
@@ -102,6 +110,12 @@ const SVELTE_IMPORT_REGEX =
  * @param {string} sourceFilePath
  */
 const resolveAndCompileImport = async (importPath, sourceDir, sourceFilePath) => {
+  // For scoped packages (@scope/package), let Node.js resolve from node_modules
+  // Return a special marker that tells the caller to leave the import as-is
+  if (importPath.startsWith('@')) {
+    return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
+  }
+
   let resolvedPath
 
   const aliasResolved = await resolveAlias(importPath, sourceFilePath)
@@ -109,6 +123,24 @@ const resolveAndCompileImport = async (importPath, sourceDir, sourceFilePath) =>
     resolvedPath = aliasResolved
   } else {
     resolvedPath = path.resolve(sourceDir, importPath)
+  }
+
+  // If the path doesn't have an extension, try to find the file with extensions
+  if (!path.extname(resolvedPath)) {
+    const extensions = ['.ts', '.js', '.svelte', '/index.ts', '/index.js', '/index.svelte']
+    for (const ext of extensions) {
+      const withExt = resolvedPath + ext
+      if (await fs.exists(withExt)) {
+        resolvedPath = withExt
+        break
+      }
+    }
+  }
+
+  // If it's a svelte file, compile it; otherwise return URL for tsLoader to handle
+  if (!isSvelteFile(resolvedPath)) {
+    const importUrl = pathToFileURL(resolvedPath).href
+    return { filePath: resolvedPath, js: { code: '' }, url: importUrl }
   }
 
   const relPath = path.relative(process.cwd(), resolvedPath)
@@ -164,7 +196,17 @@ const processImports = async (code, sourceFilePath) => {
 
   for (const { imported, path: importPath, full } of imports) {
     try {
-      const { url } = await resolveAndCompileImport(importPath, sourceDir, sourceFilePath)
+      const { url, skipProcessing } = await resolveAndCompileImport(
+        importPath,
+        sourceDir,
+        sourceFilePath,
+      )
+
+      // For scoped packages, leave the import as-is for Node.js to resolve
+      if (skipProcessing) {
+        continue
+      }
+
       const importRegex = new RegExp(
         `import\\s+${imported.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+from\\s+['"]${importPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`,
         'g',
@@ -203,7 +245,11 @@ export const compileSvelte = async filePath => {
 
     const source = await fs.readFile(filePath, 'utf-8')
 
-    const preprocessors = [testExportsPreprocessor(), sveltekitMocksPreprocessor()]
+    const preprocessors = [
+      testExportsPreprocessor(),
+      sveltekitMocksPreprocessor(),
+      viteDefinePreprocessor(),
+    ]
 
     const preprocessed = await preprocess(source, preprocessors)
 
