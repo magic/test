@@ -11,7 +11,7 @@ export { cleanFunctionString } from './cleanFunctionString.js'
 export * as mock from './mock.js'
 export { getFNS } from './getFNS.js'
 export { suiteNeedsIsolation } from './suiteNeedsIsolation.js'
-export { isNodeProd, isProd, isVerbose, getErrorLength, env } from './env.js'
+export { isNodeDev, isNodeProd, isProd, isVerbose, getErrorLength, env } from './env.js'
 export { Store, createStore } from './store.js'
 export {
   testModifiesGlobals,
