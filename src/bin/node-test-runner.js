@@ -105,7 +105,7 @@ const processSpecialFiles = async () => {
 await processSpecialFiles()
 
 /**
- * @param {Test} testObj
+ * @param {WrappedTest} testObj
  * @param {string} filePath
  * @param {number} index
  * @returns {string}
@@ -165,7 +165,7 @@ const runAssertion = async (result, expect) => {
 }
 
 /**
- * @param {Test} testObj
+ * @param {WrappedTest} testObj
  * @param {string} filePath
  * @param {number} index
  * @returns {Promise<TestItem>}
@@ -252,7 +252,7 @@ const convertSuite = async (tests, filePath) => {
     for (let i = 0; i < tests.length; i++) {
       const testObj = tests[i]
       if (testObj && is.object(testObj)) {
-        const convertedTest = await convertTest(/** @type {Test} */ (testObj), filePath, i)
+        const convertedTest = await convertTest(/** @type {WrappedTest} */ (testObj), filePath, i)
         if (convertedTest) {
           converted.push(convertedTest)
         }

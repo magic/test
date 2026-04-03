@@ -81,7 +81,7 @@ const handleSuiteHooks = async tests => {
 
 /**
  * Run an array of tests
- * @param {Test[]} tests - Array of tests
+ * @param {WrappedTest[]} tests - Array of tests
  * @param {boolean} needsIsolation - Whether tests have before/after hooks
  * @param {string} name - Suite name
  * @param {string} parent - Parent name
@@ -106,7 +106,7 @@ const runTestArray = async (
   if (needsIsolation && useWorkers) {
     // Run tests in parallel using worker threads
     const promises = tests.map((t, i) => {
-      /** @type {Test} */
+      /** @type {WrappedTest} */
       const testToRun = {
         ...t,
         name: t.name || name,
@@ -179,12 +179,12 @@ const runTestArray = async (
     })
 
     const resolved = await Promise.all(promises)
-    return resolved.filter(r => !!r)
+    return /** @type {(TestResult | Suite)[]} */ (resolved.filter(r => !!r))
   }
 
   // No isolation needed: run in parallel without isolation
   const promises = tests.map(t => {
-    /** @type {Test} */
+    /** @type {WrappedTest} */
     const testToRun = {
       ...t,
       name: t.name || name,
@@ -194,7 +194,7 @@ const runTestArray = async (
     return runTest(testToRun, store)
   })
   const resolved = await Promise.all(promises)
-  return resolved.filter(r => !!r)
+  return /** @type {(TestResult | Suite)[]} */ (resolved.filter(r => !!r))
 }
 
 /**
@@ -211,7 +211,7 @@ const runTestObject = async (testsObj, name, parent, pkg, store) => {
     const fns = getFNS()
     if (!fns.includes(name)) return []
 
-    /** @type {Test} */
+    /** @type {WrappedTest} */
     const test = { ...testsObj, name, parent, pkg }
     const result = await runTest(test, store)
     return result ? [result] : []

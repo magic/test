@@ -119,7 +119,7 @@ const importFile = async filePath => {
 }
 
 /**
- * @param {Test} test
+ * @param {WrappedTest} test
  * @param {string} key
  * @returns {Promise<RunFnResult>}
  */
@@ -206,7 +206,7 @@ const runTestFn = async (test, key) => {
 }
 
 /**
- * @param {Test} test
+ * @param {WrappedTest} test
  * @param {string} testKey
  * @param {string} testPkg
  * @param {string} testParent
@@ -239,7 +239,7 @@ const runSingleTest = async (test, testKey, testPkg, testParent, testName) => {
   let pass = false
 
   try {
-    const testResult = await runTestFn(/** @type {Test} */ (test), testKey)
+    const testResult = await runTestFn(/** @type {WrappedTest} */ (test), testKey)
     result = testResult.result
     pass = testResult.pass
     exp = testResult.exp
@@ -263,9 +263,9 @@ const runSingleTest = async (test, testKey, testPkg, testParent, testName) => {
 }
 
 /**
- * @param {Test[]} tests
+ * @param {WrappedTest[]} tests
  * @param {string} testKey
- * @returns {Test | undefined}
+ * @returns {WrappedTest | undefined}
  */
 const findTestByKey = (tests, testKey) => {
   for (const t of tests) {
@@ -285,10 +285,10 @@ const main = async () => {
 
     const tests = await importFile(testFileUrl)
 
-    /** @type {Test | TestObject | undefined} */
+    /** @type {WrappedTest | TestObject | undefined} */
     let test
     if (is.array(tests)) {
-      test = /** @type {Test} */ (tests[testIndex])
+      test = /** @type {WrappedTest} */ (tests[testIndex])
     } else if (is.objectNative(tests)) {
       test = /** @type {TestObject} */ (tests)
     }

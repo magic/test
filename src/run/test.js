@@ -46,7 +46,7 @@ const withTimeout = (promise, timeoutMs, testKey) => {
 
 /**
  * Prepare test by setting defaults and extracting component props
- * @param {Test} test - The test definition
+ * @param {WrappedTest} test - The test definition
  * @returns {{ componentFile?: string, componentProps?: ComponentProps }}
  */
 const prepareTest = test => {
@@ -168,7 +168,7 @@ const evaluateResult = async (res, expect) => {
  * - If `test.fn` exists → executes the test and returns a `TestResult`.
  * - If only `test.tests` exists → delegates to {@link runSuite}, which returns a `Suite`.
  *
- * @param {Test} test - The test definition.
+ * @param {WrappedTest} test - The test definition.
  * @param {Store} [store] - The store instance.
  * @returns {Promise<TestResult | Suite | undefined>} The result object or undefined on error.
  */

@@ -39,10 +39,12 @@ declare global {
    * Test framework type definitions (converted from JSDoc)
    * ----------------------------------------------------------- */
 
+  export type TestExpect = ((...args: unknown[]) => unknown) | Promise<unknown> | unknown
+
   /**
    * Definition of a single test (input before execution).
    */
-  export interface Test {
+  export interface WrappedTest {
     /** The test name. */
     name: string
 
@@ -73,12 +75,12 @@ declare global {
     /**
      * The expected value, or a function/promise that produces it.
      */
-    expect?: ((...args: unknown[]) => unknown) | Promise<unknown> | unknown
+    expect?: TestExpect
 
     /**
      * Alias for `expect`.
      */
-    is?: ((...args: unknown[]) => unknown) | Promise<unknown> | unknown
+    is?: TestExpect
 
     /** Number of times to run the test. */
     runs?: number
@@ -281,7 +283,7 @@ declare global {
   /**
    * A collection of tests, either an array or an object with hooks.
    */
-  export type TestCollection = Test[] | TestObject
+  export type TestCollection = WrappedTest[] | TestObject
 
   /**
    * Simple cleanup function returned by before hooks.
@@ -305,7 +307,7 @@ declare global {
    * Takes test parameter, can return cleanup function.
    */
   export type TestBeforeHook = (
-    test?: Test | TestItem,
+    test?: WrappedTest | TestItem,
   ) => void | CleanupFunction | Promise<void | CleanupFunction>
 
   /**
@@ -417,7 +419,7 @@ declare global {
 }
 
 export {
-  Test,
+  WrappedTest as Test,
   TestResult,
   Suite,
   TestsWithHooks,
