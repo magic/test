@@ -1,8 +1,6 @@
 import is from '@magic/types'
 
-/**
- * @type {State}
- */
+/** @typedef {import('../types.ts').State} State */
 const defaultState = {
   suites: {},
   stats: {

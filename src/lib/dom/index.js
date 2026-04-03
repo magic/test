@@ -1,6 +1,9 @@
 import { createRequire } from 'node:module'
 import is from '@magic/types'
 
+/** @typedef {import('happy-dom').Event} HappyEvent */
+/** @typedef {import('happy-dom').HTMLImageElement} HappyImageElement */
+
 /** @type {import('happy-dom').Window | null} */
 let happyWindow = null
 /** @type {import('happy-dom').Document | null} */
@@ -64,7 +67,6 @@ const imageCache = new Map()
 const createImagePolyfill = happyWindow => {
   const OriginalImage = happyWindow.Image
   const HTMLImageElement = happyWindow.HTMLImageElement
-  // @ts-ignore - property descriptor types
   const srcDesc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src')
   const createRequireFn = createRequire(import.meta.url)
 
@@ -72,16 +74,14 @@ const createImagePolyfill = happyWindow => {
    * @constructor
    */
   const PolyfilledImage = function () {
-    // @ts-ignore - OriginalImage constructor
     const img = new OriginalImage()
     return img
   }
 
-  // @ts-ignore - prototype manipulation
   PolyfilledImage.prototype = OriginalImage.prototype
-  // @ts-ignore
   PolyfilledImage.prototype.constructor = PolyfilledImage
 
+  // Custom properties for canvas integration - use any to avoid conflicts with real happy-dom types
   // @ts-ignore - custom property
   PolyfilledImage.prototype._nodeCanvasImage = null
   // @ts-ignore
@@ -94,19 +94,17 @@ const createImagePolyfill = happyWindow => {
   }
 
   Object.defineProperty(PolyfilledImage.prototype, 'src', {
-    /** @this {any} */
+    /** @this {import('happy-dom').HTMLImageElement} */
     get() {
-      // @ts-ignore
-      if (srcDesc.get) return srcDesc.get.call(this)
+      if (srcDesc?.get) return srcDesc.get.call(this)
       return ''
     },
-    /** @this {any} */
+    /** @this {import('happy-dom').HTMLImageElement} */
     set(value) {
       if (value && value.startsWith('data:image')) {
         const { width, height } = parsePngDimensions(value)
 
-        // @ts-ignore
-        if (srcDesc.set) srcDesc.set.call(this, value)
+        if (srcDesc?.set) srcDesc.set.call(this, value)
 
         // Set dimensions using defineProperty
         Object.defineProperty(this, 'width', {
@@ -130,38 +128,30 @@ const createImagePolyfill = happyWindow => {
 
         // Pre-load with node-canvas for canvas drawing support
         const { loadImage: nodeLoadImage } = createRequireFn('canvas')
-        /** @type {any} */
-        const img = this
+        const img = /** @type {import('happy-dom').HTMLImageElement} */ (this)
         nodeLoadImage(value)
           .then(
-            /** @param {any} nodeImg */ nodeImg => {
+            /** @param {unknown} nodeImg */ nodeImg => {
               img._nodeCanvasImage = nodeImg
 
               if (img.onload) {
-                // @ts-ignore
-                img.onload.call(img, new Event('load'))
+                img.onload.call(img, /** @type {HappyEvent} */ (new Event('load')))
               }
-              // @ts-ignore
               if (typeof img.addEventListener === 'function') {
-                // @ts-ignore
-                img.dispatchEvent(new Event('load'))
+                img.dispatchEvent(/** @type {HappyEvent} */ (new Event('load')))
               }
             },
           )
           .catch(() => {
             if (img.onload) {
-              // @ts-ignore
-              img.onload.call(img, new Event('load'))
+              img.onload.call(img, /** @type {HappyEvent} */ (new Event('load')))
             }
-            // @ts-ignore
             if (typeof img.addEventListener === 'function') {
-              // @ts-ignore
-              img.dispatchEvent(new Event('load'))
+              img.dispatchEvent(/** @type {HappyEvent} */ (new Event('load')))
             }
           })
       } else {
-        // @ts-ignore
-        if (srcDesc.set) srcDesc.set.call(this, value)
+        if (srcDesc?.set) srcDesc.set.call(this, value)
       }
     },
     configurable: true,
@@ -178,15 +168,15 @@ const createImagePolyfill = happyWindow => {
  */
 const createCanvasPolyfill = (happyWindow, happyDocument) => {
   const OriginalCanvasElement = happyWindow.HTMLCanvasElement
-  // @ts-ignore
   const originalGetContext = OriginalCanvasElement.prototype.getContext
   const createRequireFn = createRequire(import.meta.url)
   const { createCanvas: nodeCreateCanvas, loadImage: nodeLoadImage } = createRequireFn('canvas')
 
   /**
-   * @this {any}
+   * @this {import('happy-dom').HTMLCanvasElement}
    * @param {string} type
-   * @param {any[]} args
+   * @param {unknown[]} args
+   * @returns {unknown}
    */
   OriginalCanvasElement.prototype.getContext = function (type, ...args) {
     if (type === '2d') {
@@ -196,23 +186,30 @@ const createCanvasPolyfill = (happyWindow, happyDocument) => {
       // Wrap drawImage to handle happy-dom Images
       const originalDrawImage = ctx.drawImage
       /**
-       * @this {any}
-       * @param {any} img
-       * @param {any[]} drawArgs
+       * @this {import('happy-dom').CanvasRenderingContext2D}
+       * @param {import('happy-dom').CanvasImageSource} img
+       * @param {unknown[]} drawArgs
        */
       ctx.drawImage = function (img, ...drawArgs) {
         // Check if it's a happy-dom Image with pre-loaded node-canvas image
-        // @ts-ignore
-        if (img && img._nodeCanvasImage) {
-          // @ts-ignore
-          return originalDrawImage.call(this, img._nodeCanvasImage, ...drawArgs)
+        const imageEl =
+          /** @type {import('happy-dom').HTMLImageElement & { _nodeCanvasImage?: unknown }} */ (img)
+        if (img && imageEl._nodeCanvasImage) {
+          return originalDrawImage.call(this, imageEl._nodeCanvasImage, ...drawArgs)
         }
 
         // Check if it's a happy-dom Image (has width/height from data URL)
-        // @ts-ignore
-        if (img && img.width > 0 && img.height > 0 && img.src && img.src.startsWith('data:image')) {
+        if (
+          img &&
+          'width' in img &&
+          'height' in img &&
+          img.width > 0 &&
+          img.height > 0 &&
+          'src' in img &&
+          typeof img.src === 'string' &&
+          img.src.startsWith('data:image')
+        ) {
           try {
-            // @ts-ignore
             const nodeImg = nodeLoadImage(img.src)
             return originalDrawImage.call(this, nodeImg, ...drawArgs)
           } catch (e) {
@@ -227,16 +224,14 @@ const createCanvasPolyfill = (happyWindow, happyDocument) => {
     }
 
     if (type === 'webgl' || type === 'webgl2') {
-      // @ts-ignore
       return originalGetContext.call(this, type, ...args)
     }
 
-    // @ts-ignore
     return originalGetContext.call(this, type, ...args)
   }
 
   /**
-   * @this {any}
+   * @this {import('happy-dom').HTMLCanvasElement}
    * @param {string} [mimeType]
    * @param {number} [quality]
    */

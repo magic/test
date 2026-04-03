@@ -13,6 +13,14 @@ import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
 import { runSuite } from './suite.js'
 
+/** @typedef {import('../types.ts').WrappedTest} WrappedTest */
+/** @typedef {import('../types.ts').ComponentProps} ComponentProps */
+/** @typedef {import('../types.ts').TestResult} TestResult */
+/** @typedef {import('../types.ts').EvaluateResult} EvaluateResult */
+/** @typedef {import('../types.ts').TestCollection} TestCollection */
+/** @typedef {import('../types.ts').TestObject} TestObject */
+/** @typedef {import('../types.ts').Suite} Suite */
+
 const DEFAULT_TEST_TIMEOUT = 10000
 
 /**

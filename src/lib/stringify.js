@@ -2,6 +2,9 @@ import is from '@magic/types'
 
 import { env } from './env.js'
 
+/** @typedef {import('../types.ts').InputValue} InputValue */
+/** @typedef {import('../types.ts').JsonSafe} JsonSafe */
+
 /**
  * Recursively stringifies parts of an input value to make it JSON-safe.
  * Useful for cleaning data before logging or serialization.

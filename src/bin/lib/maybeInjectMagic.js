@@ -5,6 +5,16 @@ import fs from '@magic/fs'
 import is from '@magic/types'
 import log from '@magic/log'
 
+/** @typedef {import('../../types.ts').TestCollection} TestCollection */
+/** @typedef {import('../../types.ts').WrappedTest} WrappedTest */
+/** @typedef {import('../../types.ts').CleanupResult} CleanupResult */
+/** @typedef {import('../../types.ts').CleanupFunction} CleanupFunction */
+/** @typedef {import('../../types.ts').Snapshot} Snapshot */
+/** @typedef {import('../../types.ts').TestResult} TestResult */
+/** @typedef {import('../../types.ts').SuiteInput} SuiteInput */
+/** @typedef {import('../../types.ts').TestObject} TestObject */
+/** @typedef {import('@magic/error').CustomError} CustomError */
+
 const cwd = process.cwd()
 
 /**

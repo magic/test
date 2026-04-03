@@ -8,6 +8,8 @@ import is from '@magic/types'
 import { compileSvelteWithWrite } from './compile.js'
 import { initDOM, getDocument, getWindow } from '../dom/index.js'
 
+/** @typedef {import('../../types.ts').ComponentProps} ComponentProps */
+
 /** @type {Function} */
 let svelteMount
 /** @type {Function} */
@@ -38,8 +40,9 @@ const initSvelte = async () => {
     svelteCreateRawSnippet = svelte.createRawSnippet || null
     svelteInitialized = true
     return
-  } catch (/** @type {any} */ e) {
-    throw new Error(`Failed to initialize Svelte: ${e.message}`)
+  } catch (e) {
+    const err = /** @type {Error} */ (e)
+    throw new Error(`Failed to initialize Svelte: ${err.message}`)
   }
 }
 

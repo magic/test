@@ -6,9 +6,14 @@ import { stringify } from './stringify.js'
 import { getDuration } from './getDuration.js'
 import { Store } from './store.js'
 
-/**
- * @typedef {State} StoreState
- */
+/** @typedef {import('../types.ts').State} State */
+/** @typedef {import('../types.ts').Suite} Suite */
+/** @typedef {import('../types.ts').TestResult} TestResult */
+/** @typedef {import('../types.ts').PartialTest} PartialTest */
+/** @typedef {import('../types.ts').IStore} IStore */
+/** @typedef {import('../types.ts').TestResults} TestResults */
+/** @typedef {import('../types.ts').TestStats} TestStats */
+/** @typedef {import('../types.ts').InputValue} InputValue */
 
 /**
  * Type guard to check if a value is a TestResult.

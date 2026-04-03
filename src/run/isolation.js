@@ -2,6 +2,10 @@ import { Worker } from 'node:worker_threads'
 
 import is from '@magic/types'
 
+/** @typedef {import('../types.ts').Snapshot} Snapshot */
+/** @typedef {import('../types.ts').PropertyDescriptorRecord} PropertyDescriptorRecord */
+/** @typedef {import('../types.ts').TestResult} TestResult */
+
 /**
  * @typedef {ArrayBuffer | Uint8Array | Uint8ClampedArray | Int8Array | Uint16Array | Int16Array | Uint32Array | Int32Array | Float32Array | Float64Array | BigInt64Array | BigUint64Array} SliceableBuffer
  */

@@ -8,6 +8,9 @@ import { stats, createStore, ERRORS } from './lib/index.js'
 
 import { runSuite } from './run/suite.js'
 
+/** @typedef {import('./types.ts').TestSuites} TestSuites */
+/** @typedef {import('./types.ts').TestCollection} TestCollection */
+
 const cwd = process.cwd()
 
 /**

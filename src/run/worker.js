@@ -6,6 +6,12 @@ import { cleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/inde
 import { isolation, restoreFromSnapshot } from './isolation.js'
 import { getViteDefine } from '../lib/svelte/vite-config.js'
 
+/** @typedef {import('../types.ts').WrappedTest} WrappedTest */
+/** @typedef {import('../types.ts').CleanupFunction} CleanupFunction */
+/** @typedef {import('../types.ts').TestResult} TestResult */
+/** @typedef {import('../types.ts').TestObject} TestObject */
+/** @typedef {import('../types.ts').EvaluateResult} EvaluateResult */
+
 /**
  * @typedef {Object} RunFnResult
  * @property {unknown} result

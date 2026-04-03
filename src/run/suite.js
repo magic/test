@@ -21,6 +21,17 @@ import {
 import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
 
+/** @typedef {import('../types.ts').Suite} Suite */
+/** @typedef {import('../types.ts').TestCollection} TestCollection */
+/** @typedef {import('../types.ts').WrappedTest} WrappedTest */
+/** @typedef {import('../types.ts').CleanupResult} CleanupResult */
+/** @typedef {import('../types.ts').CleanupFunction} CleanupFunction */
+/** @typedef {import('../types.ts').Snapshot} Snapshot */
+/** @typedef {import('../types.ts').TestResult} TestResult */
+/** @typedef {import('../types.ts').SuiteInput} SuiteInput */
+/** @typedef {import('../types.ts').TestObject} TestObject */
+/** @typedef {import('@magic/error').CustomError} CustomError */
+
 /** @type {Suite} */
 const defaultSuite = {
   pass: 0,
@@ -66,7 +77,7 @@ const handleSuiteHooks = async tests => {
     'beforeAll' in tests &&
     is.function(tests.beforeAll)
   ) {
-    const testsWithHooks = /** @type {TestObject} */ (tests)
+    const testsWithHooks = tests
     const beforeAllFn = testsWithHooks.beforeAll
     if (is.fn(beforeAllFn)) {
       const beforeResult = await beforeAllFn()
@@ -179,7 +190,7 @@ const runTestArray = async (
     })
 
     const resolved = await Promise.all(promises)
-    return /** @type {(TestResult | Suite)[]} */ (resolved.filter(r => !!r))
+    return resolved.filter(r => !!r)
   }
 
   // No isolation needed: run in parallel without isolation
@@ -194,7 +205,7 @@ const runTestArray = async (
     return runTest(testToRun, store)
   })
   const resolved = await Promise.all(promises)
-  return /** @type {(TestResult | Suite)[]} */ (resolved.filter(r => !!r))
+  return resolved.filter(r => !!r)
 }
 
 /**
@@ -306,7 +317,8 @@ export const runSuite = async props => {
         if (modifiesGlobals || usesModuleMutation || usesFixedPorts || usesSharedFiles) {
           useWorkers = true
           if (hasBeforeAll) {
-            const beforeAllFn = /** @type {TestsWithHooks} */ (tests).beforeAll
+            const testObj = /** @type {TestObject} */ (tests)
+            const beforeAllFn = testObj.beforeAll
             const beforeAllModifiesGlobal =
               beforeAllFn && /globalThis|^global\b/.test(beforeAllFn.toString())
             if (beforeAllModifiesGlobal) {

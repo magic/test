@@ -10,6 +10,17 @@ import { run, abort } from '../run.js'
 
 import { maybeInjectMagic, readRecursive } from './lib/index.js'
 
+/** @typedef {import('../types.ts').TestSuites} TestSuites */
+/** @typedef {import('../types.ts').TestCollection} TestCollection */
+/** @typedef {import('../types.ts').WrappedTest} WrappedTest */
+/** @typedef {import('../types.ts').CleanupResult} CleanupResult */
+/** @typedef {import('../types.ts').CleanupFunction} CleanupFunction */
+/** @typedef {import('../types.ts').Snapshot} Snapshot */
+/** @typedef {import('../types.ts').TestResult} TestResult */
+/** @typedef {import('../types.ts').SuiteInput} SuiteInput */
+/** @typedef {import('../types.ts').TestObject} TestObject */
+/** @typedef {import('@magic/error').CustomError} CustomError */
+
 const getShardConfig = () => {
   const rawShards = process.env.MAGIC_TEST_SHARDING_SHARDS
   const rawShardId = process.env.MAGIC_TEST_SHARDING_ID

@@ -6,6 +6,9 @@ import is from '@magic/types'
 import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js'
 import { getViteDefine } from '../../lib/svelte/vite-config.js'
 
+/** @typedef {import('../../types.ts').TestSuites} TestSuites */
+/** @typedef {import('../../types.ts').TestCollection} TestCollection */
+
 const CONCURRENCY_LIMIT = 50
 
 /**

@@ -15,6 +15,15 @@ import deep from '@magic/deep'
 
 import { maybeInjectMagic } from './lib/index.js'
 
+/** @typedef {import('../types.ts').TestSuites} TestSuites */
+/** @typedef {import('../types.ts').TestCollection} TestCollection */
+/** @typedef {import('../types.ts').WrappedTest} WrappedTest */
+/** @typedef {import('../types.ts').TestHooks} TestHooks */
+/** @typedef {import('../types.ts').TestItem} TestItem */
+/** @typedef {import('../types.ts').CleanupFunction} CleanupFunction */
+/** @typedef {import('../types.ts').ComponentProps} ComponentProps */
+/** @typedef {import('../types.ts').SuiteHookWithArg} SuiteHookWithArg */
+
 /**
  * Internal suite type for node-test-runner
  * Uses TestSuite hooks but with TestHooks interface

@@ -1,5 +1,7 @@
 import is from '@magic/types'
 
+/** @typedef {import('../types.ts').TestCollection} TestCollection */
+
 /**
  * Check if any test in the suite needs isolation (has before/after hooks)
  * @param {TestCollection} tests - Collection of tests to check
