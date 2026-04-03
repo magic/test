@@ -152,19 +152,30 @@ const getSvelteExports = async filePath => {
 /**
  * Compile a barrel file that exports Svelte components
  * @param {string} filePath - Path to the barrel file
+ * @param {string[]} [importChain] - Track import chain for circular dep detection
  * @returns {Promise<{ filePath: string, js: { code: string }, url: string }>}
  */
-const compileBarrel = async filePath => {
+const compileBarrel = async (filePath, importChain = []) => {
   // Check if already cached
   const cached = barrelCache.get(filePath)
   if (cached) {
     return { filePath, js: { code: '' }, url: cached.wrapperUrl }
   }
 
-  // Detect circular dependency
-  if (processingBarrels.has(filePath)) {
-    throw new Error(`Circular dependency detected in barrel file: ${filePath}`)
+  // Check for TRUE circular dependency: A→B→A
+  // Not: A→B→C (sequential is fine)
+  if (importChain.includes(filePath)) {
+    const cycle = [...importChain, filePath].join(' → ')
+    throw new Error(
+      `Circular dependency detected: ${cycle}\n` +
+        `Suggestion: Import Svelte components directly instead of using barrel files.\n` +
+        `  Instead of: import { Button } from '$lib/forms'\n` +
+        `  Use: import Button from '$lib/forms/Button.svelte'`,
+    )
   }
+
+  // Add current file to chain for child imports
+  const currentChain = [...importChain, filePath]
   processingBarrels.add(filePath)
 
   try {
@@ -178,8 +189,8 @@ const compileBarrel = async filePath => {
     const compiledExports = []
 
     for (const { name, path: sveltePath } of exports) {
-      const { js } = await compileSvelte(sveltePath)
-      const processed = await processImports(js.code, sveltePath)
+      const { js } = await compileSvelte(sveltePath, currentChain)
+      const processed = await processImports(js.code, sveltePath, currentChain)
 
       const relPath = path.relative(process.cwd(), sveltePath)
       const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
@@ -247,8 +258,9 @@ const classifyImport = importPath => {
  * @param {string} importPath
  * @param {string} sourceDir
  * @param {string} sourceFilePath
+ * @param {string[]} [importChain] - Track import chain for circular dep detection
  */
-const resolveAndCompileImport = async (importPath, sourceDir, sourceFilePath) => {
+const resolveAndCompileImport = async (importPath, sourceDir, sourceFilePath, importChain = []) => {
   const importType = classifyImport(importPath)
 
   // Type 2: Scoped packages (@scope/package) - skip, let Node.js resolve
@@ -372,7 +384,7 @@ const resolveAndCompileImport = async (importPath, sourceDir, sourceFilePath) =>
   if (ext === '.ts' || ext === '.js') {
     const exports = await getSvelteExports(resolvedPath)
     if (exports.length > 0) {
-      return await compileBarrel(resolvedPath)
+      return await compileBarrel(resolvedPath, importChain)
     }
   }
 
@@ -396,9 +408,9 @@ const resolveAndCompileImport = async (importPath, sourceDir, sourceFilePath) =>
       }
     }
 
-    const { js } = await compileSvelte(resolvedPath)
+    const { js } = await compileSvelte(resolvedPath, importChain)
 
-    const processed = await processImports(js.code, resolvedPath)
+    const processed = await processImports(js.code, resolvedPath, importChain)
 
     const importUrl = pathToFileURL(tmpFile)
 
@@ -421,8 +433,9 @@ const resolveAndCompileImport = async (importPath, sourceDir, sourceFilePath) =>
 /**
  * @param {string} code
  * @param {string} sourceFilePath
+ * @param {string[]} [importChain] - Track import chain for circular dep detection
  */
-const processImports = async (code, sourceFilePath) => {
+const processImports = async (code, sourceFilePath, importChain = []) => {
   let processedCode = code
   const sourceDir = path.dirname(sourceFilePath)
   const imports = []
@@ -435,7 +448,12 @@ const processImports = async (code, sourceFilePath) => {
 
   for (const { imported, path: importPath, full } of imports) {
     try {
-      const result = await resolveAndCompileImport(importPath, sourceDir, sourceFilePath)
+      const result = await resolveAndCompileImport(
+        importPath,
+        sourceDir,
+        sourceFilePath,
+        importChain,
+      )
 
       // For scoped/bare packages, leave the import as-is for Node.js to resolve
       if ('skipProcessing' in result && result.skipProcessing) {
@@ -480,8 +498,9 @@ const transformForNode = (code, filePath) => {
 
 /**
  * @param {string} filePath
+ * @param {string[]} [importChain] - Track import chain for circular dep detection
  */
-export const compileSvelte = async filePath => {
+export const compileSvelte = async (filePath, importChain = []) => {
   await cleanTempFiles()
 
   const relPath = path.relative(process.cwd(), filePath)
