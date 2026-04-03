@@ -16,6 +16,25 @@ import { runSuite } from './suite.js'
 const DEFAULT_TEST_TIMEOUT = 10000
 
 /**
+ * Get timeout for a test, checking per-test option first, then env var
+ * @param {number | undefined} testTimeout - Per-test timeout option
+ * @returns {number}
+ */
+const getTestTimeout = testTimeout => {
+  // Per-test override: { timeout: 30000 }
+  if (testTimeout !== undefined) {
+    return testTimeout > 0 ? testTimeout : DEFAULT_TEST_TIMEOUT
+  }
+  // Environment variable: MAGIC_TEST_TIMEOUT=30000
+  const envTimeout = process.env.MAGIC_TEST_TIMEOUT
+  if (envTimeout) {
+    const parsed = parseInt(envTimeout, 10)
+    return isNaN(parsed) ? DEFAULT_TEST_TIMEOUT : parsed
+  }
+  return DEFAULT_TEST_TIMEOUT
+}
+
+/**
  * Wrap a promise with a timeout
  * @param {Promise<unknown>} promise - The promise to wrap
  * @param {number} timeoutMs - Timeout in milliseconds
@@ -183,12 +202,8 @@ export const runTest = async (test, store = createStore()) => {
   try {
     const { fn, name, pkg, before, parent, expect, runs = 1, tests, info, timeout } = test
 
-    // Determine timeout: per-test override takes precedence
-    const timeoutMs = timeout
-      ? timeout > 0
-        ? timeout
-        : DEFAULT_TEST_TIMEOUT
-      : DEFAULT_TEST_TIMEOUT
+    // Determine timeout: per-test override takes precedence, then env var
+    const timeoutMs = getTestTimeout(timeout)
 
     if (!is.ownProp(test, 'fn')) {
       if (is.object(test) && is.object(tests)) {
