@@ -41,19 +41,7 @@ declare global {
 
   export type TestExpect = ((...args: unknown[]) => unknown) | Promise<unknown> | unknown
 
-  /**
-   * Definition of a single test (input before execution).
-   */
-  export interface WrappedTest {
-    /** The test name. */
-    name: string
-
-    /** The package this test belongs to. */
-    pkg: string
-
-    /** The parent suite/group name. */
-    parent: string
-
+  export interface Test {
     /** Additional information about the test. */
     info?: string
 
@@ -89,11 +77,6 @@ declare global {
     timeout?: number
 
     /**
-     * Nested tests or child suites.
-     */
-    tests?: TestCollection
-
-    /**
      * Hook executed before running the test.
      * Can return a cleanup function.
      */
@@ -114,6 +97,25 @@ declare global {
      * Props to pass to the component (alternative to passing in component tuple).
      */
     props?: Record<string, unknown>
+
+    /**
+     * Nested tests or child suites.
+     */
+    tests?: TestCollection
+  }
+
+  /**
+   * Definition of a single test (input before execution but after processing additional fields).
+   */
+  export interface WrappedTest extends Test {
+    /** The test name. */
+    name: string
+
+    /** The package this test belongs to. */
+    pkg: string
+
+    /** The parent suite/group name. */
+    parent: string
   }
 
   /**
