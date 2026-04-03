@@ -461,9 +461,8 @@ const classifyImport = importPath => {
 export const resolveAlias = async (importPath, sourceFilePath) => {
   const importType = classifyImport(importPath)
 
-  // Only process relative imports in this function
-  // All other types should be handled by compile.js
-  if (importType !== 'relative') {
+  // Only process relative, vite-alias and scoped imports
+  if (importType !== 'relative' && importType !== 'vite-alias' && importType !== 'scoped') {
     return null
   }
 
