@@ -8,6 +8,8 @@ export { default as error } from '@magic/error'
 
 export { run } from './run.js'
 
+import { initDOM } from './lib/svelte/index.js'
+
 export { curry, env, http, mock, promise, Store, vals, version, tryCatch } from './lib/index.js'
 
 export {
@@ -82,6 +84,10 @@ export {
   prod,
   createStaticPage,
 } from './lib/svelte/index.js'
+
+// Auto-initialize DOM for all tests - makes HTMLInputElement, etc. available globally
+// This enables instanceof checks to work in plain JS unit tests
+initDOM()
 
 const { NODE_ENV = 'test' } = process.env
 process.env.NODE_ENV = NODE_ENV
