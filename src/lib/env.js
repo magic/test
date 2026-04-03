@@ -5,6 +5,12 @@
 export const isNodeProd = () => process.env.NODE_ENV === 'production'
 
 /**
+ * Check if NODE_ENV is set to 'development'
+ * @returns {boolean}
+ */
+export const isNodeDev = () => process.env.NODE_ENV === 'development'
+
+/**
  * Check if the '-p' argument is present in process.argv
  * @returns {boolean}
  */
@@ -34,6 +40,7 @@ export const getErrorLength = () => {
 
 export const env = {
   isNodeProd,
+  isNodeDev,
   isProd,
   isVerbose,
   getErrorLength,
