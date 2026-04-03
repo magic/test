@@ -22,17 +22,25 @@ let svelteInitialized = false
 const initSvelte = async () => {
   if (svelteInitialized) return
 
-  // Ensure DOM globals are set before Svelte initializes
   initDOM()
 
-  const sveltePath = path.join(process.cwd(), 'node_modules/svelte/src/index-client.js')
-  const require = createRequire(import.meta.url)
-  const svelte = require(sveltePath)
-  svelteMount = svelte.mount
-  svelteUnmount = svelte.unmount
-  svelteCreateRawSnippet = svelte.createRawSnippet
-  svelteTick = svelte.tick
-  svelteInitialized = true
+  let svelte
+
+  // Use require to load svelte/src/index-client.js directly
+  // This gives us the actual client-side mount function
+  try {
+    const sveltePath = path.join(process.cwd(), 'node_modules/svelte/src/index-client.js')
+    const require = createRequire(import.meta.url)
+    svelte = require(sveltePath)
+    svelteMount = svelte.mount
+    svelteUnmount = svelte.unmount
+    svelteTick = svelte.tick
+    svelteCreateRawSnippet = svelte.createRawSnippet || null
+    svelteInitialized = true
+    return
+  } catch (/** @type {any} */ e) {
+    throw new Error(`Failed to initialize Svelte: ${e.message}`)
+  }
 }
 
 /**
@@ -40,6 +48,8 @@ const initSvelte = async () => {
  * @param {string | (() => string)} renderFn - Function that returns HTML string
  */
 export const createSnippet = renderFn => {
+  // Try to initialize synchronously - if it returns a promise, that's fine
+  // because we'll await it in mount() anyway
   initSvelte()
 
   const render = is.str(renderFn) ? () => renderFn : renderFn
@@ -80,6 +90,10 @@ export const mount = async (filePath, options = {}) => {
     document: doc,
     window: win,
     self: win,
+    setTimeout: win.setTimeout,
+    setInterval: win.setInterval,
+    clearTimeout: win.clearTimeout,
+    clearInterval: win.clearInterval,
   })
 
   await initSvelte()
@@ -113,6 +127,33 @@ export const mount = async (filePath, options = {}) => {
 
   const props = rawProps ?? {}
 
+  // Process props to convert snippet-like objects to actual Svelte 5 snippets
+  /**
+   * @param {Record<string, any>} propsToProcess
+   * @returns {Record<string, any>}
+   */
+  const processProps = propsToProcess => {
+    /** @type {Record<string, any>} */
+    const processed = {}
+    for (const [key, value] of Object.entries(propsToProcess)) {
+      // Only convert explicit snippet-like objects: { render: fn } or { render: "string" }
+      // Don't auto-convert strings or functions - that breaks normal props like href, value, etc.
+      if (is.object(value) && value !== null && !is.array(value)) {
+        if ('render' in value && !is.fn(value)) {
+          // Convert to Svelte 5 snippet
+          const renderFn = is.str(value.render) ? () => value.render : value.render
+          processed[key] = svelteCreateRawSnippet(() => ({ render: renderFn }))
+          continue
+        }
+      }
+      // Leave everything else as-is (strings, functions, numbers, etc.)
+      processed[key] = value
+    }
+    return processed
+  }
+
+  const processedProps = svelteCreateRawSnippet ? processProps(props) : props
+
   for (const key of Reflect.ownKeys(props)) {
     if (!is.string(key)) {
       throw new Error(`Prop keys must be strings, got ${typeof key}`)
@@ -123,7 +164,7 @@ export const mount = async (filePath, options = {}) => {
   try {
     component = svelteMount(Component, {
       target,
-      props,
+      props: processedProps,
     })
   } catch (/** @type {unknown} */ mountError) {
     const err = /** @type {Error} */ (mountError)
