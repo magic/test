@@ -1,4 +1,4 @@
-export function createSnippet(renderFn: string): any
+export function createSnippet(renderFn: string | (() => string)): any
 export function tick(): Promise<void>
 export function mount(
   filePath: string,

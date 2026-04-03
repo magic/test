@@ -1,4 +1,7 @@
-export function compileSvelte(filePath: string): Promise<{
+export function compileSvelte(
+  filePath: string,
+  importChain?: string[],
+): Promise<{
   js: {
     code: string
   }
