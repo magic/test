@@ -12,6 +12,13 @@ export function sveltekitMocksPreprocessor(): {
     code: string
   }>
 }
+export function viteDefinePreprocessor(): {
+  name: string
+  /** @param {{ content: string, filename?: string }} params */
+  script: ({ content, filename }: { content: string; filename?: string }) => Promise<{
+    code: string
+  }>
+}
 export type ASTNode = {
   [key: string]: unknown
   type: string

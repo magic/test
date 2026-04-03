@@ -1,16 +1,3 @@
-/**
- * @typedef {object} PropertyDescriptorRecord
- * @property {boolean} configurable
- * @property {boolean} enumerable
- * @property {boolean} [writable]
- * @property {unknown} [value]
- * @property {(() => unknown) | undefined} [get]
- * @property {((v: unknown) => void) | undefined} [set]
- */
-/**
- * @typedef {object} Snapshot
- * @property {Record<string, PropertyDescriptorRecord>} props
- */
 export class Isolation {
   /** @type {Map<string, Snapshot>} */
   snapshots: Map<string, Snapshot>
@@ -90,7 +77,7 @@ export class Isolation {
    * @param {string} options.testParent
    * @param {string} options.testName
    * @param {Snapshot} [options.suiteSnapshot]
-   * @returns {Promise<import('../app.d.ts').TestResult>}
+   * @returns {Promise<TestResult>}
    */
   executeInWorker({
     testFileUrl,
@@ -106,19 +93,21 @@ export class Isolation {
     testParent: string
     testName: string
     suiteSnapshot?: Snapshot | undefined
-  }): Promise<import('../app.d.ts').TestResult>
+  }): Promise<TestResult>
 }
 export function restoreFromSnapshot(snapshot: Snapshot): void
 export const isolation: Isolation
-export type PropertyDescriptorRecord = {
-  configurable: boolean
-  enumerable: boolean
-  writable?: boolean | undefined
-  value?: unknown
-  get?: (() => unknown) | undefined
-  set?: ((v: unknown) => void) | undefined
-}
-export type Snapshot = {
-  props: Record<string, PropertyDescriptorRecord>
-}
+export type SliceableBuffer =
+  | ArrayBuffer
+  | Uint8Array
+  | Uint8ClampedArray
+  | Int8Array
+  | Uint16Array
+  | Int16Array
+  | Uint32Array
+  | Int32Array
+  | Float32Array
+  | Float64Array
+  | BigInt64Array
+  | BigUint64Array
 //# sourceMappingURL=isolation.d.ts.map

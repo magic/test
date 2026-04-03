@@ -11,5 +11,4 @@ export function mount(
   unmount: () => Promise<void>
   css: import('./compile.js').CssObject | null
 }>
-export type ComponentProps = Record<string, unknown>
 //# sourceMappingURL=mount.d.ts.map

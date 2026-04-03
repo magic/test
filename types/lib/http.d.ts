@@ -33,5 +33,11 @@ export type HttpOptions = {
    * - Maximum response size in bytes
    */
   maxSize?: number | undefined
+  /**
+   * - Extended options for http/https
+   */
+  requestOptions?: (nodeHttp.RequestOptions & nodeHttps.RequestOptions) | undefined
 }
+import nodeHttp from 'node:http'
+import nodeHttps from 'node:https'
 //# sourceMappingURL=http.d.ts.map

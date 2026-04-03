@@ -1,4 +1,4 @@
-export function click(target: any, selector?: string): void
+export function click(target: QueryableElement, selector?: string): void
 export function dblClick(target: HTMLElement | Document, selector?: string): void
 export function contextMenu(target: HTMLElement | Document, selector?: string): void
 export function trigger(target: Element | Document, eventType: string, options?: EventInit): void
@@ -121,6 +121,11 @@ export namespace fireEvent {
   export { checked }
   export { trigger }
 }
+export type QueryableElement =
+  | Element
+  | {
+      querySelector: (selector: string) => Element | null
+    }
 export type FireEventOptions = {
   /**
    * - CSS selector to find element

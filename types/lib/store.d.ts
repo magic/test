@@ -12,10 +12,10 @@ export class Store {
    */
   /**
    * Get a value from the store state by key
-   * @template {keyof StateBase} K
+   * @template {keyof State} K
    * @param {K} key - The key to get
-   * @param {StateBase[K]} [def] - Default value if key doesn't exist
-   * @returns {StateBase[K] | undefined}
+   * @param {State[K]} [def] - Default value if key doesn't exist
+   * @returns {State[K] | undefined}
    */
   /**
    * Get a value from the store state with custom default type
@@ -31,30 +31,4 @@ export class Store {
   reset(): void
 }
 export function createStore(): Store
-export type StateBase = {
-  /**
-   * - Test suites
-   */
-  suites: Record<string, unknown>
-  /**
-   * - Test statistics
-   */
-  stats: Stats
-  /**
-   * - Package name
-   */
-  pkg: string
-  /**
-   * - Start time timestamp
-   */
-  startTime?: [number, number] | undefined
-  /**
-   * - Test results
-   */
-  results?: Record<string, unknown> | undefined
-}
-/**
- * State object with known properties and index signature for dynamic properties
- */
-export type State = StateBase & Record<string, unknown>
 //# sourceMappingURL=store.d.ts.map
