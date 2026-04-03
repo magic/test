@@ -6,7 +6,7 @@ import log from '@magic/log'
 import is from '@magic/types'
 
 import { compileSvelteWithWrite } from './compile.js'
-import { initDOM, getDocument, getWindow } from './dom.js'
+import { initDOM, getDocument, getWindow } from '../dom/index.js'
 
 /** @type {Function} */
 let svelteMount

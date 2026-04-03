@@ -8,16 +8,14 @@ export { default as error } from '@magic/error'
 
 export { run } from './run.js'
 
-import { initDOM } from './lib/svelte/index.js'
+import { initDOM } from './lib/dom/index.js'
 
 export { curry, env, http, mock, promise, Store, vals, version, tryCatch } from './lib/index.js'
 
+export { initDOM, getDocument, getWindow, isInitialized } from './lib/dom/index.js'
+
 export {
   compileSvelte,
-  initDOM,
-  getDocument,
-  getWindow,
-  isInitialized,
   mount,
   createSnippet,
   tick,
