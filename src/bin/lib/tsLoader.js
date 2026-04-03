@@ -1,30 +1,62 @@
 import fs from '@magic/fs'
 import path from 'node:path'
 
+const EXTENSIONS = ['.js', '.ts']
+
+/** @param {string} specifier */
+const hasExtension = specifier => {
+  return EXTENSIONS.some(ext => specifier.endsWith(ext))
+}
+
 /**
- * @param {string} specifier - The module specifier to resolve
- * @param {{
- *   conditions: string[],
- *   importAttributes: Record<string, string>,
- *   parentURL: string | undefined
- * }} context - The resolution context
- * @param {(specifier: string, context: unknown) => Promise<{
- *   url: string,
- *   format?: string,
- *   shortCircuit?: boolean
- * }>} nextResolve - The next resolver in the chain
- * @returns {Promise<{
- *   url: string,
- *   format?: string,
- *   shortCircuit?: boolean
- * }>} The resolved module information
+ * @param {string} specifier
+ * @param {object} context
+ * @param {(specifier: string, context?: object) => Promise<{ url: string }>} nextResolve
+ * @param {string | undefined} parentDir
+ */
+const tryExtensions = async (specifier, context, nextResolve, parentDir) => {
+  for (const ext of EXTENSIONS) {
+    const trySpecifier = specifier + ext
+    let tryPath = trySpecifier
+    if (parentDir) {
+      tryPath = path.resolve(parentDir, trySpecifier)
+    }
+
+    const exists = await fs.exists(tryPath)
+    if (exists) {
+      try {
+        return await nextResolve(trySpecifier, context)
+      } catch {
+        // This extension failed, try next
+      }
+    }
+  }
+
+  throw new Error(`Cannot find module ${specifier}`)
+}
+
+/**
+ * @param {string} specifier
+ * @param {{ parentURL?: string }} context
+ * @param {(specifier: string, context?: object) => Promise<{ url: string }>} nextResolve
  */
 export const resolve = async (specifier, context, nextResolve) => {
+  if (specifier.startsWith('.') && !hasExtension(specifier)) {
+    const parentDir = context.parentURL
+      ? path.dirname(new URL(context.parentURL).pathname)
+      : undefined
+
+    try {
+      return await nextResolve(specifier, context)
+    } catch {
+      return tryExtensions(specifier, context, nextResolve, parentDir)
+    }
+  }
+
   if (specifier.endsWith('.js')) {
     try {
       return await nextResolve(specifier, context)
     } catch (initialError) {
-      // Check if .js file actually exists on disk
       let jsPath = specifier
       if (context.parentURL) {
         const parentDir = path.dirname(new URL(context.parentURL).pathname)
@@ -34,12 +66,10 @@ export const resolve = async (specifier, context, nextResolve) => {
       const jsExists = await fs.exists(jsPath)
 
       if (!jsExists) {
-        // .js doesn't exist, try .ts
         const tsSpecifier = specifier.replace(/\.js$/, '.ts')
         return nextResolve(tsSpecifier, context)
       }
 
-      // .js exists but failed to load - rethrow original error
       throw initialError
     }
   }
