@@ -1,4 +1,4 @@
-export { isNodeProd, isProd, isVerbose, getErrorLength, env } from './env.js'
+export { isNodeDev, isNodeProd, isProd, isVerbose, getErrorLength, env } from './env.js'
 export { getTestKey } from './getTestKey.js'
 export { http } from './http.js'
 export { promise } from './promise.js'

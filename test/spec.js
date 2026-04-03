@@ -78,6 +78,7 @@ const spec = {
   env: [
     'obj',
     {
+      isNodeDev: 'fn',
       isNodeProd: 'fn',
       isProd: 'fn',
       isVerbose: 'fn',
