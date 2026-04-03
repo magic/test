@@ -37,15 +37,18 @@ const initSvelte = async () => {
 
 /**
  * Create a raw snippet for passing as children prop
- * @param {string} renderFn - Function that returns HTML string
+ * @param {string | (() => string)} renderFn - Function that returns HTML string
  */
 export const createSnippet = renderFn => {
   initSvelte()
 
+  const render = is.str(renderFn) ? () => renderFn : renderFn
+
   if (!svelteCreateRawSnippet) {
     throw new Error('Svelte not initialized. Make sure to call mount() first.')
   }
-  return svelteCreateRawSnippet(() => ({ render: renderFn }))
+
+  return svelteCreateRawSnippet(() => ({ render }))
 }
 
 /**
