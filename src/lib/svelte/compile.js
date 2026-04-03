@@ -6,7 +6,7 @@ import fs from '@magic/fs'
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { resolveAlias } from './vite-config.js'
+import { resolveAlias, resolveViteAlias } from './vite-config.js'
 import {
   testExportsPreprocessor,
   sveltekitMocksPreprocessor,
@@ -35,6 +35,12 @@ const cache = new LRUCache(100)
 
 /** @type {LRUCache<ImportCacheEntry>} */
 const importCache = new LRUCache(100)
+
+/** @type {Map<string, { exports: { name: string, path: string }[], wrapperUrl: string }>} */
+const barrelCache = new Map()
+
+/** @type {Set<string>} */
+const processingBarrels = new Set()
 
 const TMP_DIR = 'test/.tmp'
 
@@ -105,24 +111,195 @@ const isSvelteFile = (/** @type {string} */ filePath) => {
 }
 
 /**
+ * Detect if a file is a barrel that exports Svelte components
+ * @param {string} filePath - Path to the potential barrel file
+ * @returns {Promise<{ name: string, path: string }[]>} - Array of exported Svelte components
+ */
+const getSvelteExports = async filePath => {
+  // Check cache first
+  const cached = barrelCache.get(filePath)
+  if (cached) {
+    return cached.exports
+  }
+
+  const content = await fs.readFile(filePath, 'utf-8')
+  /** @type {{ name: string, path: string }[]} */
+  const exports = []
+
+  // Match: export { Component } from './Component.svelte'
+  // ONLY match exports that point to .svelte files
+  const regex = /export\s+\{([^}]+)\}\s+from\s+['"](\.\/[^'"]+\.svelte)['"]/g
+  let match
+
+  const sourceDir = path.dirname(filePath)
+
+  while ((match = regex.exec(content)) !== null) {
+    const exportedNames = match[1].split(',').map(s => s.trim())
+    const exportPath = match[2]
+    let resolvedPath = path.resolve(sourceDir, exportPath)
+
+    // Verify the Svelte file exists
+    if (await fs.exists(resolvedPath)) {
+      for (const name of exportedNames) {
+        exports.push({ name, path: resolvedPath })
+      }
+    }
+  }
+
+  return exports
+}
+
+/**
+ * Compile a barrel file that exports Svelte components
+ * @param {string} filePath - Path to the barrel file
+ * @returns {Promise<{ filePath: string, js: { code: string }, url: string }>}
+ */
+const compileBarrel = async filePath => {
+  // Check if already cached
+  const cached = barrelCache.get(filePath)
+  if (cached) {
+    return { filePath, js: { code: '' }, url: cached.wrapperUrl }
+  }
+
+  // Detect circular dependency
+  if (processingBarrels.has(filePath)) {
+    throw new Error(`Circular dependency detected in barrel file: ${filePath}`)
+  }
+  processingBarrels.add(filePath)
+
+  try {
+    const exports = await getSvelteExports(filePath)
+
+    if (exports.length === 0) {
+      throw new Error(`No Svelte exports found in barrel file: ${filePath}`)
+    }
+
+    /** @type {{ name: string, url: string }[]} */
+    const compiledExports = []
+
+    for (const { name, path: sveltePath } of exports) {
+      const { js } = await compileSvelte(sveltePath)
+      const processed = await processImports(js.code, sveltePath)
+
+      const relPath = path.relative(process.cwd(), sveltePath)
+      const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
+
+      await fs.mkdirp(path.dirname(tmpFile))
+      await fs.writeFile(tmpFile, processed.code)
+
+      compiledExports.push({ name, url: pathToFileURL(tmpFile).href })
+    }
+
+    // Generate wrapper module - fix export syntax
+    const wrapperExports = compiledExports
+      .map(({ name, url }) => {
+        // Skip type exports
+        if (name.startsWith('type ') || name === '') {
+          return null
+        }
+        // Handle default export
+        if (name === 'default') {
+          return `export { default } from '${url}'`
+        }
+        // Handle named exports
+        return `export { ${name} } from '${url}'`
+      })
+      .filter(Boolean)
+
+    const wrapperCode = wrapperExports.join('\n')
+
+    // Write wrapper to temp file
+    const relPath = path.relative(process.cwd(), filePath)
+    const wrapperFile = path.join(TMP_DIR, relPath.replace(/\.(ts|js)$/, '.barrel.js'))
+    await fs.mkdirp(path.dirname(wrapperFile))
+    await fs.writeFile(wrapperFile, wrapperCode)
+
+    const wrapperUrl = pathToFileURL(wrapperFile).href
+
+    // Cache the result
+    barrelCache.set(filePath, { exports, wrapperUrl })
+
+    return { filePath, js: { code: wrapperCode }, url: wrapperUrl }
+  } finally {
+    processingBarrels.delete(filePath)
+  }
+}
+
+/**
+ * Classify import type
+ * @param {string} importPath
+ * @returns {'relative' | 'scoped' | 'vite-alias' | 'bare'}
+ */
+const classifyImport = importPath => {
+  if (importPath.startsWith('./') || importPath.startsWith('../')) {
+    return 'relative'
+  }
+  if (importPath.startsWith('@')) {
+    return 'scoped'
+  }
+  if (importPath.startsWith('$')) {
+    return 'vite-alias'
+  }
+  return 'bare'
+}
+
+/**
  * @param {string} importPath
  * @param {string} sourceDir
  * @param {string} sourceFilePath
  */
 const resolveAndCompileImport = async (importPath, sourceDir, sourceFilePath) => {
-  // For scoped packages (@scope/package), let Node.js resolve from node_modules
-  // Return a special marker that tells the caller to leave the import as-is
-  if (importPath.startsWith('@')) {
+  const importType = classifyImport(importPath)
+
+  // Type 2: Scoped packages (@scope/package) - skip, let Node.js resolve
+  if (importType === 'scoped') {
     return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
   }
 
-  let resolvedPath
+  // Type 1: Bare imports (node_modules like 'svelte', 'lodash') - skip, let Node.js resolve
+  if (importType === 'bare') {
+    return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
+  }
 
-  const aliasResolved = await resolveAlias(importPath, sourceFilePath)
-  if (aliasResolved) {
-    resolvedPath = aliasResolved
+  // Type 4: Vite/SvelteKit aliases ($lib, $app, $env, etc.)
+  if (importType === 'vite-alias') {
+    const aliasResolved = await resolveViteAlias(importPath, sourceFilePath)
+    if (aliasResolved) {
+      // Continue to file resolution below
+      var resolvedPath = aliasResolved
+    } else {
+      // Could not resolve via alias - try manual resolution for $lib
+      // For $app/*, $env/* we skip (handled by preprocess.js mocks)
+      if (importPath.startsWith('$lib')) {
+        // Manual fallback: $lib/forms -> src/lib/forms (relative to project root)
+        const rootDir = await (async () => {
+          let current = path.dirname(sourceFilePath)
+          const root = process.cwd()
+          while (current && current !== path.dirname(current)) {
+            const pkgPath = path.join(current, 'package.json')
+            if (await fs.exists(pkgPath)) {
+              return current
+            }
+            current = path.dirname(current)
+          }
+          return root
+        })()
+        const aliasPath = importPath.slice(1) // Remove $
+        resolvedPath = path.resolve(rootDir, 'src', aliasPath)
+      } else {
+        // Could not resolve, skip processing (will be handled by preprocess.js mocks)
+        return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
+      }
+    }
   } else {
-    resolvedPath = path.resolve(sourceDir, importPath)
+    // Type 3: Relative imports (./something, ../something)
+    // Only call resolveAlias for relative imports
+    const aliasResolved = await resolveAlias(importPath, sourceFilePath)
+    if (aliasResolved) {
+      resolvedPath = aliasResolved
+    } else {
+      resolvedPath = path.resolve(sourceDir, importPath)
+    }
   }
 
   // If the path doesn't have an extension, try to find the file with extensions
@@ -134,6 +311,68 @@ const resolveAndCompileImport = async (importPath, sourceDir, sourceFilePath) =>
         resolvedPath = withExt
         break
       }
+    }
+  } else if (resolvedPath.endsWith('.js') && !(await fs.exists(resolvedPath))) {
+    // .js file doesn't exist - try .ts version
+    const tsPath = resolvedPath.slice(0, -3) + '.ts'
+    if (await fs.exists(tsPath)) {
+      resolvedPath = tsPath
+    }
+  }
+
+  // Path validation: Check if resolved path points to a directory or is invalid
+  const pathStats = (await fs.exists(resolvedPath)) ? await fs.stat(resolvedPath) : null
+  if (pathStats?.isDirectory()) {
+    // FIX: Try to find the file using the import path filename
+    // e.g., if resolvedPath = "forms" and importPath = "./Button.svelte"
+    // try "forms/Button.svelte"
+    const importFileName = path.basename(importPath)
+    const possibleFile = path.join(resolvedPath, importFileName)
+
+    // First try with .svelte extension
+    const withSvelte = possibleFile.endsWith('.svelte') ? possibleFile : possibleFile + '.svelte'
+    if (await fs.exists(withSvelte)) {
+      resolvedPath = withSvelte
+    }
+    // Try just the filename.svelte directly in that directory
+    else if (importPath.includes('/')) {
+      const fileName = importPath.split('/').pop() ?? ''
+      const directCandidate = path.join(resolvedPath, fileName)
+      if (await fs.exists(directCandidate)) {
+        resolvedPath = directCandidate
+      }
+    }
+  }
+
+  // Global path validation - verify file exists, try to fix common issues
+  if (!(await fs.exists(resolvedPath))) {
+    // Try adding .svelte extension
+    if (await fs.exists(resolvedPath + '.svelte')) {
+      resolvedPath = resolvedPath + '.svelte'
+    }
+    // Try /index.svelte
+    else if (await fs.exists(path.join(resolvedPath, 'index.svelte'))) {
+      resolvedPath = path.join(resolvedPath, 'index.svelte')
+    }
+    // FIX: If path is corrupted like "forms/svelte" (no extension), reconstruct from source context
+    else if (!path.extname(resolvedPath) && !resolvedPath.includes('.')) {
+      // This is likely a corruption - try to find the file relative to source
+      const sourceBase = path.basename(sourceFilePath, '.svelte')
+      // Check if this looks like a barrel component directory
+      const sourceDirName = path.dirname(sourceFilePath)
+      const possiblePath = path.join(sourceDirName, importPath.replace(/^\.\//, ''))
+      if (await fs.exists(possiblePath)) {
+        resolvedPath = possiblePath
+      }
+    }
+  }
+
+  // NEW: Check if it's a barrel file that exports Svelte components
+  const ext = path.extname(resolvedPath)
+  if (ext === '.ts' || ext === '.js') {
+    const exports = await getSvelteExports(resolvedPath)
+    if (exports.length > 0) {
+      return await compileBarrel(resolvedPath)
     }
   }
 
@@ -196,17 +435,17 @@ const processImports = async (code, sourceFilePath) => {
 
   for (const { imported, path: importPath, full } of imports) {
     try {
-      const { url, skipProcessing } = await resolveAndCompileImport(
-        importPath,
-        sourceDir,
-        sourceFilePath,
-      )
+      const result = await resolveAndCompileImport(importPath, sourceDir, sourceFilePath)
 
-      // For scoped packages, leave the import as-is for Node.js to resolve
-      if (skipProcessing) {
+      // For scoped/bare packages, leave the import as-is for Node.js to resolve
+      if ('skipProcessing' in result && result.skipProcessing) {
         continue
       }
 
+      const url = 'url' in result && result.url
+      if (!url) {
+        continue
+      }
       const importRegex = new RegExp(
         `import\\s+${imported.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+from\\s+['"]${importPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`,
         'g',
@@ -220,6 +459,23 @@ const processImports = async (code, sourceFilePath) => {
   }
 
   return { code: processedCode }
+}
+
+/**
+ * Transform compiled Svelte code to be valid ESM for Node.js
+ * Fixes issues with _unknown_ identifier and other ESM compatibility issues
+ * @param {string} code - Compiled Svelte code
+ * @param {string} filePath - Original component file path
+ */
+const transformForNode = (code, filePath) => {
+  // Extract component name from file path
+  const componentName = path.basename(filePath, '.svelte')
+  const safeName = componentName.replace(/[^a-zA-Z0-9]/g, '_') + '$$component'
+
+  // Replace _unknown_ with safe name (both as function name and references)
+  let transformed = code.replace(/_unknown_/g, safeName)
+
+  return transformed
 }
 
 /**
@@ -264,6 +520,7 @@ export const compileSvelte = async filePath => {
     }
 
     let jsCodeString = String(result.js.code)
+
     const { css } = result
 
     if (result.js.map) {
@@ -306,6 +563,9 @@ export const compileSvelteWithWrite = async filePath => {
 
   const { js, css } = await compileSvelteWithImports(filePath)
 
+  // Apply transform for Node.js ESM compatibility
+  const transformedCode = transformForNode(js.code, filePath)
+
   const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
   const relPath = path.relative(process.cwd(), resolvedPath)
   const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
@@ -315,10 +575,10 @@ export const compileSvelteWithWrite = async filePath => {
 
   try {
     await fs.mkdirp(path.dirname(tmpFile))
-    await fs.writeFile(tmpFile, js.code)
+    await fs.writeFile(tmpFile, transformedCode)
   } finally {
     release()
   }
 
-  return { js, css, tmpFile, importUrl }
+  return { js: { code: transformedCode }, css, tmpFile, importUrl }
 }

@@ -436,11 +436,37 @@ const loadViteDefine = async rootDir => {
 }
 
 /**
+ * Classify import type
+ * @param {string} importPath
+ * @returns {'relative' | 'scoped' | 'vite-alias' | 'bare'}
+ */
+const classifyImport = importPath => {
+  if (importPath.startsWith('./') || importPath.startsWith('../')) {
+    return 'relative'
+  }
+  if (importPath.startsWith('@')) {
+    return 'scoped'
+  }
+  if (importPath.startsWith('$')) {
+    return 'vite-alias'
+  }
+  return 'bare'
+}
+
+/**
  * @param {string} importPath
  * @param {string} sourceFilePath
  * @returns {Promise<string|null>}
  */
 export const resolveAlias = async (importPath, sourceFilePath) => {
+  const importType = classifyImport(importPath)
+
+  // Only process relative imports in this function
+  // All other types should be handled by compile.js
+  if (importType !== 'relative') {
+    return null
+  }
+
   const sourceDir = path.dirname(sourceFilePath)
   const rootDir = await findProjectRoot(sourceDir)
 
@@ -508,27 +534,74 @@ export const resolveAlias = async (importPath, sourceFilePath) => {
     }
   }
 
-  // Skip resolution for scoped packages (@scope/package) - let tsLoader handle node_modules
-  if (importPath.startsWith('@')) {
+  return null
+}
+
+/**
+ * Resolve Vite/SvelteKit aliases ($lib, $app, $env, etc.)
+ * This is called from compile.js for non-relative imports
+ * @param {string} importPath
+ * @param {string} sourceFilePath
+ * @returns {Promise<string|null>}
+ */
+export const resolveViteAlias = async (importPath, sourceFilePath) => {
+  const importType = classifyImport(importPath)
+
+  // Only handle vite-alias and bare imports here
+  if (importType !== 'vite-alias' && importType !== 'bare') {
     return null
   }
 
-  if (importPath.startsWith('$')) {
-    const aliasName = importPath.slice(1)
-    const commonPaths = [
-      path.join(rootDir, 'src', aliasName),
-      path.join(rootDir, 'lib', aliasName),
-      path.join(rootDir, aliasName),
-    ]
+  const sourceDir = path.dirname(sourceFilePath)
+  const rootDir = await findProjectRoot(sourceDir)
 
-    for (const resolved of commonPaths) {
-      const exists = await fs.exists(resolved)
-      if (exists) {
-        return resolved
+  // Handle $lib and other $app/*, $env/* aliases via tsconfig paths
+  if (importPath.startsWith('$')) {
+    const viteAliases = await loadViteAliases(rootDir)
+    const tsAliases = await parseTsConfig(rootDir)
+    const allAliases = [...viteAliases, ...tsAliases]
+
+    for (const { find, replacement } of allAliases) {
+      /** @type {string|null} */
+      let resolved = null
+
+      if (is.string(find)) {
+        if (importPath === find || importPath.startsWith(find + '/')) {
+          if (importPath === find) {
+            resolved = replacement
+          } else {
+            resolved = importPath.replace(find, replacement)
+          }
+        }
+      } else if (is.regex(find)) {
+        const match = importPath.match(find)
+        if (match) {
+          resolved = importPath.replace(find, replacement)
+        }
       }
-      const withExtensions = ['', '.js', '.svelte', '.ts', '/index.js', '/index.svelte']
-      for (const ext of withExtensions) {
-        const withExt = resolved + ext
+
+      if (resolved) {
+        // Check if file exists with various extensions
+        const extensions = ['', '.js', '.svelte', '.ts', '/index.js', '/index.svelte', '/index.ts']
+
+        for (const ext of extensions) {
+          const withExt = resolved + ext
+          const exists = await fs.exists(withExt)
+          if (exists) {
+            return withExt
+          }
+        }
+      }
+    }
+
+    // Fallback: $lib maps to src/lib
+    if (importPath.startsWith('$lib')) {
+      const aliasPath = importPath.slice(1) // Remove $
+      const libPath = path.join(rootDir, 'src', aliasPath)
+
+      const extensions = ['', '.js', '.svelte', '.ts', '/index.js', '/index.svelte', '/index.ts']
+      for (const ext of extensions) {
+        const withExt = libPath + ext
         const exists = await fs.exists(withExt)
         if (exists) {
           return withExt

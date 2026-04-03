@@ -142,6 +142,26 @@ export const sveltekitMocksPreprocessor = () => {
         "const localizeHref = (/** @type {string} */ href) => href && href.startsWith('http') && !href.endsWith('/') ? href + '/' : href || ''\nconst reroute = /** @type {any} */ (x => x)",
       )
 
+      // Mock svelte-easy-crop - this package has unusual exports that Node can't resolve directly
+      processed = processed.replace(
+        /import\s+\{[^}]*\bImageCrop\b[^}]*\}\s+from\s+['"]svelte-easy-crop['"]/g,
+        'const ImageCrop = /** @type {any} */ (() => ({ default: () => ({}) }))',
+      )
+      processed = processed.replace(
+        /import\s+\{[^}]*\}\s+from\s+['"]svelte-easy-crop['"]/g,
+        'const svelte_easy_crop = { ImageCrop: () => ({}) }',
+      )
+      processed = processed.replace(
+        /import\s+(\w+)\s+from\s+['"]svelte-easy-crop['"]/g,
+        'const $1 = /** @type {any} */ (() => ({ default: () => ({}) }))',
+      )
+
+      // Mock other common problematic packages
+      processed = processed.replace(
+        /import\s+\{[^}]*\}\s+from\s+['"]svelte['"]/g,
+        'const svelte = { onMount: () => {}, onDestroy: () => {}, createEventDispatcher: () => ({ dispatch: () => {} }), getContext: () => {}, setContext: () => {}, hasContext: () => false, writable: (val) => ({ subscribe: () => {}, set: () => {}, update: () => {} }), derived: () => ({ subscribe: () => {} }) }',
+      )
+
       return { code: processed }
     },
   }
