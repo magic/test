@@ -421,7 +421,9 @@ declare global {
 }
 
 export {
-  WrappedTest as Test,
+  TestExpect,
+  WrappedTest,
+  Test,
   TestResult,
   Suite,
   TestsWithHooks,
@@ -448,6 +450,11 @@ export {
   Snapshot,
   CleanupResult,
   IStore,
+  JsonSafe,
+  JsonSafeArg,
+  InputValue,
+  TestObject,
+  CustomError,
 }
 
 export {}
