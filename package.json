@@ -22,7 +22,7 @@
     "serve": "magic serve",
     "dev": "magic dev",
     "test": "node src/bin/t.ts",
-    "test:native": "node --test src/bin/node-test-runner.ts --coverage",
+    "test:native": "node --test src/bin/node-test-runner.ts --coverage && c8 report",
     "test:ci": "node src/bin/t.ts -p",
     "coverage": "node src/bin/t.ts",
     "format": "f -w --exclude docs",
