@@ -16,7 +16,7 @@
   },
   "scripts": {
     "start": "node src/bin/t.ts -p",
-    "build:docs": "NODE_ENV=production magic build",
+    "build": "NODE_ENV=production magic build",
     "prod": "NODE_ENV=production magic build serve",
     "clean": "magic clean",
     "serve": "magic serve",
