@@ -1,5 +1,12 @@
 import is from '@magic/types'
 
+/**
+ * Minimal interface for the @magic/fs module.
+ */
+interface FsModule {
+  readFile?: (path: string, encoding?: string) => Promise<string | undefined>
+}
+
 const GLOBAL_MODIFICATION_RE_ASSIGN =
   /\b(?:globalThis|window|global|self)\b(?:\[[^\]]+\]|\.[a-zA-Z_$][\w$]*)\s*(?:[=+\-*/%]|<<?|>>?|&&|\|\|?)|\bprocess\.env\b[^\n]*[=+\-]/
 
@@ -148,7 +155,7 @@ export const testImportsMutableModuleState = async (
     return false
   }
 
-  const fs = fsModule as any
+  const fs = fsModule as FsModule
 
   let content
   try {

@@ -23,23 +23,20 @@ export class Store {
       if (is.objectNative(value)) {
         const existing = this.state[stateKey]
         if (is.objectNative(existing)) {
-          this.state[stateKey] = { ...(existing as object), ...(value as object) }
+          this.state[stateKey] = { ...(existing as object), ...(value as object) } as any
         } else {
-          this.state[stateKey] = value
+          this.state[stateKey] = value as any
         }
       } else {
-        this.state[stateKey] = value
+        this.state[stateKey] = value as any
       }
     })
   }
 
   /**
-   * Get the entire store state (no key provided)
+   * Get a value from the store by key.
    */
-  get<T = State>(key?: string, def?: T): T | undefined {
-    if (!key) {
-      return this.state as unknown as T
-    }
+  get<T>(key: string, def?: T): T | undefined {
     return is.ownProp(this.state, key) ? (this.state[key as keyof State] as T | undefined) : def
   }
 

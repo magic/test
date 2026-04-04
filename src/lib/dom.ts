@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module'
 import is from '@magic/types'
+import { Document as HappyDocument, Window as HappyWindow } from 'happy-dom'
 
 interface SimpleEvent {
   type: string
@@ -28,7 +29,8 @@ interface CanvasRenderingContext2D {
   toDataURL: (mimeType?: string, quality?: number) => string
 }
 
-interface WindowWithMinimal {
+interface CustomWindow {
+  document: HappyDocument
   [key: string]: unknown
   Image: ImageConstructor
   HTMLImageElement: { prototype: ImageInstance }
@@ -36,7 +38,6 @@ interface WindowWithMinimal {
     prototype: { getContext: unknown; width: number; height: number; toDataURL: unknown }
   }
   Event: new (type: string, eventInitDict?: unknown) => SimpleEvent
-  document: unknown
   navigator: unknown
   location: unknown
   history: unknown
@@ -100,8 +101,8 @@ interface WindowWithMinimal {
   globalThis: unknown
 }
 
-let happyWindow: WindowWithMinimal | null = null
-let happyDocument: unknown = null
+let happyWindow: CustomWindow | null = null
+let happyDocument: HappyDocument | null = null
 
 const define = (
   target: Record<string | symbol, unknown>,
@@ -143,7 +144,7 @@ const parsePngDimensions = (dataUrl: string): { width: number; height: number } 
 
 const imageCache = new Map<string, unknown>()
 
-const createImagePolyfill = (win: WindowWithMinimal): new () => ImageInstance => {
+const createImagePolyfill = (win: CustomWindow): new () => ImageInstance => {
   const OriginalImage = win.Image as ImageConstructor
   const HTMLImageElement = win.HTMLImageElement as { prototype: ImageInstance }
   const srcDesc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src')
@@ -241,7 +242,7 @@ const createImagePolyfill = (win: WindowWithMinimal): new () => ImageInstance =>
   return PolyfilledImage
 }
 
-const createCanvasPolyfill = (win: WindowWithMinimal, _happyDocument: unknown): void => {
+const createCanvasPolyfill = (win: CustomWindow, _happyDocument: unknown): void => {
   const HTMLCanvasElement = win.HTMLCanvasElement as {
     prototype: {
       getContext: (type: string, ...args: unknown[]) => unknown
@@ -347,11 +348,7 @@ const createCanvasPolyfill = (win: WindowWithMinimal, _happyDocument: unknown): 
 const initGlobals = (): void => {
   if (happyWindow) return
 
-  const require = createRequire(import.meta.url)
-  // @ts-expect-error - dynamic import of happy-dom
-  const { Window } = require('happy-dom') as { new (): WindowWithMinimal }
-
-  happyWindow = new Window() as WindowWithMinimal
+  happyWindow = new (HappyWindow as any)({ url: 'http://localhost/' }) as CustomWindow
   happyDocument = happyWindow!.document
 
   define(globalThis as Record<string | symbol, unknown>, 'document', happyDocument)
@@ -557,7 +554,7 @@ export const getDocument = (): unknown => {
   return happyDocument
 }
 
-export const getWindow = (): WindowWithMinimal => {
+export const getWindow = (): CustomWindow => {
   initGlobals()
   return happyWindow!
 }

@@ -31,6 +31,13 @@ import type {
   TestObject,
 } from '../types.ts'
 
+/**
+ * Type guard to check if an Error has a `code` property.
+ */
+const hasErrorCode = (err: Error): err is Error & { code?: string } => {
+  return 'code' in err
+}
+
 const defaultSuite = {
   pass: 0,
   fail: 0,
@@ -362,10 +369,13 @@ export const runSuite = async (
     }
 
     return suite
-  } catch (e) {
-    const err = e as any
-    if (err.code === ERRORS.E_EMPTY_SUITE) {
-      log.error(err.code, err.message)
+  } catch (e: unknown) {
+    if (e instanceof Error && hasErrorCode(e)) {
+      if (e.code === ERRORS.E_EMPTY_SUITE) {
+        log.error(e.code, e.message)
+      } else {
+        log.error(ERRORS.E_RUN_SUITE_UNKNOWN, { suite: name, error: e })
+      }
     } else {
       log.error(ERRORS.E_RUN_SUITE_UNKNOWN, { suite: name, error: e })
     }

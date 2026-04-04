@@ -15,6 +15,25 @@ interface ImportResult {
   error?: Error
 }
 
+/**
+ * Type guard for ImportResult.
+ */
+const isImportResult = (obj: unknown): obj is ImportResult => {
+  return (
+    obj != null &&
+    typeof obj === 'object' &&
+    'type' in obj &&
+    (obj.type === 'file' || obj.type === 'directory' || obj.type === 'error' || obj.type === 'skip')
+  )
+}
+
+/**
+ * Error with attached individual errors for aggregated failures.
+ */
+interface AggregatedImportError extends Error {
+  errors: Array<{ file: string; error: Error }>
+}
+
 const CONCURRENCY_LIMIT = 50
 
 const importFile = async (filePath: string): Promise<unknown> => {
@@ -144,7 +163,11 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
       }
 
       if (result.status === 'fulfilled') {
-        const value = result.value as unknown as ImportResult
+        const value = result.value
+        if (!isImportResult(value)) {
+          // Unexpected result type, treat as skip
+          continue
+        }
 
         if (value.type === 'file' && value.test !== undefined && value.file) {
           tests[value.file] = value.test
@@ -154,7 +177,7 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
             ...value.tests,
           }
         } else if (value.type === 'error') {
-          // value.error is defined for error type, but TS needs help
+          // value.error is defined for error type
           const err = value.error || new Error('Unknown import error')
           errors.push({ file: value.file || 'unknown', error: err })
         }
@@ -171,7 +194,7 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
     const errorMessages = errors.map(e => `${e.file}: ${e.error.message}`).join('\n')
     const aggError = new Error(
       `Failed to load ${errors.length} test file(s):\n${errorMessages}`,
-    ) as any
+    ) as AggregatedImportError
     aggError.name = 'E_IMPORT_AGGREGATED'
     // Attach individual errors for programmatic access
     aggError.errors = errors
