@@ -10,7 +10,7 @@ export { run } from './run.ts'
 
 import { initDOM } from './lib/dom.ts'
 
-export { curry, env, http, mock, promise, Store, vals, version, tryCatch } from './lib/index.ts'
+export { curry, env, http, mock, promise, vals, version, tryCatch } from './lib/index.ts'
 
 export { initDOM, getDocument, getWindow, isInitialized } from './lib/dom.ts'
 
