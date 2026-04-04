@@ -30,8 +30,6 @@ const getShardConfig = () => {
   return { shards, shardId }
 }
 
-
-
 const init = async () => {
   await maybeInjectMagic()
 
