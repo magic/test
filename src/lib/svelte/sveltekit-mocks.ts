@@ -1,5 +1,11 @@
 import is from '@magic/types'
 
+type PageProxy = {
+  url: URL
+  params: Record<string, unknown>
+  state: Record<string, unknown>
+}
+
 /**
  * Create a static page object that mimics $app/state page
  */
@@ -12,7 +18,7 @@ export const createStaticPage = (
     state: initialData.state || {},
   }
 
-  const handler: ProxyHandler<object> = {
+  const handler: ProxyHandler<PageProxy> = {
     get: (target, prop, receiver) => {
       if (prop === 'url') {
         return state.url
@@ -29,15 +35,15 @@ export const createStaticPage = (
       if ((prop === 'url' && is.instance(value, URL)) || is.string(value)) {
         state.url = is.instance(value, URL) ? value : new URL(value)
       } else if (prop === 'params' && is.object(value)) {
-        state.params = value
+        state.params = value as Record<string, unknown>
       } else if (prop === 'state' && is.object(value)) {
-        state.state = value
+        state.state = value as Record<string, unknown>
       }
       return true
     },
   }
 
-  return new Proxy({}, handler as PageProxy)
+  return new Proxy(state as PageProxy, handler)
 }
 
 export const browser = true

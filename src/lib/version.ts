@@ -15,7 +15,7 @@ const createLibTest = (
   let fn = spec
   if (!is.fn(spec)) {
     if (is.string(spec) && is.ownProp(is, spec)) {
-      const isValue = (is as any)[spec]
+      const isValue = (is as Record<string, unknown>)[spec]
       if (is.fn(isValue)) {
         fn = isValue
       }
@@ -30,7 +30,7 @@ const createLibTest = (
   }
 
   return {
-    fn: (fn as Function)(lib),
+    fn: fn(lib),
     info: `Spec for ${fullName} is wrong, expected: ${spec}, actual type is ${is.type(lib)}`,
   }
 }

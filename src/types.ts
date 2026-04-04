@@ -19,7 +19,14 @@ export interface Test {
   /**
    * The test function, a promise, or a direct value to evaluate.
    */
-  fn?: Function | Promise<unknown> | string | boolean | number | Record<string, unknown> | unknown[]
+  fn?:
+    | ((...args: unknown[]) => unknown)
+    | Promise<unknown>
+    | string
+    | boolean
+    | number
+    | Record<string, unknown>
+    | unknown[]
 
   /**
    * The expected value, or a function/promise that produces it.

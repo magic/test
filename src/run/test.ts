@@ -44,11 +44,7 @@ const getTestTimeout = (testTimeout: number | undefined): number => {
 /**
  * Wrap a promise with a timeout
  */
-const withTimeout = (
-  promise: Promise<unknown>,
-  timeoutMs: number,
-  testKey: string,
-): Promise<unknown> => {
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, testKey: string): Promise<T> {
   if (!timeoutMs || timeoutMs <= 0) {
     return promise
   }
@@ -111,7 +107,7 @@ const prepareTest = (
  * Execute a single test function with proper isolation
  */
 const executeTest = async (
-  fn: Function | Promise<unknown> | unknown,
+  fn: ((...args: unknown[]) => unknown) | Promise<unknown> | unknown,
   key: string,
   componentFile?: string,
   componentProps?: Record<string, unknown>,

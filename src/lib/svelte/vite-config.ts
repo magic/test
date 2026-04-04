@@ -7,6 +7,13 @@ type AliasEntry = {
   replacement: string
 }
 
+interface TSConfig {
+  compilerOptions?: {
+    baseUrl?: string
+    paths?: Record<string, string[]>
+  }
+}
+
 const VITE_CONFIG_NAMES = [
   'vite.config.js',
   'vite.config.ts',
@@ -280,10 +287,9 @@ const parseTsConfig = async (rootDir: string): Promise<AliasEntry[]> => {
   try {
     const rawContent = await fs.readFile(tsconfigPath, 'utf-8')
     const content = stripJsonComments(rawContent)
-    const tsconfig = JSON.parse(content)
+    const tsconfig = JSON.parse(content) as TSConfig
     const baseUrl = tsconfig.compilerOptions?.baseUrl || '.'
-    let paths: Record<string, string[]> = ((tsconfig.compilerOptions as any)?.paths ||
-      {}) as Record<string, string[]>
+    let paths: Record<string, string[]> = tsconfig.compilerOptions?.paths || {}
 
     // Also check .svelte-kit/tsconfig.json for additional paths (like $lib)
     const svelteKitTsconfigPath = path.join(rootDir, '.svelte-kit', 'tsconfig.json')
@@ -291,12 +297,8 @@ const parseTsConfig = async (rootDir: string): Promise<AliasEntry[]> => {
 
     if (svelteKitExists) {
       const svelteKitRaw = await fs.readFile(svelteKitTsconfigPath, 'utf-8')
-      const svelteKitConfig = JSON.parse(svelteKitRaw)
-      const svelteKitPaths = ((svelteKitConfig.compilerOptions as any)?.paths || {}) as Record<
-        string,
-        string[]
-      >
-
+      const svelteKitConfig = JSON.parse(svelteKitRaw) as TSConfig
+      const svelteKitPaths = svelteKitConfig.compilerOptions?.paths || {}
       // Normalize svelte-kit paths that use ../ to point to correct location
       const normalizedSvelteKitPaths: Record<string, string[]> = {}
       for (const [key, value] of Object.entries(svelteKitPaths)) {
@@ -379,7 +381,7 @@ const loadViteAliases = async (rootDir: string): Promise<AliasEntry[]> => {
   }
 
   try {
-    const config = await parseViteConfig(configPath as Record<string, unknown>)
+    const config = await parseViteConfig(configPath)
     const configDir = path.dirname(configPath)
     const resolveConfig = config.resolve as Record<string, unknown> | undefined
     const aliases = normalizeAlias(resolveConfig?.alias, configDir)
@@ -407,7 +409,7 @@ const loadViteDefine = async (rootDir: string): Promise<Record<string, unknown>>
   }
 
   try {
-    const config = await parseViteConfig(configPath as Record<string, unknown>)
+    const config = await parseViteConfig(configPath)
     const defineConfig = config.define as Record<string, unknown> | undefined
     defineCache.set(cacheKey, defineConfig || {})
     return defineConfig || {}

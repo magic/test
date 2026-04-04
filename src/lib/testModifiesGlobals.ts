@@ -13,7 +13,10 @@ const GLOBAL_MODIFICATION_RE = new RegExp(
 /**
  * Check if a single test modifies global state
  */
-export const testModifiesGlobals = (test: { before?: Function; after?: Function }): boolean => {
+export const testModifiesGlobals = (test: {
+  before?: (...args: unknown[]) => unknown
+  after?: (...args: unknown[]) => unknown
+}): boolean => {
   if (is.function(test.before)) {
     const beforeStr = test.before.toString()
     if (GLOBAL_MODIFICATION_RE.test(beforeStr)) {
@@ -36,14 +39,26 @@ export const testModifiesGlobals = (test: { before?: Function; after?: Function 
  */
 export const suiteModifiesGlobals = (tests: unknown): boolean => {
   if (is.array(tests)) {
-    return tests.some(test => testModifiesGlobals(test as { before?: Function; after?: Function }))
+    return tests.some(test =>
+      testModifiesGlobals(
+        test as {
+          before?: (...args: unknown[]) => unknown
+          after?: (...args: unknown[]) => unknown
+        },
+      ),
+    )
   }
 
   if (is.objectNative(tests)) {
     return Object.values(tests as Record<string, unknown>).some(test => {
       if (
         is.objectNative(test) &&
-        testModifiesGlobals(test as { before?: Function; after?: Function })
+        testModifiesGlobals(
+          test as {
+            before?: (...args: unknown[]) => unknown
+            after?: (...args: unknown[]) => unknown
+          },
+        )
       ) {
         return true
       }
@@ -166,34 +181,62 @@ export const testImportsMutableModuleState = async (
   const checkTestsInObject = (testObj: unknown): boolean => {
     if (is.array(testObj)) {
       return testObj.some(t =>
-        checkTest(t as { before?: Function; after?: Function; tests?: unknown }),
+        checkTest(
+          t as {
+            before?: (...args: unknown[]) => unknown
+            after?: (...args: unknown[]) => unknown
+            tests?: unknown
+          },
+        ),
       )
     }
     if (is.objectNative(testObj)) {
       return Object.values(testObj as Record<string, unknown>).some(t => {
         if (is.objectNative(t) && t.tests) return checkTestsInObject(t.tests)
         if (is.objectNative(t))
-          return checkTest(t as { before?: Function; after?: Function; tests?: unknown })
+          return checkTest(
+            t as {
+              before?: (...args: unknown[]) => unknown
+              after?: (...args: unknown[]) => unknown
+              tests?: unknown
+            },
+          )
         return false
       })
     }
     return false
   }
 
-  const checkTest = (test: { before?: Function; after?: Function; tests?: unknown }): boolean => {
+  const checkTest = (test: {
+    before?: (...args: unknown[]) => unknown
+    after?: (...args: unknown[]) => unknown
+    tests?: unknown
+  }): boolean => {
     if (checkHook(test?.before)) return true
     if (checkHook(test?.after)) return true
     if (test?.tests) return checkTestsInObject(test.tests)
     return false
   }
 
-  const testsObj = tests as { beforeAll?: Function; afterAll?: Function; tests?: unknown }
+  const testsObj = tests as {
+    beforeAll?: (...args: unknown[]) => unknown
+    afterAll?: (...args: unknown[]) => unknown
+    tests?: unknown
+  }
 
   if (checkHook(testsObj.beforeAll)) return true
   if (checkHook(testsObj.afterAll)) return true
 
   if (is.array(tests)) {
-    return tests.some(t => checkTest(t as { before?: Function; after?: Function; tests?: unknown }))
+    return tests.some(t =>
+      checkTest(
+        t as {
+          before?: (...args: unknown[]) => unknown
+          after?: (...args: unknown[]) => unknown
+          tests?: unknown
+        },
+      ),
+    )
   }
 
   if (is.objectNative(tests) && testsObj.tests) {
@@ -260,7 +303,11 @@ const getFilePaths = (code: string): string[] => {
  * Check if tests use fixed ports instead of port 0
  */
 export const testUsesFixedPorts = (tests: unknown): boolean => {
-  const testsObj = tests as { beforeAll?: Function; afterAll?: Function; tests?: unknown }
+  const testsObj = tests as {
+    beforeAll?: (...args: unknown[]) => unknown
+    afterAll?: (...args: unknown[]) => unknown
+    tests?: unknown
+  }
 
   const checkHook = (hook: unknown): boolean => {
     if (is.function(hook)) {
@@ -270,7 +317,10 @@ export const testUsesFixedPorts = (tests: unknown): boolean => {
     return false
   }
 
-  const checkTest = (test: { before?: Function; after?: Function }): boolean => {
+  const checkTest = (test: {
+    before?: (...args: unknown[]) => unknown
+    after?: (...args: unknown[]) => unknown
+  }): boolean => {
     if (checkHook(test?.before)) return true
     if (checkHook(test?.after)) return true
     return false
@@ -280,16 +330,30 @@ export const testUsesFixedPorts = (tests: unknown): boolean => {
   if (checkHook(testsObj.afterAll)) return true
 
   if (is.array(tests)) {
-    return tests.some(t => checkTest(t as { before?: Function; after?: Function }))
+    return tests.some(t =>
+      checkTest(
+        t as { before?: (...args: unknown[]) => unknown; after?: (...args: unknown[]) => unknown },
+      ),
+    )
   }
 
   if (is.objectNative(tests)) {
     if (testsObj.tests) {
       return Object.values(testsObj.tests as Record<string, unknown>).some(t =>
-        checkTest(t as { before?: Function; after?: Function }),
+        checkTest(
+          t as {
+            before?: (...args: unknown[]) => unknown
+            after?: (...args: unknown[]) => unknown
+          },
+        ),
       )
     }
-    return checkTest(tests as { before?: Function; after?: Function })
+    return checkTest(
+      tests as {
+        before?: (...args: unknown[]) => unknown
+        after?: (...args: unknown[]) => unknown
+      },
+    )
   }
 
   return false
@@ -301,7 +365,11 @@ export const testUsesFixedPorts = (tests: unknown): boolean => {
 export const testUsesSharedFiles = (tests: unknown): boolean => {
   const allFiles = new Set()
 
-  const testsObj = tests as { beforeAll?: Function; afterAll?: Function; tests?: unknown }
+  const testsObj = tests as {
+    beforeAll?: (...args: unknown[]) => unknown
+    afterAll?: (...args: unknown[]) => unknown
+    tests?: unknown
+  }
 
   const checkHook = (hook: unknown): boolean => {
     if (is.function(hook)) {
@@ -316,7 +384,11 @@ export const testUsesSharedFiles = (tests: unknown): boolean => {
     return false
   }
 
-  const checkTest = (test: { before?: Function; fn?: Function; after?: Function }): boolean => {
+  const checkTest = (test: {
+    before?: (...args: unknown[]) => unknown
+    fn?: (...args: unknown[]) => unknown
+    after?: (...args: unknown[]) => unknown
+  }): boolean => {
     if (checkHook(test?.before)) return true
     if (checkHook(test?.fn)) return true
     if (checkHook(test?.after)) return true
@@ -327,16 +399,36 @@ export const testUsesSharedFiles = (tests: unknown): boolean => {
   if (checkHook(testsObj.afterAll)) return true
 
   if (is.array(tests)) {
-    return tests.some(t => checkTest(t as { before?: Function; fn?: Function; after?: Function }))
+    return tests.some(t =>
+      checkTest(
+        t as {
+          before?: (...args: unknown[]) => unknown
+          fn?: (...args: unknown[]) => unknown
+          after?: (...args: unknown[]) => unknown
+        },
+      ),
+    )
   }
 
   if (is.objectNative(tests)) {
     if (testsObj.tests) {
       return Object.values(testsObj.tests as Record<string, unknown>).some(t =>
-        checkTest(t as { before?: Function; fn?: Function; after?: Function }),
+        checkTest(
+          t as {
+            before?: (...args: unknown[]) => unknown
+            fn?: (...args: unknown[]) => unknown
+            after?: (...args: unknown[]) => unknown
+          },
+        ),
       )
     }
-    return checkTest(tests as { before?: Function; fn?: Function; after?: Function })
+    return checkTest(
+      tests as {
+        before?: (...args: unknown[]) => unknown
+        fn?: (...args: unknown[]) => unknown
+        after?: (...args: unknown[]) => unknown
+      },
+    )
   }
 
   return false

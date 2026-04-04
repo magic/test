@@ -7,8 +7,11 @@ const tooManyArgsMsg = 'too many arguments passed to curried function'
 /**
  * Curry a function by pre-filling its arguments.
  */
-export function curry(fnOrArg: Function | unknown, ...args: unknown[]): unknown {
-  let fn: Function
+export function curry(
+  fnOrArg: (...args: unknown[]) => unknown | unknown,
+  ...args: unknown[]
+): unknown {
+  let fn: (...args: unknown[]) => unknown
   let preFilled: unknown[] = []
 
   if (is.fn(fnOrArg)) {
@@ -19,7 +22,7 @@ export function curry(fnOrArg: Function | unknown, ...args: unknown[]): unknown 
     if (fnIndex === -1) {
       throw new Error(invalidArgsMsg)
     }
-    fn = args[fnIndex] as Function
+    fn = args[fnIndex] as (...args: unknown[]) => unknown
     // Collect pre-filled args: fnOrArg + everything before the function
     preFilled = [fnOrArg, ...args.slice(0, fnIndex)]
     // Remove the function from args, keep only args after it
