@@ -34,10 +34,24 @@ export class Store {
   }
 
   /**
-   * Get a value from the store by key.
+   * Get the entire store state.
    */
-  get<T>(key: string, def?: T): T | undefined {
-    return is.ownProp(this.state, key) ? (this.state[key as keyof State] as T | undefined) : def
+  get(): State
+  /**
+   * Get a value from the store by key, with optional default.
+   */
+  get<T>(key: string, def?: T): T | undefined
+  /**
+   * Implementation of get method.
+   */
+  get(key?: string, def?: unknown): State | unknown | undefined {
+    if (!key) {
+      return this.state
+    }
+    if (is.ownProp(this.state, key)) {
+      return this.state[key as keyof State]
+    }
+    return def
   }
 
   /**
