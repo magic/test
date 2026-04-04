@@ -22,6 +22,7 @@ const res = cli({
     ['--shards', '--shard-count'],
     ['--shard-id'],
     ['--error-length'],
+    ['--timeout', '--to', '-t'],
   ],
   env: [[['--production', '--prod', '--p', '-p'], 'NODE_ENV', 'production']],
   help: {
@@ -34,6 +35,7 @@ const res = cli({
       '--shards': 'total number of shards',
       '--shard-id': 'shard id (0-indexed)',
       '--error-length': 'max length for error strings (default 70, 0 = no limit)',
+      '--timeout': 'test timeout in ms (default: 10000)',
     },
     header: `
 simple unit testing. runs all tests found in {cwd}/test/
@@ -80,6 +82,7 @@ const run = async () => {
   const shards = res.args.shards
   const shardId = res.args.shardId
   const errorLength = res.args.errorLength
+  const timeout = res.args.timeout
 
   const include = is.array(includeArgs) ? includeArgs : [includeArgs]
   const exclude = is.array(excludeArgs) ? excludeArgs : [excludeArgs]
@@ -103,6 +106,9 @@ const run = async () => {
   }
   if (errorLength !== undefined) {
     process.env.MAGIC_TEST_ERROR_LENGTH = String(errorLength)
+  }
+  if (timeout !== undefined) {
+    process.env.MAGIC_TEST_TIMEOUT = String(timeout)
   }
 
   argv.push(binFile)
