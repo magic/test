@@ -28,8 +28,13 @@ interface CompileCacheEntry {
 
 interface ImportCacheEntry {
   code: string
-  url: string
+  absPath: string
   mtime: number
+}
+
+interface BarrelCacheEntry {
+  exports: { name: string; path: string }[]
+  wrapperAbsPath: string
 }
 
 type ResolveAndCompileResult =
@@ -40,11 +45,15 @@ const cache = new LRUCache(100)
 
 const importCache = new LRUCache(100)
 
-const barrelCache = new Map()
+const barrelCache = new Map<string, BarrelCacheEntry>()
 
 const processingBarrels = new Set()
 
-const TMP_DIR = 'test/.tmp'
+let TMP_DIR = 'test/.tmp'
+
+export const setTmpDir = (dir: string) => {
+  TMP_DIR = dir
+}
 
 let cleanupDone = false
 
@@ -155,11 +164,11 @@ const getSvelteExports = async (filePath: string): Promise<{ name: string; path:
 const compileBarrel = async (
   filePath: string,
   importChain: string[] = [],
-): Promise<{ filePath: string; js: { code: string }; url: string }> => {
+): Promise<{ filePath: string; js: { code: string }; wrapperAbsPath: string }> => {
   // Check if already cached
   const cached = barrelCache.get(filePath)
   if (cached) {
-    return { filePath, js: { code: '' }, url: cached.wrapperUrl }
+    return { filePath, js: { code: '' }, wrapperAbsPath: cached.wrapperAbsPath }
   }
 
   // Check for TRUE circular dependency: A→B→A
@@ -197,39 +206,43 @@ const compileBarrel = async (
       await fs.mkdirp(path.dirname(tmpFile))
       await fs.writeFile(tmpFile, processed.code)
 
-      compiledExports.push({ name, url: pathToFileURL(tmpFile).href })
+      compiledExports.push({ name, absPath: path.join(process.cwd(), tmpFile) })
     }
+
+    // Determine wrapper file path first
+    const barrelRelPath = path.relative(process.cwd(), filePath)
+    const wrapperFile = path.join(TMP_DIR, barrelRelPath.replace(/\.(ts|js)$/, '.barrel.js'))
+    const wrapperAbsPath = path.join(process.cwd(), wrapperFile)
+    const wrapperTmpDir = path.dirname(wrapperAbsPath)
 
     // Generate wrapper module - fix export syntax
     const wrapperExports = compiledExports
-      .map(({ name, url }) => {
+      .map(({ name, absPath }) => {
         // Skip type exports
         if (name.startsWith('type ') || name === '') {
           return null
         }
+        // Compute relative path from the wrapper file location to the component file
+        const relative = computeRelativePath(wrapperTmpDir, absPath)
         // Handle default export
         if (name === 'default') {
-          return `export { default } from '${url}'`
+          return `export { default } from '${relative}'`
         }
         // Handle named exports
-        return `export { ${name} } from '${url}'`
+        return `export { ${name} } from '${relative}'`
       })
       .filter(Boolean)
 
     const wrapperCode = wrapperExports.join('\n')
 
     // Write wrapper to temp file
-    const relPath = path.relative(process.cwd(), filePath)
-    const wrapperFile = path.join(TMP_DIR, relPath.replace(/\.(ts|js)$/, '.barrel.js'))
     await fs.mkdirp(path.dirname(wrapperFile))
     await fs.writeFile(wrapperFile, wrapperCode)
 
-    const wrapperUrl = pathToFileURL(wrapperFile).href
-
     // Cache the result
-    barrelCache.set(filePath, { exports, wrapperUrl })
+    barrelCache.set(filePath, { exports, wrapperAbsPath })
 
-    return { filePath, js: { code: wrapperCode }, url: wrapperUrl }
+    return { filePath, js: { code: wrapperCode }, wrapperAbsPath }
   } finally {
     processingBarrels.delete(filePath)
   }
@@ -251,6 +264,33 @@ const classifyImport = (importPath: string): 'relative' | 'scoped' | 'vite-alias
   return 'bare'
 }
 
+/**
+ * Get the absolute path of the compiled temp file for a source .svelte file
+ */
+const getTmpFilePath = (sourceFilePath: string): string => {
+  const cwd = process.cwd()
+  const rel = path.relative(cwd, sourceFilePath)
+  const tmpFile = path.join(cwd, TMP_DIR, rel.replace(/\.svelte$/, '.svelte.js'))
+  return tmpFile
+}
+
+/**
+ * Compute relative path from a directory to a target file (using forward slashes)
+ * Ensures the result is a valid relative import specifier (starts with './' or '../' or '/')
+ */
+const computeRelativePath = (fromDir: string, toFile: string): string => {
+  const absoluteFrom = path.isAbsolute(fromDir) ? fromDir : path.join(process.cwd(), fromDir)
+  const absoluteTo = path.isAbsolute(toFile) ? toFile : path.join(process.cwd(), toFile)
+  let relative = path.relative(absoluteFrom, absoluteTo)
+  relative = relative.replace(/\\/g, '/')
+  // If the result doesn't start with '/' (absolute) or '.' (relative), it's a same-directory reference.
+  // Prepend './' to make it a valid relative import.
+  if (!relative.startsWith('/') && !relative.startsWith('.')) {
+    relative = './' + relative
+  }
+  return relative
+}
+
 const resolveAndCompileImport = async (
   importPath: string,
   sourceDir: string,
@@ -259,7 +299,8 @@ const resolveAndCompileImport = async (
 ): Promise<ResolveAndCompileResult> => {
   const importType = classifyImport(importPath)
 
-  // Type 2: Scoped packages (@scope/package) - skip, let Node.js resolve
+  // Type 2: Scoped packages (@scope/package) - let Node.js resolve at runtime
+  // Do NOT try to pre-resolve - just skip and leave import as-is
   if (importType === 'scoped') {
     return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
   }
@@ -295,7 +336,7 @@ const resolveAndCompileImport = async (
         const aliasPath = importPath.slice(1) // Remove $
         resolvedPath = path.resolve(rootDir, 'src', aliasPath)
       } else {
-        // Could not resolve, skip processing (will be handled by preprocess.js mocks)
+        // Could not resolve, skip processing
         return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
       }
     }
@@ -311,6 +352,7 @@ const resolveAndCompileImport = async (
   }
 
   // If the path doesn't have an extension, try to find the file with extensions
+  // Priority: .ts first (since many SvelteKit projects use .ts), then .js, then .svelte
   if (!path.extname(resolvedPath)) {
     const extensions = ['.ts', '.js', '.svelte', '/index.ts', '/index.js', '/index.svelte']
     for (const ext of extensions) {
@@ -320,8 +362,9 @@ const resolveAndCompileImport = async (
         break
       }
     }
-  } else if (resolvedPath.endsWith('.js') && !(await fs.exists(resolvedPath))) {
-    // .js file doesn't exist - try .ts version
+  } else if (resolvedPath.endsWith('.js')) {
+    // For .js files, check if a .ts version exists and use that instead
+    // This handles SvelteKit barrel files that use .js imports but are .ts files
     const tsPath = resolvedPath.slice(0, -3) + '.ts'
     if (await fs.exists(tsPath)) {
       resolvedPath = tsPath
@@ -380,18 +423,27 @@ const resolveAndCompileImport = async (
   if (ext === '.ts' || ext === '.js') {
     const exports = await getSvelteExports(resolvedPath)
     if (exports.length > 0) {
-      return await compileBarrel(resolvedPath, importChain)
+      const barrelResult = await compileBarrel(resolvedPath, importChain)
+      // Compute relative path from the source file's tmp directory to the wrapper file
+      const sourceTmpFile = getTmpFilePath(sourceFilePath)
+      const fromDir = path.dirname(sourceTmpFile)
+      const relativePath = computeRelativePath(fromDir, barrelResult.wrapperAbsPath)
+      return { filePath: resolvedPath, js: barrelResult.js, url: relativePath }
     }
   }
 
-  // If it's a svelte file, compile it; otherwise return URL for tsLoader to handle
+  // If it's a svelte file, compile it; otherwise return relative path for Node.js to handle
   if (!isSvelteFile(resolvedPath)) {
-    const importUrl = pathToFileURL(resolvedPath).href
-    return { filePath: resolvedPath, js: { code: '' }, url: importUrl }
+    // For non-Svelte files (including .ts), return a relative path from the source file's tmp directory
+    const sourceTmpFile = getTmpFilePath(sourceFilePath)
+    const fromDir = path.dirname(sourceTmpFile)
+    const relativePath = computeRelativePath(fromDir, resolvedPath)
+    return { filePath: resolvedPath, js: { code: '' }, url: relativePath }
   }
 
   const relPath = path.relative(process.cwd(), resolvedPath)
   const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
+  const tmpFileAbs = path.join(process.cwd(), tmpFile)
 
   const release = await acquireLock(tmpFile)
 
@@ -400,7 +452,11 @@ const resolveAndCompileImport = async (
     if (cached) {
       const stats = await fs.stat(resolvedPath)
       if (stats.mtime.getTime() === cached.mtime) {
-        return { filePath: resolvedPath, js: { code: cached.code }, url: cached.url }
+        // Compute relative path from this importer's tmp directory to the cached absolute path
+        const sourceTmpFile = getTmpFilePath(sourceFilePath)
+        const fromDir = path.dirname(sourceTmpFile)
+        const relativePath = computeRelativePath(fromDir, cached.absPath)
+        return { filePath: resolvedPath, js: { code: cached.code }, url: relativePath }
       }
     }
 
@@ -408,19 +464,24 @@ const resolveAndCompileImport = async (
 
     const processed = await processImports(js.code, resolvedPath, importChain)
 
-    const importUrl = pathToFileURL(tmpFile)
-
     await fs.mkdirp(path.dirname(tmpFile))
     await fs.writeFile(tmpFile, processed.code)
 
     const stats = await fs.stat(resolvedPath)
+
+    // Cache absolute path; relative path will be computed per importer
     importCache.set(resolvedPath, {
       code: processed.code,
-      url: importUrl.href,
+      absPath: tmpFileAbs,
       mtime: stats.mtime.getTime(),
     })
 
-    return { filePath: resolvedPath, js: { code: processed.code }, url: importUrl.href }
+    // Compute relative path for this importer
+    const sourceTmpFile = getTmpFilePath(sourceFilePath)
+    const fromDir = path.dirname(sourceTmpFile)
+    const relativePath = computeRelativePath(fromDir, tmpFileAbs)
+
+    return { filePath: resolvedPath, js: { code: processed.code }, url: relativePath }
   } finally {
     release()
   }
@@ -578,7 +639,8 @@ export const compileSvelteWithWrite = async (
   const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
   const relPath = path.relative(process.cwd(), resolvedPath)
   const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
-  const importUrl = pathToFileURL(tmpFile).href
+  const tmpFileAbs = path.join(process.cwd(), tmpFile)
+  const importUrl = pathToFileURL(tmpFileAbs).href
 
   const release = await acquireLock(tmpFile)
 
