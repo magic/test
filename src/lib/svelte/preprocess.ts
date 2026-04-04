@@ -120,55 +120,19 @@ export const testExportsPreprocessor = () => {
 export const sveltekitMocksPreprocessor = () => {
   return {
     name: 'magic-sveltekit-mocks',
-    script: async ({
-      content,
-      attributes,
-      markup,
-      filename,
-    }: {
-      content: string
-      attributes: Record<string, string | boolean>
-      markup: string
-      filename?: string
-    }) => {
-      let processed = content.replace(
+    script: async ({ content }: { content: string }) => {
+      let processed = content
+      .replace(
         /import\s+\{[^}]*\b(browser|dev|prod)\b[^}]*\}\s+from\s+['"]\$app\/environment['"]/g,
         "import { browser, dev, prod } from '@magic/test'",
       )
-
       // Mock $app/state page import - create simple object that won't be shadowed
-      processed = processed.replace(
+      .replace(
         /import\s+\{[^}]*\bpage\b[^}]*\}\s+from\s+['"]\$app\/state['"]/g,
         "const page = { url: { origin: 'http://localhost' } }",
       )
 
-      // Mock @systemkollektiv/i18n imports - localizeHref adds trailing slash to http URLs
-      processed = processed.replace(
-        /import\s+\{[^}]*\}\s+from\s+['"]@systemkollektiv\/i18n['"]/g,
-        "const localizeHref = ( href) => href && href.startsWith('http') && !href.endsWith('/') ? href + '/' : href || ''\nconst reroute = (x => x as any)",
-      )
-
-      // Mock svelte-easy-crop - this package has unusual exports that Node can't resolve directly
-      processed = processed.replace(
-        /import\s+\{[^}]*\bImageCrop\b[^}]*\}\s+from\s+['"]svelte-easy-crop['"]/g,
-        'const ImageCrop = (( as any) => ({ default: () => ({}) }))',
-      )
-      processed = processed.replace(
-        /import\s+\{[^}]*\}\s+from\s+['"]svelte-easy-crop['"]/g,
-        'const svelte_easy_crop = { ImageCrop: () => ({}) }',
-      )
-      processed = processed.replace(
-        /import\s+(\w+)\s+from\s+['"]svelte-easy-crop['"]/g,
-        'const $1 = (( as any) => ({ default: () => ({}) }))',
-      )
-
-      // Mock other common problematic packages
-      processed = processed.replace(
-        /import\s+\{[^}]*\}\s+from\s+['"]svelte['"]/g,
-        'const svelte = { onMount: () => {}, onDestroy: () => {}, createEventDispatcher: () => ({ dispatch: () => {} }), getContext: () => {}, setContext: () => {}, hasContext: () => false, writable: (val) => ({ subscribe: () => {}, set: () => {}, update: () => {} }), derived: () => ({ subscribe: () => {} }) }',
-      )
-
-      return { code: processed }
+      return { code: content }
     },
   }
 }
