@@ -30,16 +30,7 @@ const getShardConfig = () => {
   return { shards, shardId }
 }
 
-// FNV-1a hash function for better distribution
-const getShardForTest = (testPath: string, totalShards: number): number => {
-  let hash = 2166136261 // FNV offset basis
-  for (let i = 0; i < testPath.length; i++) {
-    hash ^= testPath.charCodeAt(i)
-    hash = Math.imul(hash, 16777619) // FNV prime
-  }
-  // Ensure positive and within range
-  return (hash >>> 0) % totalShards
-}
+
 
 const init = async () => {
   await maybeInjectMagic()
@@ -53,43 +44,8 @@ const init = async () => {
 
   const { shards, shardId } = getShardConfig()
 
-  const hasShardsEnv = 'MAGIC_TEST_SHARDING_SHARDS' in process.env
-  const hasShardIdEnv = 'MAGIC_TEST_SHARDING_ID' in process.env
-  if (hasShardsEnv !== hasShardIdEnv) {
-    log.warn('Both --shards and --shard-id should be specified together for consistent behavior')
-  }
-
-  // If no sharding, run all tests
-  if (shards <= 1) {
-    try {
-      await run(tests)
-    } catch (e: unknown) {
-      const err = e as CustomError
-      err.code = 'E_MAGIC_TEST'
-      log.error(err)
-    }
-    return
-  }
-
-  // Filter tests to only those assigned to this shard
-  const shardTests = Object.fromEntries(
-    Object.entries(tests).filter(([key]) => {
-      const shard = getShardForTest(key, shards)
-      return shard === shardId
-    }),
-  ) as TestSuites
-
-  if (Object.keys(shardTests).length === 0) {
-    log.info(`Shard ${shardId} has no tests assigned`)
-    return
-  }
-
-  log.info(
-    `Running shard ${shardId + 1}/${shards} with ${Object.keys(shardTests).length} test suites`,
-  )
-
   try {
-    await run(shardTests)
+    await run(tests, { shards, shardId })
   } catch (e: unknown) {
     const err = e as CustomError
     err.code = 'E_MAGIC_TEST'
