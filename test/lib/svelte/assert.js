@@ -1,4 +1,4 @@
-import { initDOM } from '../../../src/lib/svelte/dom.js'
+import { initDOM } from '../../../src/lib/dom.js'
 import { html, text, component, props } from '../../../src/lib/svelte/assert.js'
 
 initDOM()

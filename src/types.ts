@@ -101,8 +101,8 @@ export interface TestResult {
   /** The expected value (evaluated). */
   expect: unknown
 
-  /** Stringified expectation. */
-  expString: string | unknown
+  /** Stringified expectation (or raw value if not a function). */
+  expString: unknown
 
   /** Unique test key. */
   key: string
@@ -283,11 +283,6 @@ export interface PartialTest {
   parent?: string
   pass: boolean
 }
-
-/**
- * A module's exported values.
- */
-export type ModuleExport = Record<string, unknown>
 
 /**
  * Props passed to a component.

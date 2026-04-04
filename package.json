@@ -5,40 +5,36 @@
   "description": "simple yet powerful unit testing library",
   "license": "AGPL-3.0",
   "homepage": "https://magic.github.io/test",
-  "main": "src/index.js",
-  "module": "src/index.js",
-  "types": "types/index.d.ts",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
   "type": "module",
   "bin": {
-    "t": "src/bin/t.js",
-    "magic-test": "src/bin/t.js",
-    "magic-test-native": "src/bin/node-test-runner.js"
+    "t": "src/bin/t.ts",
+    "magic-test": "src/bin/t.ts",
+    "magic-test-native": "src/bin/node-test-runner.ts"
   },
   "scripts": {
-    "start": "node src/bin/t.js -p",
-    "build": "tsc && npm run format",
-    "prepublishOnly": "npm run test && npm run build",
+    "start": "node src/bin/t.ts -p",
     "build:docs": "NODE_ENV=production magic build",
     "prod": "NODE_ENV=production magic build serve",
     "clean": "magic clean",
     "serve": "magic serve",
     "dev": "magic dev",
-    "test": "node src/bin/t.js",
-    "test:native": "node --test src/bin/node-test-runner.js",
-    "test:ci": "node src/bin/t.js -p",
-    "coverage": "node src/bin/t.js",
+    "test": "node src/bin/t.ts",
+    "test:native": "node --test src/bin/node-test-runner.ts",
+    "test:ci": "node src/bin/t.ts -p",
+    "coverage": "node src/bin/t.ts",
     "format": "f -w --exclude docs",
     "format:check": "f --exclude docs",
-    "lint": "npm run tsc",
     "tsc": "tsc --noEmit"
   },
   "engines": {
-    "node": ">=14.15.4"
+    "node": ">=22.18.0"
   },
   "engineStrict": true,
   "files": [
-    "src",
-    "types"
+    "src"
   ],
   "repository": {
     "type": "git",
