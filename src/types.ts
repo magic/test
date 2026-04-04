@@ -199,7 +199,6 @@ export interface State {
   pkg: string
   startTime?: [number, number]
   results?: TestResults
-  [key: string]: unknown
 }
 
 /**
