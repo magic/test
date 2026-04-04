@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-import(path.join(__dirname, 'lib/registerLoader.js'))
+import(path.join(__dirname, 'lib/registerLoader.ts'))
 
 import { describe, before, after, it } from 'node:test'
 import fs from '@magic/fs'
@@ -21,6 +21,7 @@ import type {
   TestItem,
   CleanupFunction,
   SuiteHookWithArg,
+  ComponentProps,
 } from '../types.ts'
 
 /**
@@ -85,13 +86,21 @@ const processSpecialFiles = async () => {
   const filesToProcess = [...discoveredFiles]
   for (const filePath of filesToProcess) {
     const fileName = path.basename(filePath)
-    if (fileName === 'beforeAll.js') {
+    if (
+      fileName === 'beforeAll.js' ||
+      fileName === 'beforeAll.ts' ||
+      fileName === 'beforeAll.mjs'
+    ) {
       const mod = await extractExport(filePath)
       if (mod && is.function(mod.default)) {
         globalBeforeAll = mod.default as (tests: unknown) => void | Promise<void>
       }
       discoveredFiles.splice(discoveredFiles.indexOf(filePath), 1)
-    } else if (fileName === 'afterAll.js') {
+    } else if (
+      fileName === 'afterAll.js' ||
+      fileName === 'afterAll.ts' ||
+      fileName === 'afterAll.mjs'
+    ) {
       const mod = await extractExport(filePath)
       if (mod && is.function(mod.default)) {
         globalAfterAll = mod.default as (tests: unknown) => void | Promise<void>
@@ -172,7 +181,7 @@ const convertTest = async (
     if (!fnExists) {
       result = undefined
     } else if (testObj.component) {
-      const { mount } = await import(path.join(__dirname, '..', 'lib', 'svelte', 'mount.js'))
+      const { mount } = await import(path.join(__dirname, '..', 'lib', 'svelte', 'mount.ts'))
       let componentFile, componentProps
 
       if (is.string(testObj.component)) {
