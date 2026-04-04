@@ -15,10 +15,10 @@ import type {
 } from '../types.ts'
 
 /**
- * Type guard to check if an object is a WrappedTest.
+ * Type guard to check if an object has test properties (fn or tests).
  */
-const isWrappedTest = (obj: unknown): obj is WrappedTest => {
-  return is.objectNative(obj) && 'name' in obj && 'pkg' in obj && 'parent' in obj
+const hasTestProperties = (obj: unknown): obj is { fn?: unknown; tests?: unknown } => {
+  return is.objectNative(obj) && ('fn' in obj || 'tests' in obj)
 }
 
 type RunFnResult = {
@@ -276,10 +276,10 @@ const main = async () => {
     const tests = await importFile(testFileUrl)
 
     let test: WrappedTest | undefined
-    if (is.array(tests) && isWrappedTest(tests[testIndex])) {
-      test = tests[testIndex]
-    } else if (isWrappedTest(tests)) {
-      test = tests
+    if (is.array(tests) && tests[testIndex] != null && hasTestProperties(tests[testIndex])) {
+      test = tests[testIndex] as WrappedTest
+    } else if (hasTestProperties(tests)) {
+      test = tests as WrappedTest
     }
 
     if (!test) {
