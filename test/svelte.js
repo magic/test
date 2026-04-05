@@ -94,4 +94,36 @@ export default [
     expect: {},
     info: 'props returns element attributes',
   },
+  // SvelteKit wrapper provides correct $app/environment values (dev mode)
+  {
+    fn: async () => {
+      const { target, unmount } = await mount('./src/lib/svelte/components/SvelteKit.svelte')
+      const result = html(target)
+      await unmount()
+      return result
+    },
+    expect:
+      '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----> <button>Toggle</button>',
+    info: 'SvelteKit wrapper provides correct $app/environment values (dev mode)',
+  },
+  // SvelteKit component state updates correctly with toggle
+  {
+    fn: async () => {
+      const { target, unmount } = await mount('./src/lib/svelte/components/SvelteKit.svelte')
+      // Initial state: showEnv = true
+      const initial = html(target)
+      // Click button to toggle
+      click(target, 'button')
+      await flushSync()
+      const afterToggle = html(target)
+      await unmount()
+      return { initial, afterToggle }
+    },
+    expect: {
+      initial:
+        '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----> <button>Toggle</button>',
+      afterToggle: '<!----><!----> <button>Toggle</button>',
+    },
+    info: 'SvelteKit component state updates correctly with toggle',
+  },
 ]

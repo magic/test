@@ -1,4 +1,4 @@
-import { html, createSnippet } from '../../../src/lib/svelte/index.js'
+import { html, createSnippet } from '../../../../src/lib/svelte/index.js'
 
 const component = './src/lib/svelte/components/SnippetButton.svelte'
 

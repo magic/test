@@ -1,7 +1,7 @@
 <script>
-  import { browser, dev, prod } from '$app/environment';
-  
-  let showEnv = $state(true);
+  import { browser, dev, prod } from '$app/environment'
+
+  let showEnv = $state(true)
 </script>
 
 {#if showEnv}
@@ -12,4 +12,4 @@
   </div>
 {/if}
 
-<button onclick={() => showEnv = !showEnv}>Toggle</button>
+<button onclick={() => (showEnv = !showEnv)}>Toggle</button>

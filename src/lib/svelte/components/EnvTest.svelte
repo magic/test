@@ -1,5 +1,5 @@
 <script>
-  import { browser, dev, prod, building, version } from '$app/environment';
+  import { browser, dev, prod, building, version } from '$app/environment'
 </script>
 
 <div class="env">

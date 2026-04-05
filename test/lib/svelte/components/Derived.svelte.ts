@@ -1,5 +1,5 @@
-import { mount, html } from '../../../src/lib/svelte/index.js'
-import { tryCatch } from '../../../src/index.js'
+import { mount, html } from '../../../../src/lib/svelte/index.js'
+import { tryCatch } from '../../../../src/index.js'
 
 const component = './src/lib/svelte/components/Derived.svelte'
 

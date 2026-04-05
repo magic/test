@@ -1,16 +1,16 @@
 <script>
-  import { resolve, match, asset, base } from '$app/paths';
-  
-  const resolved = resolve('/blog/[slug]', { slug: 'hello' });
-  
+  import { resolve, match, asset, base } from '$app/paths'
+
+  const resolved = resolve('/blog/[slug]', { slug: 'hello' })
+
   /** @type {{id: string, params: Record<string, string>} | null} */
-  let matched = $state(null);
-  
+  let matched = $state(null)
+
   $effect(async () => {
-    matched = await match('/blog/hello');
-  });
-  
-  const assetUrl = asset('/logo.png');
+    matched = await match('/blog/hello')
+  })
+
+  const assetUrl = asset('/logo.png')
 </script>
 
 <div class="paths">

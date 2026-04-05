@@ -1,6 +1,14 @@
-import { html } from '../../../src/lib/svelte/index.js'
+import { html } from '../../../../src/lib/svelte/index.js'
 
 const component = './src/lib/svelte/components/Button.svelte'
+
+export type TestCase = {
+  component: string
+  props?: Record<string, unknown>
+  fn: (ctx: { target: unknown }) => boolean | Promise<boolean>
+  expect?: boolean | ((result: boolean[]) => boolean)
+  info?: string
+}
 
 export default [
   {
@@ -96,4 +104,4 @@ export default [
     fn: ({ target }) => html(target).includes('btn') && !target.querySelector('button').disabled,
     info: 'handles undefined props with defaults',
   },
-]
+] satisfies TestCase[]

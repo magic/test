@@ -1,6 +1,6 @@
 <script>
-  import { page } from '$app/state';
-  import { browser } from '$app/environment';
+  import { page } from '$app/state'
+  import { browser } from '$app/environment'
 </script>
 
 <div class="wrapper-test">
