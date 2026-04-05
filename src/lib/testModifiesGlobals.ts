@@ -8,10 +8,10 @@ interface FsModule {
 }
 
 const GLOBAL_MODIFICATION_RE_ASSIGN =
-  /\b(?:globalThis|window|global|self)\b(?:\[[^\]]+\]|\.[a-zA-Z_$][\w$]*)\s*(?:[=+\-*/%]|<<?|>>?|&&|\|\|?)|\bprocess\.env\b[^\n]*[=+\-]/
+  /(?:globalThis|window|global|self)[^\n=]*(?:\.\w+|\[[^\]]+\])\s*=|process\.env\.[^\n]+[=+\-]/
 
 const GLOBAL_MODIFICATION_RE_DELETE =
-  /\bdelete\s+(?:globalThis|window|global|self|process)\b(?:\[[^\]]+\]|\.[a-zA-Z_$][\w$]*)/
+  /delete\s+.*globalThis.*(?:\[[^\]]+\]|\.\w+)/
 
 const GLOBAL_MODIFICATION_RE = new RegExp(
   `(${GLOBAL_MODIFICATION_RE_ASSIGN.source})|(${GLOBAL_MODIFICATION_RE_DELETE.source})`,
@@ -45,6 +45,28 @@ export const testModifiesGlobals = (test: {
  * Check if any test in a suite modifies global state
  */
 export const suiteModifiesGlobals = (tests: unknown): boolean => {
+  const t = tests as {
+    beforeAll?: (...args: unknown[]) => unknown
+    afterAll?: (...args: unknown[]) => unknown
+    before?: (...args: unknown[]) => unknown
+    after?: (...args: unknown[]) => unknown
+    tests?: unknown
+  }
+
+  if (t.beforeAll) {
+    const beforeAllStr = t.beforeAll.toString()
+    if (GLOBAL_MODIFICATION_RE.test(beforeAllStr)) {
+      return true
+    }
+  }
+
+  if (t.afterAll) {
+    const afterAllStr = t.afterAll.toString()
+    if (GLOBAL_MODIFICATION_RE.test(afterAllStr)) {
+      return true
+    }
+  }
+
   if (is.array(tests)) {
     return tests.some(test =>
       testModifiesGlobals(
