@@ -206,8 +206,18 @@ export interface State {
  */
 export type TestSuites = Record<string, TestCollection> & {
   '/beforeAll.js'?: (tests: TestSuites) => void | Promise<void | CleanupFunction>
+  '/beforeall.js'?: (tests: TestSuites) => void | Promise<void | CleanupFunction>
+  '/beforeAll.ts'?: (tests: TestSuites) => void | Promise<void | CleanupFunction>
+  '/beforeall.ts'?: (tests: TestSuites) => void | Promise<void | CleanupFunction>
+  '/beforeAll.mjs'?: (tests: TestSuites) => void | Promise<void | CleanupFunction>
+  '/beforeall.mjs'?: (tests: TestSuites) => void | Promise<void | CleanupFunction>
 
   '/afterAll.js'?: (tests: TestSuites) => void | Promise<void>
+  '/afterall.js'?: (tests: TestSuites) => void | Promise<void>
+  '/afterAll.ts'?: (tests: TestSuites) => void | Promise<void>
+  '/afterall.ts'?: (tests: TestSuites) => void | Promise<void>
+  '/afterAll.mjs'?: (tests: TestSuites) => void | Promise<void>
+  '/afterall.mjs'?: (tests: TestSuites) => void | Promise<void>
 }
 
 /* -------------------------------------------------------------

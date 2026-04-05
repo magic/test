@@ -48,5 +48,25 @@ export default {
       expect: true,
       info: 'test/beforeAll.mjs file gets executed before other tests.',
     },
+    {
+      fn: () => (globalThis as any).beforeallJS,
+      expect: true,
+      info: 'test/beforeall.js file gets executed before other tests.',
+    },
+    {
+      fn: () => (globalThis as any).beforeAllMJS,
+      expect: true,
+      info: 'test/beforeAll.mjs file gets executed before other tests.',
+    },
+    {
+      fn: () => (globalThis as any).beforeallJS,
+      expect: true,
+      info: 'test/beforeall.js file gets executed before other tests.',
+    },
+    {
+      fn: () => (globalThis as any).beforeallTS,
+      expect: true,
+      info: 'test/beforeall.ts file gets executed before other tests.',
+    },
   ],
 }

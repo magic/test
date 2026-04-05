@@ -113,11 +113,47 @@ export const run = async (
     return new Error(ERRORS.E_NO_TESTS)
   }
 
-  const beforeAll = testsObj['/beforeAll.js']
-  let afterAll = testsObj['/afterAll.js'] ? [testsObj['/afterAll.js']] : []
+  // Define all beforeAll/afterAll file variants in execution order
+  const beforeAllFiles = [
+    '/beforeAll.js',
+    '/beforeall.js',
+    '/beforeAll.ts',
+    '/beforeall.ts',
+    '/beforeAll.mjs',
+    '/beforeall.mjs',
+  ]
 
-  delete testsObj['/beforeAll.js']
-  delete testsObj['/afterAll.js']
+  const afterAllFiles = [
+    '/afterAll.js',
+    '/afterall.js',
+    '/afterAll.ts',
+    '/afterall.ts',
+    '/afterAll.mjs',
+    '/afterall.mjs',
+  ]
+
+  // Collect beforeAll functions and their cleanup handlers
+  const beforeAllCleanup: (() => void | Promise<void>)[] = []
+  for (const file of beforeAllFiles) {
+    const beforeAll = testsObj[file]
+    if (is.fn(beforeAll)) {
+      const cleanup = await beforeAll(testsObj)
+      if (is.fn(cleanup)) {
+        beforeAllCleanup.push(cleanup)
+      }
+    }
+    delete testsObj[file]
+  }
+
+  // Collect afterAll functions (to run after tests)
+  const afterAllFns: (() => void | Promise<void>)[] = []
+  for (const file of afterAllFiles) {
+    const afterAll = testsObj[file]
+    if (is.fn(afterAll)) {
+      afterAllFns.push(() => afterAll(testsObj))
+    }
+    delete testsObj[file]
+  }
 
   // Filter tests by shard if sharding is enabled
   if (shards > 1) {
@@ -131,13 +167,6 @@ export const run = async (
     testsObj = filtered
   }
 
-  // execute beforeall and save the result in the afterAll array for later
-  if (is.fn(beforeAll)) {
-    const after = await beforeAll(testsObj)
-    if (after) {
-      afterAll.push(after)
-    }
-  }
 
   let packagePath = path.join(cwd, 'package.json')
 
@@ -175,8 +204,14 @@ export const run = async (
     return
   }
 
-  if (afterAll) {
-    await Promise.all(afterAll.filter(is.fn).map(fn => fn(testsObj)))
+  // Run all afterAll files
+  for (const afterAll of afterAllFns) {
+    await afterAll()
+  }
+
+  // Run all beforeAll cleanup handlers (no arguments)
+  for (const cleanup of beforeAllCleanup) {
+    await cleanup()
   }
 
   const tmpDir = path.join(cwd, 'test', '.tmp')
