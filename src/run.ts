@@ -167,7 +167,6 @@ export const run = async (
     testsObj = filtered
   }
 
-
   let packagePath = path.join(cwd, 'package.json')
 
   const content = await fs.readFile(packagePath, 'utf8')
