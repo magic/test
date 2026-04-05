@@ -33,6 +33,13 @@ export class Store {
     if (val.results !== undefined) {
       this.state.results = val.results
     }
+    // Allow setting arbitrary keys on state
+    const keys = Object.keys(val) as (keyof State)[]
+    for (const key of keys) {
+      if (key !== 'suites' && key !== 'stats' && key !== 'pkg' && key !== 'startTime' && key !== 'results') {
+        (this.state as any)[key] = (val as any)[key]
+      }
+    }
   }
 
   /**
