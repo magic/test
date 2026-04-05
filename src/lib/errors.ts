@@ -1,10 +1,7 @@
 import is from '@magic/types'
 import type { CustomError } from '@magic/error'
 
-export type ErrorCodeMap = Record<string, string>
-export type ErrorMessageMap = Record<string, string | ((...args: unknown[]) => string)>
-
-export const ERRORS: ErrorCodeMap = {
+export const ERRORS: Record<string, string> = {
   E_EMPTY_SUITE: 'E_EMPTY_SUITE',
   E_RUN_SUITE_UNKNOWN: 'E_RUN_SUITE_UNKNOWN',
   E_TEST_NO_FN: 'E_TEST_NO_FN',
@@ -17,7 +14,7 @@ export const ERRORS: ErrorCodeMap = {
   E_MAGIC_TEST: 'E_MAGIC_TEST',
 }
 
-export const ERROR_MESSAGES: ErrorMessageMap = {
+export const ERROR_MESSAGES: Record<string, string | ((...args: unknown[]) => string)> = {
   E_EMPTY_SUITE: test => `${test} is not exporting tests.`,
   E_NO_TESTS: 'No test suites found.',
   E_TEST_NO_FN: test => `test.fn is not a function in ${test}`,

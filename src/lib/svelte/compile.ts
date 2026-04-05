@@ -11,7 +11,7 @@ import { testExportsPreprocessor, viteDefinePreprocessor } from './preprocess.ts
 import { LRUCache } from './LRUCache.ts'
 import { SourceMap } from 'magic-string'
 
-export interface CssObject {
+interface CssObject {
   code: string
   map?: SourceMap
   hasGlobal?: boolean

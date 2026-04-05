@@ -282,16 +282,6 @@ export type TestBeforeHook = (
 export type TestAfterHook = () => void | Promise<void>
 
 /**
- * A partial test definition for internal use.
- */
-export interface PartialTest {
-  name: string
-  pkg?: string
-  parent?: string
-  pass: boolean
-}
-
-/**
  * Props passed to a component.
  */
 export type ComponentProps = Record<string, unknown>
