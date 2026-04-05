@@ -30,7 +30,7 @@ export const defineCache = new Map<string, Record<string, unknown>>()
 
 const svelteKitDetectionCache = new Map<string, boolean>()
 
-export async function detectSvelteKit(rootDir: string): Promise<boolean> {
+export const detectSvelteKit = async (rootDir: string): Promise<boolean> => {
   const cached = svelteKitDetectionCache.get(rootDir)
   if (cached !== undefined) return cached
 
@@ -650,49 +650,3 @@ export const getViteDefine = async (sourceFilePath: string): Promise<Record<stri
   return await loadViteDefine(rootDir)
 }
 
-// --- SvelteKit Config Helper ---
-
-/**
- * Get SvelteKit configuration from vite.config.ts if available.
- * Returns partial config: { dev?, base?, version?, building? }
- */
-export function getSvelteKitConfig(rootDir: string): Record<string, any> {
-  const configPaths = [
-    path.join(rootDir, 'vite.config.ts'),
-    path.join(rootDir, 'vite.config.js'),
-    path.join(rootDir, 'vite.config.mts'),
-    path.join(rootDir, 'vite.config.mjs'),
-    path.join(rootDir, 'vite.config.cjs'),
-  ]
-  for (const configPath of configPaths) {
-    try {
-      // Check existence via fs.exists would be async; we're using sync read
-      // Use try/catch
-      const content = require('fs').readFileSync(configPath, 'utf-8')
-      // Look for defineConfig({ kit: { ... } })
-      const kitMatch = content.match(/defineConfig\s*\(\s*\{[\s\S]*?kit\s*:\s*\{([\s\S]*?)\}/)
-      if (kitMatch) {
-        const kitConfig = kitMatch[1]
-        const parseVal = (key: string) => {
-          const m = kitConfig.match(new RegExp(`${key}\\s*:\\s*([^,\\}\\n]+)`))
-          if (m) {
-            let val = m[1].trim()
-            if (val === 'true' || val === 'false') return val === 'true'
-            if (val.startsWith("'") || val.startsWith('"')) return val.slice(1, -1)
-            return val
-          }
-          return undefined
-        }
-        return {
-          dev: parseVal('dev'),
-          base: parseVal('base'),
-          version: parseVal('version'),
-          building: parseVal('building'),
-        }
-      }
-    } catch (e) {
-      // file not found or parse error, continue
-    }
-  }
-  return {}
-}

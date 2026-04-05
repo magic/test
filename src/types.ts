@@ -234,15 +234,6 @@ export interface TestItem {
   after?: TestAfterHook
 }
 
-/**
- * A test suite containing multiple test items.
- */
-export interface TestSuite {
-  name: string
-  tests: TestItem[]
-  hooks: TestHooks
-}
-
 export type JsonSafe = string | number | boolean | null | undefined | object
 
 export type JsonSafeArg = JsonSafe | (() => unknown)

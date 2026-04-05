@@ -74,10 +74,6 @@ export const updated = {
   check: (): Promise<boolean> => Promise.resolve(false),
 }
 
-export function getPage(): Page {
-  return get(getCtx().page)
-}
-
 export function reset() {
   resetDefaultContext()
 }
