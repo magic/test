@@ -1,4 +1,4 @@
-import { classifyImport } from '../../src/lib/svelte/viteConfig/classifyImport.js'
+import { classifyImport } from '../../../../src/lib/svelte/viteConfig/classifyImport.js'
 
 export default [
   {

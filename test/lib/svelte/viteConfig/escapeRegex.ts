@@ -1,4 +1,4 @@
-import { escapeRegex } from '../../src/lib/svelte/viteConfig/escapeRegex.js'
+import { escapeRegex } from '../../../../src/lib/svelte/viteConfig/escapeRegex.js'
 
 export default [
   {

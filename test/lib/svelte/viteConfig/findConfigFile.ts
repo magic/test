@@ -1,9 +1,13 @@
 import path from 'node:path'
-import { fs } from '@magic/fs'
-import { findConfigFile } from '../../src/lib/svelte/viteConfig/findConfigFile.js'
-import { VITE_CONFIG_NAMES } from '../../src/lib/svelte/viteConfig/VITE_CONFIG_NAMES.js'
+import fs from '@magic/fs'
+import { findConfigFile } from '../../../../src/lib/svelte/viteConfig/findConfigFile.js'
+import { VITE_CONFIG_NAMES } from '../../../../src/lib/svelte/viteConfig/VITE_CONFIG_NAMES.js'
 
 const TEST_ROOT = path.join(process.cwd(), 'test', '.tmp', 'viteConfig', 'findConfigFile')
+
+const run1Dir = path.join(TEST_ROOT, 'run1')
+const run2Dir = path.join(TEST_ROOT, 'run2')
+const run3Dir = path.join(TEST_ROOT, 'run3')
 
 export default {
   beforeAll: async () => {
@@ -14,28 +18,33 @@ export default {
   },
   tests: [
     {
-      fn: async () => {
-        await fs.writeFile(path.join(TEST_ROOT, 'vite.config.js'), '')
-        const result = await findConfigFile(TEST_ROOT, VITE_CONFIG_NAMES)
-        return result
+      before: async () => {
+        await fs.mkdirp(run1Dir)
+        await fs.writeFile(path.join(run1Dir, 'vite.config.js'), '')
+
+        return async () => {
+          await fs.rmrf(run1Dir)
+        }
       },
-      expect: path.join(TEST_ROOT, 'vite.config.js'),
+      fn: async () => await findConfigFile(run1Dir, VITE_CONFIG_NAMES),
+      expect: path.join(run1Dir, 'vite.config.js'),
       info: 'finds config on first name',
     },
     {
-      fn: async () => {
-        await fs.writeFile(path.join(TEST_ROOT, 'vite.config.ts'), '')
-        const result = await findConfigFile(TEST_ROOT, VITE_CONFIG_NAMES)
-        return result
+      before: async () => {
+        await fs.mkdirp(run2Dir)
+        await fs.writeFile(path.join(run2Dir, 'vite.config.ts'), '')
+
+        return async () => {
+          await fs.rmrf(run2Dir)
+        }
       },
-      expect: path.join(TEST_ROOT, 'vite.config.ts'),
+      fn: () => findConfigFile(run2Dir, VITE_CONFIG_NAMES),
+      expect: path.join(run2Dir, 'vite.config.ts'),
       info: 'finds config on second name',
     },
     {
-      fn: async () => {
-        const result = await findConfigFile(TEST_ROOT, VITE_CONFIG_NAMES)
-        return result
-      },
+      fn: findConfigFile(run3Dir, VITE_CONFIG_NAMES),
       expect: null,
       info: 'returns null when no config found',
     },

@@ -1,5 +1,5 @@
-import { normalizeAlias } from '../../src/lib/svelte/viteConfig/normalizeAlias.js'
-import { normalizeSingleAlias } from '../../src/lib/svelte/viteConfig/normalizeSingleAlias.js'
+import { normalizeAlias } from '../../../../src/lib/svelte/viteConfig/normalizeAlias.js'
+import { normalizeSingleAlias } from '../../../../src/lib/svelte/viteConfig/normalizeSingleAlias.js'
 
 export default [
   {

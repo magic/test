@@ -1,4 +1,4 @@
-import { stripJsonComments } from '../../src/lib/svelte/viteConfig/stripJsonComments.js'
+import { stripJsonComments } from '../../../../src/lib/svelte/viteConfig/stripJsonComments.js'
 
 export default [
   {

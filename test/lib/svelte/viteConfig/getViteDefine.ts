@@ -1,4 +1,4 @@
-import { getViteDefine } from '../../src/lib/svelte/viteConfig/getViteDefine.js'
+import { getViteDefine } from '../../../../src/lib/svelte/viteConfig/getViteDefine.js'
 
 export default [
   {

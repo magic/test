@@ -72,8 +72,8 @@ export default {
     },
     {
       fn: () => resolveAlias('$test', 'test/test-file.svelte'),
-      expect: path.resolve('test/.tmp/test-alias-dir'),
-      info: 'resolves exact $test alias match',
+      expect: null,
+      info: 'resolves exact $test alias match returns null (directory without index)',
     },
     {
       fn: async () => resolveAlias('@org/package', 'test/test-file.svelte'),

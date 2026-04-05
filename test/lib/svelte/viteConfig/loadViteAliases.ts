@@ -1,8 +1,8 @@
 import path from 'node:path'
-import { fs } from '@magic/fs'
-import { loadViteAliases } from '../../src/lib/svelte/viteConfig/loadViteAliases.js'
-import { aliasCache } from '../../src/lib/svelte/viteConfig/cache.js'
-import { configCache } from '../../src/lib/svelte/viteConfig/cache.js'
+import fs from '@magic/fs'
+
+import { loadViteAliases } from '../../../../src/lib/svelte/viteConfig/loadViteAliases.js'
+import { aliasCache, configCache } from '../../../../src/lib/svelte/viteConfig/cache.js'
 
 const TEST_ROOT = path.join(process.cwd(), 'test', '.tmp', 'viteConfig', 'loadViteAliases')
 const CONFIG_PATH = path.join(TEST_ROOT, 'vite.config.js')
@@ -12,7 +12,8 @@ export default {
   beforeAll: async () => {
     aliasCache.clear()
     configCache.clear()
-    await fs.mkdir(TEST_ROOT, { recursive: true })
+    await fs.mkdirp(TEST_ROOT)
+
     return async () => {
       await fs.rmrf(TEST_ROOT)
     }
@@ -20,6 +21,10 @@ export default {
   tests: [
     {
       fn: async () => {
+        await aliasCache.clear()
+        await configCache.clear()
+        await fs.rmrf(TEST_ROOT)
+        await fs.mkdir(TEST_ROOT, { recursive: true })
         // No config file
         const result = await loadViteAliases(TEST_ROOT)
         return result
@@ -29,14 +34,26 @@ export default {
     },
     {
       fn: async () => {
+        await aliasCache.clear()
+        await configCache.clear()
+        await fs.rmrf(TEST_ROOT)
+        await fs.mkdir(TEST_ROOT, { recursive: true })
         // Valid config
         await fs.writeFile(
           CONFIG_PATH,
           `
-          export default defineConfig({
-            resolve: { alias: { find: '@', replacement: './src' } }
-          })
-        `,
+            export default defineConfig({
+              resolve: { alias: { find: '@', replacement: './src' } }
+            })
+          `,
+        )
+        await fs.writeFile(
+          CONFIG_PATH,
+          `
+            export default defineConfig({
+              resolve: { alias: { find: '@', replacement: './src' } }
+            })
+          `,
         )
         const result = await loadViteAliases(TEST_ROOT)
         return result
@@ -46,6 +63,10 @@ export default {
     },
     {
       fn: async () => {
+        await aliasCache.clear()
+        await configCache.clear()
+        await fs.rmrf(TEST_ROOT)
+        await fs.mkdir(TEST_ROOT, { recursive: true })
         // Config with parse error (invalid syntax)
         await fs.writeFile(CONFIG_PATH, `invalid syntax`)
         const result = await loadViteAliases(TEST_ROOT)
@@ -56,6 +77,10 @@ export default {
     },
     {
       fn: async () => {
+        await aliasCache.clear()
+        await configCache.clear()
+        await fs.rmrf(TEST_ROOT)
+        await fs.mkdir(TEST_ROOT, { recursive: true })
         // Cache hit: pre-populate cache
         aliasCache.set(TEST_ROOT + ':vite', [{ find: '$lib', replacement: '/root/src/lib' }])
         const result = await loadViteAliases(TEST_ROOT)

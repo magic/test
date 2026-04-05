@@ -1,13 +1,12 @@
 import path from 'node:path'
 import { fs } from '@magic/fs'
-import { aliasCache } from '../../src/lib/svelte/viteConfig/cache.js'
-import { parseTsConfig } from '../../src/lib/svelte/viteConfig/parseTsConfig.js'
+import { aliasCache } from '../../../../src/lib/svelte/viteConfig/cache.js'
+import { parseTsConfig } from '../../../../src/lib/svelte/viteConfig/parseTsConfig.js'
 
 const TEST_ROOT = path.join(process.cwd(), 'test', '.tmp', 'viteConfig', 'parseTsConfig')
 
 export default {
   beforeAll: async () => {
-    aliasCache.clear()
     await fs.mkdir(TEST_ROOT, { recursive: true })
   },
   afterAll: async () => {
@@ -16,7 +15,13 @@ export default {
   tests: [
     {
       fn: async () => {
-        const result = await parseTsConfig(TEST_ROOT)
+        await aliasCache.clear()
+        const testDir = path.join(
+          TEST_ROOT,
+          'run-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        )
+        await fs.mkdir(testDir, { recursive: true })
+        const result = await parseTsConfig(testDir)
         return result
       },
       expect: [],
@@ -24,8 +29,14 @@ export default {
     },
     {
       fn: async () => {
+        await aliasCache.clear()
+        const testDir = path.join(
+          TEST_ROOT,
+          'run-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        )
+        await fs.mkdir(testDir, { recursive: true })
         await fs.writeFile(
-          path.join(TEST_ROOT, 'tsconfig.json'),
+          path.join(testDir, 'tsconfig.json'),
           JSON.stringify({
             compilerOptions: {
               paths: {
@@ -35,7 +46,7 @@ export default {
             },
           }),
         )
-        const result = await parseTsConfig(TEST_ROOT)
+        const result = await parseTsConfig(testDir)
         return result.length
       },
       expect: 2,
@@ -43,8 +54,14 @@ export default {
     },
     {
       fn: async () => {
+        await aliasCache.clear()
+        const testDir = path.join(
+          TEST_ROOT,
+          'run-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        )
+        await fs.mkdir(testDir, { recursive: true })
         await fs.writeFile(
-          path.join(TEST_ROOT, 'tsconfig.json'),
+          path.join(testDir, 'tsconfig.json'),
           JSON.stringify({
             compilerOptions: {
               baseUrl: '.',
@@ -54,7 +71,7 @@ export default {
             },
           }),
         )
-        const svelteKitDir = path.join(TEST_ROOT, '.svelte-kit')
+        const svelteKitDir = path.join(testDir, '.svelte-kit')
         await fs.mkdir(svelteKitDir)
         await fs.writeFile(
           path.join(svelteKitDir, 'tsconfig.json'),
@@ -66,7 +83,7 @@ export default {
             },
           }),
         )
-        const result = await parseTsConfig(TEST_ROOT)
+        const result = await parseTsConfig(testDir)
         const libAlias = result.find(a => String(a.find).includes('$lib'))
         return libAlias?.replacement.includes('src/lib')
       },
@@ -75,8 +92,14 @@ export default {
     },
     {
       fn: async () => {
+        await aliasCache.clear()
+        const testDir = path.join(
+          TEST_ROOT,
+          'run-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        )
+        await fs.mkdir(testDir, { recursive: true })
         await fs.writeFile(
-          path.join(TEST_ROOT, 'tsconfig.json'),
+          path.join(testDir, 'tsconfig.json'),
           JSON.stringify({
             compilerOptions: {
               baseUrl: '/absolute/path',
@@ -86,17 +109,23 @@ export default {
             },
           }),
         )
-        const result = await parseTsConfig(TEST_ROOT)
+        const result = await parseTsConfig(testDir)
         const alias = result[0]
-        return alias.replacement.includes('/absolute/path')
+        return alias?.replacement?.includes('/absolute/path')
       },
       expect: true,
       info: 'handles absolute baseUrl',
     },
     {
       fn: async () => {
-        await fs.writeFile(path.join(TEST_ROOT, 'tsconfig.json'), '{ invalid json')
-        const result = await parseTsConfig(TEST_ROOT)
+        await aliasCache.clear()
+        const testDir = path.join(
+          TEST_ROOT,
+          'run-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        )
+        await fs.mkdir(testDir, { recursive: true })
+        await fs.writeFile(path.join(testDir, 'tsconfig.json'), '{ invalid json')
+        const result = await parseTsConfig(testDir)
         return result
       },
       expect: [],

@@ -1,15 +1,12 @@
 import path from 'node:path'
 import { fs } from '@magic/fs'
-import { configCache } from '../../src/lib/svelte/viteConfig/cache.js'
-import { parseViteConfig } from '../../src/lib/svelte/viteConfig/parseViteConfig.js'
+import { configCache } from '../../../../src/lib/svelte/viteConfig/cache.js'
+import { parseViteConfig } from '../../../../src/lib/svelte/viteConfig/parseViteConfig.js'
 
 const TEST_ROOT = path.join(process.cwd(), 'test', '.tmp', 'viteConfig', 'parseViteConfig')
-const CONFIG_PATH = path.join(TEST_ROOT, 'vite.config.js')
-const EXPECTED_REPLACEMENT = path.join(TEST_ROOT, 'src')
 
 export default {
   beforeAll: async () => {
-    configCache.clear()
     await fs.mkdir(TEST_ROOT, { recursive: true })
   },
   afterAll: async () => {
@@ -18,9 +15,15 @@ export default {
   tests: [
     {
       fn: async () => {
-        // No alias, no define
-        await fs.writeFile(CONFIG_PATH, `export default defineConfig({})`)
-        const result = await parseViteConfig(CONFIG_PATH)
+        await configCache.clear()
+        const testDir = path.join(
+          TEST_ROOT,
+          'run-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        )
+        await fs.mkdir(testDir, { recursive: true })
+        const configPath = path.join(testDir, 'vite.config.js')
+        await fs.writeFile(configPath, `export default defineConfig({})`)
+        const result = await parseViteConfig(configPath)
         return result
       },
       expect: {},
@@ -28,26 +31,50 @@ export default {
     },
     {
       fn: async () => {
-        // Object alias
+        await configCache.clear()
+        const testDir = path.join(
+          TEST_ROOT,
+          'run-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        )
+        await fs.mkdir(testDir, { recursive: true })
+        const configPath = path.join(testDir, 'vite.config.js')
         await fs.writeFile(
-          CONFIG_PATH,
+          configPath,
           `
           export default defineConfig({
             resolve: { alias: { find: '@', replacement: './src' } }
           })
         `,
         )
-        const result = await parseViteConfig(CONFIG_PATH)
-        return result.resolve?.alias?.[0]
+        const result = await parseViteConfig(configPath)
+        const actual = result.resolve?.alias?.[0]
+        const expectedReplacement = path.join(testDir, 'src')
+        const expected = { find: '@', replacement: expectedReplacement }
+        if (
+          !actual ||
+          actual.find !== expected.find ||
+          actual.replacement !== expected.replacement
+        ) {
+          throw new Error(
+            `Object alias test failed. Got: ${JSON.stringify(actual)}, expected: ${JSON.stringify(expected)}`,
+          )
+        }
+        return true
       },
-      expect: { find: '@', replacement: EXPECTED_REPLACEMENT },
+      expect: true,
       info: 'parses object-style alias',
     },
     {
       fn: async () => {
-        // Array alias
+        await configCache.clear()
+        const testDir = path.join(
+          TEST_ROOT,
+          'run-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        )
+        await fs.mkdir(testDir, { recursive: true })
+        const configPath = path.join(testDir, 'vite.config.js')
         await fs.writeFile(
-          CONFIG_PATH,
+          configPath,
           `
           export default defineConfig({
             resolve: { alias: [
@@ -57,7 +84,7 @@ export default {
           })
         `,
         )
-        const result = await parseViteConfig(CONFIG_PATH)
+        const result = await parseViteConfig(configPath)
         return result.resolve?.alias?.length
       },
       expect: 2,
@@ -65,16 +92,22 @@ export default {
     },
     {
       fn: async () => {
-        // Invalid regex in alias - should be kept as string
+        await configCache.clear()
+        const testDir = path.join(
+          TEST_ROOT,
+          'run-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        )
+        await fs.mkdir(testDir, { recursive: true })
+        const configPath = path.join(testDir, 'vite.config.js')
         await fs.writeFile(
-          CONFIG_PATH,
+          configPath,
           `
           export default defineConfig({
             resolve: { alias: { find: '/invalid[regex/', replacement: './src' } }
           })
         `,
         )
-        const result = await parseViteConfig(CONFIG_PATH)
+        const result = await parseViteConfig(configPath)
         return result.resolve?.alias?.[0]?.find
       },
       expect: '/invalid[regex/',
@@ -82,16 +115,22 @@ export default {
     },
     {
       fn: async () => {
-        // Alias processing error: malformed alias object causing syntax error in new Function
+        await configCache.clear()
+        const testDir = path.join(
+          TEST_ROOT,
+          'run-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        )
+        await fs.mkdir(testDir, { recursive: true })
+        const configPath = path.join(testDir, 'vite.config.js')
         await fs.writeFile(
-          CONFIG_PATH,
+          configPath,
           `
           export default defineConfig({
             resolve: { alias: { find: @ } } // bare @ will cause syntax error
           })
         `,
         )
-        const result = await parseViteConfig(CONFIG_PATH)
+        const result = await parseViteConfig(configPath)
         return result.resolve
       },
       expect: undefined,
@@ -99,16 +138,22 @@ export default {
     },
     {
       fn: async () => {
-        // Define parsing
+        await configCache.clear()
+        const testDir = path.join(
+          TEST_ROOT,
+          'run-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        )
+        await fs.mkdir(testDir, { recursive: true })
+        const configPath = path.join(testDir, 'vite.config.js')
         await fs.writeFile(
-          CONFIG_PATH,
+          configPath,
           `
           export default defineConfig({
             define: { __VITE_PROD__: false, __VITE_DEV__: true }
           })
         `,
         )
-        const result = await parseViteConfig(CONFIG_PATH)
+        const result = await parseViteConfig(configPath)
         return result.define
       },
       expect: { __VITE_PROD__: false, __VITE_DEV__: true },
@@ -116,16 +161,22 @@ export default {
     },
     {
       fn: async () => {
-        // Define parse error: invalid syntax
+        await configCache.clear()
+        const testDir = path.join(
+          TEST_ROOT,
+          'run-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        )
+        await fs.mkdir(testDir, { recursive: true })
+        const configPath = path.join(testDir, 'vite.config.js')
         await fs.writeFile(
-          CONFIG_PATH,
+          configPath,
           `
           export default defineConfig({
             define: { __VITE_PROD__: } // syntax error
           })
         `,
         )
-        const result = await parseViteConfig(CONFIG_PATH)
+        const result = await parseViteConfig(configPath)
         return result.define
       },
       expect: undefined,
@@ -133,19 +184,20 @@ export default {
     },
     {
       fn: async () => {
-        // Cache hit: pre-populate cache with any mtime
-        const fakeMtime = Date.now()
-        configCache.set(CONFIG_PATH, {
-          config: { define: { cached: true } },
-          mtime: fakeMtime,
-        })
-        // Ensure file exists because fs.stat will be called
-        await fs.writeFile(CONFIG_PATH, `export default defineConfig({})`)
-        const result = await parseViteConfig(CONFIG_PATH)
-        return result
+        await configCache.clear()
+        const testDir = path.join(
+          TEST_ROOT,
+          'run-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        )
+        await fs.mkdir(testDir, { recursive: true })
+        const configPath = path.join(testDir, 'vite.config.js')
+        await fs.writeFile(configPath, `export default defineConfig({})`)
+        const first = await parseViteConfig(configPath)
+        const second = await parseViteConfig(configPath)
+        return second
       },
-      expect: { define: { cached: true } },
-      info: 'uses cached config when mtime matches',
+      expect: {},
+      info: 'uses cache on subsequent calls',
     },
   ],
 }

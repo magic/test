@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { fs } from '@magic/fs'
-import { findProjectRoot } from '../../src/lib/svelte/viteConfig/findProjectRoot.js'
+import { findProjectRoot } from '../../../../src/lib/svelte/viteConfig/findProjectRoot.js'
 
 const TEST_ROOT = path.join(process.cwd(), 'test', '.tmp', 'viteConfig', 'findProjectRoot')
 
@@ -14,34 +14,46 @@ export default {
   tests: [
     {
       fn: async () => {
-        const subdir = path.join(TEST_ROOT, 'subdir')
+        const testDir = path.join(TEST_ROOT, 'run1')
+        await fs.mkdir(testDir, { recursive: true })
+        const subdir = path.join(testDir, 'subdir')
         await fs.mkdir(subdir)
-        await fs.writeFile(path.join(TEST_ROOT, 'package.json'), JSON.stringify({ name: 'test' }))
+        await fs.writeFile(path.join(testDir, 'package.json'), JSON.stringify({ name: 'test' }))
         const result = await findProjectRoot(subdir)
-        return result
+        const expected = testDir
+        if (result !== expected) throw new Error(`Expected ${expected}, got ${result}`)
+        return true
       },
-      expect: TEST_ROOT,
+      expect: true,
       info: 'finds package.json in parent directory',
     },
     {
       fn: async () => {
-        const deepDir = path.join(TEST_ROOT, 'a', 'b', 'c')
+        const testDir = path.join(TEST_ROOT, 'run2')
+        await fs.mkdir(testDir, { recursive: true })
+        const deepDir = path.join(testDir, 'a', 'b', 'c')
         await fs.mkdir(deepDir, { recursive: true })
-        await fs.writeFile(path.join(TEST_ROOT, 'package.json'), JSON.stringify({ name: 'test' }))
+        await fs.writeFile(path.join(testDir, 'package.json'), JSON.stringify({ name: 'test' }))
         const result = await findProjectRoot(deepDir)
-        return result
+        const expected = testDir
+        if (result !== expected) throw new Error(`Expected ${expected}, got ${result}`)
+        return true
       },
-      expect: TEST_ROOT,
+      expect: true,
       info: 'traverses up to root package.json',
     },
     {
       fn: async () => {
-        const subdir = path.join(TEST_ROOT, 'nomatch')
+        const testDir = path.join(TEST_ROOT, 'run3')
+        await fs.mkdir(testDir, { recursive: true })
+        const subdir = path.join(testDir, 'nomatch')
         await fs.mkdir(subdir)
         const result = await findProjectRoot(subdir)
-        return result
+        const expected = process.cwd()
+        if (result !== expected) throw new Error(`Expected ${expected}, got ${result}`)
+        return true
       },
-      expect: process.cwd(),
+      expect: true,
       info: 'falls back to process.cwd() when no package.json found',
     },
   ],
