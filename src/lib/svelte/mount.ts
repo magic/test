@@ -4,12 +4,12 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import log from '@magic/log'
 import is from '@magic/types'
-import * as HappyDOM from 'happy-dom'
 
 import { compileSvelteWithWrite } from './compile.ts'
 import { initDOM, getDocument, getWindow } from '../dom.ts'
 import type { ComponentProps } from '../../types.ts'
 import { createContext, runWithContext } from './shims/$app/state.ts'
+import { detectSvelteKitImports, needsSvelteKitContext } from './detect-sveltekit-imports.js'
 
 let svelteMount: Function | undefined
 
@@ -116,8 +116,7 @@ export const mount = async (
 
   // Read source to detect $app imports before compilation
   const sourceCode = await fs.readFile(resolvedPath, 'utf-8')
-  const { detectSvelteKitImports, needsSvelteKitContext } =
-    await import('./detect-sveltekit-imports.js')
+
   const detection = await detectSvelteKitImports(sourceCode)
   const usesApp = needsSvelteKitContext(detection)
 
@@ -160,7 +159,10 @@ export const mount = async (
 
     const rawProps = options.props
 
-    if (rawProps !== undefined && (!is.object(rawProps) || is.null(rawProps) || is.array(rawProps))) {
+    if (
+      rawProps !== undefined &&
+      (!is.object(rawProps) || is.null(rawProps) || is.array(rawProps))
+    ) {
       throw new Error(`Props must be an object, got ${typeof rawProps}`)
     }
 
