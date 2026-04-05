@@ -324,41 +324,34 @@ const resolveAndCompileImport = async (
     if (aliasResolved) {
       // Continue to file resolution below
       var resolvedPath = aliasResolved
-     } else {
-       // Could not resolve via alias - try manual resolution for $lib or $app
-       if (importPath.startsWith('$lib')) {
-         // Manual fallback: $lib/forms -> src/lib/forms (relative to project root)
-         const rootDir = await (async () => {
-           let current = path.dirname(sourceFilePath)
-           const root = process.cwd()
-           while (current && current !== path.dirname(current)) {
-             const pkgPath = path.join(current, 'package.json')
-             if (await fs.exists(pkgPath)) {
-               return current
-             }
-             current = path.dirname(current)
-           }
-           return root
-         })()
-         const aliasPath = importPath.slice(1) // Remove $
-         resolvedPath = path.resolve(rootDir, 'src', aliasPath)
-        } else if (importPath.startsWith('$app')) {
-          // Manual fallback: $app/* -> src/lib/svelte/shim-$app/*
-          const rootDir = process.cwd()
-          const shimName = importPath.slice(5) // after "$app/"
-          resolvedPath = path.join(rootDir, 'src/lib/svelte/shim-$app', shimName)
-        }
-             current = path.dirname(current)
-           }
-           return root
-         })()
-         const shimName = importPath.slice(5) // after "$app/"
-         resolvedPath = path.join(rootDir, 'src/lib/svelte/shim-$app', shimName)
-       } else {
-         // Could not resolve, skip processing
-         return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
-       }
-     }
+    } else {
+      // Could not resolve via alias - try manual resolution for $lib or $app
+      if (importPath.startsWith('$lib')) {
+        // Manual fallback: $lib/forms -> src/lib/forms (relative to project root)
+        const rootDir = await (async () => {
+          let current = path.dirname(sourceFilePath)
+          const root = process.cwd()
+          while (current && current !== path.dirname(current)) {
+            const pkgPath = path.join(current, 'package.json')
+            if (await fs.exists(pkgPath)) {
+              return current
+            }
+            current = path.dirname(current)
+          }
+          return root
+        })()
+        const aliasPath = importPath.slice(1) // Remove $
+        resolvedPath = path.resolve(rootDir, 'src', aliasPath)
+      } else if (importPath.startsWith('$app')) {
+        // Manual fallback: $app/* -> src/lib/svelte/shims/$app/*
+        const rootDir = process.cwd()
+        const shimName = importPath.slice(5) // after "$app/"
+        resolvedPath = path.join(rootDir, 'src/lib/svelte/shims/$app', shimName)
+      } else {
+        // Could not resolve, skip processing
+        return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
+      }
+    }
   } else {
     // Type 3: Relative imports (./something, ../something)
     // Only call resolveAlias for relative imports
@@ -644,8 +637,6 @@ export const compileSvelteWithImports = async (
 export const compileSvelteWithWrite = async (
   filePath: string,
 ): Promise<{ js: { code: string }; css: CssObject | null; tmpFile: string; importUrl: string }> => {
-  await cleanTempFiles()
-
   const { js, css } = await compileSvelteWithImports(filePath)
 
   // Apply transform for Node.js ESM compatibility
@@ -654,17 +645,12 @@ export const compileSvelteWithWrite = async (
   const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
   const relPath = path.relative(process.cwd(), resolvedPath)
   const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
-  const tmpFileAbs = path.join(process.cwd(), tmpFile)
+  const tmpFileAbs = path.resolve(process.cwd(), tmpFile)
   const importUrl = pathToFileURL(tmpFileAbs).href
 
-  const release = await acquireLock(tmpFile)
-
-  try {
-    await fs.mkdirp(path.dirname(tmpFile))
-    await fs.writeFile(tmpFile, transformedCode)
-  } finally {
-    release()
-  }
+  // Write file WITHOUT lock to avoid potential blocking issues
+  await fs.mkdirp(path.dirname(tmpFileAbs))
+  await fs.writeFile(tmpFileAbs, transformedCode)
 
   return { js: { code: transformedCode }, css, tmpFile, importUrl }
 }

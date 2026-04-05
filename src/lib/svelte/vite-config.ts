@@ -28,6 +28,19 @@ export const aliasCache = new Map<string, AliasEntry[]>()
 
 export const defineCache = new Map<string, Record<string, unknown>>()
 
+const svelteKitDetectionCache = new Map<string, boolean>()
+
+export async function detectSvelteKit(rootDir: string): Promise<boolean> {
+  const cached = svelteKitDetectionCache.get(rootDir)
+  if (cached !== undefined) return cached
+
+  const kitPath = path.join(rootDir, 'node_modules', '@sveltejs', 'kit')
+  const exists = await fs.exists(kitPath)
+
+  svelteKitDetectionCache.set(rootDir, exists)
+  return exists
+}
+
 const findProjectRoot = async (sourceDir: string): Promise<string> => {
   let current = sourceDir
   const root = process.cwd()
@@ -534,15 +547,15 @@ export const resolveViteAlias = async (
   const sourceDir = path.dirname(sourceFilePath)
   const rootDir = await findProjectRoot(sourceDir)
 
-  // Direct handling for $app/* imports to local test shims (highest priority)
+  // Use shims for $app/* imports (SvelteKit internal deps can't be resolved in test env)
   if (importPath.startsWith('$app/')) {
     const shimName = importPath.slice(5) // after "$app/"
-    const shimPath = path.join(rootDir, 'src/lib/svelte/shim-$app', shimName)
+    const shimPath = path.join(rootDir, 'src/lib/svelte/shims/$app', shimName)
     const candidates = [
       shimPath + '.js',
       shimPath + '.ts',
       path.join(shimPath, 'index.js'),
-      path.join(shimPath, 'index.ts')
+      path.join(shimPath, 'index.ts'),
     ]
     for (const candidate of candidates) {
       if (await fs.exists(candidate)) {
@@ -608,12 +621,12 @@ export const resolveViteAlias = async (
   // Shim $app/* imports to local test shims
   if (importPath.startsWith('$app/')) {
     const shimName = importPath.slice(5) // after "$app/"
-    const shimPath = path.join(rootDir, 'src/lib/svelte/shim-$app', shimName)
+    const shimPath = path.join(rootDir, 'src/lib/svelte/shims/$app', shimName)
     const candidates = [
       shimPath + '.js',
       shimPath + '.ts',
       path.join(shimPath, 'index.js'),
-      path.join(shimPath, 'index.ts')
+      path.join(shimPath, 'index.ts'),
     ]
     for (const candidate of candidates) {
       if (await fs.exists(candidate)) {
@@ -649,37 +662,37 @@ export function getSvelteKitConfig(rootDir: string): Record<string, any> {
     path.join(rootDir, 'vite.config.js'),
     path.join(rootDir, 'vite.config.mts'),
     path.join(rootDir, 'vite.config.mjs'),
-    path.join(rootDir, 'vite.config.cjs')
-  ];
+    path.join(rootDir, 'vite.config.cjs'),
+  ]
   for (const configPath of configPaths) {
     try {
       // Check existence via fs.exists would be async; we're using sync read
       // Use try/catch
-      const content = require('fs').readFileSync(configPath, 'utf-8');
+      const content = require('fs').readFileSync(configPath, 'utf-8')
       // Look for defineConfig({ kit: { ... } })
-      const kitMatch = content.match(/defineConfig\s*\(\s*\{[\s\S]*?kit\s*:\s*\{([\s\S]*?)\}/);
+      const kitMatch = content.match(/defineConfig\s*\(\s*\{[\s\S]*?kit\s*:\s*\{([\s\S]*?)\}/)
       if (kitMatch) {
-        const kitConfig = kitMatch[1];
+        const kitConfig = kitMatch[1]
         const parseVal = (key: string) => {
-          const m = kitConfig.match(new RegExp(`${key}\\s*:\\s*([^,\\}\\n]+)`));
+          const m = kitConfig.match(new RegExp(`${key}\\s*:\\s*([^,\\}\\n]+)`))
           if (m) {
-            let val = m[1].trim();
-            if (val === 'true' || val === 'false') return val === 'true';
-            if (val.startsWith("'") || val.startsWith('"')) return val.slice(1, -1);
-            return val;
+            let val = m[1].trim()
+            if (val === 'true' || val === 'false') return val === 'true'
+            if (val.startsWith("'") || val.startsWith('"')) return val.slice(1, -1)
+            return val
           }
-          return undefined;
-        };
+          return undefined
+        }
         return {
           dev: parseVal('dev'),
           base: parseVal('base'),
           version: parseVal('version'),
-          building: parseVal('building')
-        };
+          building: parseVal('building'),
+        }
       }
     } catch (e) {
       // file not found or parse error, continue
     }
   }
-  return {};
+  return {}
 }
