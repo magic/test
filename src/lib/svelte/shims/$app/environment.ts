@@ -27,20 +27,28 @@ function getViteConfig(): ViteKitConfig {
         const kitMatch = content.match(/defineConfig\s*\(\s*\{[\s\S]*?kit\s*:\s*\{([\s\S]*?)\}/)
         if (kitMatch) {
           const kitBlock = kitMatch[1]
-          const parseVal = (key: string): any => {
-            const m = kitBlock.match(new RegExp(`${key}\s*:\s*([^,\}\n]+)`))
+          const parseValStr = (key: string): string | undefined => {
+            const m = kitBlock.match(new RegExp(`${key}\\s*:\\s*([^,\\}\\n]+)`))
             if (m) {
               let val = m[1].trim()
-              if (val === 'true' || val === 'false') return val === 'true'
               if (val.startsWith("'") || val.startsWith('"')) return val.slice(1, -1)
               return val
             }
             return undefined
           }
+          const parseValBool = (key: string): boolean | undefined => {
+            const m = kitBlock.match(new RegExp(`${key}\\s*:\\s*([^,\\}\\n]+)`))
+            if (m) {
+              const val = m[1].trim()
+              if (val === 'true') return true
+              if (val === 'false') return false
+            }
+            return undefined
+          }
           return {
-            dev: parseVal('dev'),
-            building: parseVal('building'),
-            version: parseVal('version'),
+            dev: parseValBool('dev'),
+            building: parseValBool('building'),
+            version: parseValStr('version'),
           }
         }
       }

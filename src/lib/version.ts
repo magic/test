@@ -93,5 +93,5 @@ export const test = (
 export const version = (
   lib: Record<string, unknown>,
   spec: Record<string, unknown>,
-  parent: string,
+  parent: string = '',
 ): LibTestResult[] => test(lib, spec, parent).flat(Infinity) as LibTestResult[]

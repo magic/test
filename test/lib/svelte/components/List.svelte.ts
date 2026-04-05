@@ -2,6 +2,14 @@ import { html, tick } from '../../../../src/lib/svelte/index.js'
 
 const component = './src/lib/svelte/components/List.svelte'
 
+type TestCase = {
+  component: string
+  props?: Record<string, unknown>
+  fn: (ctx: { target: unknown; component?: unknown }) => unknown
+  expect?: unknown
+  info?: string
+}
+
 export default [
   {
     component,
@@ -12,7 +20,7 @@ export default [
       ],
       title: 'My List',
     },
-    fn: async ({ target }) => {
+    fn: async ({ target }: { target: unknown; component?: unknown }) => {
       const result = html(target)
       return result.includes('My List') && result.includes('Item 1') && result.includes('Item 2')
     },
@@ -22,8 +30,8 @@ export default [
   {
     component,
     props: { items: [{ id: 1, text: 'Item 1' }], title: 'My List' },
-    fn: async ({ component: instance }) => {
-      return instance.itemsList.length
+    fn: async ({ component: instance }: { target: unknown; component?: unknown }) => {
+      return (instance as { itemsList: unknown[] }).itemsList.length
     },
     expect: 1,
     info: 'returns itemsList from component',
@@ -36,11 +44,13 @@ export default [
         { id: 2, text: 'Item 2' },
       ],
     },
-    fn: async ({ target, component: instance }) => {
-      const removeButtons = target.querySelectorAll('.remove-btn')
+    fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
+      const removeButtons = (target as HTMLElement).querySelectorAll<HTMLButtonElement>(
+        '.remove-btn',
+      )
       removeButtons[0].click()
       await tick()
-      return instance.itemsList.length
+      return (instance as { itemsList: unknown[] }).itemsList.length
     },
     expect: 1,
     info: 'remove button removes item from list',
@@ -48,7 +58,7 @@ export default [
   {
     component,
     props: { items: [] },
-    fn: async ({ target }) => {
+    fn: async ({ target }: { target: unknown; component?: unknown }) => {
       return html(target).includes('Total: 0')
     },
     expect: true,
@@ -57,7 +67,7 @@ export default [
   {
     component,
     props: { items: [{ id: 1, text: 'Item 1' }] },
-    fn: async ({ target }) => {
+    fn: async ({ target }: { target: unknown; component?: unknown }) => {
       return html(target).includes('Total: 1')
     },
     expect: true,
@@ -66,7 +76,7 @@ export default [
   {
     component,
     props: { items: [{ id: 1, text: 'Item 1' }] },
-    fn: async ({ target }) => {
+    fn: async ({ target }: { target: unknown; component?: unknown }) => {
       return html(target).includes('List')
     },
     expect: true,
@@ -81,13 +91,15 @@ export default [
         { id: 3, text: 'Item 3' },
       ],
     },
-    fn: async ({ target, component: instance }) => {
-      const removeButtons = target.querySelectorAll('.remove-btn')
+    fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
+      const removeButtons = (target as HTMLElement).querySelectorAll<HTMLButtonElement>(
+        '.remove-btn',
+      )
       removeButtons[0].click()
       await tick()
-      return instance.itemsList.length
+      return (instance as { itemsList: unknown[] }).itemsList.length
     },
     expect: 2,
     info: 'remove button correctly updates itemsList length',
   },
-]
+] satisfies TestCase[]

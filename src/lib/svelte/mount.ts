@@ -4,6 +4,7 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import log from '@magic/log'
 import is from '@magic/types'
+import * as HappyDOM from 'happy-dom'
 
 import { compileSvelteWithWrite } from './compile.ts'
 import { initDOM, getDocument, getWindow } from '../dom.ts'
@@ -72,7 +73,17 @@ export const tick = async () => {
   await svelteTick()
 }
 
-export const mount = async (filePath: string, options: { props?: ComponentProps } = {}) => {
+export interface MountResult {
+  target: unknown
+  component: unknown
+  unmount: () => Promise<void>
+  css: unknown
+}
+
+export const mount = async (
+  filePath: string,
+  options: { props?: ComponentProps } = {},
+): Promise<MountResult> => {
   const doc = getDocument()
   if (!doc) {
     throw new Error('Failed to initialize DOM. Is happy-dom installed?')

@@ -111,7 +111,7 @@ const getImportNames = (content: string): string[] => {
   const defaultImport = /import\s+([a-zA-Z_$][\w$]*)\s+from\s+['"][^'"]+['"]/g
   const namespaceImport = /import\s*\*\s+as\s+([a-zA-Z_$][\w$]*)\s+from/g
 
-  const names = []
+  const names: string[] = []
   let match
 
   while ((match = namedImport.exec(content))) {
@@ -257,7 +257,7 @@ export const testImportsMutableModuleState = async (
  * Extract port patterns from code
  */
 const getPortPatterns = (code: string): string[] => {
-  const ports = []
+  const ports: string[] = []
 
   const listenMatch = code.match(/\.listen\(\s*(\d+)/g)
   if (listenMatch) {
@@ -286,7 +286,7 @@ const getPortPatterns = (code: string): string[] => {
  * Extract file paths from code
  */
 const getFilePaths = (code: string): string[] => {
-  const files = []
+  const files: string[] = []
 
   const fsMethodMatch = code.match(/fs\.\w+\(\s*['"]([^'"]+)['"]/g)
   if (fsMethodMatch) {

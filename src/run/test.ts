@@ -89,14 +89,14 @@ const prepareTest = (
   if (is.string(componentProp)) {
     return {
       componentFile: componentProp,
-      componentProps: explicitProps || ({} as ComponentProps),
+      componentProps: explicitProps || {},
     }
   }
 
   if (is.array(componentProp)) {
     return {
       componentFile: componentProp[0],
-      componentProps: componentProp[1] || ({} as ComponentProps),
+      componentProps: componentProp[1] || {},
     }
   }
 
@@ -126,7 +126,7 @@ const executeTest = async (
       }
     } finally {
       await unmount()
-      target.remove()
+      ;(target as HTMLElement).remove()
     }
   }
 
@@ -250,7 +250,7 @@ export const runTest = async (
     let expString
     let pass = false
 
-    const results = []
+    const results: { res: unknown; pass: boolean; exp?: unknown; expString?: unknown }[] = []
     for (let i = 0; i < runs; i++) {
       let res
       try {

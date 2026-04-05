@@ -32,7 +32,15 @@ const callbacks: CallbackList = {
   on: [],
 }
 
-export function goto(url: string | URL, opts: any = {}): Promise<void> {
+export function goto(
+  url: string | URL,
+  opts: {
+    replaceState?: boolean
+    keepFocus?: boolean
+    noScroll?: boolean
+    state?: Record<string, unknown>
+  } = {},
+): Promise<void> {
   const currentPage = get(page)
   const from: URL = currentPage.url
   const targetUrl = typeof url === 'string' ? new URL(url, from.origin) : url
@@ -90,13 +98,13 @@ export function goto(url: string | URL, opts: any = {}): Promise<void> {
   return Promise.resolve()
 }
 
-export function pushState(url: string | URL, state: any = {}): void {
+export function pushState(url: string | URL, state: Record<string, unknown> = {}): void {
   const currentPage = get(page)
   const targetUrl = typeof url === 'string' ? new URL(url, currentPage.url.origin) : url
   page.update(p => ({ ...p, url: targetUrl, ...state }))
 }
 
-export function replaceState(url: string | URL, state: any = {}): void {
+export function replaceState(url: string | URL, state: Record<string, unknown> = {}): void {
   const currentPage = get(page)
   const targetUrl = typeof url === 'string' ? new URL(url, currentPage.url.origin) : url
   page.update(p => ({ ...p, url: targetUrl, ...state }))
@@ -111,7 +119,7 @@ export function invalidateAll(): Promise<void> {
 }
 
 type PreloadedData =
-  | { type: 'loaded'; status: number; data: any }
+  | { type: 'loaded'; status: number; data: unknown }
   | { type: 'redirect'; location: string }
 
 export function preloadData(href: string): Promise<PreloadedData> {

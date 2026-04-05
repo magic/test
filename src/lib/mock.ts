@@ -22,7 +22,7 @@ interface MockFn {
  * Create a mock function with call tracking.
  */
 export const fn = (implementation?: (...args: unknown[]) => unknown): MockFn => {
-  const mockFn = (...args: unknown[]): unknown => {
+  const mockFn: MockFn = (...args: unknown[]): unknown => {
     mockFn.calls.push(args)
 
     if (mockFn._throwError) {
@@ -40,12 +40,12 @@ export const fn = (implementation?: (...args: unknown[]) => unknown): MockFn => 
     return result
   }
 
-  mockFn.calls = [] as unknown[][]
-  mockFn.returns = [] as unknown[]
-  mockFn.errors = [] as Array<Error | null>
+  mockFn.calls = []
+  mockFn.returns = []
+  mockFn.errors = []
   mockFn.callCount = 0
-  mockFn._returnValue = undefined as unknown
-  mockFn._throwError = null as Error | null
+  mockFn._returnValue = undefined
+  mockFn._throwError = null
 
   mockFn.mockReturnValue = function (value: unknown): MockFn {
     mockFn._returnValue = value
@@ -55,7 +55,7 @@ export const fn = (implementation?: (...args: unknown[]) => unknown): MockFn => 
 
   mockFn.mockThrow = function (error: Error): MockFn {
     mockFn._throwError = error
-    mockFn._returnValue = undefined as unknown
+    mockFn._returnValue = undefined
     return mockFn
   }
 
@@ -93,9 +93,9 @@ export const spy = (
 }
 
 export const log = {
-  log: () => !env.isNodeProd(),
-  warn: () => !env.isNodeProd(),
-  error: () => true,
-  time: () => !env.isNodeProd(),
-  timeEnd: () => !env.isNodeProd(),
+  log: (_?: unknown) => !env.isNodeProd(),
+  warn: (_?: unknown) => !env.isNodeProd(),
+  error: (_?: unknown) => true,
+  time: (_?: unknown) => !env.isNodeProd(),
+  timeEnd: (_?: unknown) => !env.isNodeProd(),
 }

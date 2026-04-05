@@ -1,11 +1,21 @@
 import is from '@magic/types'
 
-export const cleanError = (e: Error): string[] | Error => {
-  if (is.undefined(e?.stack?.split)) {
+/**
+ * @param {unknown} e
+ * @returns {string[] | Error | unknown}
+ */
+export const cleanError = (e: unknown): string[] | Error | unknown => {
+  if (!e || typeof e !== 'object') {
     return e
   }
 
-  const [err, file] = e.stack.split('\n')
+  const errObj = e as { stack?: string }
+
+  if (!errObj.stack || typeof errObj.stack !== 'string') {
+    return e
+  }
+
+  const [err, file] = errObj.stack.split('\n')
   if (!file) {
     return [err]
   }

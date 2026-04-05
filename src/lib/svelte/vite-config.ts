@@ -469,7 +469,7 @@ export const resolveAlias = async (
   const allAliases = [...viteAliases, ...tsAliases]
 
   for (const { find, replacement } of allAliases) {
-    let resolved = null
+    let resolved: string | null = null
 
     if (is.string(find)) {
       if (importPath === find || importPath.startsWith(find + '/')) {
@@ -572,7 +572,7 @@ export const resolveViteAlias = async (
     const allAliases = [...viteAliases, ...tsAliases]
 
     for (const { find, replacement } of allAliases) {
-      let resolved = null
+      let resolved: string | null = null
 
       if (is.string(find)) {
         if (importPath === find || importPath.startsWith(find + '/')) {

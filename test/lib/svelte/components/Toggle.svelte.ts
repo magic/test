@@ -2,11 +2,24 @@ import { mount, html } from '../../../../src/lib/svelte/index.js'
 
 const component = './src/lib/svelte/components/Toggle.svelte'
 
+type TestCase = {
+  component?: string
+  props?: Record<string, unknown>
+  fn: (ctx: { target: unknown; component?: unknown }) => unknown
+  expect?: unknown
+  info?: string
+}
+
+type TestCtx = {
+  target: unknown
+  component?: unknown
+}
+
 export default [
   {
     component,
     props: { label: 'Enable', initial: false },
-    fn: async ({ target }) => {
+    fn: async ({ target }: TestCtx) => {
       const result = html(target)
       return result.includes('Enable') && result.includes('OFF')
     },
@@ -16,17 +29,15 @@ export default [
   {
     component,
     props: { label: 'Enable', initial: true },
-    fn: async ({ component: instance }) => {
-      return instance.on
-    },
+    fn: async ({ component: instance }: TestCtx) => (instance as { on: boolean }).on,
     expect: true,
     info: 'returns on state from component',
   },
   {
     component,
     props: { label: 'Enable', initial: true },
-    fn: async ({ target }) => {
-      const input = target.querySelector('input')
+    fn: async ({ target }: TestCtx) => {
+      const input = (target as HTMLElement).querySelector<HTMLInputElement>('input')!
       return input.checked
     },
     expect: true,
@@ -35,13 +46,15 @@ export default [
   {
     fn: async () => {
       try {
-        await mount(component, { props: 'invalid' })
+        await mount(component, { props: 'invalid' } as unknown as {
+          props?: Record<string, unknown>
+        })
         return 'no error'
       } catch (e) {
-        return e.message
+        return (e as Error).message
       }
     },
     expect: 'Props must be an object, got string',
     info: 'throws when props is a string',
   },
-]
+] satisfies TestCase[]

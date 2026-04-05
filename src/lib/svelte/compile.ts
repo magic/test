@@ -190,7 +190,7 @@ const compileBarrel = async (
       throw new Error(`No Svelte exports found in barrel file: ${filePath}`)
     }
 
-    const compiledExports = []
+    const compiledExports: { name: string; absPath: string }[] = []
 
     for (const { name, path: sveltePath } of exports) {
       const { js } = await compileSvelte(sveltePath, currentChain)
@@ -506,7 +506,7 @@ const processImports = async (
 ): Promise<{ code: string }> => {
   let processedCode = code
   const sourceDir = path.dirname(sourceFilePath)
-  const imports = []
+  const imports: { imported: string; path: string; full: string }[] = []
 
   let match
   const regex = new RegExp(SVELTE_IMPORT_REGEX.source, 'g')

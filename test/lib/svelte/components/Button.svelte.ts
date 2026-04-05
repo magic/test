@@ -2,10 +2,17 @@ import { html } from '../../../../src/lib/svelte/index.js'
 
 const component = './src/lib/svelte/components/Button.svelte'
 
+type TestTarget = {
+  querySelector: (
+    selector: string,
+  ) => Element & { disabled: boolean; onclick: (() => void) | null; click: () => void }
+  querySelectorAll: (selector: string) => (Element & { click: () => void })[]
+}
+
 export type TestCase = {
   component: string
   props?: Record<string, unknown>
-  fn: (ctx: { target: unknown }) => boolean | Promise<boolean>
+  fn: (ctx: { target: TestTarget }) => boolean | Promise<boolean>
   expect?: boolean | ((result: boolean[]) => boolean)
   info?: string
 }
@@ -20,13 +27,13 @@ export default [
   {
     component,
     props: { disabled: true },
-    fn: ({ target }) => target.querySelector('button').disabled,
+    fn: ({ target }) => (target as TestTarget).querySelector('button').disabled,
     info: 'button disabled property is true',
   },
   {
     component,
     props: { disabled: false },
-    fn: ({ target }) => !target.querySelector('button').disabled,
+    fn: ({ target }) => !(target as TestTarget).querySelector('button').disabled,
     info: 'button disabled property is false when explicitly set',
   },
   {
@@ -48,7 +55,7 @@ export default [
     props: { onclick: () => {} },
     fn: async ({ target }) => {
       let clicked = false
-      const button = target.querySelector('button')
+      const button = (target as TestTarget).querySelector('button')
       button.onclick = () => {
         clicked = true
       }
@@ -61,7 +68,7 @@ export default [
     component,
     props: { disabled: true, onclick: () => {} },
     fn: async ({ target }) => {
-      const button = target.querySelector('button')
+      const button = (target as TestTarget).querySelector('button')
       let clicked = false
       button.onclick = () => {
         clicked = true
@@ -88,7 +95,8 @@ export default [
     component,
     props: { disabled: false, variant: 'primary' },
     fn: ({ target }) =>
-      html(target).includes('btn primary') && !target.querySelector('button').disabled,
+      html(target).includes('btn primary') &&
+      !(target as TestTarget).querySelector('button').disabled,
     info: 'button is enabled with explicit false and variant',
   },
   {
@@ -101,7 +109,8 @@ export default [
   {
     component,
     props: { disabled: undefined, variant: undefined },
-    fn: ({ target }) => html(target).includes('btn') && !target.querySelector('button').disabled,
+    fn: ({ target }) =>
+      html(target).includes('btn') && !(target as TestTarget).querySelector('button').disabled,
     info: 'handles undefined props with defaults',
   },
 ] satisfies TestCase[]

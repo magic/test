@@ -4,14 +4,10 @@
     "lib": ["ES2022", "DOM"],
     "module": "nodenext",
     "moduleResolution": "nodenext",
+    "rootDir": ".",
     "allowJs": true,
     "checkJs": true,
     "maxNodeModuleJsDepth": 2,
-    "declaration": true,
-    "declarationMap": true,
-    "emitDeclarationOnly": true,
-    "rootDir": "./src",
-    "outDir": "./types",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -34,35 +30,19 @@
     },
     "types": ["@types/node"],
 
-    // Emit
-    "sourceMap": true,
-    "removeComments": false,
-    "importHelpers": false,
-
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-
-    "allowImportingTsExtensions": true,
-    "noResolve": false
+    "allowImportingTsExtensions": true
   },
 
-  "include": ["src/app.d.ts", "src/**/*", "test/**/*"],
+  "include": ["test/**/*"],
 
-  "exclude": [
-    "node_modules",
-    "coverage",
-    ".tmp",
-    "dist",
-    "build",
-    "**/*.min.js",
-    "**/*.bundle.js",
-    "test/**/*"
-  ],
+  "exclude": ["node_modules", "coverage", ".tmp", "dist", "build", "**/*.min.js", "**/*.bundle.js"],
 
   "ts-node": {
     "esm": true,
     "experimentalSpecifierResolution": "node"
   },
 
-  "typeRoots": ["./types", "./node_modules/@types"]
+  "typeRoots": ["./node_modules/@types"]
 }

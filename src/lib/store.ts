@@ -18,19 +18,21 @@ export class Store {
    * Set values in the store state
    */
   set(val: Partial<State>): void {
-    Object.entries(val).forEach(([key, value]) => {
-      const stateKey = key as keyof State
-      if (is.objectNative(value)) {
-        const existing = this.state[stateKey]
-        if (is.objectNative(existing)) {
-          this.state[stateKey] = { ...(existing as object), ...(value as object) } as any
-        } else {
-          this.state[stateKey] = value as any
-        }
-      } else {
-        this.state[stateKey] = value as any
-      }
-    })
+    if (val.suites) {
+      this.state.suites = { ...this.state.suites, ...val.suites }
+    }
+    if (val.stats) {
+      this.state.stats = val.stats
+    }
+    if (val.pkg !== undefined) {
+      this.state.pkg = val.pkg
+    }
+    if (val.startTime !== undefined) {
+      this.state.startTime = val.startTime
+    }
+    if (val.results !== undefined) {
+      this.state.results = val.results
+    }
   }
 
   /**
@@ -44,12 +46,12 @@ export class Store {
   /**
    * Implementation of get method.
    */
-  get(key?: string, def?: unknown): State | unknown | undefined {
+  get<T>(key?: string, def?: T): State | T | undefined {
     if (!key) {
-      return this.state
+      return this.state as State
     }
     if (is.ownProp(this.state, key)) {
-      return this.state[key as keyof State]
+      return this.state[key as keyof State] as T
     }
     return def
   }

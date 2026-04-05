@@ -1,14 +1,15 @@
-export const html = (target: import('happy-dom').HTMLElement): string => target.innerHTML
+import * as HappyDOM from 'happy-dom'
 
-export const text = (target: import('happy-dom').HTMLElement): string => target.textContent ?? ''
+export const html = (target: unknown): string => (target as HappyDOM.HTMLElement).innerHTML
 
-export const component = (
-  instance: import('happy-dom').HTMLElement,
-): import('happy-dom').HTMLElement => instance
+export const text = (target: unknown): string => (target as HappyDOM.HTMLElement).textContent ?? ''
 
-export const props = (target: import('happy-dom').HTMLElement): Record<string, string> => {
+export const component = (instance: unknown): unknown => instance
+
+export const props = (target: unknown): Record<string, string> => {
+  const el = target as HappyDOM.HTMLElement
   const result: Record<string, string> = {}
-  for (const attr of target.attributes || []) {
+  for (const attr of el.attributes || []) {
     result[attr.name] = attr.value ?? ''
   }
   return result
