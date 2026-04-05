@@ -45,11 +45,6 @@ export const resolveAlias = async (
     }
 
     if (resolved) {
-      const exists = await fs.exists(resolved)
-      if (exists) {
-        return resolved
-      }
-
       // Try with extensions, handling .js->.ts conversion
       const withExtensions = [
         '',
@@ -71,12 +66,35 @@ export const resolveAlias = async (
         const withExt = resolved + ext
         const exists = await fs.exists(withExt)
         if (exists) {
+          // Skip if withExt is a directory and ext is empty (raw resolved path is a directory)
+          if (ext === '') {
+            try {
+              const stat = await fs.stat(withExt)
+              if (stat.isDirectory()) {
+                continue
+              }
+            } catch {
+              continue
+            }
+          }
           return withExt
         }
         // Also try without .js
         if (baseResolved !== resolved) {
           const noJsExt = baseResolved + ext
           if (await fs.exists(noJsExt)) {
+            // Similarly, skip if noJsExt is a directory when ext is empty?
+            // baseResolved likely is a file without extension, but if ext is '' then noJsExt = baseResolved (file). Check directory?
+            if (ext === '') {
+              try {
+                const stat = await fs.stat(noJsExt)
+                if (stat.isDirectory()) {
+                  continue
+                }
+              } catch {
+                continue
+              }
+            }
             return noJsExt
           }
         }

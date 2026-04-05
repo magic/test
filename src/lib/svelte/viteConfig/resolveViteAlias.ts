@@ -17,8 +17,8 @@ export const resolveViteAlias = async (
 ): Promise<string | null> => {
   const importType = classifyImport(importPath)
 
-  // Only handle vite-alias and bare imports here
-  if (importType !== 'vite-alias' && importType !== 'bare') {
+  // Only handle vite-alias, bare, and scoped imports here
+  if (importType !== 'vite-alias' && importType !== 'bare' && importType !== 'scoped') {
     return null
   }
 
@@ -43,58 +43,78 @@ export const resolveViteAlias = async (
     // If not found, fall through to other resolution methods
   }
 
-  // Handle $lib and other $app/*, $env/* aliases via tsconfig paths
-  if (importPath.startsWith('$')) {
-    const viteAliases = await loadViteAliases(rootDir)
-    const tsAliases = await parseTsConfig(rootDir)
-    const allAliases = [...viteAliases, ...tsAliases]
+   // Attempt to resolve using Vite/TSConfig aliases (for any non-relative import)
+   const viteAliases = await loadViteAliases(rootDir)
+   const tsAliases = await parseTsConfig(rootDir)
+   const allAliases = [...viteAliases, ...tsAliases]
 
-    for (const { find, replacement } of allAliases) {
-      let resolved: string | null = null
+   for (const { find, replacement } of allAliases) {
+     let resolved: string | null = null
 
-      if (is.string(find)) {
-        if (importPath === find || importPath.startsWith(find + '/')) {
-          if (importPath === find) {
-            resolved = replacement
-          } else {
-            resolved = importPath.replace(find, replacement)
-          }
-        }
-      } else if (is.regex(find)) {
-        const match = importPath.match(find)
-        if (match) {
-          resolved = importPath.replace(find, replacement)
-        }
-      }
+     if (is.string(find)) {
+       if (importPath === find || importPath.startsWith(find + '/')) {
+         if (importPath === find) {
+           resolved = replacement
+         } else {
+           resolved = importPath.replace(find, replacement)
+         }
+       }
+     } else if (is.regex(find)) {
+       const match = importPath.match(find)
+       if (match) {
+         resolved = importPath.replace(find, replacement)
+       }
+     }
 
-      if (resolved) {
-        // Check if file exists with various extensions
-        const extensions = ['', '.js', '.svelte', '.ts', '/index.js', '/index.svelte', '/index.ts']
+     if (resolved) {
+       // Check if file exists with various extensions
+       const extensions = ['', '.js', '.svelte', '.ts', '/index.js', '/index.svelte', '/index.ts']
 
-        for (const ext of extensions) {
-          const withExt = resolved + ext
-          const exists = await fs.exists(withExt)
-          if (exists) {
-            return withExt
-          }
-        }
-      }
-    }
+       for (const ext of extensions) {
+         const withExt = resolved + ext
+         const exists = await fs.exists(withExt)
+         if (exists) {
+           // Skip if withExt is a directory and ext is empty (raw resolved path is a directory)
+           if (ext === '') {
+             try {
+               const stat = await fs.stat(withExt)
+               if (stat.isDirectory()) {
+                 continue
+               }
+             } catch {
+               continue
+             }
+           }
+           return withExt
+         }
+       }
+     }
+   }
 
-    // Fallback: $lib maps to src/lib
-    if (importPath.startsWith('$lib')) {
-      const aliasPath = importPath.slice(1) // Remove $
-      const libPath = path.join(rootDir, 'src', aliasPath)
+   // Fallback: $lib maps to src/lib
+   if (importPath.startsWith('$lib')) {
+     const aliasPath = importPath.slice(1) // Remove $
+     const libPath = path.join(rootDir, 'src', aliasPath)
 
-      const extensions = ['', '.js', '.svelte', '.ts', '/index.js', '/index.svelte', '/index.ts']
-      for (const ext of extensions) {
-        const withExt = libPath + ext
-        if (await fs.exists(withExt)) {
-          return withExt
-        }
-      }
-    }
-  } // end if importPath starts with $
+     const extensions = ['', '.js', '.svelte', '.ts', '/index.js', '/index.svelte', '/index.ts']
+     for (const ext of extensions) {
+       const withExt = libPath + ext
+       if (await fs.exists(withExt)) {
+         // Skip if withExt is a directory and ext is empty
+         if (ext === '') {
+           try {
+             const stat = await fs.stat(withExt)
+             if (stat.isDirectory()) {
+               continue
+             }
+           } catch {
+             continue
+           }
+         }
+         return withExt
+       }
+     }
+   }
 
   // Shim $app/* imports to local test shims
   if (importPath.startsWith('$app/')) {

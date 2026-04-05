@@ -41,6 +41,25 @@ const INCLUDED_EXTENSIONS = ['.js', '.ts', '.mjs']
 
 const discoveredFiles: string[] = []
 
+// Ordered lists matching run.ts - hooks run in this order
+const BEFORE_ALL_FILES = [
+  '/beforeAll.js',
+  '/beforeall.js',
+  '/beforeAll.ts',
+  '/beforeall.ts',
+  '/beforeAll.mjs',
+  '/beforeall.mjs',
+]
+
+const AFTER_ALL_FILES = [
+  '/afterAll.js',
+  '/afterall.js',
+  '/afterAll.ts',
+  '/afterall.ts',
+  '/afterAll.mjs',
+  '/afterall.mjs',
+]
+
 const scanDir = async (dir: string): Promise<void> => {
   const exists = await fs.exists(dir)
   if (!exists) return
@@ -78,39 +97,56 @@ const extractExport = async (filePath: string): Promise<Record<string, unknown> 
   }
 }
 
-let globalBeforeAll: Function | null = null
+// Collect all beforeAll and afterAll hooks with their filenames
+const beforeAllHooks: Array<{ file: string; fn: Function }> = []
+const afterAllHooks: Array<{ file: string; fn: Function }> = []
+const beforeAllCleanup: (() => void | Promise<void>)[] = []
 
-let globalAfterAll: Function | null = null
-
-const processSpecialFiles = async () => {
+const processHookFiles = async () => {
   const filesToProcess = [...discoveredFiles]
   for (const filePath of filesToProcess) {
     const fileName = path.basename(filePath)
+
+    // Check if this is a beforeAll variant (case-sensitive matching)
     if (
       fileName === 'beforeAll.js' ||
+      fileName === 'beforeall.js' ||
       fileName === 'beforeAll.ts' ||
-      fileName === 'beforeAll.mjs'
+      fileName === 'beforeall.ts' ||
+      fileName === 'beforeAll.mjs' ||
+      fileName === 'beforeall.mjs'
     ) {
       const mod = await extractExport(filePath)
       if (mod && is.function(mod.default)) {
-        globalBeforeAll = mod.default as (tests: unknown) => void | Promise<void>
+        beforeAllHooks.push({
+          file: fileName,
+          fn: mod.default as (tests: unknown) => void | Promise<void>,
+        })
       }
       discoveredFiles.splice(discoveredFiles.indexOf(filePath), 1)
-    } else if (
+    }
+    // Check if this is an afterAll variant (case-sensitive matching)
+    else if (
       fileName === 'afterAll.js' ||
       fileName === 'afterAll.ts' ||
-      fileName === 'afterAll.mjs'
+      fileName === 'afterAll.mjs' ||
+      fileName === 'afterall.js' ||
+      fileName === 'afterall.ts' ||
+      fileName === 'afterall.mjs'
     ) {
       const mod = await extractExport(filePath)
       if (mod && is.function(mod.default)) {
-        globalAfterAll = mod.default as (tests: unknown) => void | Promise<void>
+        afterAllHooks.push({
+          file: fileName,
+          fn: mod.default as (tests: unknown) => void | Promise<void>,
+        })
       }
       discoveredFiles.splice(discoveredFiles.indexOf(filePath), 1)
     }
   }
 }
 
-await processSpecialFiles()
+await processHookFiles()
 
 const getTestName = (testObj: WrappedTest, filePath: string, index: number): string => {
   if (testObj.info) return String(testObj.info)
@@ -331,12 +367,15 @@ const run = async () => {
     allSuites.push(...suites)
   }
 
-  let beforeAllGlobalCleanup = undefined
-
-  if (globalBeforeAll) {
-    const beforeAllResult = await globalBeforeAll(allSuites)
-    if (is.function(beforeAllResult)) {
-      beforeAllGlobalCleanup = beforeAllResult
+  // Run all beforeAll hooks in the defined order AFTER suites are collected
+  // (matching t.ts/run.ts behavior - beforeAll runs once after all test files are loaded)
+  for (const beforeAllEntry of BEFORE_ALL_FILES) {
+    const hook = beforeAllHooks.find(h => h.file === path.basename(beforeAllEntry))
+    if (hook) {
+      const result = await hook.fn(allSuites)
+      if (is.function(result)) {
+        beforeAllCleanup.push(result as CleanupFunction)
+      }
     }
   }
 
@@ -398,18 +437,24 @@ const run = async () => {
   }
 
   after(async () => {
-    if (beforeAllGlobalCleanup) {
-      await beforeAllGlobalCleanup()
+    // 1. Run all afterAll hooks in order
+    for (const afterAllEntry of AFTER_ALL_FILES) {
+      const hook = afterAllHooks.find(h => h.file === path.basename(afterAllEntry))
+      if (hook) {
+        await hook.fn(allSuites)
+      }
     }
 
-    if (globalAfterAll) {
-      await globalAfterAll(allSuites)
+    // 2. Run all beforeAll cleanup handlers (in order they were collected)
+    for (const cleanup of beforeAllCleanup) {
+      await cleanup()
     }
 
+    // 3. Clean up temp directory
     const tmpDir = path.join(cwd, 'test', '.tmp')
     const exists = await fs.exists(tmpDir)
     if (exists) {
-      fs.rmrf(tmpDir)
+      await fs.rmrf(tmpDir)
     }
   })
 }

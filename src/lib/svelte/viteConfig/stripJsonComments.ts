@@ -20,6 +20,9 @@ export const stripJsonComments = (content: string): string => {
         while (i < content.length && content[i] !== '\n') {
           i++
         }
+        if (i < content.length) {
+          result += '\n'
+        }
       } else if (char === '/' && nextChar === '*') {
         while (i < content.length && !(content[i] === '*' && content[i + 1] === '/')) {
           i++
