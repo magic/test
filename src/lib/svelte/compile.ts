@@ -6,7 +6,7 @@ import fs from '@magic/fs'
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { resolveAlias, resolveViteAlias } from './vite-config.ts'
+import { resolveAlias, resolveViteAlias } from './viteConfig/index.ts'
 import { testExportsPreprocessor, viteDefinePreprocessor } from './preprocess.ts'
 import { LRUCache } from './LRUCache.ts'
 import { SourceMap } from 'magic-string'

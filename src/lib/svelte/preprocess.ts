@@ -1,7 +1,7 @@
 import { parse } from 'svelte/compiler'
 import is from '@magic/types'
 
-import { getViteDefine } from './vite-config.ts'
+import { getViteDefine } from './viteConfig/index.ts'
 
 type ASTNode = { [key: string]: unknown; type: string }
 

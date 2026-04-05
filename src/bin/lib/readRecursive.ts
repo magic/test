@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url'
 import fs from '@magic/fs'
 import is from '@magic/types'
 import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.ts'
-import { getViteDefine } from '../../lib/svelte/vite-config.ts'
+import { getViteDefine } from '../../lib/svelte/viteConfig/index.ts'
 import type { TestSuites, TestCollection } from '../../types.ts'
 
 interface ImportResult {

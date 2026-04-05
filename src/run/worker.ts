@@ -4,7 +4,7 @@ import is from '@magic/types'
 
 import { cleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/index.ts'
 import { isolation, restoreFromSnapshot } from './isolation.ts'
-import { getViteDefine } from '../lib/svelte/vite-config.ts'
+import { getViteDefine } from '../lib/svelte/viteConfig/index.ts'
 import type {
   WrappedTest,
   CleanupFunction,

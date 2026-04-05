@@ -1,12 +1,9 @@
 import path from 'node:path'
 import { fs } from '@magic/fs'
 import { mount } from '../src/index.js'
-import {
-  resolveAlias,
-  getProjectRoot,
-  configCache,
-  aliasCache,
-} from '../src/lib/svelte/vite-config.js'
+import { resolveAlias } from '../src/lib/svelte/viteConfig/index.js'
+import { configCache, aliasCache } from '../src/lib/svelte/viteConfig/cache.js'
+import { findProjectRoot } from '../src/lib/svelte/viteConfig/findProjectRoot.js'
 
 const VITE_CONFIG = `import { defineConfig } from 'vite'
 import path from 'path'
@@ -90,11 +87,11 @@ export default {
     },
     {
       fn: async () => {
-        const result = await getProjectRoot('test/test-file.svelte')
+        const result = await findProjectRoot('test/test-file.svelte')
         return result
       },
       expect: process.cwd(),
-      info: 'getProjectRoot returns current working directory',
+      info: 'findProjectRoot returns current working directory',
     },
     {
       fn: async () => {
