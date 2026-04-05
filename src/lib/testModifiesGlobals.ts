@@ -7,14 +7,7 @@ interface FsModule {
   readFile?: (path: string, encoding?: string) => Promise<string | undefined>
 }
 
-const GLOBAL_MODIFICATION_RE_ASSIGN =
-  /(?:globalThis|window|global|self)[^\n=]*(?:\.\w+|\[[^\]]+\])\s*=|process\.env\.[^\n]+[=+\-]/
-
-const GLOBAL_MODIFICATION_RE_DELETE = /delete\s+.*globalThis.*(?:\[[^\]]+\]|\.\w+)/
-
-const GLOBAL_MODIFICATION_RE = new RegExp(
-  `(${GLOBAL_MODIFICATION_RE_ASSIGN.source})|(${GLOBAL_MODIFICATION_RE_DELETE.source})`,
-)
+const GLOBAL_MODIFICATION_RE = /(?:globalThis|window|global|self|process\.env)/
 
 /**
  * Check if a single test modifies global state
