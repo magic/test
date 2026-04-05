@@ -6,7 +6,7 @@ const fn = (v: unknown) => v
 const add = (a: number, b: number, c: number) => a + b + c
 
 const curryAny = (...args: any[]) => {
-  return curry(...args as Parameters<typeof curry>)
+  return curry(...(args as Parameters<typeof curry>))
 }
 
 export default [
