@@ -1,14 +1,9 @@
 // Shim for $app/navigation
 // Provides navigation functions that manipulate the page store
+// Context-aware: resolves to current AsyncLocalStorage context
 
 import { get } from 'svelte/store'
-import { page, navigating, type Navigation } from './state.ts'
-
-interface CallbackList {
-  before: Array<(nav: BeforeNavigate) => void>
-  after: Array<(nav: AfterNavigate) => void>
-  on: Array<(nav: OnNavigate) => (() => void) | void>
-}
+import { getContext, getDefaultContext, type Navigation, type Page } from './state.ts'
 
 interface BeforeNavigate {
   from: URL
@@ -26,11 +21,7 @@ interface AfterNavigate {
 
 interface OnNavigate extends AfterNavigate {}
 
-const callbacks: CallbackList = {
-  before: [],
-  after: [],
-  on: [],
-}
+const getCtx = () => getContext() ?? getDefaultContext()
 
 export function goto(
   url: string | URL,
@@ -41,7 +32,8 @@ export function goto(
     state?: Record<string, unknown>
   } = {},
 ): Promise<void> {
-  const currentPage = get(page)
+  const ctx = getCtx()
+  const currentPage = get(ctx.page) as Page
   const from: URL = currentPage.url
   const targetUrl = typeof url === 'string' ? new URL(url, from.origin) : url
 
@@ -54,24 +46,24 @@ export function goto(
     complete: () => {},
   }
 
-  const beforeList = [...callbacks.before]
+  const beforeList = [...ctx.callbacks.before]
   for (const cb of beforeList) {
     try {
       cb({ ...navObj, cancel: () => {} })
     } catch (e) {}
   }
 
-  navigating.set(navObj)
+  ctx.navigating.set(navObj)
 
-  page.update(p => ({
+  ctx.page.update(p => ({
     ...p,
     url: targetUrl,
     ...(opts.state || {}),
   }))
 
-  navigating.set(null)
+  ctx.navigating.set(null)
 
-  const afterList = [...callbacks.after]
+  const afterList = [...ctx.callbacks.after]
   for (const cb of afterList) {
     try {
       cb({ from, to: targetUrl, type: 'goto' })
@@ -79,7 +71,7 @@ export function goto(
   }
 
   const onCleanups: (() => void)[] = []
-  const onList = [...callbacks.on]
+  const onList = [...ctx.callbacks.on]
   for (const cb of onList) {
     try {
       const result = cb({ from, to: targetUrl, type: 'goto' })
@@ -99,15 +91,17 @@ export function goto(
 }
 
 export function pushState(url: string | URL, state: Record<string, unknown> = {}): void {
-  const currentPage = get(page)
+  const ctx = getCtx()
+  const currentPage = get(ctx.page) as Page
   const targetUrl = typeof url === 'string' ? new URL(url, currentPage.url.origin) : url
-  page.update(p => ({ ...p, url: targetUrl, ...state }))
+  ctx.page.update(p => ({ ...p, url: targetUrl, ...state }))
 }
 
 export function replaceState(url: string | URL, state: Record<string, unknown> = {}): void {
-  const currentPage = get(page)
+  const ctx = getCtx()
+  const currentPage = get(ctx.page) as Page
   const targetUrl = typeof url === 'string' ? new URL(url, currentPage.url.origin) : url
-  page.update(p => ({ ...p, url: targetUrl, ...state }))
+  ctx.page.update(p => ({ ...p, url: targetUrl, ...state }))
 }
 
 export function invalidate(resource: string | URL | ((url: URL) => boolean)): Promise<void> {
@@ -131,23 +125,26 @@ export function preloadCode(pathname: string): Promise<void> {
 }
 
 export function beforeNavigate(cb: (nav: BeforeNavigate) => void): () => void {
-  callbacks.before.push(cb)
+  const ctx = getCtx()
+  ctx.callbacks.before.push(cb)
   return () => {
-    const idx = callbacks.before.indexOf(cb)
-    if (idx !== -1) callbacks.before.splice(idx, 1)
+    const idx = ctx.callbacks.before.indexOf(cb)
+    if (idx !== -1) ctx.callbacks.before.splice(idx, 1)
   }
 }
 
 export function afterNavigate(cb: (nav: AfterNavigate) => void): () => void {
-  callbacks.after.push(cb)
+  const ctx = getCtx()
+  ctx.callbacks.after.push(cb)
   return () => {
-    const idx = callbacks.after.indexOf(cb)
-    if (idx !== -1) callbacks.after.splice(idx, 1)
+    const idx = ctx.callbacks.after.indexOf(cb)
+    if (idx !== -1) ctx.callbacks.after.splice(idx, 1)
   }
 }
 
 export function onNavigate(cb: (nav: OnNavigate) => (() => void) | void): void {
-  callbacks.on.push(cb)
+  const ctx = getCtx()
+  ctx.callbacks.on.push(cb)
 }
 
 export function disableScrollHandling(): void {
@@ -155,7 +152,8 @@ export function disableScrollHandling(): void {
 }
 
 export function reset() {
-  callbacks.before = []
-  callbacks.after = []
-  callbacks.on = []
+  const ctx = getDefaultContext()
+  ctx.callbacks.before = []
+  ctx.callbacks.after = []
+  ctx.callbacks.on = []
 }

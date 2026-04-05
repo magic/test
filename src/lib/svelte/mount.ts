@@ -9,8 +9,7 @@ import * as HappyDOM from 'happy-dom'
 import { compileSvelteWithWrite } from './compile.ts'
 import { initDOM, getDocument, getWindow } from '../dom.ts'
 import type { ComponentProps } from '../../types.ts'
-import { page, reset as resetState } from './shims/$app/state.ts'
-import { reset as resetNav } from './shims/$app/navigation.ts'
+import { createContext, runWithContext } from './shims/$app/state.ts'
 
 let svelteMount: Function | undefined
 
@@ -108,10 +107,6 @@ export const mount = async (
 
   await initSvelte()
 
-  // Reset shim state for test isolation
-  resetState()
-  resetNav()
-
   const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
 
   const exists = await fs.exists(resolvedPath)
@@ -126,16 +121,18 @@ export const mount = async (
   const detection = await detectSvelteKitImports(sourceCode)
   const usesApp = needsSvelteKitContext(detection)
 
-  // If component uses $app/* imports, set up the shim stores directly (like SvelteKit does)
+  // Create isolated context for this mount
+  const ctx = createContext()
+
+  // If component uses $app/* imports, set up the context stores (like SvelteKit does)
   if (usesApp) {
-    // Get URL from props or use default
     const urlStr = (options.props?.url as string) || 'http://localhost/'
     const urlObj = new URL(urlStr)
     const routeId = (options.props?.routeId as string) || ''
     const params = (options.props?.params as Record<string, string>) || {}
     const data = (options.props?.data as Record<string, unknown>) || {}
 
-    page.set({
+    ctx.page.set({
       url: urlObj,
       routeId,
       params,
@@ -146,96 +143,100 @@ export const mount = async (
     })
   }
 
-  const { js, css, importUrl } = await compileSvelteWithWrite(resolvedPath)
+  return runWithContext(ctx, async () => {
+    const { js, css, importUrl } = await compileSvelteWithWrite(resolvedPath)
 
-  let mod
-  try {
-    mod = await import(importUrl)
-  } catch (e) {
-    const err = is.error(e) ? e : new Error(String(e))
-    log.error('Failed to import compiled component:', resolvedPath, err.message)
-    throw err
-  }
-  const Component = mod.default
+    let mod
+    try {
+      mod = await import(importUrl)
+    } catch (e) {
+      const err = is.error(e) ? e : new Error(String(e))
+      log.error('Failed to import compiled component:', resolvedPath, err.message)
+      throw err
+    }
+    const Component = mod.default
 
-  const target = document.createElement('div')
+    const target = document.createElement('div')
 
-  const rawProps = options.props
+    const rawProps = options.props
 
-  if (rawProps !== undefined && (!is.object(rawProps) || is.null(rawProps) || is.array(rawProps))) {
-    throw new Error(`Props must be an object, got ${typeof rawProps}`)
-  }
+    if (rawProps !== undefined && (!is.object(rawProps) || is.null(rawProps) || is.array(rawProps))) {
+      throw new Error(`Props must be an object, got ${typeof rawProps}`)
+    }
 
-  const props = rawProps ?? {}
+    const props = rawProps ?? {}
 
-  // Process props to convert snippet-like objects to actual Svelte 5 snippets
+    // Process props to convert snippet-like objects to actual Svelte 5 snippets
 
-  const processProps = (propsToProcess: ComponentProps): ComponentProps => {
-    const processed: ComponentProps = {}
-    for (const [key, value] of Object.entries(propsToProcess)) {
-      // Only convert explicit snippet-like objects: { render: fn } or { render: "string" }
-      // Don't auto-convert strings or functions - that breaks normal props like href, value, etc.
-      if (is.object(value) && value !== null && !is.array(value)) {
-        if ('render' in value && !is.fn(value)) {
-          // Convert to Svelte 5 snippet
-          const renderFn = is.str(value.render) ? () => value.render : value.render
-          processed[key] = svelteCreateRawSnippet!(() => ({ render: renderFn }))
-          continue
+    const processProps = (propsToProcess: ComponentProps): ComponentProps => {
+      const processed: ComponentProps = {}
+      for (const [key, value] of Object.entries(propsToProcess)) {
+        // Only convert explicit snippet-like objects: { render: fn } or { render: "string" }
+        // Don't auto-convert strings or functions - that breaks normal props like href, value, etc.
+        if (is.object(value) && value !== null && !is.array(value)) {
+          if ('render' in value && !is.fn(value)) {
+            // Convert to Svelte 5 snippet
+            const renderFn = is.str(value.render) ? () => value.render : value.render
+            processed[key] = svelteCreateRawSnippet!(() => ({ render: renderFn }))
+            continue
+          }
         }
+        // Leave everything else as-is (strings, functions, numbers, etc.)
+        processed[key] = value
       }
-      // Leave everything else as-is (strings, functions, numbers, etc.)
-      processed[key] = value
-    }
-    return processed
-  }
-
-  const processedProps = svelteCreateRawSnippet ? processProps(props) : props
-
-  for (const key of Reflect.ownKeys(props)) {
-    if (!is.string(key)) {
-      throw new Error(`Prop keys must be strings, got ${typeof key}`)
-    }
-  }
-
-  let component
-  try {
-    if (!svelteMount) {
-      throw new Error('Svelte not initialized')
-    }
-    component = svelteMount(Component, {
-      target,
-      props: processedProps,
-    })
-  } catch (mountError) {
-    const err = mountError as Error
-    if (err.message.includes('can only be used during component initialisation')) {
-      throw new Error(
-        `Lifecycle error in ${resolvedPath}: ${err.message}. Make sure lifecycle functions are called at the top level of the component script.`,
-        { cause: err },
-      )
+      return processed
     }
 
-    if (err.message.includes('https://svelte.dev/')) {
-      throw new Error(`[svelte] ${err.message} ${resolvedPath}`, { cause: err })
+    const processedProps = svelteCreateRawSnippet ? processProps(props) : props
+
+    for (const key of Reflect.ownKeys(props)) {
+      if (!is.string(key)) {
+        throw new Error(`Prop keys must be strings, got ${typeof key}`)
+      }
     }
 
-    throw err
-  }
+    let component
+    try {
+      if (!svelteMount) {
+        throw new Error('Svelte not initialized')
+      }
+      component = svelteMount(Component, {
+        target,
+        props: processedProps,
+      })
+    } catch (mountError) {
+      const err = mountError as Error
+      if (err.message.includes('can only be used during component initialisation')) {
+        throw new Error(
+          `Lifecycle error in ${resolvedPath}: ${err.message}. Make sure lifecycle functions are called at the top level of the component script.`,
+          { cause: err },
+        )
+      }
 
-  // Wait for initial effects to run (e.g., $effect) before returning
-  if (svelteTick) {
-    await svelteTick()
-  }
+      if (err.message.includes('https://svelte.dev/')) {
+        throw new Error(`[svelte] ${err.message} ${resolvedPath}`, { cause: err })
+      }
 
-  // If wrapper exposed the inner component, use that as the component instance
-  if (component && typeof component === 'object' && '__inner' in component) {
-    component = component.__inner
-  }
+      throw err
+    }
 
-  const unmount = async () => {
-    if (!svelteUnmount) throw new Error('Svelte not initialized')
-    await svelteUnmount(component, { outro: true })
-  }
+    // Wait for initial effects to run (e.g., $effect) before returning
+    if (svelteTick) {
+      await svelteTick()
+    }
 
-  return { target, component, unmount, css }
+    // If wrapper exposed the inner component, use that as the component instance
+    if (component && typeof component === 'object' && '__inner' in component) {
+      component = component.__inner
+    }
+
+    const unmount = async () => {
+      if (!svelteUnmount) throw new Error('Svelte not initialized')
+      await runWithContext(ctx, async () => {
+        await (svelteUnmount as Function)(component, { outro: true })
+      })
+    }
+
+    return { target, component, unmount, css }
+  })
 }
