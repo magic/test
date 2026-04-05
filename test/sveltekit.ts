@@ -83,7 +83,7 @@ export default [
       await flushSyncSvelte()
       await Promise.resolve()
       const result = html(target as any) as string
-      console.log('PATHS TEST RESULT:', JSON.stringify(result))
+      // console.log('PATHS TEST RESULT:', JSON.stringify(result))
       await unmount()
       return result
     },
