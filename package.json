@@ -52,7 +52,8 @@
     "@magic/types": "0.1.33",
     "c8": "11.0.0",
     "canvas": "3.2.3",
-    "happy-dom": "20.8.9"
+    "happy-dom": "20.8.9",
+    "magic-string": "0.30.21"
   },
   "devDependencies": {
     "@magic-modules/git-badges": "0.0.12",
