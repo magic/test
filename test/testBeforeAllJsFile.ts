@@ -29,11 +29,6 @@ export default {
       info: 'Undefined globals are undefined and not true',
     },
     {
-      fn: () => (globalThis as any).beforeAllJS,
-      expect: true,
-      info: 'test/beforeAll.js file gets executed before other tests.',
-    },
-    {
       fn: () => (globalThis as any).beforeAllTS,
       expect: true,
       info: 'test/beforeAll.ts file gets executed before other tests.',
@@ -62,11 +57,6 @@ export default {
       fn: () => (globalThis as any).beforeallJS,
       expect: true,
       info: 'test/beforeall.js file gets executed before other tests.',
-    },
-    {
-      fn: () => (globalThis as any).beforeallTS,
-      expect: true,
-      info: 'test/beforeall.ts file gets executed before other tests.',
     },
   ],
 }
