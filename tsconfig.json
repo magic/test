@@ -37,7 +37,7 @@
     "allowImportingTsExtensions": true
   },
 
-  "include": ["test/**/*"],
+  "include": ["test/**/*", "src/app.d.ts"],
 
   "exclude": ["node_modules", "coverage", ".tmp", "dist", "build", "**/*.min.js", "**/*.bundle.js"],
 

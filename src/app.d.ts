@@ -19,6 +19,17 @@ declare global {
   var before: boolean | undefined
   var tests: unknown
 
+  var beforeAllMJS: boolean | undefined
+  var afterallTS: boolean | undefined
+  var beforeallJS: boolean | undefined
+  var beforeAllTS: boolean | undefined
+  var beforeallTS: boolean | undefined
+  var testsBeforeAllTS: unknown
+  var testsBeforeallTS: unknown
+  var afterAllMJS: boolean | undefined
+  var afterAllTS: boolean | undefined
+  var afterallJS: boolean | undefined
+
   // Allow dynamic property access on globalThis
   interface GlobalThis {
     CHECK_PROPS?: unknown
@@ -31,6 +42,17 @@ declare global {
     subscriptions?: AppInstance['subscriptions']
 
     before?: boolean
+
+    beforeAllMJS?: boolean
+    afterallTS?: boolean
+    beforeallJS?: boolean
+    beforeAllTS?: boolean
+    beforeallTS?: boolean
+    testsBeforeAllTS?: unknown
+    testsBeforeallTS?: unknown
+    afterAllMJS?: boolean
+    afterAllTS?: boolean
+    afterallJS?: boolean
 
     [key: string]: unknown
   }
