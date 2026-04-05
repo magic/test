@@ -10,8 +10,7 @@ interface FsModule {
 const GLOBAL_MODIFICATION_RE_ASSIGN =
   /(?:globalThis|window|global|self)[^\n=]*(?:\.\w+|\[[^\]]+\])\s*=|process\.env\.[^\n]+[=+\-]/
 
-const GLOBAL_MODIFICATION_RE_DELETE =
-  /delete\s+.*globalThis.*(?:\[[^\]]+\]|\.\w+)/
+const GLOBAL_MODIFICATION_RE_DELETE = /delete\s+.*globalThis.*(?:\[[^\]]+\]|\.\w+)/
 
 const GLOBAL_MODIFICATION_RE = new RegExp(
   `(${GLOBAL_MODIFICATION_RE_ASSIGN.source})|(${GLOBAL_MODIFICATION_RE_DELETE.source})`,

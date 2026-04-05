@@ -42,7 +42,9 @@ export default [
   },
   {
     fn: async () => {
-      const result = await (await tryCatch(mount as (...args: unknown[]) => unknown, component, { props: null }))()
+      const result = await (
+        await tryCatch(mount as (...args: unknown[]) => unknown, component, { props: null })
+      )()
       return result
     },
     expect: (t: unknown) => (t as Error).message === 'Props must be an object, got object',

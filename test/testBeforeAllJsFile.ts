@@ -14,9 +14,7 @@ export default {
   afterAll: () => {
     const g = globalThis as any
     if (g.testing !== 'afterAll') {
-      log.error(
-        `AfterAll globalThis.testing not matching, is "${g.testing}" expected: 'afterAll'`,
-      )
+      log.error(`AfterAll globalThis.testing not matching, is "${g.testing}" expected: 'afterAll'`)
     }
   },
   tests: [

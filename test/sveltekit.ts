@@ -130,8 +130,8 @@ export default [
       await unmount()
       return result
     },
-     expect:
-       '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----> <button>Toggle</button>',
+    expect:
+      '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----> <button>Toggle</button>',
     info: 'SvelteKit component uses multiple $app modules correctly',
   },
   // Multiple mount cycles
