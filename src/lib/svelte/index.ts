@@ -55,5 +55,5 @@ export {
   checked,
   trigger,
 } from './events.ts'
-export { testExportsPreprocessor, sveltekitMocksPreprocessor } from './preprocess.ts'
+export { testExportsPreprocessor } from './preprocess.ts'
 export { browser, dev, prod, createStaticPage } from './sveltekit-mocks.ts'

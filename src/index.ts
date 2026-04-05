@@ -76,7 +76,6 @@ export {
   checked,
   trigger,
   testExportsPreprocessor,
-  sveltekitMocksPreprocessor,
   browser,
   dev,
   prod,

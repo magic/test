@@ -7,11 +7,7 @@ import log from '@magic/log'
 import is from '@magic/types'
 
 import { resolveAlias, resolveViteAlias } from './vite-config.ts'
-import {
-  testExportsPreprocessor,
-  sveltekitMocksPreprocessor,
-  viteDefinePreprocessor,
-} from './preprocess.ts'
+import { testExportsPreprocessor, viteDefinePreprocessor } from './preprocess.ts'
 import { LRUCache } from './LRUCache.ts'
 
 export interface CssObject {
@@ -299,6 +295,18 @@ const resolveAndCompileImport = async (
 ): Promise<ResolveAndCompileResult> => {
   const importType = classifyImport(importPath)
 
+  // Special handling for svelte package - force client entry
+  if (importPath === 'svelte') {
+    const svelteClient = path.resolve(process.cwd(), 'node_modules/svelte/src/index-client.js')
+    if (await fs.exists(svelteClient)) {
+      const sourceTmpFile = getTmpFilePath(sourceFilePath)
+      const fromDir = path.dirname(sourceTmpFile)
+      const relativePath = computeRelativePath(fromDir, svelteClient)
+      return { filePath: importPath, js: { code: '' }, url: relativePath }
+    }
+    // If client file not found, fall through to normal handling
+  }
+
   // Type 2: Scoped packages (@scope/package) - let Node.js resolve at runtime
   // Do NOT try to pre-resolve - just skip and leave import as-is
   if (importType === 'scoped') {
@@ -316,30 +324,41 @@ const resolveAndCompileImport = async (
     if (aliasResolved) {
       // Continue to file resolution below
       var resolvedPath = aliasResolved
-    } else {
-      // Could not resolve via alias - try manual resolution for $lib
-      // For $app/*, $env/* we skip (handled by preprocess.js mocks)
-      if (importPath.startsWith('$lib')) {
-        // Manual fallback: $lib/forms -> src/lib/forms (relative to project root)
-        const rootDir = await (async () => {
-          let current = path.dirname(sourceFilePath)
-          const root = process.cwd()
-          while (current && current !== path.dirname(current)) {
-            const pkgPath = path.join(current, 'package.json')
-            if (await fs.exists(pkgPath)) {
-              return current
-            }
-            current = path.dirname(current)
-          }
-          return root
-        })()
-        const aliasPath = importPath.slice(1) // Remove $
-        resolvedPath = path.resolve(rootDir, 'src', aliasPath)
-      } else {
-        // Could not resolve, skip processing
-        return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
-      }
-    }
+     } else {
+       // Could not resolve via alias - try manual resolution for $lib or $app
+       if (importPath.startsWith('$lib')) {
+         // Manual fallback: $lib/forms -> src/lib/forms (relative to project root)
+         const rootDir = await (async () => {
+           let current = path.dirname(sourceFilePath)
+           const root = process.cwd()
+           while (current && current !== path.dirname(current)) {
+             const pkgPath = path.join(current, 'package.json')
+             if (await fs.exists(pkgPath)) {
+               return current
+             }
+             current = path.dirname(current)
+           }
+           return root
+         })()
+         const aliasPath = importPath.slice(1) // Remove $
+         resolvedPath = path.resolve(rootDir, 'src', aliasPath)
+        } else if (importPath.startsWith('$app')) {
+          // Manual fallback: $app/* -> src/lib/svelte/shim-$app/*
+          const rootDir = process.cwd()
+          const shimName = importPath.slice(5) // after "$app/"
+          resolvedPath = path.join(rootDir, 'src/lib/svelte/shim-$app', shimName)
+        }
+             current = path.dirname(current)
+           }
+           return root
+         })()
+         const shimName = importPath.slice(5) // after "$app/"
+         resolvedPath = path.join(rootDir, 'src/lib/svelte/shim-$app', shimName)
+       } else {
+         // Could not resolve, skip processing
+         return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
+       }
+     }
   } else {
     // Type 3: Relative imports (./something, ../something)
     // Only call resolveAlias for relative imports
@@ -573,17 +592,13 @@ export const compileSvelte = async (
 
     const source = await fs.readFile(filePath, 'utf-8')
 
-    const preprocessors = [
-      testExportsPreprocessor(),
-      sveltekitMocksPreprocessor(),
-      viteDefinePreprocessor(),
-    ]
+    const preprocessors = [testExportsPreprocessor(), viteDefinePreprocessor()]
 
     const preprocessed = await preprocess(source, preprocessors)
 
     const result = compile(preprocessed.code, {
       generate: 'client',
-      dev: true,
+      dev: false,
       filename: filePath,
     })
 

@@ -534,6 +534,24 @@ export const resolveViteAlias = async (
   const sourceDir = path.dirname(sourceFilePath)
   const rootDir = await findProjectRoot(sourceDir)
 
+  // Direct handling for $app/* imports to local test shims (highest priority)
+  if (importPath.startsWith('$app/')) {
+    const shimName = importPath.slice(5) // after "$app/"
+    const shimPath = path.join(rootDir, 'src/lib/svelte/shim-$app', shimName)
+    const candidates = [
+      shimPath + '.js',
+      shimPath + '.ts',
+      path.join(shimPath, 'index.js'),
+      path.join(shimPath, 'index.ts')
+    ]
+    for (const candidate of candidates) {
+      if (await fs.exists(candidate)) {
+        return candidate
+      }
+    }
+    // If not found, fall through to other resolution methods
+  }
+
   // Handle $lib and other $app/*, $env/* aliases via tsconfig paths
   if (importPath.startsWith('$')) {
     const viteAliases = await loadViteAliases(rootDir)
@@ -580,10 +598,26 @@ export const resolveViteAlias = async (
       const extensions = ['', '.js', '.svelte', '.ts', '/index.js', '/index.svelte', '/index.ts']
       for (const ext of extensions) {
         const withExt = libPath + ext
-        const exists = await fs.exists(withExt)
-        if (exists) {
+        if (await fs.exists(withExt)) {
           return withExt
         }
+      }
+    }
+  } // end if importPath starts with $
+
+  // Shim $app/* imports to local test shims
+  if (importPath.startsWith('$app/')) {
+    const shimName = importPath.slice(5) // after "$app/"
+    const shimPath = path.join(rootDir, 'src/lib/svelte/shim-$app', shimName)
+    const candidates = [
+      shimPath + '.js',
+      shimPath + '.ts',
+      path.join(shimPath, 'index.js'),
+      path.join(shimPath, 'index.ts')
+    ]
+    for (const candidate of candidates) {
+      if (await fs.exists(candidate)) {
+        return candidate
       }
     }
   }
@@ -601,4 +635,51 @@ export const getViteDefine = async (sourceFilePath: string): Promise<Record<stri
   const sourceDir = path.dirname(sourceFilePath)
   const rootDir = await findProjectRoot(sourceDir)
   return await loadViteDefine(rootDir)
+}
+
+// --- SvelteKit Config Helper ---
+
+/**
+ * Get SvelteKit configuration from vite.config.ts if available.
+ * Returns partial config: { dev?, base?, version?, building? }
+ */
+export function getSvelteKitConfig(rootDir: string): Record<string, any> {
+  const configPaths = [
+    path.join(rootDir, 'vite.config.ts'),
+    path.join(rootDir, 'vite.config.js'),
+    path.join(rootDir, 'vite.config.mts'),
+    path.join(rootDir, 'vite.config.mjs'),
+    path.join(rootDir, 'vite.config.cjs')
+  ];
+  for (const configPath of configPaths) {
+    try {
+      // Check existence via fs.exists would be async; we're using sync read
+      // Use try/catch
+      const content = require('fs').readFileSync(configPath, 'utf-8');
+      // Look for defineConfig({ kit: { ... } })
+      const kitMatch = content.match(/defineConfig\s*\(\s*\{[\s\S]*?kit\s*:\s*\{([\s\S]*?)\}/);
+      if (kitMatch) {
+        const kitConfig = kitMatch[1];
+        const parseVal = (key: string) => {
+          const m = kitConfig.match(new RegExp(`${key}\\s*:\\s*([^,\\}\\n]+)`));
+          if (m) {
+            let val = m[1].trim();
+            if (val === 'true' || val === 'false') return val === 'true';
+            if (val.startsWith("'") || val.startsWith('"')) return val.slice(1, -1);
+            return val;
+          }
+          return undefined;
+        };
+        return {
+          dev: parseVal('dev'),
+          base: parseVal('base'),
+          version: parseVal('version'),
+          building: parseVal('building')
+        };
+      }
+    } catch (e) {
+      // file not found or parse error, continue
+    }
+  }
+  return {};
 }

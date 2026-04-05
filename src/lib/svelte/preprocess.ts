@@ -117,26 +117,6 @@ export const testExportsPreprocessor = () => {
   }
 }
 
-export const sveltekitMocksPreprocessor = () => {
-  return {
-    name: 'magic-sveltekit-mocks',
-    script: async ({ content }: { content: string }) => {
-      let processed = content
-      .replace(
-        /import\s+\{[^}]*\b(browser|dev|prod)\b[^}]*\}\s+from\s+['"]\$app\/environment['"]/g,
-        "import { browser, dev, prod } from '@magic/test'",
-      )
-      // Mock $app/state page import - create simple object that won't be shadowed
-      .replace(
-        /import\s+\{[^}]*\bpage\b[^}]*\}\s+from\s+['"]\$app\/state['"]/g,
-        "const page = { url: { origin: 'http://localhost' } }",
-      )
-
-      return { code: content }
-    },
-  }
-}
-
 export const viteDefinePreprocessor = () => {
   return {
     name: 'magic-vite-define',

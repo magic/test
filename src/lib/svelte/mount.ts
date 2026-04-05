@@ -1,13 +1,19 @@
 import { createRequire } from 'node:module'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import fs from '@magic/fs'
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { compileSvelteWithWrite } from './compile.ts'
+import { compileSvelteWithWrite, compileSvelte } from './compile.ts'
 import { initDOM, getDocument, getWindow } from '../dom.ts'
 import type { ComponentProps } from '../../types.ts'
+import { detectSvelteKitImports } from './detect-sveltekit-imports.js'
+import { reset as resetState } from './shim-$app/state.ts'
+import { reset as resetNav } from './shim-$app/navigation.ts'
+
+const TMP_DIR = 'test/.tmp'
 
 let svelteMount: Function | undefined
 
@@ -93,20 +99,32 @@ export const mount = async (filePath: string, options: { props?: ComponentProps 
     clearInterval: win.clearInterval,
   })
 
-  await initSvelte()
+   await initSvelte()
 
-  const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
+   // Reset shim state for test isolation
+   resetState();
+   resetNav();
+
+   const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
 
   const exists = await fs.exists(resolvedPath)
   if (!exists) {
     throw new Error(`Svelte component not found: ${resolvedPath}`)
   }
 
+   // Read source to detect $app imports before compilation
+   const sourceCode = await fs.readFile(resolvedPath, 'utf-8')
+   const { detectSvelteKitImports, needsSvelteKitContext } = await import('./detect-sveltekit-imports.js')
+   const detection = await detectSvelteKitImports(sourceCode)
+   const usesApp = needsSvelteKitContext(detection)
+
   const { js, css, importUrl } = await compileSvelteWithWrite(resolvedPath)
 
-  let mod
-  try {
-    mod = await import(importUrl)
+
+
+   let mod
+   try {
+     mod = await import(importUrl)
   } catch (e) {
     const err = is.error(e) ? e : new Error(String(e))
     log.error('Failed to import compiled component:', resolvedPath, err.message)
@@ -178,7 +196,17 @@ export const mount = async (filePath: string, options: { props?: ComponentProps 
     throw err
   }
 
-  const unmount = async () => {
+   // Wait for initial effects to run (e.g., $effect) before returning
+   if (svelteTick) {
+     await svelteTick()
+   }
+
+   // If wrapper exposed the inner component, use that as the component instance
+   if (component && typeof component === 'object' && '__inner' in component) {
+     component = component.__inner;
+   }
+
+   const unmount = async () => {
     if (!svelteUnmount) throw new Error('Svelte not initialized')
     await svelteUnmount(component, { outro: true })
   }
