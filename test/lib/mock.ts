@@ -45,7 +45,7 @@ export default [
       spy.mockReturnValue('second')
       return spy() === 'second'
     },
-    expect: 'second',
+    expect: true,
     info: 'mock.fn.mockReturnValue is chainable and updates value',
   },
   {

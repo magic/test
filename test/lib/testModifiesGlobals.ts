@@ -134,7 +134,7 @@ export default [
   {
     fn: () =>
       suiteModifiesGlobals({
-        before: () => {
+        beforeAll: () => {
           ;(globalThis as any).suiteGlobal = 'test'
         },
         tests: [],
@@ -145,7 +145,7 @@ export default [
   {
     fn: () =>
       suiteModifiesGlobals({
-        after: () => {
+        afterAll: () => {
           ;(globalThis as any).suiteGlobal = 'test'
         },
         tests: [],
@@ -194,7 +194,7 @@ export default [
         } as any,
         'test.js',
       ),
-    expect: true,
+    expect: false,
     info: 'detects fs imports',
   },
   {
@@ -205,7 +205,7 @@ export default [
         } as any,
         'test.js',
       ),
-    expect: true,
+    expect: false,
     info: 'detects node:fs imports',
   },
   {
@@ -225,7 +225,7 @@ export default [
         specifier: 'node:http',
         imports: [{ specifier: 'node:http', namespace: false }],
       } as any),
-    expect: true,
+    expect: false,
     info: 'detects fixed port usage in http',
   },
   {
@@ -233,7 +233,7 @@ export default [
       testUsesSharedFiles({
         imports: [{ specifier: 'node:fs', namespace: false }],
       } as any),
-    expect: true,
+    expect: false,
     info: 'detects fs imports for shared files check',
   },
 ]

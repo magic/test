@@ -1,11 +1,12 @@
 import type { TestObject } from '../src/types.js'
 
 export default (tests: TestObject): (() => void) => {
-  ;(globalThis as any).before = true
-  ;(globalThis as any).tests = tests
+  const g = globalThis as any
+  g.beforeAllTS = true
+  g.testsBeforeAllTS = tests
 
   return () => {
-    delete (globalThis as any).before
-    delete (globalThis as any).tests
+    delete g.beforeAllTS
+    delete g.testsBeforeAllTS
   }
 }

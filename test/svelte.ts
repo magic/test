@@ -104,8 +104,8 @@ export default [
       await unmount()
       return result
     },
-    expect:
-      '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div<!----> <button>Toggle</button>',
+     expect:
+       '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----> <button>Toggle</button>',
     info: 'SvelteKit wrapper provides correct $app/environment values (dev mode)',
   },
   // SvelteKit component state updates correctly with toggle
@@ -123,11 +123,11 @@ export default [
       await unmount()
       return { initial, afterToggle }
     },
-    expect: {
-      initial:
-        '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div<!----> <button>Toggle</button>',
-      afterToggle: '<!----><!----> <button>Toggle</button>',
-    },
+     expect: {
+       initial:
+         '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----> <button>Toggle</button>',
+       afterToggle: '<!----><!----> <button>Toggle</button>',
+     },
     info: 'SvelteKit component state updates correctly with toggle',
   },
 ]

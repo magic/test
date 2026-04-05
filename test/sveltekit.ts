@@ -1,5 +1,6 @@
 import { mount, html } from '../src/index.js'
 import { flushSync as flushSyncSvelte } from 'svelte'
+import { reset as resetPage } from '../src/lib/svelte/shims/$app/state.ts'
 
 export default [
   // $app/environment
@@ -93,6 +94,7 @@ export default [
   // Auto-wrapping
   {
     fn: async () => {
+      resetPage()
       const { target, unmount } = (await mount(
         './src/lib/svelte/components/UsesAppImports.svelte',
       )) as any
@@ -128,8 +130,8 @@ export default [
       await unmount()
       return result
     },
-    expect:
-      '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div<!----> <button>Toggle</button>',
+     expect:
+       '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----> <button>Toggle</button>',
     info: 'SvelteKit component uses multiple $app modules correctly',
   },
   // Multiple mount cycles

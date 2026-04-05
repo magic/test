@@ -41,7 +41,10 @@ export default [
     info: 'isEmpty is true when no items',
   },
   {
-    fn: () => tryCatch(mount as (...args: unknown[]) => unknown, component, { props: null }),
+    fn: async () => {
+      const result = await (await tryCatch(mount as (...args: unknown[]) => unknown, component, { props: null }))()
+      return result
+    },
     expect: (t: unknown) => (t as Error).message === 'Props must be an object, got object',
     info: 'throws when props is null',
   },

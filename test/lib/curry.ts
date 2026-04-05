@@ -1,12 +1,11 @@
 import is from '@magic/types'
-import { tryCatch } from '../../src/index.js'
+import { tryCatch, curry } from '../../src/index.js'
 
 const fn = (v: unknown) => v
 
 const add = (a: number, b: number, c: number) => a + b + c
 
 const curryAny = (...args: unknown[]) => {
-  const { curry } = require('../../src/index.js')
   return curry(...args)
 }
 
