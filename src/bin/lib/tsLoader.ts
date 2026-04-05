@@ -1,7 +1,7 @@
 import fs from '@magic/fs'
 import path from 'node:path'
 
-const EXTENSIONS = ['.js', '.ts']
+const EXTENSIONS = ['.ts', '.js']
 
 const hasExtension = (specifier: string): boolean => {
   return EXTENSIONS.some(ext => specifier.endsWith(ext))
@@ -38,11 +38,13 @@ export const resolve = async (
   context: { parentURL?: string },
   nextResolve: (specifier: string, context?: object) => Promise<{ url: string }>,
 ): Promise<{ url: string }> => {
+  // Handle relative imports without extension - check .ts first (preferred)
   if (specifier.startsWith('.') && !hasExtension(specifier)) {
     const parentDir = context.parentURL
       ? path.dirname(new URL(context.parentURL).pathname)
       : undefined
 
+    // First try default resolution
     try {
       return await nextResolve(specifier, context)
     } catch {
@@ -50,24 +52,30 @@ export const resolve = async (
     }
   }
 
+  // Handle .js files - check if .ts version exists and prefer it
   if (specifier.endsWith('.js')) {
+    let basePath = specifier
+    if (context.parentURL) {
+      const parentDir = path.dirname(new URL(context.parentURL).pathname)
+      basePath = path.resolve(parentDir, specifier)
+    }
+
+    // Check if corresponding .ts file exists
+    const tsPath = basePath.replace(/\.js$/, '.ts')
+    const tsExists = await fs.exists(tsPath)
+
+    if (tsExists) {
+      const tsSpecifier = specifier.replace(/\.js$/, '.ts')
+      return nextResolve(tsSpecifier, context)
+    }
+
+    // .ts doesn't exist, try .js as-is
     try {
       return await nextResolve(specifier, context)
     } catch (initialError) {
-      let jsPath = specifier
-      if (context.parentURL) {
-        const parentDir = path.dirname(new URL(context.parentURL).pathname)
-        jsPath = path.resolve(parentDir, specifier)
-      }
-
-      const jsExists = await fs.exists(jsPath)
-
-      if (!jsExists) {
-        const tsSpecifier = specifier.replace(/\.js$/, '.ts')
-        return nextResolve(tsSpecifier, context)
-      }
-
-      throw initialError
+      // Fallback: try converting .js to .ts
+      const tsSpecifier = specifier.replace(/\.js$/, '.ts')
+      return nextResolve(tsSpecifier, context)
     }
   }
 
