@@ -9,10 +9,11 @@ import is from '@magic/types'
 import { resolveAlias, resolveViteAlias } from './vite-config.ts'
 import { testExportsPreprocessor, viteDefinePreprocessor } from './preprocess.ts'
 import { LRUCache } from './LRUCache.ts'
+import { SourceMap } from 'magic-string'
 
 export interface CssObject {
   code: string
-  map?: import('magic-string').SourceMap | undefined
+  map?: SourceMap
   hasGlobal?: boolean
 }
 

@@ -7,7 +7,7 @@ import fs from '@magic/fs'
 import { stats, createStore, ERRORS } from './lib/index.ts'
 
 import { runSuite } from './run/suite.ts'
-import type { TestSuites, TestCollection } from './types.ts'
+import type { TestSuites, TestCollection, CleanupFunction } from './types.ts'
 
 const cwd = process.cwd()
 
@@ -137,7 +137,7 @@ export const run = async (
   for (const file of beforeAllFiles) {
     const beforeAll = testsObj[file]
     if (is.fn(beforeAll)) {
-      const cleanup = await beforeAll(testsObj)
+      const cleanup = await (beforeAll as unknown as (tests: TestSuites) => void | Promise<void | CleanupFunction>)(testsObj)
       if (is.fn(cleanup)) {
         beforeAllCleanup.push(cleanup)
       }
@@ -150,7 +150,7 @@ export const run = async (
   for (const file of afterAllFiles) {
     const afterAll = testsObj[file]
     if (is.fn(afterAll)) {
-      afterAllFns.push(() => afterAll(testsObj))
+      afterAllFns.push(() => (afterAll as unknown as (tests: TestSuites) => void | Promise<void>)(testsObj))
     }
     delete testsObj[file]
   }

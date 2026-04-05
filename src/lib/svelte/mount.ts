@@ -72,7 +72,7 @@ export const tick = async () => {
   await svelteTick()
 }
 
-export interface MountResult {
+interface MountResult {
   target: unknown
   component: unknown
   unmount: () => Promise<void>

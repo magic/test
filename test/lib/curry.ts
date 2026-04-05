@@ -5,8 +5,8 @@ const fn = (v: unknown) => v
 
 const add = (a: number, b: number, c: number) => a + b + c
 
-const curryAny = (...args: unknown[]) => {
-  return curry(...args)
+const curryAny = (...args: any[]) => {
+  return curry(...args as Parameters<typeof curry>)
 }
 
 export default [
@@ -28,7 +28,7 @@ export default [
   { fn: () => curryAny((v: unknown) => v), expect: is.function },
   { fn: () => curryAny((_a: unknown) => {}), expect: is.function },
   { fn: () => curryAny(is.type, 'object'), expect: is.function },
-  { fn: () => curryAny(add, 1)(2)(3), expect: 6 },
-  { fn: () => curryAny(add, 1)(2)(-3), expect: 0 },
+  { fn: () => (curryAny(add, 1) as (b: number) => (c: number) => number)(2)(3), expect: 6 },
+  { fn: () => (curryAny(add, 1) as (b: number) => (c: number) => number)(2)(-3), expect: 0 },
   { fn: tryCatch(curryAny, add, 1, 2, 3, 4), expect: is.error },
 ]

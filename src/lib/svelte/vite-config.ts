@@ -649,4 +649,3 @@ export const getViteDefine = async (sourceFilePath: string): Promise<Record<stri
   const rootDir = await findProjectRoot(sourceDir)
   return await loadViteDefine(rootDir)
 }
-

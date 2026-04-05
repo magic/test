@@ -1,6 +1,7 @@
 import { createRequire } from 'node:module'
 import is from '@magic/types'
 import { Document as HappyDocument, Window as HappyWindow } from 'happy-dom'
+import { createCanvas, loadImage } from 'canvas'
 
 interface SimpleEvent {
   type: string
@@ -207,11 +208,8 @@ const createImagePolyfill = (win: CustomWindow): new () => ImageInstance => {
           enumerable: true,
         })
 
-        const { loadImage: nodeLoadImage } = createRequireFn('canvas') as {
-          loadImage: (url: string) => Promise<unknown>
-        }
         const img = this as ImageInstance & { _nodeCanvasImage?: unknown }
-        nodeLoadImage(value)
+        loadImage(value)
           .then((nodeImg: unknown) => {
             img._nodeCanvasImage = nodeImg
 
@@ -253,20 +251,6 @@ const createCanvasPolyfill = (win: CustomWindow, _happyDocument: unknown): void 
   }
   const originalGetContext = HTMLCanvasElement.prototype.getContext
   const createRequireFn = createRequire(import.meta.url)
-  const { createCanvas: nodeCreateCanvas, loadImage: nodeLoadImage } = createRequireFn(
-    'canvas',
-  ) as {
-    createCanvas: (
-      width: number,
-      height: number,
-    ) => {
-      getContext: (type: string) => CanvasRenderingContext2D
-      width: number
-      height: number
-      toDataURL: (mimeType?: string, quality?: number) => string
-    }
-    loadImage: (src: string) => Promise<unknown>
-  }
 
   HTMLCanvasElement.prototype.getContext = function (
     this: { width: number; height: number },
@@ -274,10 +258,16 @@ const createCanvasPolyfill = (win: CustomWindow, _happyDocument: unknown): void 
     ...args: unknown[]
   ): CanvasRenderingContext2D | null {
     if (type === '2d') {
-      const canvas = nodeCreateCanvas(this.width || 300, this.height || 150)
+      const canvas = createCanvas(this.width || 300, this.height || 150)
       const ctx = canvas.getContext('2d')!
 
       const originalDrawImage = ctx.drawImage
+      const drawImageWithUnknownArgs = originalDrawImage as (
+        this: CanvasRenderingContext2D,
+        img: unknown,
+        ...args: unknown[]
+      ) => void
+
       ctx.drawImage = function (
         this: CanvasRenderingContext2D,
         img: unknown,
@@ -288,7 +278,7 @@ const createCanvasPolyfill = (win: CustomWindow, _happyDocument: unknown): void 
           img &&
           typeof (img as { _nodeCanvasImage?: unknown })._nodeCanvasImage !== 'undefined'
         ) {
-          return originalDrawImage.call(
+          return drawImageWithUnknownArgs.call(
             this,
             (img as { _nodeCanvasImage: unknown })._nodeCanvasImage,
             ...drawArgs,
@@ -306,17 +296,20 @@ const createCanvasPolyfill = (win: CustomWindow, _happyDocument: unknown): void 
           (img as { src: string }).src.startsWith('data:image')
         ) {
           try {
-            const nodeImg = nodeLoadImage((img as { src: string }).src)
-            return originalDrawImage.call(this, nodeImg, ...drawArgs)
+            const nodeImg = loadImage((img as { src: string }).src)
+            return drawImageWithUnknownArgs.call(this, nodeImg, ...drawArgs)
           } catch {
             // Fall through to original
           }
         }
 
-        return originalDrawImage.call(this, img, ...drawArgs)
+        return drawImageWithUnknownArgs.call(this, img, ...drawArgs)
       }
 
-      return ctx
+      const ctxWithToDataURL = ctx as unknown as CanvasRenderingContext2D & {
+        toDataURL: (mimeType?: string, quality?: number) => string
+      }
+      return ctxWithToDataURL
     }
 
     if (type === 'webgl' || type === 'webgl2') {
@@ -339,8 +332,10 @@ const createCanvasPolyfill = (win: CustomWindow, _happyDocument: unknown): void 
     mimeType = 'image/png',
     quality?: number,
   ): string {
-    const canvas = nodeCreateCanvas(this.width || 300, this.height || 150)
-    const ctx = canvas.getContext('2d')!
+    const canvas = createCanvas(this.width || 300, this.height || 150)
+    const ctx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D & {
+      toDataURL: (mimeType?: string, quality?: number) => string
+    }
     return ctx.toDataURL(mimeType, quality)
   }
 }
