@@ -2,7 +2,7 @@ export { isNodeDev, isNodeProd, isProd, isVerbose, getErrorLength, env } from '.
 export { getTestKey } from './getTestKey.ts'
 export { http } from './http.ts'
 export { promise } from './promise.ts'
-export * as stats from './stats.ts'
+export * as stats from './stats/index.ts'
 export { Store, createStore } from './store.ts'
 export { vals } from './vals.ts'
 export { version } from './version.ts'

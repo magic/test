@@ -1,6 +1,6 @@
 import is from '@magic/types'
-import * as stats from '../../src/lib/stats.js'
-import { info, reset, test } from '../../src/lib/stats.js'
+import * as stats from '../../src/lib/stats/index.js'
+import { info, reset, test } from '../../src/lib/stats/index.js'
 import { Store } from '../../src/lib/store.js'
 
 export default [

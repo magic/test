@@ -1,101 +1,13 @@
 import log from '@magic/log'
-import is from '@magic/types'
 
-import { env } from './env.ts'
-import { stringify } from './stringify.ts'
-import { getDuration } from './getDuration.ts'
-import { Store } from './store.ts'
-import type { InputValue, TestResult, TestStats, TestResults } from '../types.ts'
+import { env } from '../env.ts'
+import { stringify } from '../stringify.ts'
+import { getDuration } from '../getDuration.ts'
+import { Store } from '../store.ts'
+import { isTestResult } from './isTestResult.ts'
+import { printPercent } from './printPercent.ts'
 
-/**
- * Type guard to check if a value is a TestResult.
- */
-export const isTestResult = (obj: unknown): obj is TestResult =>
-  is.objectNative(obj) &&
-  'result' in obj &&
-  'expString' in obj &&
-  'msg' in obj &&
-  'pass' in obj &&
-  'key' in obj
-
-/**
- * Formats a number with fixed decimals and converts to number type.
- */
-export const toMinimalFixed = (p: number, fix = 2): number => parseFloat(p.toFixed(fix))
-
-/**
- * Returns a colored percentage string.
- */
-export const printPercent = (p: number): string => {
-  let color = 'red'
-  if (p === 100) {
-    color = 'green'
-  } else if (p > 90) {
-    color = 'yellow'
-  }
-
-  const value = toMinimalFixed(p, 2)
-
-  return log.color(color, value)
-}
-
-/**
- * Record a test result in the store, updating statistics for the test,
- * its parent, package, and global counters.
- */
-export const test = (
-  t: { name: string; parent?: string; pass: boolean; pkg?: string },
-  store: Store,
-): void => {
-  const storeResults = store.get('results')
-  const results: TestResults = (storeResults as TestResults | undefined) ?? {
-    __PACKAGE_ROOT__: { all: 0, pass: 0 },
-  }
-
-  const { name, parent, pass, pkg } = t
-
-  let currentName = name
-
-  if (parent && parent !== name) {
-    currentName = `${parent}.${name}`
-
-    if (!results[parent]) {
-      results[parent] = { all: 0, pass: 0 }
-    }
-    results[parent].all++
-    if (pass) {
-      results[parent].pass++
-    }
-  }
-
-  if (pkg && pkg !== parent) {
-    currentName = `${pkg}.${currentName}`
-
-    if (!results[pkg]) {
-      results[pkg] = { all: 0, pass: 0 }
-    }
-    results[pkg].all++
-    if (pass) {
-      results[pkg].pass++
-    }
-  }
-
-  if (!results[currentName]) {
-    results[currentName] = { all: 0, pass: 0 }
-  }
-  if (!results.__PACKAGE_ROOT__) {
-    results.__PACKAGE_ROOT__ = { all: 0, pass: 0 }
-  }
-
-  results.__PACKAGE_ROOT__.all++
-  results[currentName].all++
-  if (pass) {
-    results.__PACKAGE_ROOT__.pass++
-    results[currentName].pass++
-  }
-
-  store.set({ results })
-}
+import type { InputValue, TestResult, TestResults } from '../../types.ts'
 
 /**
  * Prints test results for a package and its suites.
@@ -176,11 +88,4 @@ export const info = (pkg: string, suites: unknown[], store: Store): boolean => {
 
   log(`Ran ${all} tests in ${duration}. Passed ${pass}/${all} ${percentage}%\n`)
   return true
-}
-
-/**
- * Reset the store to default state.
- */
-export const reset = (store: Store): void => {
-  store.reset()
 }
