@@ -5,7 +5,6 @@ import {
   cleanError,
   cleanFunctionString,
   getTestKey,
-  stats,
   createStore,
   ERRORS,
 } from '../lib/index.ts'
@@ -189,7 +188,8 @@ const evaluateResult = async (res: unknown, expect: unknown): Promise<EvaluateRe
  */
 export const runTest = async (
   test: WrappedTest,
-  store: Store = createStore(),
+  store: Store,
+  rawResults?: TestResult[],
 ): Promise<TestResult | Suite | undefined> => {
   const testKey = test.key || ''
   const testName = test.name || ''
@@ -205,15 +205,16 @@ export const runTest = async (
     const timeoutMs = getTestTimeout(timeout)
 
     if (!is.ownProp(test, 'fn')) {
-      if (is.object(test) && is.object(tests)) {
-        return await runSuite({
-          pkg,
-          parent: name,
-          name,
-          tests,
-          store,
-        })
-      }
+       if (is.object(test) && is.object(tests)) {
+         return await runSuite({
+           pkg,
+           parent: name,
+           name,
+           tests,
+           store,
+           rawResults: rawResults ?? [],
+         })
+       }
 
       log.error(ERRORS.E_TEST_NO_FN, {
         testKey: test.key,
@@ -330,38 +331,33 @@ export const runTest = async (
       }
     }
 
-    if (!pass) {
-      let testName = name
-      if (parent && parent !== name) {
-        testName = `${parent}.${name}`
-      }
-      if (pkg !== parent && pkg !== name) {
-        testName = `${pkg}.${testName}`
-      }
-      log.error('FAIL', testName, info)
-    }
+     if (!pass) {
+       let testName = name
+       if (parent && parent !== name) {
+         testName = `${parent}.${name}`
+       }
+       if (pkg !== parent && pkg !== name) {
+         testName = `${pkg}.${testName}`
+       }
+       log.error('FAIL', testName, info)
+     }
 
-    stats.test(
-      {
-        parent,
-        name,
-        pass,
-        pkg,
-      },
-      store,
-    )
+     const testResult: TestResult = {
+       result,
+       msg,
+       pass,
+       parent: parent || '',
+       name,
+       expect: exp,
+       expString,
+       key,
+       info,
+     }
 
-    return {
-      result,
-      msg,
-      pass,
-      parent: parent || '',
-      name,
-      expect: exp,
-      expString,
-      key,
-      info,
-    }
+     // Collect result for final aggregation (main thread only)
+     rawResults?.push(testResult)
+
+     return testResult
   } catch (e) {
     log.error(ERRORS.E_TEST_FN, {
       testKey: testKey,

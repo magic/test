@@ -10,13 +10,14 @@ import {
   getFNS,
   getTestKey,
   cleanError,
-  stats,
+  createStore,
+  ERRORS,
   suiteNeedsIsolation,
   suiteModifiesGlobals,
+  testModifiesGlobals,
   testImportsMutableModuleState,
   testUsesFixedPorts,
   testUsesSharedFiles,
-  ERRORS,
 } from '../lib/index.ts'
 import { Store } from '../lib/store.ts'
 import { isolation } from './isolation.ts'
@@ -100,6 +101,7 @@ const runTestArray = async (
   parent: string,
   pkg: string,
   store: Store,
+  rawResults: TestResult[],
   testFileUrl: string,
   useWorkers: boolean,
   suiteSnapshot?: Snapshot,
@@ -114,78 +116,78 @@ const runTestArray = async (
         pkg: t.pkg || pkg,
       }
 
-      // Component tests require DOM, can't run in workers (happy-dom singleton)
-      if (t.component) {
-        return runTest(testToRun, store)
-      }
+       // Component tests require DOM, can't run in workers (happy-dom singleton)
+       if (t.component) {
+         return runTest(testToRun, store, rawResults)
+       }
 
-      const keyForResult =
-        testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name)
-      return isolation
-        .executeInWorker({
-          testFileUrl,
-          testIndex: i,
-          testPkg: testToRun.pkg,
-          testParent: testToRun.parent,
-          testName: testToRun.name,
-          suiteSnapshot,
-        })
-        .then(
-          (result): TestResult => {
-            const r = result as TestResult
-            // Manually update stats (workers don't have store access)
-            if (r.pass !== undefined) {
-              stats.test({ parent: r.parent, name: r.name, pass: r.pass, pkg: r.pkg }, store)
-            }
+       const keyForResult =
+         testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name)
+       return isolation
+         .executeInWorker({
+           testFileUrl,
+           testIndex: i,
+           testPkg: testToRun.pkg,
+           testParent: testToRun.parent,
+           testName: testToRun.name,
+           suiteSnapshot,
+         })
+         .then(
+           (result): TestResult => {
+             const r = result as TestResult
+             // Collect result for aggregation
+             rawResults.push(r)
 
-            // Log cleanup errors from worker
-            if (r.afterCleanupError) {
-              log.warn('afterCleanup error in', r.name || testToRun.name, r.afterCleanupError)
-            }
-            if (r.afterError) {
-              log.warn('after error in', r.name || testToRun.name, r.afterError)
-            }
+             // Log cleanup errors from worker
+             if (r.afterCleanupError) {
+               log.warn('afterCleanup error in', r.name || testToRun.name, r.afterCleanupError)
+             }
+             if (r.afterError) {
+               log.warn('after error in', r.name || testToRun.name, r.afterError)
+             }
 
-            return r
-          },
-          err => {
-            // Worker failed; create a failing TestResult
-            log.error(ERRORS.E_TEST_FN, {
-              testKey: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
-              testName: testToRun.name,
-              parent: testToRun.parent,
-              error: cleanError(err),
-            })
-            return {
-              result: undefined,
-              msg: '',
-              pass: false,
-              parent: testToRun.parent || '',
-              name: testToRun.name,
-              expect: undefined,
-              expString: undefined,
-              key: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
-              info: testToRun.info || '',
-              pkg: testToRun.pkg,
-            }
-          },
-        )
+             return r
+           },
+           err => {
+             // Worker failed; create a failing TestResult
+             log.error(ERRORS.E_TEST_FN, {
+               testKey: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
+               testName: testToRun.name,
+               parent: testToRun.parent,
+               error: cleanError(err),
+             })
+             const failResult = {
+               result: undefined,
+               msg: '',
+               pass: false,
+               parent: testToRun.parent || '',
+               name: testToRun.name,
+               expect: undefined,
+               expString: undefined,
+               key: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
+               info: testToRun.info || '',
+               pkg: testToRun.pkg,
+             }
+             rawResults.push(failResult)
+             return failResult
+           },
+         )
     })
 
     const resolved = await Promise.all(promises)
     return resolved.filter(r => !!r)
   }
 
-  // No isolation needed: run in parallel without isolation
-  const promises = tests.map(t => {
-    const testToRun = {
-      ...t,
-      name: t.name || name,
-      parent: t.parent || parent,
-      pkg: t.pkg || pkg,
-    }
-    return runTest(testToRun, store)
-  })
+   // No isolation needed: run in parallel without isolation
+   const promises = tests.map(t => {
+     const testToRun = {
+       ...t,
+       name: t.name || name,
+       parent: t.parent || parent,
+       pkg: t.pkg || pkg,
+     }
+     return runTest(testToRun, store, rawResults)
+   })
   const resolved = await Promise.all(promises)
   return resolved.filter(r => !!r)
 }
@@ -199,13 +201,14 @@ const runTestObject = async (
   parent: string,
   pkg: string,
   store: Store,
+  rawResults: TestResult[],
 ): Promise<(TestResult | Suite)[]> => {
   if (is.function(testsObj.fn)) {
     const fns = getFNS()
     if (!fns.includes(name)) return []
 
     const test = { ...testsObj, name, parent, pkg }
-    const result = await runTest(test, store)
+    const result = await runTest(test, store, rawResults)
     return result ? [result] : []
   }
 
@@ -221,6 +224,7 @@ const runTestObject = async (
       tests: nestedTests as TestCollection,
       pkg,
       store,
+      rawResults,
     }),
   )
   const resolved = await Promise.all(promises)
@@ -231,9 +235,10 @@ const runTestObject = async (
  * Run a suite of tests (recursively).
  */
 export const runSuite = async (
-  props: SuiteInput & { store?: Store },
+  props: SuiteInput & { store: Store; rawResults: TestResult[] },
 ): Promise<Suite | undefined> => {
   const store = props.store ?? new Store()
+  const { rawResults } = props
 
   const suite: Suite = {
     ...defaultSuite,
@@ -319,12 +324,13 @@ export const runSuite = async (
           parent,
           pkg,
           store,
+          rawResults,
           testFileUrl,
           useWorkers,
           suiteSnapshot,
         )
       } else if (is.objectNative(tests)) {
-        results = await runTestObject(tests as TestObject, name, parent, pkg, store as Store)
+        results = await runTestObject(tests as TestObject, name, parent, pkg, store as Store, rawResults)
       }
 
       if (!is.undefined(results)) {

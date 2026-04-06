@@ -4,12 +4,63 @@ import is from '@magic/types'
 import log from '@magic/log'
 import fs from '@magic/fs'
 
-import { stats, createStore, ERRORS } from './lib/index.ts'
-
+import { stats, createStore, ERRORS, Store } from './lib/index.ts'
 import { runSuite } from './run/suite.ts'
-import type { TestSuites, TestCollection, CleanupFunction } from './types.ts'
+import type { TestSuites, TestCollection, CleanupFunction, TestResult } from './types.ts'
 
 const cwd = process.cwd()
+
+/**
+ * Aggregate raw test results into the store's results object.
+ * This replaces the incremental stats.test() calls to avoid race conditions.
+ */
+const aggregateResults = (
+  rawResults: TestResult[],
+  store: Store,
+  pkg: string,
+): void => {
+  const results: Record<string, { all: number; pass: number }> = {
+    __PACKAGE_ROOT__: { all: 0, pass: 0 },
+  }
+
+  for (const r of rawResults) {
+    if (!r) continue
+
+    const testKey = r.key || ''
+    if (!testKey) continue
+
+    // Test-level entry
+    if (!results[testKey]) {
+      results[testKey] = { all: 0, pass: 0 }
+    }
+    results[testKey].all++
+    if (r.pass) results[testKey].pass++
+
+    // Parent-level (suite)
+    if (r.parent && r.parent !== testKey) {
+      if (!results[r.parent]) {
+        results[r.parent] = { all: 0, pass: 0 }
+      }
+      results[r.parent].all++
+      if (r.pass) results[r.parent].pass++
+    }
+
+    // Package-level
+    if (r.pkg && r.pkg !== r.parent && r.pkg !== testKey) {
+      if (!results[r.pkg]) {
+        results[r.pkg] = { all: 0, pass: 0 }
+      }
+      results[r.pkg].all++
+      if (r.pass) results[r.pkg].pass++
+    }
+
+    // Package root
+    results.__PACKAGE_ROOT__.all++
+    if (r.pass) results.__PACKAGE_ROOT__.pass++
+  }
+
+  store.set({ results })
+}
 
 /**
  * Check if a value is a TestCollection (array of tests or test object with hooks)
@@ -102,11 +153,13 @@ export const run = async (
 
   resetAbort()
 
-  const store = createStore()
-  const startTime = log.hrtime()
-  store.set({ startTime })
+   const store = createStore()
+   const startTime = log.hrtime()
+   store.set({ startTime })
 
-  let testsObj: TestSuites = is.function(tests) ? tests() : tests
+   const rawResults: TestResult[] = []
+
+   let testsObj: TestSuites = is.function(tests) ? tests() : tests
 
   if (!is.object(testsObj)) {
     log.error(ERRORS.E_NO_TESTS, { received: testsObj })
@@ -176,14 +229,9 @@ export const run = async (
   const content = await fs.readFile(packagePath, 'utf8')
   const { name } = JSON.parse(content)
 
-  // Filter to only include TestCollection entries (exclude hook functions)
-  const allEntries = Object.entries(testsObj)
-  const testEntries: [string, TestCollection][] = []
-  for (const entry of allEntries) {
-    if (isTestCollection(entry[1])) {
-      testEntries.push(entry as [string, TestCollection])
-    }
-  }
+   // After removing hook files, all remaining entries should be processed as test suites.
+   // convertSuite will handle arrays, functions, and objects (including plain test objects).
+   const testEntries: [string, unknown][] = Object.entries(testsObj)
 
   const suites = (
     await Promise.all(
@@ -191,23 +239,27 @@ export const run = async (
         if (aborted) {
           return
         }
-        return await runSuite({
-          pkg: name,
-          parent: name,
-          name,
-          tests: testsValue,
-          store,
-        })
+         return await runSuite({
+           pkg: name,
+           parent: name,
+           name,
+           tests: testsValue as TestCollection,
+           store,
+           rawResults,
+         })
       }),
     )
   ).filter(s => !is.undef(s))
 
-  if (aborted) {
-    log.warn('Test run was aborted')
-    return
-  }
+   if (aborted) {
+     log.warn('Test run was aborted')
+     return
+   }
 
-  // Run all afterAll files
+   // Aggregate all raw results into store (single pass, race-free)
+   aggregateResults(rawResults, store, name)
+
+   // Run all afterAll files
   for (const afterAll of afterAllFns) {
     await afterAll()
   }
