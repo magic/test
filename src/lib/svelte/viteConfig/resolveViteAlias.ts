@@ -1,6 +1,10 @@
 import fs from '@magic/fs'
 import is from '@magic/types'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 import { classifyImport } from './classifyImport.ts'
 import { findProjectRoot } from './findProjectRoot.ts'
@@ -28,14 +32,28 @@ export const resolveViteAlias = async (
   // Use shims for $app/* imports (SvelteKit internal deps can't be resolved in test env)
   if (importPath.startsWith('$app/')) {
     const shimName = importPath.slice(5) // after "$app/"
-    const shimPath = path.join(rootDir, 'src/lib/svelte/shims/$app', shimName)
-    const candidates = [
-      shimPath + '.js',
-      shimPath + '.ts',
-      path.join(shimPath, 'index.js'),
-      path.join(shimPath, 'index.ts'),
+    // First, try project-local shims (if the project copied them)
+    const projectShimPath = path.join(rootDir, 'src/lib/svelte/shims/$app', shimName)
+    const projectCandidates = [
+      projectShimPath + '.js',
+      projectShimPath + '.ts',
+      path.join(projectShimPath, 'index.js'),
+      path.join(projectShimPath, 'index.ts'),
     ]
-    for (const candidate of candidates) {
+    for (const candidate of projectCandidates) {
+      if (await fs.exists(candidate)) {
+        return candidate
+      }
+    }
+    // Fallback to test runner's bundled shims
+    const shimsDir = path.join(__dirname, '..', 'shims', '$app')
+    const bundledCandidates = [
+      path.join(shimsDir, shimName + '.js'),
+      path.join(shimsDir, shimName + '.ts'),
+      path.join(shimsDir, shimName, 'index.js'),
+      path.join(shimsDir, shimName, 'index.ts'),
+    ]
+    for (const candidate of bundledCandidates) {
       if (await fs.exists(candidate)) {
         return candidate
       }
@@ -116,15 +134,15 @@ export const resolveViteAlias = async (
     }
   }
 
-  // Shim $app/* imports to local test shims
+  // Fallback: use test runner's own $app shims (if project didn't provide alias/shims)
   if (importPath.startsWith('$app/')) {
     const shimName = importPath.slice(5) // after "$app/"
-    const shimPath = path.join(rootDir, 'src/lib/svelte/shims/$app', shimName)
+    const shimsDir = path.join(__dirname, '..', 'shims', '$app')
     const candidates = [
-      shimPath + '.js',
-      shimPath + '.ts',
-      path.join(shimPath, 'index.js'),
-      path.join(shimPath, 'index.ts'),
+      path.join(shimsDir, shimName + '.js'),
+      path.join(shimsDir, shimName + '.ts'),
+      path.join(shimsDir, shimName, 'index.js'),
+      path.join(shimsDir, shimName, 'index.ts'),
     ]
     for (const candidate of candidates) {
       if (await fs.exists(candidate)) {

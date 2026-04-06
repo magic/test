@@ -1,5 +1,7 @@
 import fs from '@magic/fs'
 import path from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.ts'
 
 const EXTENSIONS = ['.ts', '.js']
 
@@ -38,6 +40,19 @@ export const resolve = async (
   context: { parentURL?: string },
   nextResolve: (specifier: string, context?: object) => Promise<{ url: string }>,
 ): Promise<{ url: string }> => {
+  // Handle Vite/SvelteKit path aliases ($lib, $app, etc.) for test files
+  if (context.parentURL) {
+    const parentPath = new URL(context.parentURL).pathname
+    try {
+      const aliasResolved = await resolveViteAlias(specifier, parentPath)
+      if (aliasResolved) {
+        return { url: pathToFileURL(aliasResolved).href }
+      }
+    } catch {
+      // ignore and fall through to normal resolution
+    }
+  }
+
   // Handle relative imports without extension - check .ts first (preferred)
   if (specifier.startsWith('.') && !hasExtension(specifier)) {
     const parentDir = context.parentURL
