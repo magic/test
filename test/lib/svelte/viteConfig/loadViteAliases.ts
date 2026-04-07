@@ -38,6 +38,8 @@ export default {
         await configCache.clear()
         await fs.rmrf(TEST_ROOT)
         await fs.mkdir(TEST_ROOT, { recursive: true })
+        // Small delay to ensure filesystem operations complete
+        await new Promise(r => setTimeout(r, 5))
         // Valid config
         await fs.writeFile(
           CONFIG_PATH,
@@ -47,14 +49,8 @@ export default {
             })
           `,
         )
-        await fs.writeFile(
-          CONFIG_PATH,
-          `
-            export default defineConfig({
-              resolve: { alias: { find: '@', replacement: './src' } }
-            })
-          `,
-        )
+        // Small delay to ensure file is written before parsing
+        await new Promise(r => setTimeout(r, 5))
         const result = await loadViteAliases(TEST_ROOT)
         return result
       },

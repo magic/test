@@ -35,7 +35,7 @@
 </script>
 
 <div class="nav">
-  <span class="url">{$page.url.pathname}</span>
-  <span class="navigating">{$navigating ? 'busy' : 'idle'}</span>
+  <span class="url">{page.url.pathname}</span>
+  <span class="navigating">{navigating ? 'busy' : 'idle'}</span>
   <span class="logs">{logs.join('|')}</span>
 </div>

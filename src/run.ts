@@ -14,11 +14,7 @@ const cwd = process.cwd()
  * Aggregate raw test results into the store's results object.
  * This replaces the incremental stats.test() calls to avoid race conditions.
  */
-const aggregateResults = (
-  rawResults: TestResult[],
-  store: Store,
-  pkg: string,
-): void => {
+const aggregateResults = (rawResults: TestResult[], store: Store, pkg: string): void => {
   const results: Record<string, { all: number; pass: number }> = {
     __PACKAGE_ROOT__: { all: 0, pass: 0 },
   }
@@ -153,13 +149,13 @@ export const run = async (
 
   resetAbort()
 
-   const store = createStore()
-   const startTime = log.hrtime()
-   store.set({ startTime })
+  const store = createStore()
+  const startTime = log.hrtime()
+  store.set({ startTime })
 
-   const rawResults: TestResult[] = []
+  const rawResults: TestResult[] = []
 
-   let testsObj: TestSuites = is.function(tests) ? tests() : tests
+  let testsObj: TestSuites = is.function(tests) ? tests() : tests
 
   if (!is.object(testsObj)) {
     log.error(ERRORS.E_NO_TESTS, { received: testsObj })
@@ -229,9 +225,9 @@ export const run = async (
   const content = await fs.readFile(packagePath, 'utf8')
   const { name } = JSON.parse(content)
 
-   // After removing hook files, all remaining entries should be processed as test suites.
-   // convertSuite will handle arrays, functions, and objects (including plain test objects).
-   const testEntries: [string, unknown][] = Object.entries(testsObj)
+  // After removing hook files, all remaining entries should be processed as test suites.
+  // convertSuite will handle arrays, functions, and objects (including plain test objects).
+  const testEntries: [string, unknown][] = Object.entries(testsObj)
 
   const suites = (
     await Promise.all(
@@ -239,27 +235,27 @@ export const run = async (
         if (aborted) {
           return
         }
-         return await runSuite({
-           pkg: name,
-           parent: name,
-           name,
-           tests: testsValue as TestCollection,
-           store,
-           rawResults,
-         })
+        return await runSuite({
+          pkg: name,
+          parent: name,
+          name,
+          tests: testsValue as TestCollection,
+          store,
+          rawResults,
+        })
       }),
     )
   ).filter(s => !is.undef(s))
 
-   if (aborted) {
-     log.warn('Test run was aborted')
-     return
-   }
+  if (aborted) {
+    log.warn('Test run was aborted')
+    return
+  }
 
-   // Aggregate all raw results into store (single pass, race-free)
-   aggregateResults(rawResults, store, name)
+  // Aggregate all raw results into store (single pass, race-free)
+  aggregateResults(rawResults, store, name)
 
-   // Run all afterAll files
+  // Run all afterAll files
   for (const afterAll of afterAllFns) {
     await afterAll()
   }

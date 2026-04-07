@@ -4,4 +4,4 @@
   const { routeId } = $props()
 </script>
 
-<div>{$page.routeId || routeId}</div>
+<div>{page.routeId || routeId}</div>

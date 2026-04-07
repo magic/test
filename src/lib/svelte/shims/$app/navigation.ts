@@ -23,7 +23,7 @@ interface OnNavigate extends AfterNavigate {}
 
 const getCtx = () => getContext() ?? getDefaultContext()
 
-export function goto(
+export async function goto(
   url: string | URL,
   opts: {
     replaceState?: boolean
@@ -55,11 +55,14 @@ export function goto(
 
   ctx.navigating.set(navObj)
 
-  ctx.page.update(p => ({
-    ...p,
+  ctx.page.set({
+    ...currentPage,
     url: targetUrl,
     ...(opts.state || {}),
-  }))
+  })
+
+  // Allow Svelte to process the state changes
+  await new Promise(r => setTimeout(r, 0))
 
   ctx.navigating.set(null)
 
@@ -94,14 +97,14 @@ export function pushState(url: string | URL, state: Record<string, unknown> = {}
   const ctx = getCtx()
   const currentPage = get(ctx.page) as Page
   const targetUrl = typeof url === 'string' ? new URL(url, currentPage.url.origin) : url
-  ctx.page.update(p => ({ ...p, url: targetUrl, ...state }))
+  ctx.page.set({ ...currentPage, url: targetUrl, ...state })
 }
 
 export function replaceState(url: string | URL, state: Record<string, unknown> = {}): void {
   const ctx = getCtx()
   const currentPage = get(ctx.page) as Page
   const targetUrl = typeof url === 'string' ? new URL(url, currentPage.url.origin) : url
-  ctx.page.update(p => ({ ...p, url: targetUrl, ...state }))
+  ctx.page.set({ ...currentPage, url: targetUrl, ...state })
 }
 
 export function invalidate(resource: string | URL | ((url: URL) => boolean)): Promise<void> {

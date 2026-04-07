@@ -116,78 +116,78 @@ const runTestArray = async (
         pkg: t.pkg || pkg,
       }
 
-       // Component tests require DOM, can't run in workers (happy-dom singleton)
-       if (t.component) {
-         return runTest(testToRun, store, rawResults)
-       }
+      // Component tests require DOM, can't run in workers (happy-dom singleton)
+      if (t.component) {
+        return runTest(testToRun, store, rawResults)
+      }
 
-       const keyForResult =
-         testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name)
-       return isolation
-         .executeInWorker({
-           testFileUrl,
-           testIndex: i,
-           testPkg: testToRun.pkg,
-           testParent: testToRun.parent,
-           testName: testToRun.name,
-           suiteSnapshot,
-         })
-         .then(
-           (result): TestResult => {
-             const r = result as TestResult
-             // Collect result for aggregation
-             rawResults.push(r)
+      const keyForResult =
+        testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name)
+      return isolation
+        .executeInWorker({
+          testFileUrl,
+          testIndex: i,
+          testPkg: testToRun.pkg,
+          testParent: testToRun.parent,
+          testName: testToRun.name,
+          suiteSnapshot,
+        })
+        .then(
+          (result): TestResult => {
+            const r = result as TestResult
+            // Collect result for aggregation
+            rawResults.push(r)
 
-             // Log cleanup errors from worker
-             if (r.afterCleanupError) {
-               log.warn('afterCleanup error in', r.name || testToRun.name, r.afterCleanupError)
-             }
-             if (r.afterError) {
-               log.warn('after error in', r.name || testToRun.name, r.afterError)
-             }
+            // Log cleanup errors from worker
+            if (r.afterCleanupError) {
+              log.warn('afterCleanup error in', r.name || testToRun.name, r.afterCleanupError)
+            }
+            if (r.afterError) {
+              log.warn('after error in', r.name || testToRun.name, r.afterError)
+            }
 
-             return r
-           },
-           err => {
-             // Worker failed; create a failing TestResult
-             log.error(ERRORS.E_TEST_FN, {
-               testKey: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
-               testName: testToRun.name,
-               parent: testToRun.parent,
-               error: cleanError(err),
-             })
-             const failResult = {
-               result: undefined,
-               msg: '',
-               pass: false,
-               parent: testToRun.parent || '',
-               name: testToRun.name,
-               expect: undefined,
-               expString: undefined,
-               key: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
-               info: testToRun.info || '',
-               pkg: testToRun.pkg,
-             }
-             rawResults.push(failResult)
-             return failResult
-           },
-         )
+            return r
+          },
+          err => {
+            // Worker failed; create a failing TestResult
+            log.error(ERRORS.E_TEST_FN, {
+              testKey: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
+              testName: testToRun.name,
+              parent: testToRun.parent,
+              error: cleanError(err),
+            })
+            const failResult = {
+              result: undefined,
+              msg: '',
+              pass: false,
+              parent: testToRun.parent || '',
+              name: testToRun.name,
+              expect: undefined,
+              expString: undefined,
+              key: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
+              info: testToRun.info || '',
+              pkg: testToRun.pkg,
+            }
+            rawResults.push(failResult)
+            return failResult
+          },
+        )
     })
 
     const resolved = await Promise.all(promises)
     return resolved.filter(r => !!r)
   }
 
-   // No isolation needed: run in parallel without isolation
-   const promises = tests.map(t => {
-     const testToRun = {
-       ...t,
-       name: t.name || name,
-       parent: t.parent || parent,
-       pkg: t.pkg || pkg,
-     }
-     return runTest(testToRun, store, rawResults)
-   })
+  // No isolation needed: run in parallel without isolation
+  const promises = tests.map(t => {
+    const testToRun = {
+      ...t,
+      name: t.name || name,
+      parent: t.parent || parent,
+      pkg: t.pkg || pkg,
+    }
+    return runTest(testToRun, store, rawResults)
+  })
   const resolved = await Promise.all(promises)
   return resolved.filter(r => !!r)
 }
@@ -330,7 +330,14 @@ export const runSuite = async (
           suiteSnapshot,
         )
       } else if (is.objectNative(tests)) {
-        results = await runTestObject(tests as TestObject, name, parent, pkg, store as Store, rawResults)
+        results = await runTestObject(
+          tests as TestObject,
+          name,
+          parent,
+          pkg,
+          store as Store,
+          rawResults,
+        )
       }
 
       if (!is.undefined(results)) {

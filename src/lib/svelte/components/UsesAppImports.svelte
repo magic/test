@@ -4,6 +4,6 @@
 </script>
 
 <div class="wrapper-test">
-  <span class="path">{$page.url.pathname}</span>
+  <span class="path">{page.url.pathname}</span>
   <span class="browser">{browser}</span>
 </div>

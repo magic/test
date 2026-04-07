@@ -1,0 +1,68 @@
+// Shim for $app/forms
+// Provides form enhancement functions
+
+interface ActionResult<Success, Failure> {
+  type: 'success' | 'failure' | 'redirect' | 'error'
+  success?: Success
+  failure?: Failure
+  location?: string
+  status?: number
+  data?: unknown
+  error?: unknown
+}
+
+export async function applyAction<
+  Success extends Record<string, unknown> | undefined,
+  Failure extends Record<string, unknown> | undefined,
+>(result: ActionResult<Success, Failure>): Promise<void> {
+  // In test environment, we can't update page state like a real browser
+  // This is a no-op implementation
+}
+
+export function deserialize<
+  Success extends Record<string, unknown> | undefined,
+  Failure extends Record<string, unknown> | undefined,
+>(result: string): ActionResult<Success, Failure> {
+  try {
+    return JSON.parse(result) as ActionResult<Success, Failure>
+  } catch {
+    return {
+      type: 'error',
+      error: new Error('Failed to deserialize result'),
+    } as any
+  }
+}
+
+interface EnhanceOptions<Success, Failure> {
+  reset?: boolean
+  invalidateAll?: boolean
+  submit?: (args: {
+    formData: FormData
+    action: URL
+    cancel: () => void
+    result: (res: ActionResult<Success, Failure>) => void
+    update: (opts?: EnhanceOptions<Success, Failure>) => Promise<void>
+  }) => void | Promise<void>
+}
+
+export function enhance<
+  Success extends Record<string, unknown> | undefined,
+  Failure extends Record<string, unknown> | undefined,
+>(
+  formElement: HTMLFormElement,
+  submit?: (args: {
+    formData: FormData
+    action: URL
+    cancel: () => void
+    result: (res: ActionResult<Success, Failure>) => void
+    update: (opts?: EnhanceOptions<Success, Failure>) => Promise<void>
+  }) => void | Promise<void>,
+): { destroy(): void } {
+  // No-op enhancement - form submits normally
+  // Return destroy function for cleanup
+  return {
+    destroy() {
+      // cleanup
+    },
+  }
+}

@@ -54,18 +54,62 @@ const defaultContext: ShimContext = {
 
 const getCtx = (): ShimContext => storage.getStore() ?? defaultContext
 
-// Proxy objects that delegate to the current context's stores
-export const page = {
-  subscribe: (run: any, invalidate?: any) => getCtx().page.subscribe(run, invalidate),
-  set: (value: Page) => getCtx().page.set(value),
-  update: (fn: (value: Page) => Page) => getCtx().page.update(fn),
+const makePageProxy = (): Page => {
+  return new Proxy({} as any, {
+    get(_target, prop) {
+      return get(getCtx().page)?.[prop as keyof (keyof Page)]
+    },
+    has(_target, prop) {
+      const page = get(getCtx().page)
+      return prop in (page || {})
+    },
+    ownKeys(_target) {
+      const page = get(getCtx().page)
+      return Object.keys(page || {})
+    },
+    getOwnPropertyDescriptor(_target, prop) {
+      const page = get(getCtx().page)
+      if (prop in (page || {})) {
+        return {
+          enumerable: true,
+          configurable: true,
+          value: page?.[prop as keyof (keyof Page)],
+        }
+      }
+      return undefined
+    },
+  })
 }
 
-export const navigating = {
-  subscribe: (run: any, invalidate?: any) => getCtx().navigating.subscribe(run, invalidate),
-  set: (value: Navigation | null) => getCtx().navigating.set(value),
-  update: (fn: (value: Navigation | null) => Navigation | null) => getCtx().navigating.update(fn),
+const makeNavigatingProxy = (): Navigation | null => {
+  return new Proxy({} as any, {
+    get(_target, prop) {
+      return get(getCtx().navigating)?.[prop as keyof (keyof Navigation)]
+    },
+    has(_target, prop) {
+      const nav = get(getCtx().navigating)
+      return prop in (nav || {})
+    },
+    ownKeys(_target) {
+      const nav = get(getCtx().navigating)
+      return Object.keys(nav || {})
+    },
+    getOwnPropertyDescriptor(_target, prop) {
+      const nav = get(getCtx().navigating)
+      if (prop in (nav || {})) {
+        return {
+          enumerable: true,
+          configurable: true,
+          value: nav?.[prop as keyof (keyof Navigation)],
+        }
+      }
+      return undefined
+    },
+  })
 }
+
+export const page: any = makePageProxy()
+export const navigating: any = makeNavigatingProxy()
 
 export const updated = {
   get current(): boolean {

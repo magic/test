@@ -1,13 +1,7 @@
 import is from '@magic/types'
 import log from '@magic/log'
 
-import {
-  cleanError,
-  cleanFunctionString,
-  getTestKey,
-  createStore,
-  ERRORS,
-} from '../lib/index.ts'
+import { cleanError, cleanFunctionString, getTestKey, createStore, ERRORS } from '../lib/index.ts'
 import { Store } from '../lib/store.ts'
 import { isolation } from './isolation.ts'
 import { runSuite } from './suite.ts'
@@ -205,16 +199,16 @@ export const runTest = async (
     const timeoutMs = getTestTimeout(timeout)
 
     if (!is.ownProp(test, 'fn')) {
-       if (is.object(test) && is.object(tests)) {
-         return await runSuite({
-           pkg,
-           parent: name,
-           name,
-           tests,
-           store,
-           rawResults: rawResults ?? [],
-         })
-       }
+      if (is.object(test) && is.object(tests)) {
+        return await runSuite({
+          pkg,
+          parent: name,
+          name,
+          tests,
+          store,
+          rawResults: rawResults ?? [],
+        })
+      }
 
       log.error(ERRORS.E_TEST_NO_FN, {
         testKey: test.key,
@@ -331,33 +325,33 @@ export const runTest = async (
       }
     }
 
-     if (!pass) {
-       let testName = name
-       if (parent && parent !== name) {
-         testName = `${parent}.${name}`
-       }
-       if (pkg !== parent && pkg !== name) {
-         testName = `${pkg}.${testName}`
-       }
-       log.error('FAIL', testName, info)
-     }
+    if (!pass) {
+      let testName = name
+      if (parent && parent !== name) {
+        testName = `${parent}.${name}`
+      }
+      if (pkg !== parent && pkg !== name) {
+        testName = `${pkg}.${testName}`
+      }
+      log.error('FAIL', testName, info)
+    }
 
-     const testResult: TestResult = {
-       result,
-       msg,
-       pass,
-       parent: parent || '',
-       name,
-       expect: exp,
-       expString,
-       key,
-       info,
-     }
+    const testResult: TestResult = {
+      result,
+      msg,
+      pass,
+      parent: parent || '',
+      name,
+      expect: exp,
+      expString,
+      key,
+      info,
+    }
 
-     // Collect result for final aggregation (main thread only)
-     rawResults?.push(testResult)
+    // Collect result for final aggregation (main thread only)
+    rawResults?.push(testResult)
 
-     return testResult
+    return testResult
   } catch (e) {
     log.error(ERRORS.E_TEST_FN, {
       testKey: testKey,
