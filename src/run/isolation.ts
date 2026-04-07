@@ -487,7 +487,7 @@ export const restoreFromSnapshot = (snapshot: Snapshot | null | undefined): void
       try {
         const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
         if (desc && desc.configurable !== false) {
-          delete (globalThis as any)[prop as string]
+          delete (globalThis as Record<string | symbol, unknown>)[prop]
         }
       } catch {
         // ignore

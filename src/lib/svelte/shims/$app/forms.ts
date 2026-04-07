@@ -29,7 +29,7 @@ export function deserialize<
     return {
       type: 'error',
       error: new Error('Failed to deserialize result'),
-    } as any
+    } as ActionResult<Success, Failure>
   }
 }
 

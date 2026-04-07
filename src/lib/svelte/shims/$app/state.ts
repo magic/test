@@ -38,9 +38,9 @@ export interface ShimContext {
   page: Writable<Page>
   navigating: Writable<Navigation | null>
   callbacks: {
-    before: Array<(nav: any) => void>
-    after: Array<(nav: any) => void>
-    on: Array<(nav: any) => (() => void) | void>
+    before: Array<(nav: Navigation) => void>
+    after: Array<(nav: Navigation) => void>
+    on: Array<(nav: Navigation) => (() => void) | void>
   }
 }
 
@@ -55,9 +55,9 @@ const defaultContext: ShimContext = {
 const getCtx = (): ShimContext => storage.getStore() ?? defaultContext
 
 const makePageProxy = (): Page => {
-  return new Proxy({} as any, {
+  return new Proxy({} as Page, {
     get(_target, prop) {
-      return get(getCtx().page)?.[prop as keyof (keyof Page)]
+      return get(getCtx().page)?.[prop as keyof Page]
     },
     has(_target, prop) {
       const page = get(getCtx().page)
@@ -73,7 +73,7 @@ const makePageProxy = (): Page => {
         return {
           enumerable: true,
           configurable: true,
-          value: page?.[prop as keyof (keyof Page)],
+          value: page?.[prop as keyof Page],
         }
       }
       return undefined
@@ -82,9 +82,9 @@ const makePageProxy = (): Page => {
 }
 
 const makeNavigatingProxy = (): Navigation | null => {
-  return new Proxy({} as any, {
+  return new Proxy({} as Navigation, {
     get(_target, prop) {
-      return get(getCtx().navigating)?.[prop as keyof (keyof Navigation)]
+      return get(getCtx().navigating)?.[prop as keyof Navigation]
     },
     has(_target, prop) {
       const nav = get(getCtx().navigating)
@@ -100,7 +100,7 @@ const makeNavigatingProxy = (): Navigation | null => {
         return {
           enumerable: true,
           configurable: true,
-          value: nav?.[prop as keyof (keyof Navigation)],
+          value: nav?.[prop as keyof Navigation],
         }
       }
       return undefined
@@ -108,8 +108,8 @@ const makeNavigatingProxy = (): Navigation | null => {
   })
 }
 
-export const page: any = makePageProxy()
-export const navigating: any = makeNavigatingProxy()
+export const page: Page = makePageProxy()
+export const navigating: Navigation | null = makeNavigatingProxy()
 
 export const updated = {
   get current(): boolean {
