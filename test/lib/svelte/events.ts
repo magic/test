@@ -457,4 +457,53 @@ export default [
     expect: true,
     info: 'checked sets checkbox checked state',
   },
+  // ended event
+  {
+    fn: async () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      let fired = false
+      div.addEventListener('ended', () => {
+        fired = true
+      })
+      const { ended } = await import('../../../src/lib/svelte/events.js')
+      ended(div)
+      return fired
+    },
+    expect: true,
+    info: 'ended triggers ended event on element',
+  },
+  // volumeChange event
+  {
+    fn: async () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      let fired = false
+      div.addEventListener('volumechange', () => {
+        fired = true
+      })
+      const { volumeChange } = await import('../../../src/lib/svelte/events.js')
+      volumeChange(div)
+      return fired
+    },
+    expect: true,
+    info: 'volumeChange triggers volumechange event',
+  },
+  // fireEvent with selector
+  {
+    fn: () => {
+      const container = doc.createElement('div')
+      doc.body.appendChild(container)
+      const inner = doc.createElement('span')
+      container.appendChild(inner)
+      let fired = false
+      inner.addEventListener('click', () => {
+        fired = true
+      })
+      fireEvent(container, 'click', { selector: 'span' })
+      return fired
+    },
+    expect: true,
+    info: 'fireEvent can fire events on descendant elements via selector',
+  },
 ]
