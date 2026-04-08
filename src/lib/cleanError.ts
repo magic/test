@@ -1,5 +1,3 @@
-import is from '@magic/types'
-
 /**
  * @param {unknown} e
  * @returns {string[] | Error | unknown}
