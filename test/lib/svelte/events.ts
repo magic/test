@@ -1,4 +1,4 @@
-import { initDOM, getDocument } from '../../../src/lib/dom.js'
+import { initDOM, getDocument } from '../../../src/lib/dom/index.js'
 import {
   fireEvent,
   click,

@@ -4,10 +4,12 @@ import {
   suiteModifiesGlobals,
   suiteBeforeAllModifiesGlobals,
   suiteAfterAllModifiesGlobals,
+} from '../../src/lib/globalCheck.js'
+import {
   testImportsMutableModuleState,
   testUsesFixedPorts,
   testUsesSharedFiles,
-} from '../../src/lib/testModifiesGlobals.js'
+} from '../../src/lib/mutableStateCheck.js'
 
 const { fn, expect } = globalThis as any
 
