@@ -1,4 +1,4 @@
-export { compileSvelte } from './compile.ts'
+export { compileSvelte } from './compile/index.ts'
 export { mount, createSnippet, tick } from './mount.ts'
 export { html, text, component, props } from './assert.ts'
 export {
