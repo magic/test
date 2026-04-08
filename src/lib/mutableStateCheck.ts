@@ -1,128 +1,12 @@
 import is from '@magic/types'
 
-/**
- * Minimal interface for the @magic/fs module.
- */
 interface FsModule {
   readFile?: (path: string, encoding?: string) => Promise<string | undefined>
 }
 
-const GLOBAL_MODIFICATION_RE = /(?:globalThis|window|global|self|process\.env)/
-
-/**
- * Check if a single test modifies global state
- */
-export const testModifiesGlobals = (test: {
-  before?: (...args: unknown[]) => unknown
-  after?: (...args: unknown[]) => unknown
-}): boolean => {
-  if (is.function(test.before)) {
-    const beforeStr = test.before.toString()
-    if (GLOBAL_MODIFICATION_RE.test(beforeStr)) {
-      return true
-    }
-  }
-
-  if (is.function(test.after)) {
-    const afterStr = test.after.toString()
-    if (GLOBAL_MODIFICATION_RE.test(afterStr)) {
-      return true
-    }
-  }
-
-  return false
-}
-
-/**
- * Check if any test in a suite modifies global state
- */
-export const suiteModifiesGlobals = (tests: unknown): boolean => {
-  const t = tests as {
-    beforeAll?: (...args: unknown[]) => unknown
-    afterAll?: (...args: unknown[]) => unknown
-    before?: (...args: unknown[]) => unknown
-    after?: (...args: unknown[]) => unknown
-    tests?: unknown
-  }
-
-  if (t.beforeAll) {
-    const beforeAllStr = t.beforeAll.toString()
-    if (GLOBAL_MODIFICATION_RE.test(beforeAllStr)) {
-      return true
-    }
-  }
-
-  if (t.afterAll) {
-    const afterAllStr = t.afterAll.toString()
-    if (GLOBAL_MODIFICATION_RE.test(afterAllStr)) {
-      return true
-    }
-  }
-
-  if (is.array(tests)) {
-    return tests.some(test =>
-      testModifiesGlobals(
-        test as {
-          before?: (...args: unknown[]) => unknown
-          after?: (...args: unknown[]) => unknown
-        },
-      ),
-    )
-  }
-
-  if (is.objectNative(tests)) {
-    return Object.values(tests as Record<string, unknown>).some(test => {
-      if (
-        is.objectNative(test) &&
-        testModifiesGlobals(
-          test as {
-            before?: (...args: unknown[]) => unknown
-            after?: (...args: unknown[]) => unknown
-          },
-        )
-      ) {
-        return true
-      }
-      if (is.objectNative(test) && test.tests) {
-        return suiteModifiesGlobals(test.tests)
-      }
-      return false
-    })
-  }
-
-  return false
-}
-
-/**
- * Check if beforeAll modifies global state
- */
-export const suiteBeforeAllModifiesGlobals = (tests: unknown): boolean => {
-  const t = tests
-  if (is.objectNative(t) && is.function(t.beforeAll)) {
-    const beforeAllStr = t.beforeAll.toString()
-    return GLOBAL_MODIFICATION_RE.test(beforeAllStr)
-  }
-  return false
-}
-
-/**
- * Check if afterAll modifies global state
- */
-export const suiteAfterAllModifiesGlobals = (tests: unknown): boolean => {
-  const t = tests
-  if (is.objectNative(t) && is.function(t.afterAll)) {
-    const afterAllStr = t.afterAll.toString()
-    return GLOBAL_MODIFICATION_RE.test(afterAllStr)
-  }
-  return false
-}
-
-/**
- * Extract imported names from code content
- */
 const getImportNames = (content: string): string[] => {
   const namedImport = /import\s*\{([^}]+)\}\s*from\s*['"][^'"]+['"]/g
-  const defaultImport = /import\s+([a-zA-Z_$][\w$]*)\s+from\s+['"][^'"]+['"]/g
+  const defaultImport = /import\s+([a-zA-Z_$][\w$]*)\s+from\s*['"][^'"]+['"]/g
   const namespaceImport = /import\s*\*\s+as\s+([a-zA-Z_$][\w$]*)\s+from/g
 
   const names: string[] = []
@@ -141,9 +25,6 @@ const getImportNames = (content: string): string[] => {
   return names
 }
 
-/**
- * Check if code mutates any of the imported names
- */
 const mutatesImportedState = (code: string, importNames: string[]): boolean => {
   const mutationPatterns = importNames.map(name => {
     const nameEscaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -155,9 +36,6 @@ const mutatesImportedState = (code: string, importNames: string[]): boolean => {
   return mutationPatterns.some((re: RegExp) => re.test(code))
 }
 
-/**
- * Check if test imports mutable module state
- */
 export const testImportsMutableModuleState = async (
   tests: unknown,
   testFilePath: string,
@@ -267,9 +145,6 @@ export const testImportsMutableModuleState = async (
   return false
 }
 
-/**
- * Extract port patterns from code
- */
 const getPortPatterns = (code: string): string[] => {
   const ports: string[] = []
 
@@ -296,9 +171,6 @@ const getPortPatterns = (code: string): string[] => {
   return ports
 }
 
-/**
- * Extract file paths from code
- */
 const getFilePaths = (code: string): string[] => {
   const files: string[] = []
 
@@ -320,9 +192,6 @@ const getFilePaths = (code: string): string[] => {
   return files
 }
 
-/**
- * Check if tests use fixed ports instead of port 0
- */
 export const testUsesFixedPorts = (tests: unknown): boolean => {
   const testsObj = tests as {
     beforeAll?: (...args: unknown[]) => unknown
@@ -380,9 +249,6 @@ export const testUsesFixedPorts = (tests: unknown): boolean => {
   return false
 }
 
-/**
- * Check if tests use shared file resources (potential race conditions)
- */
 export const testUsesSharedFiles = (tests: unknown): boolean => {
   const allFiles = new Set()
 

@@ -20,9 +20,12 @@ export {
   suiteModifiesGlobals,
   suiteBeforeAllModifiesGlobals,
   suiteAfterAllModifiesGlobals,
+} from './globalCheck.ts'
+
+export {
   testImportsMutableModuleState,
   testUsesFixedPorts,
   testUsesSharedFiles,
-} from './testModifiesGlobals.ts'
+} from './mutableStateCheck.ts'
 
 export { ERRORS, ERROR_MESSAGES, createError, errorify } from './errors.ts'
