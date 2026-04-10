@@ -1,6 +1,6 @@
-import { mount, html } from '../../../../src/lib/svelte/index.js'
+import { mount, html } from '../../../../../src/lib/svelte/index.js'
 
-const component = './src/lib/svelte/components/ListItem.svelte'
+const component = './src/lib/svelte/testFixtures/components/ListItem.svelte'
 
 type TestCase = {
   component: string

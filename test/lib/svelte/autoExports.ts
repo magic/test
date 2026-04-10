@@ -1,7 +1,7 @@
 import { mount } from '../../../src/lib/svelte/index.js'
 
-const counterComponent = './src/lib/svelte/components/Counter.svelte'
-const derivedComponent = './src/lib/svelte/components/Derived.svelte'
+const counterComponent = './src/lib/svelte/testFixtures/components/Counter.svelte'
+const derivedComponent = './src/lib/svelte/testFixtures/components/Derived.svelte'
 
 export default [
   {

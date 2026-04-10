@@ -1,6 +1,6 @@
-import { mount, html } from '../../../../src/lib/svelte/index.js'
+import { mount, html } from '../../../../../src/lib/svelte/index.js'
 
-const component = './src/lib/svelte/components/Tabs.svelte'
+const component = './src/lib/svelte/testFixtures/components/Tabs.svelte'
 const tabs = [
   { id: 'a', label: 'Tab A', content: 'Content A' },
   { id: 'b', label: 'Tab B', content: 'Content B' },

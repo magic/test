@@ -6,7 +6,9 @@ export default [
   // $app/environment
   {
     fn: async () => {
-      const { target, unmount } = (await mount('./src/lib/svelte/components/EnvTest.svelte')) as any
+      const { target, unmount } = (await mount(
+        './src/lib/svelte/testFixtures/components/EnvTest.svelte',
+      )) as any
       const result = html(target as any) as string
       await unmount()
       return result
@@ -19,7 +21,7 @@ export default [
   {
     fn: async () => {
       const { target, unmount } = (await mount(
-        './src/lib/svelte/components/StateTest.svelte',
+        './src/lib/svelte/testFixtures/components/StateTest.svelte',
       )) as any
       await tick()
       const result = html(target as any) as string
@@ -32,9 +34,12 @@ export default [
   // goto updates URL and navigating
   {
     fn: async () => {
-      const { target, unmount } = (await mount('./src/lib/svelte/components/NavTest.svelte', {
-        props: { triggerGoto: true },
-      })) as any
+      const { target, unmount } = (await mount(
+        './src/lib/svelte/testFixtures/components/NavTest.svelte',
+        {
+          props: { triggerGoto: true },
+        },
+      )) as any
       await flushSyncSvelte()
       await tick()
       const url = html(target as any).match(/<span class="url">([^<]*)<\/span>/)?.[1] as string
@@ -50,9 +55,12 @@ export default [
   // callbacks fire
   {
     fn: async () => {
-      const { target, unmount } = (await mount('./src/lib/svelte/components/NavTest.svelte', {
-        props: { triggerGoto: true },
-      })) as any
+      const { target, unmount } = (await mount(
+        './src/lib/svelte/testFixtures/components/NavTest.svelte',
+        {
+          props: { triggerGoto: true },
+        },
+      )) as any
       await flushSyncSvelte()
       await tick()
       const logs = html(target as any).match(/<span class="logs">([^<]*)<\/span>/)?.[1] as string
@@ -65,9 +73,12 @@ export default [
   // pushState updates page.url
   {
     fn: async () => {
-      const { target, unmount } = (await mount('./src/lib/svelte/components/NavTest.svelte', {
-        props: { triggerPush: true },
-      })) as any
+      const { target, unmount } = (await mount(
+        './src/lib/svelte/testFixtures/components/NavTest.svelte',
+        {
+          props: { triggerPush: true },
+        },
+      )) as any
       await flushSyncSvelte()
       await tick()
       const url = html(target as any).match(/<span class="url">([^<]*)<\/span>/)?.[1] as string
@@ -81,7 +92,7 @@ export default [
   {
     fn: async () => {
       const { target, unmount } = (await mount(
-        './src/lib/svelte/components/PathsTest.svelte',
+        './src/lib/svelte/testFixtures/components/PathsTest.svelte',
       )) as any
       await flushSyncSvelte()
       await Promise.resolve()
@@ -99,7 +110,7 @@ export default [
     fn: async () => {
       resetPage()
       const { target, unmount } = (await mount(
-        './src/lib/svelte/components/UsesAppImports.svelte',
+        './src/lib/svelte/testFixtures/components/UsesAppImports.svelte',
       )) as any
       const result = html(target as any) as string
       await unmount()
@@ -112,9 +123,12 @@ export default [
   // Wrapper routeId propagation
   {
     fn: async () => {
-      const { target, unmount } = (await mount('./src/lib/svelte/components/ChildWithPage.svelte', {
-        props: { routeId: '/parent/[id]' },
-      })) as any
+      const { target, unmount } = (await mount(
+        './src/lib/svelte/testFixtures/components/ChildWithPage.svelte',
+        {
+          props: { routeId: '/parent/[id]' },
+        },
+      )) as any
       await flushSyncSvelte()
       const result = html(target as any) as string
       await unmount()
@@ -127,7 +141,7 @@ export default [
   {
     fn: async () => {
       const { target, unmount } = (await mount(
-        './src/lib/svelte/components/SvelteKit.svelte',
+        './src/lib/svelte/testFixtures/components/SvelteKit.svelte',
       )) as any
       const result = html(target as any) as string
       await unmount()
@@ -140,7 +154,9 @@ export default [
   // Multiple mount cycles
   {
     fn: async () => {
-      const { unmount } = (await mount('./src/lib/svelte/components/NavTest.svelte')) as any
+      const { unmount } = (await mount(
+        './src/lib/svelte/testFixtures/components/NavTest.svelte',
+      )) as any
       await unmount()
       return true
     },
@@ -151,7 +167,7 @@ export default [
   {
     fn: async () => {
       const { target, unmount } = (await mount(
-        './src/lib/svelte/components/FormsTest.svelte',
+        './src/lib/svelte/testFixtures/components/FormsTest.svelte',
       )) as any
       const result = html(target as any) as string
       await unmount()
@@ -165,7 +181,7 @@ export default [
   {
     fn: async () => {
       const { target, unmount } = (await mount(
-        './src/lib/svelte/components/StoresTest.svelte',
+        './src/lib/svelte/testFixtures/components/StoresTest.svelte',
       )) as any
       const result = html(target as any) as string
       await unmount()
@@ -179,7 +195,7 @@ export default [
   {
     fn: async () => {
       const { target, unmount } = (await mount(
-        './src/lib/svelte/components/ServerTest.svelte',
+        './src/lib/svelte/testFixtures/components/ServerTest.svelte',
       )) as any
       const result = html(target as any) as string
       await unmount()
@@ -193,7 +209,7 @@ export default [
   {
     fn: async () => {
       const { target, unmount } = (await mount(
-        './src/lib/svelte/components/TypesTest.svelte',
+        './src/lib/svelte/testFixtures/components/TypesTest.svelte',
       )) as any
       const result = html(target as any) as string
       await unmount()
@@ -206,7 +222,7 @@ export default [
   {
     fn: async () => {
       const { target, unmount } = (await mount(
-        './src/lib/svelte/components/FormsTest2.svelte',
+        './src/lib/svelte/testFixtures/components/FormsTest2.svelte',
       )) as any
       const result = html(target as any) as string
       await unmount()
@@ -220,7 +236,7 @@ export default [
   {
     fn: async () => {
       const { target, unmount } = (await mount(
-        './src/lib/svelte/components/PathsTest2.svelte',
+        './src/lib/svelte/testFixtures/components/PathsTest2.svelte',
       )) as any
       const result = html(target as any) as string
       await unmount()
@@ -233,9 +249,12 @@ export default [
   // $app/navigation replaceState
   {
     fn: async () => {
-      const { target, unmount } = (await mount('./src/lib/svelte/components/NavTest2.svelte', {
-        props: { triggerReplace: true },
-      })) as any
+      const { target, unmount } = (await mount(
+        './src/lib/svelte/testFixtures/components/NavTest2.svelte',
+        {
+          props: { triggerReplace: true },
+        },
+      )) as any
       await flushSyncSvelte()
       await tick()
       const result = html(target as any) as string
@@ -249,9 +268,12 @@ export default [
   // $app/navigation invalidate, invalidateAll, preload
   {
     fn: async () => {
-      const { target, unmount } = (await mount('./src/lib/svelte/components/NavTest2.svelte', {
-        props: { triggerInvalidate: true, triggerInvalidateAll: true, triggerPreload: true },
-      })) as any
+      const { target, unmount } = (await mount(
+        './src/lib/svelte/testFixtures/components/NavTest2.svelte',
+        {
+          props: { triggerInvalidate: true, triggerInvalidateAll: true, triggerPreload: true },
+        },
+      )) as any
       await flushSyncSvelte()
       await new Promise(r => setTimeout(r, 10))
       const result = html(target as any) as string
@@ -269,7 +291,7 @@ export default [
   {
     fn: async () => {
       const { target, unmount } = (await mount(
-        './src/lib/svelte/components/ServerTest2.svelte',
+        './src/lib/svelte/testFixtures/components/ServerTest2.svelte',
       )) as any
       const result = html(target as any) as string
       await unmount()
@@ -283,7 +305,7 @@ export default [
   {
     fn: async () => {
       const { target, unmount } = (await mount(
-        './src/lib/svelte/components/FormsTest3.svelte',
+        './src/lib/svelte/testFixtures/components/FormsTest3.svelte',
       )) as any
       const result = html(target as any) as string
       await unmount()

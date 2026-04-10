@@ -1,6 +1,6 @@
-import { html, trigger } from '../../../../src/lib/svelte/index.js'
+import { html, trigger } from '../../../../../src/lib/svelte/index.js'
 
-const component = './src/lib/svelte/components/Input.svelte'
+const component = './src/lib/svelte/testFixtures/components/Input.svelte'
 
 type TestCase = {
   component: string
