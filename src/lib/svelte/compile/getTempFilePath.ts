@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { TMP_DIR } from './constants'
+import { TMP_DIR } from './constants.ts'
 
 export const getTempFilePath = (sourceFilePath: string): string => {
   const cwd = process.cwd()
