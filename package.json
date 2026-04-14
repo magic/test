@@ -27,7 +27,8 @@
     "coverage": "node src/bin/t.ts",
     "format": "f -w --exclude docs",
     "format:check": "f --exclude docs",
-    "tsc": "tsc --noEmit"
+    "tsc": "tsc --noEmit",
+    "lint": "eslint"
   },
   "engines": {
     "node": ">=22.18.0"
@@ -53,10 +54,11 @@
     "@magic/types": "0.1.33",
     "c8": "11.0.0",
     "canvas": "3.2.3",
-    "happy-dom": "20.8.9",
+    "happy-dom": "20.9.0",
     "magic-string": "0.30.21"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "@magic-modules/git-badges": "0.0.12",
     "@magic-modules/light-switch": "0.0.12",
     "@magic-modules/no-spy": "0.0.9",
@@ -65,9 +67,11 @@
     "@magic/core": "0.0.156",
     "@magic/format": "0.0.73",
     "@types/node": "25.6.0",
+    "eslint": "10.2.0",
     "prettier-plugin-svelte": "3.5.1",
     "svelte": "5.55.3",
     "typescript": "6.0.2",
+    "typescript-eslint": "8.58.2",
     "vite": "8.0.8"
   },
   "contributors": [
