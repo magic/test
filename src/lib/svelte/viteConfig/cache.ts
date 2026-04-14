@@ -1,4 +1,4 @@
-import type { AliasEntry, ViteConfig } from '@magic/test/types.ts'
+import type { AliasEntry, ViteConfig } from '../../../types.ts'
 
 export const configCache = new Map<string, { config: ViteConfig; mtime: number }>()
 
