@@ -25,8 +25,8 @@
     "test:native": "node --test src/bin/node-test-runner.ts --coverage && c8 report",
     "test:ci": "node src/bin/t.ts -p",
     "coverage": "node src/bin/t.ts",
-    "format": "f -w --exclude docs",
-    "format:check": "f --exclude docs",
+    "format": "f -w --exclude ./docs/",
+    "format:check": "f --exclude ./docs/",
     "tsc": "tsc --noEmit",
     "check": "tsc --noEmit",
     "lint": "eslint"
