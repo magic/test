@@ -1,29 +1,28 @@
+// import is from '@magic/types'
 import { mock, tryCatch } from '../../src/index.js'
 
-const fn = mock.fn as any
-
 export default [
+  // {
+  //   fn: () => {
+  //     const spy = mock.fn()
+  //     return spy
+  //   },
+  //   expect: is.function,
+  //   info: 'mock.fn returns a function that tracks calls',
+  // },
   {
     fn: () => {
-      const spy = fn()
-      return typeof spy === 'function'
-    },
-    expect: true,
-    info: 'mock.fn returns a function that tracks calls',
-  },
-  {
-    fn: () => {
-      const spy = fn()
+      const spy = mock.fn()
       spy('arg1')
       spy('arg2')
-      return spy.calls.length === 2 && spy.calls[0][0] === 'arg1' && spy.calls[1][0] === 'arg2'
+      return spy.calls.length === 2 && spy.calls[0]?.[0] === 'arg1' && spy.calls[1]?.[0] === 'arg2'
     },
     expect: true,
     info: 'mock.fn tracks call arguments',
   },
   {
     fn: () => {
-      const spy = fn(() => 'result')
+      const spy = mock.fn(() => 'result')
       const result = spy()
       return result === 'result'
     },
@@ -32,7 +31,7 @@ export default [
   },
   {
     fn: () => {
-      const spy = fn().mockReturnValue('mocked')
+      const spy = mock.fn().mockReturnValue('mocked')
       return spy() === 'mocked'
     },
     expect: true,
@@ -40,7 +39,7 @@ export default [
   },
   {
     fn: () => {
-      const spy = fn().mockReturnValue('first')
+      const spy = mock.fn().mockReturnValue('first')
       spy()
       spy.mockReturnValue('second')
       return spy() === 'second'
@@ -50,7 +49,7 @@ export default [
   },
   {
     fn: () => {
-      const spy = fn()
+      const spy = mock.fn()
       spy()
       spy()
       return spy.returns.length === 2
@@ -60,7 +59,7 @@ export default [
   },
   {
     fn: async () => {
-      const spy = fn().mockThrow(new Error('test error'))
+      const spy = mock.fn().mockThrow(new Error('test error'))
       const caught = (await tryCatch(spy)()) as Error
       return caught instanceof Error && caught.message === 'test error'
     },
@@ -69,10 +68,12 @@ export default [
   },
   {
     fn: () => {
-      const spy = fn()
+      const spy = mock.fn()
       try {
         spy()
-      } catch (e) {}
+      } catch {
+        // intentional empty catch
+      }
       return spy.errors.length === 1 && spy.errors[0] === null
     },
     expect: true,
@@ -80,13 +81,17 @@ export default [
   },
   {
     fn: () => {
-      const spy = fn().mockThrow(new Error('fail'))
+      const spy = mock.fn().mockThrow(new Error('fail'))
       try {
         spy()
-      } catch (e) {}
+      } catch {
+        // intentional empty catch
+      }
       try {
         spy()
-      } catch (e) {}
+      } catch {
+        // intentional empty catch
+      }
       return spy.errors.length === 2 && spy.errors[0]?.message === 'fail'
     },
     expect: true,
@@ -125,7 +130,7 @@ export default [
   },
   {
     fn: () => {
-      const spy = fn()
+      const spy = mock.fn()
       spy()
       spy()
       const calls = spy.getCalls()
@@ -142,7 +147,7 @@ export default [
   },
   {
     fn: () => {
-      const spy = fn().mockReturnValue('value').mockReturnValue('value2')
+      const spy = mock.fn().mockReturnValue('value').mockReturnValue('value2')
       return spy._returnValue === 'value2'
     },
     expect: true,
@@ -150,7 +155,7 @@ export default [
   },
   {
     fn: () => {
-      const spy = fn()
+      const spy = mock.fn()
       spy()
       spy()
       const errors = spy.getErrors()

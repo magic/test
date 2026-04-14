@@ -1,3 +1,4 @@
+import { Event } from 'happy-dom'
 import { initDOM, getDocument } from '../../../src/lib/dom/index.js'
 import {
   fireEvent,

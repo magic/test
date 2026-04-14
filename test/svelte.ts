@@ -4,10 +4,10 @@ import { flushSync } from 'svelte'
 export default [
   {
     fn: async () => {
-      const { target, unmount } = (await mount(
+      const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
-      )) as any
-      const result = html(target as any) as string
+      )
+      const result = html(target) as string
       await unmount()
       return result
     },
@@ -28,11 +28,9 @@ export default [
   },
   {
     fn: async () => {
-      const {
-        target,
-        component: instance,
-        unmount,
-      } = await mount('./src/lib/svelte/testFixtures/components/Counter.svelte')
+      const { component: instance, unmount } = await mount(
+        './src/lib/svelte/testFixtures/components/Counter.svelte',
+      )
       ;(instance as { count: number }).count = 5
       flushSync()
       const result = (component(instance) as { count: number }).count
@@ -45,9 +43,9 @@ export default [
   {
     fn: async () => {
       let called = false
-      const { target, unmount } = (await mount(
+      const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
-      )) as any
+      )
       const button = target.querySelector('button') as HTMLElement
       button.addEventListener('click', () => {
         called = true
@@ -61,9 +59,9 @@ export default [
   },
   {
     fn: async () => {
-      const { target, unmount } = (await mount(
+      const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
-      )) as any
+      )
       const div = target.querySelector('.count') as HTMLElement
       scroll(div, 0, 100)
       flushSync()
@@ -77,14 +75,14 @@ export default [
   {
     fn: async () => {
       let clicked = false
-      const { target, unmount } = (await mount(
+      const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
-      )) as any
+      )
       const button = target.querySelector('button') as HTMLElement
       button.addEventListener('click', () => {
         clicked = true
       })
-      click(target as any, 'button')
+      click(target, 'button')
       await unmount()
       return clicked
     },
@@ -93,9 +91,9 @@ export default [
   },
   {
     fn: async () => {
-      const { target, unmount } = (await mount(
+      const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
-      )) as any
+      )
       const button = target.querySelector('button') as HTMLElement
       const result = props(button) as Record<string, any>
       await unmount()
@@ -107,10 +105,10 @@ export default [
   // SvelteKit wrapper provides correct $app/environment values (dev mode)
   {
     fn: async () => {
-      const { target, unmount } = (await mount(
+      const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/SvelteKit.svelte',
-      )) as any
-      const result = html(target as any) as string
+      )
+      const result = html(target) as string
       await unmount()
       return result
     },
@@ -121,15 +119,15 @@ export default [
   // SvelteKit component state updates correctly with toggle
   {
     fn: async () => {
-      const { target, unmount } = (await mount(
+      const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/SvelteKit.svelte',
-      )) as any
+      )
       // Initial state: showEnv = true
-      const initial = html(target as any) as string
+      const initial = html(target) as string
       // Click button to toggle
-      click(target as any, 'button')
+      click(target, 'button')
       await flushSync()
-      const afterToggle = html(target as any) as string
+      const afterToggle = html(target) as string
       await unmount()
       return { initial, afterToggle }
     },
