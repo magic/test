@@ -123,7 +123,6 @@ export const resolveAndCompileImport = async (
     } else if (await fs.exists(path.join(resolvedPath, 'index.svelte'))) {
       resolvedPath = path.join(resolvedPath, 'index.svelte')
     } else if (!path.extname(resolvedPath) && !resolvedPath.includes('.')) {
-      const sourceBase = path.basename(sourceFilePath, '.svelte')
       const sourceDirName = path.dirname(sourceFilePath)
       const possiblePath = path.join(sourceDirName, importPath.replace(/^\.\//, ''))
       if (await fs.exists(possiblePath)) {

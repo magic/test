@@ -2,8 +2,6 @@ import path from 'node:path'
 
 import fs from '@magic/fs'
 
-import { SourceMap } from 'magic-string'
-
 import { TMP_DIR } from './constants.ts'
 
 export let cleanupDone = false

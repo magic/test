@@ -23,7 +23,7 @@ export const processImports = async (
     }
   }
 
-  for (const { imported, path: importPath, full } of imports) {
+  for (const { imported, path: importPath } of imports) {
     try {
       const result = await resolveAndCompileImport(
         importPath,
