@@ -1,6 +1,6 @@
 import * as test from '../src/index.js'
 
-const constants: [string, any] = [
+const constants = [
   'object',
   {
     UV_FS_SYMLINK_DIR: 'num',
@@ -64,7 +64,7 @@ const constants: [string, any] = [
   },
 ]
 
-const spec: Record<string, any> = {
+const spec = {
   // check if spec can handle functions instead of strings to allow more complicated tests
   run: test.is.fn,
   curry: 'fn',

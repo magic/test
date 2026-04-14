@@ -12,7 +12,7 @@ export default [
           parent: 'run-test-delegate',
           pkg: 'run-test-pkg',
           tests: { child: [{ fn: true, expect: true }] },
-        } as any,
+        },
         store,
       )) as { tests?: unknown[] } | undefined
       return result && 'tests' in result && result.tests && result.tests.length > 0
@@ -30,7 +30,7 @@ export default [
           pkg: 'run-test-pkg',
           fn: () => 'result',
           expect: 'result',
-        } as any,
+        },
         store,
       )
       return result && result.pass === true
@@ -48,7 +48,7 @@ export default [
           pkg: 'run-test-pkg',
           fn: () => true,
           is: true,
-        } as any,
+        },
         store,
       )
       return result && result.pass === true
@@ -65,7 +65,7 @@ export default [
           parent: 'run-test-default',
           pkg: 'run-test-pkg',
           fn: () => true,
-        } as any,
+        },
         store,
       )
       return result && result.pass === true
@@ -82,8 +82,8 @@ export default [
           parent: 'run-test-fn',
           pkg: 'run-test-pkg',
           fn: () => 'value',
-          expect: (res: any) => res === 'value',
-        } as any,
+          expect: (res: string) => res === 'value',
+        },
         store,
       )
       return result && result.pass === true
@@ -107,10 +107,10 @@ export default [
               cleanupCalled = true
             }
           },
-        } as any,
+        },
         store,
       )
-      return result && !!(result as any).pass && !!cleanupCalled
+      return result && !!result.pass && !!cleanupCalled
     },
     expect: true,
   },
@@ -129,10 +129,10 @@ export default [
           after: () => {
             afterCalled = true
           },
-        } as any,
+        },
         store,
       )
-      return result && !!(result as any).pass && !!afterCalled
+      return result && !!result.pass && !!afterCalled
     },
     expect: true,
   },
@@ -149,10 +149,10 @@ export default [
           fn: () => true,
           expect: true,
           info: 'test info message',
-        } as any,
+        },
         store,
       )
-      return result && (result as any).info === 'test info message'
+      return result && 'info' in result && result.info === 'test info message'
     },
     expect: true,
   },
@@ -167,10 +167,10 @@ export default [
           pkg: 'run-test-pkg8',
           fn: () => 'actual',
           expect: 'actual',
-        } as any,
+        },
         store,
       )
-      return result && (result as any).result === 'actual'
+      return result && 'result' in result && result.result === 'actual'
     },
     expect: true,
   },

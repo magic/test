@@ -7,7 +7,7 @@ export default [
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
-      const result = html(target) as string
+      const result = html(target)
       await unmount()
       return result
     },
@@ -62,10 +62,10 @@ export default [
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
-      const div = target.querySelector('.count') as HTMLElement
+      const div = target.querySelector('.count')
       scroll(div, 0, 100)
       flushSync()
-      const result = div.scrollTop as number
+      const result = div.scrollTop
       await unmount()
       return result
     },
@@ -78,7 +78,7 @@ export default [
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
-      const button = target.querySelector('button') as HTMLElement
+      const button = target.querySelector('button')
       button.addEventListener('click', () => {
         clicked = true
       })
@@ -94,8 +94,8 @@ export default [
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
-      const button = target.querySelector('button') as HTMLElement
-      const result = props(button) as Record<string, any>
+      const button = target.querySelector('button')
+      const result = props(button)
       await unmount()
       return result
     },
@@ -108,7 +108,7 @@ export default [
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/SvelteKit.svelte',
       )
-      const result = html(target) as string
+      const result = html(target)
       await unmount()
       return result
     },
@@ -123,11 +123,11 @@ export default [
         './src/lib/svelte/testFixtures/components/SvelteKit.svelte',
       )
       // Initial state: showEnv = true
-      const initial = html(target) as string
+      const initial = html(target)
       // Click button to toggle
       click(target, 'button')
       await flushSync()
-      const afterToggle = html(target) as string
+      const afterToggle = html(target)
       await unmount()
       return { initial, afterToggle }
     },
