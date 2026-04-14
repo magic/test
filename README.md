@@ -84,8 +84,8 @@ npm i --save-dev @magic/test
 mkdir test
 ```
 
-create ./test/yourLibToTest.{js,ts}, the filename is used in the test output,
-the path should be the same as the file in your sources.
+create ./test/yourFileToTest.{js,ts}, the filename is used in the test output,
+the path should be the same as the file in your src dir, the path is used in the log messages.
 
 ```javascript
 // ./test/yourLibToTest.{js,ts}
