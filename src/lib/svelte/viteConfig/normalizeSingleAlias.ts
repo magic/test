@@ -2,7 +2,7 @@ import is from '@magic/types'
 import path from 'node:path'
 import { escapeRegex } from './escapeRegex.ts'
 
-import type { AliasEntry } from './cache.ts'
+import type { AliasEntry } from '../../../types.ts'
 
 export const normalizeSingleAlias = (entry: unknown, configDir: string): AliasEntry => {
   const e = entry as Record<string, unknown>
@@ -18,7 +18,7 @@ export const normalizeSingleAlias = (entry: unknown, configDir: string): AliasEn
 
   if (is.string(findVal)) {
     const regexMatch = findVal.match(/^\/(.+)\/([a-z]*)$/)
-    if (regexMatch && regexMatch[1] && regexMatch[2]) {
+    if (regexMatch && regexMatch[1] && !is.undef(regexMatch[2])) {
       try {
         findVal = new RegExp(regexMatch[1], regexMatch[2])
       } catch {
