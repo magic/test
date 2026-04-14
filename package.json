@@ -28,6 +28,7 @@
     "format": "f -w --exclude docs",
     "format:check": "f --exclude docs",
     "tsc": "tsc --noEmit",
+    "check": "tsc --noEmit",
     "lint": "eslint"
   },
   "engines": {
