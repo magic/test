@@ -37,8 +37,8 @@ const getElement = (target: Element | Document, selector?: string): Element | Do
   return target
 }
 
-export const click = (target: Element, selector?: string): void => {
-  const el = getElement(target, selector)
+export const click = (target: unknown, selector?: string): void => {
+  const el = getElement(target as Element, selector)
   if (el && is.instance(el, Element) && 'click' in el && is.fn(el.click)) {
     el.click()
   }
@@ -58,13 +58,10 @@ export const contextMenu = (target: Element | Document, selector?: string): void
   }
 }
 
-export const trigger = (
-  target: Element | Document,
-  eventType: string,
-  options: EventInit = {},
-): void => {
+export const trigger = (target: unknown, eventType: string, options: EventInit = {}): void => {
+  if (!target) return
   const event = new Event(eventType, { bubbles: true, ...options })
-  target.dispatchEvent(event)
+  ;(target as Element).dispatchEvent(event)
 }
 
 export const mouseDown = (target: Element | Document, selector?: string): void => {
@@ -332,14 +329,15 @@ export const resize = (target: Element | Window): void => {
   target.dispatchEvent(new Event('resize', { bubbles: false, cancelable: false }))
 }
 
-export const scroll = (target: Element, x = 0, y = 0): void => {
-  if (is.fn(target.scrollTo)) {
-    target.scrollTo(x, y)
+export const scroll = (target: unknown, x = 0, y = 0): void => {
+  const el = target as Element
+  if (is.fn(el.scrollTo)) {
+    el.scrollTo(x, y)
   } else {
-    target.scrollTop = y
-    target.scrollLeft = x
+    el.scrollTop = y
+    el.scrollLeft = x
   }
-  target.dispatchEvent(new Event('scroll', { bubbles: true, cancelable: false }))
+  el.dispatchEvent(new Event('scroll', { bubbles: true, cancelable: false }))
 }
 
 export const animationStart = (target: Element | Document, selector?: string): void => {

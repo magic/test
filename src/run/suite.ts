@@ -99,7 +99,7 @@ const runTestArray = async (
   parent: string,
   pkg: string,
   store: Store,
-  rawResults: TestResult[],
+  rawResults: TestResult[] = [],
   testFileUrl: string,
   useWorkers: boolean,
   suiteSnapshot?: Snapshot,
@@ -197,7 +197,7 @@ const runTestObject = async (
   parent: string,
   pkg: string,
   store: Store,
-  rawResults: TestResult[],
+  rawResults: TestResult[] = [],
 ): Promise<(TestResult | Suite)[]> => {
   if (is.function(testsObj.fn)) {
     const fns = getFNS()
@@ -231,10 +231,10 @@ const runTestObject = async (
  * Run a suite of tests (recursively).
  */
 export const runSuite = async (
-  props: SuiteInput & { store: Store; rawResults: TestResult[] },
+  props: SuiteInput & { store: Store; rawResults?: TestResult[] },
 ): Promise<Suite | undefined> => {
   const store = props.store ?? new Store()
-  const { rawResults } = props
+  const rawResults = props.rawResults ?? []
 
   const suite: Suite = {
     ...defaultSuite,

@@ -15,7 +15,7 @@ export default [
     fn: () =>
       testModifiesGlobals({
         before: () => {
-          globalThis.foo = 'bar'
+          ;(globalThis as Record<string, unknown>).foo = 'bar'
         },
       }),
     expect: true,
@@ -25,7 +25,7 @@ export default [
     fn: () =>
       testModifiesGlobals({
         before: () => {
-          globalThis['key'] = 'value'
+          ;(globalThis as Record<string, unknown>)['key'] = 'value'
         },
       }),
     expect: true,
@@ -35,7 +35,7 @@ export default [
     fn: () =>
       testModifiesGlobals({
         after: () => {
-          globalThis.foo = 'bar'
+          ;(globalThis as Record<string, unknown>).foo = 'bar'
         },
       }),
     expect: true,
@@ -45,7 +45,7 @@ export default [
     fn: () =>
       testModifiesGlobals({
         before: () => {
-          delete globalThis.foo
+          delete (globalThis as Record<string, unknown>).foo
         },
       }),
     expect: true,
@@ -54,9 +54,8 @@ export default [
   {
     fn: () =>
       testModifiesGlobals({
-        before: () => {
-          globalThis.window = { document: {} }
-        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        before: () => ((globalThis as any).window = { document: {} }),
       }),
     expect: true,
     info: 'detects window.x = value',
@@ -75,7 +74,8 @@ export default [
     fn: () =>
       testModifiesGlobals({
         before: () => {
-          globalThis.global = { foo: 'bar' }
+          const g = globalThis as unknown as { global: Record<string, unknown> }
+          g.global = { foo: 'bar' }
         },
       }),
     expect: true,
@@ -85,7 +85,8 @@ export default [
     fn: () =>
       testModifiesGlobals({
         before: () => {
-          globalThis.self = { worker: {} }
+          const s = globalThis as unknown as { self: Record<string, unknown> }
+          s.self = { worker: {} }
         },
       }),
     expect: true,
@@ -95,7 +96,7 @@ export default [
     fn: () =>
       testModifiesGlobals({
         before: () => {
-          globalThis.newGlobal = 'test'
+          ;(globalThis as Record<string, unknown>).newGlobal = 'test'
         },
       }),
     expect: true,
@@ -104,7 +105,7 @@ export default [
   {
     fn: () =>
       testModifiesGlobals({
-        fn: () => true,
+        before: () => true,
       }),
     expect: false,
     info: 'returns false when no global modification',
@@ -135,7 +136,7 @@ export default [
     fn: () =>
       suiteModifiesGlobals({
         beforeAll: () => {
-          globalThis.suiteGlobal = 'test'
+          ;(globalThis as Record<string, unknown>).suiteGlobal = 'test'
         },
         tests: [],
       }),
@@ -146,7 +147,7 @@ export default [
     fn: () =>
       suiteModifiesGlobals({
         afterAll: () => {
-          globalThis.suiteGlobal = 'test'
+          ;(globalThis as Record<string, unknown>).suiteGlobal = 'test'
         },
         tests: [],
       }),
@@ -162,7 +163,7 @@ export default [
     fn: () =>
       suiteBeforeAllModifiesGlobals({
         beforeAll: () => {
-          globalThis.beforeAll = 'test'
+          ;(globalThis as Record<string, unknown>).beforeAll = 'test'
         },
       }),
     expect: true,
@@ -180,7 +181,7 @@ export default [
     fn: () =>
       suiteAfterAllModifiesGlobals({
         afterAll: () => {
-          globalThis.afterAll = 'test'
+          ;(globalThis as Record<string, unknown>).afterAll = 'test'
         },
       }),
     expect: true,

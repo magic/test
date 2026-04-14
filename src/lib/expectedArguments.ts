@@ -1,6 +1,6 @@
 import is from '@magic/types'
 
-export const expectedArguments = (fn?: (...args: unknown[]) => unknown): string | string[] => {
+export const expectedArguments = (fn?: unknown): string | string[] => {
   if (!is.function(fn)) {
     return []
   }

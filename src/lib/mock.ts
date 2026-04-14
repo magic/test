@@ -3,6 +3,7 @@ import { env } from './env.ts'
  * MockFn interface
  */
 interface MockFn {
+  (...args: unknown[]): unknown
   callCount: number
   calls: unknown[][]
   returns: unknown[]

@@ -14,32 +14,42 @@ const fnWithCb = (
 
 export default [
   {
-    fn: promise((r: unknown) => fnWithCb(null, 'arg', r)),
+    fn: promise(r => fnWithCb(null, 'arg', r as (err: Error | null, arg: unknown) => void)),
     expect: 'arg',
     info: 'can handle return values',
   },
   {
-    fn: promise((r: unknown) => fnWithCb(new Error('err'), 'arg', r)),
+    fn: promise(r =>
+      fnWithCb(new Error('err'), 'arg', r as (err: Error | null, arg: unknown) => void),
+    ),
     expect: ([e]: [Error]) => is.err(e),
     info: 'can handle returned errors',
   },
   {
-    fn: promise((r: unknown) => fnWithCb(new Error('err'), 'arg', r)),
+    fn: promise(r =>
+      fnWithCb(new Error('err'), 'arg', r as (err: Error | null, arg: unknown) => void),
+    ),
     expect: ([, b]: [unknown, unknown]) => b === 'arg',
     info: 'if errors returns argument after error',
   },
   {
-    fn: promise((r: unknown) => fnWithCb(new Error('err'), null, r)),
+    fn: promise(r =>
+      fnWithCb(new Error('err'), null, r as (err: Error | null, arg: unknown) => void),
+    ),
     expect: is.err,
     info: 'returns an error if there is one and no arg',
   },
   {
-    fn: promise((r: unknown) => fnWithCb(new Error('err'), new Error('err2'), r)),
+    fn: promise(r =>
+      fnWithCb(new Error('err'), new Error('err2'), r as (err: Error | null, arg: unknown) => void),
+    ),
     expect: (r: Error[]) => r.every(is.err),
     info: 'returns two errors if two are passed',
   },
   {
-    fn: promise((r: unknown) => fnWithCb(null, null as unknown, r)),
+    fn: promise(r =>
+      fnWithCb(null, null as unknown, r as (err: Error | null, arg: unknown) => void),
+    ),
     expect: is.undefined,
     info: 'returns undefined when all args are null/undefined',
   },

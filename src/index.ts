@@ -14,6 +14,8 @@ export { curry, env, http, mock, promise, vals, version, tryCatch } from './lib/
 
 export { initDOM, getDocument, getWindow } from './lib/dom/index.ts'
 
+export * from './types.ts'
+
 export {
   compileSvelte,
   mount,

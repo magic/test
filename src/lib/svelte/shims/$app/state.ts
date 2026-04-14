@@ -24,6 +24,16 @@ export interface Navigation {
   complete: () => void
 }
 
+export interface BeforeNavigate {
+  from: URL
+  to: URL
+  type: string
+  willUnload: boolean
+  delta: number
+  complete: () => void
+  cancel: (msg?: string) => void
+}
+
 const makeDefaultPage = (): Page => ({
   url: new URL('http://localhost/'),
   params: {},

@@ -59,14 +59,21 @@ export { JsonParseError, HttpStatusError, SizeLimitError, NetworkError, isRespon
  * Accepts any 2xx status code as successful.
  */
 export const handleResponse = (
-  res: import('http').IncomingMessage,
+  res: {
+    statusCode?: number
+    headers: Record<string, string | string[] | undefined>
+    setEncoding?: (enc: BufferEncoding) => void
+    on: (event: string, cb: (chunk?: string | Buffer) => void) => void
+    destroy?: () => void
+  },
   resolve: (value: unknown) => void,
   reject: (reason?: unknown) => void,
   url?: string,
   maxSize?: number,
 ): void => {
   const { statusCode } = res
-  const contentType = res.headers['content-type']
+  const contentType =
+    typeof res.headers['content-type'] === 'string' ? res.headers['content-type'] : undefined
 
   let err
 
@@ -79,9 +86,11 @@ export const handleResponse = (
 
   if (err) {
     const chunks: string[] = []
-    res.setEncoding('utf8')
-    res.on('data', (chunk: string) => chunks.push(chunk))
-    res.on('end', () => {
+    res.setEncoding?.('utf8')
+    res.on?.('data', chunk => {
+      if (chunk) chunks.push(String(chunk))
+    })
+    res.on?.('end', () => {
       let errorMessage = err
       let body: string | undefined
       if (chunks.length > 0) {
@@ -98,10 +107,12 @@ export const handleResponse = (
 
   const chunks: string[] = []
   let responseSize = 0
-  res.setEncoding('utf8')
-  res.on('data', (chunk: string) => {
-    if (maxSize && responseSize + chunk.length > maxSize) {
-      res.destroy()
+  res.setEncoding?.('utf8')
+  res.on?.('data', chunk => {
+    if (!chunk) return
+    const chunkStr = String(chunk)
+    if (maxSize && responseSize + chunkStr.length > maxSize) {
+      res.destroy?.()
       const error = new SizeLimitError(
         `Response size exceeds limit of ${maxSize} bytes${url ? ': ' + url : ''}`,
         url,
@@ -109,10 +120,10 @@ export const handleResponse = (
       reject(error)
       return
     }
-    responseSize += chunk.length
-    chunks.push(chunk)
+    responseSize += chunkStr.length
+    chunks.push(chunkStr)
   })
-  res.on('end', () => {
+  res.on?.('end', () => {
     const rawData = chunks.join('')
     if (contentType === 'application/json') {
       try {

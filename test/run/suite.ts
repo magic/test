@@ -63,8 +63,8 @@ export default [
         parent: 'suite-test4',
         pkg: 'suite-pkg4',
         tests: [
-          { fn: () => 1, expect: 1 },
-          { fn: () => 2, expect: 2 },
+          { fn: () => 1, expect: 1, name: 't1', pkg: 'p', parent: '' },
+          { fn: () => 2, expect: 2, name: 't2', pkg: 'p', parent: '' },
         ],
         store,
       })
@@ -128,9 +128,9 @@ export default [
         pkg: 'suite-pkg7',
         tests: {
           beforeAll: () => {
-            return () => {
+            return Promise.resolve(() => {
               cleanupCalled = true
-            }
+            })
           },
           child: [{ fn: true, expect: true }],
         },
@@ -149,7 +149,7 @@ export default [
         name: 'named-suite',
         parent: 'suite-test8',
         pkg: 'suite-pkg8',
-        tests: [{ fn: true, expect: true }],
+        tests: [{ fn: true, expect: true, name: 'test', pkg: 'p', parent: '' }],
         store,
       })
       return result && result.name === 'named-suite'
@@ -165,7 +165,7 @@ export default [
         name: 'child-suite',
         parent: 'parent-suite',
         pkg: 'suite-pkg9',
-        tests: [{ fn: true, expect: true }],
+        tests: [{ fn: true, expect: true, name: 'test', pkg: 'p', parent: '' }],
         store,
       })
       return result && result.parent === 'parent-suite'
@@ -181,7 +181,7 @@ export default [
         name: 'pkg-suite',
         parent: 'suite-test10',
         pkg: 'my-pkg-suite',
-        tests: [{ fn: true, expect: true }],
+        tests: [{ fn: true, expect: true, name: 'test', pkg: 'p', parent: '' }],
         store,
       })
       return result && result.pkg === 'my-pkg-suite'
@@ -197,7 +197,7 @@ export default [
         name: 'duration-suite',
         parent: 'suite-test11',
         pkg: 'suite-pkg11',
-        tests: [{ fn: () => true, expect: true }],
+        tests: [{ fn: () => true, expect: true, name: '', pkg: '', parent: '' }],
         store,
       })
       return result && typeof result.duration === 'string'

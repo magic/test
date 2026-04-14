@@ -41,7 +41,7 @@ export default [
     component,
     fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
       const input = (target as HTMLElement).querySelector<HTMLInputElement>('input')!
-      trigger(input, 'input')
+      trigger(input as unknown, 'input')
       await new Promise(r => setTimeout(r, 10))
       return (instance as { inputValue: string }).inputValue
     },
@@ -52,7 +52,7 @@ export default [
     component,
     fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
       const input = (target as HTMLElement).querySelector<HTMLInputElement>('input')!
-      trigger(input, 'input')
+      trigger(input as unknown, 'input')
       await new Promise(r => setTimeout(r, 10))
       return (instance as { changed: boolean }).changed
     },
@@ -99,7 +99,7 @@ export default [
     fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
       const input = (target as HTMLElement).querySelector<HTMLInputElement>('input')!
       input.value = 'new value'
-      trigger(input, 'input')
+      trigger(input as unknown, 'input')
       await new Promise(r => setTimeout(r, 10))
       return (
         (instance as { inputValue: string }).inputValue === 'new value' &&

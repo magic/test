@@ -12,7 +12,7 @@ import { createContext, runWithContext } from './shims/$app/state.ts'
 import { detectSvelteKitImports, needsSvelteKitContext } from './detect-sveltekit-imports.js'
 import type { SvelteComponent } from 'svelte'
 
-let svelteMount: (component: unknown, options: unknown) => unknown | undefined
+let svelteMount: (component: unknown, options: unknown) => SvelteComponent
 
 let svelteUnmount: (component: unknown, options?: unknown) => Promise<void> | undefined
 
@@ -178,9 +178,9 @@ export const mount = async (
         // Don't auto-convert strings or functions - that breaks normal props like href, value, etc.
         if (is.object(value) && value !== null && !is.array(value)) {
           if ('render' in value && !is.fn(value)) {
-            // Convert to Svelte 5 snippet
-            const renderFn = is.str(value.render) ? () => value.render : value.render
-            processed[key] = svelteCreateRawSnippet!(() => ({ render: renderFn }))
+            const renderValue = value.render as string
+            const renderFn = is.str(renderValue) ? () => renderValue : (renderValue as () => string)
+            processed[key] = renderFn
             continue
           }
         }
@@ -198,7 +198,7 @@ export const mount = async (
       }
     }
 
-    let component
+    let component: SvelteComponent
     try {
       if (!svelteMount) {
         throw new Error('Svelte not initialized')
@@ -218,7 +218,7 @@ export const mount = async (
         )
       }
 
-      if (mountError instanceof Error && mountError.message.includes('https://svelte.dev/')) {
+      if (is.error(mountError) && mountError.message.includes('https://svelte.dev/')) {
         throw new Error(`[svelte] ${mountError.message} ${resolvedPath}`, { cause: mountError })
       }
 
@@ -231,7 +231,7 @@ export const mount = async (
     }
 
     // If wrapper exposed the inner component, use that as the component instance
-    if (component && typeof component === 'object' && '__inner' in component) {
+    if (component && is.object(component) && '__inner' in component) {
       component = component.__inner
     }
 

@@ -3,7 +3,13 @@
 // Context-aware: resolves to current AsyncLocalStorage context
 
 import { get } from 'svelte/store'
-import { getContext, getDefaultContext, type Navigation, type Page } from './state.ts'
+import {
+  getContext,
+  getDefaultContext,
+  type Navigation,
+  type Page,
+  type BeforeNavigate,
+} from './state.ts'
 
 interface AfterNavigate {
   from: URL
@@ -29,19 +35,20 @@ export async function goto(
   const from: URL = currentPage.url
   const targetUrl = typeof url === 'string' ? new URL(url, from.origin) : url
 
-  const navObj: Navigation = {
+  const navObj = {
     from,
     to: targetUrl,
     type: 'goto',
     willUnload: false,
     delta: 0,
     complete: () => {},
-  }
+    cancel: (_msg?: string) => {},
+  } as BeforeNavigate
 
   const beforeList = [...ctx.callbacks.before]
   for (const cb of beforeList) {
     try {
-      cb({ ...navObj })
+      cb(navObj)
     } catch (_e) {
       // ignore nav errors
     }
@@ -63,7 +70,15 @@ export async function goto(
   const afterList = [...ctx.callbacks.after]
   for (const cb of afterList) {
     try {
-      cb({ from, to: targetUrl, type: 'goto', willUnload: false, delta: 0, complete: () => {} })
+      cb({
+        from,
+        to: targetUrl,
+        type: 'goto',
+        willUnload: false,
+        delta: 0,
+        complete: () => {},
+        cancel: () => {},
+      } as BeforeNavigate)
     } catch (_e) {
       // ignore nav errors
     }
@@ -80,7 +95,7 @@ export async function goto(
         willUnload: false,
         delta: 0,
         complete: () => {},
-      })
+      } as Navigation)
       if (typeof result === 'function') {
         onCleanups.push(result)
       }
@@ -134,11 +149,11 @@ export function preloadCode(_pathname: string): Promise<void> {
   return Promise.resolve()
 }
 
-export function beforeNavigate(cb: (nav: Navigation) => void): () => void {
+export function beforeNavigate(cb: (nav: BeforeNavigate) => void): () => void {
   const ctx = getCtx()
-  ctx.callbacks.before.push(cb)
+  ctx.callbacks.before.push(cb as (nav: Navigation) => void)
   return () => {
-    const idx = ctx.callbacks.before.indexOf(cb)
+    const idx = ctx.callbacks.before.indexOf(cb as (nav: Navigation) => void)
     if (idx !== -1) ctx.callbacks.before.splice(idx, 1)
   }
 }

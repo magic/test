@@ -204,15 +204,12 @@ export default {
     {
       fn: async () => {
         const g = globalThis as TestGlobals
-        const result = await httpModule.post(
+        const result = (await httpModule.post(
           `http://localhost:${g.httpTestPort}/post`,
           { test: 'https-reject' },
           { rejectUnauthorized: false },
-        )
-        return (
-          result.success === true &&
-          (result.body as Record<string, unknown>).test === 'https-reject'
-        )
+        )) as { success?: boolean; body?: Record<string, unknown> }
+        return result.success === true && result.body?.test === 'https-reject'
       },
       expect: (r: boolean) => r === true,
       info: 'http.post accepts rejectUnauthorized option',

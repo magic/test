@@ -5,7 +5,7 @@ interface MockResponse {
   statusCode: number
   headers: { 'content-type': string }
   setEncoding: () => void
-  on: (event: string, callback: (data?: string) => void) => MockResponse
+  on: (event: string, callback: (chunk?: string | Buffer) => void) => MockResponse
   resume: () => void
 }
 

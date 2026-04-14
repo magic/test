@@ -46,12 +46,12 @@ export default [
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
-      const button = target.querySelector('button')
+      const button = (target as HTMLElement).querySelector('button')
       button?.addEventListener('click', () => {
         called = true
       })
       if (button) {
-        trigger(button, 'click')
+        trigger(button as unknown, 'click')
       }
       await unmount()
       return called
@@ -64,7 +64,7 @@ export default [
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
-      const div = target.querySelector('.count')
+      const div = (target as HTMLElement).querySelector('.count')
       if (div) {
         scroll(div, 0, 100)
       }
@@ -82,12 +82,12 @@ export default [
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
-      const button = target.querySelector('button')
+      const button = (target as HTMLElement).querySelector('button')
       button?.addEventListener('click', () => {
         clicked = true
       })
       if (target) {
-        click(target, 'button')
+        click(target as unknown, 'button')
       }
       await unmount()
       return clicked
@@ -100,8 +100,8 @@ export default [
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
-      const button = target.querySelector('button')
-      const result = props(button)
+      const button = (target as HTMLElement).querySelector('button')!
+      const result = props(button as unknown as Element)
       await unmount()
       return result
     },
@@ -131,7 +131,7 @@ export default [
       // Initial state: showEnv = true
       const initial = html(target)
       // Click button to toggle
-      click(target, 'button')
+      click(target as unknown, 'button')
       await flushSync()
       const afterToggle = html(target)
       await unmount()

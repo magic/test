@@ -141,7 +141,7 @@ export default [
       return (
         calls.length === 2 &&
         returns.length === 2 &&
-        calls[0].length === 0 &&
+        calls[0]?.length === 0 &&
         returns[0] === undefined
       )
     },

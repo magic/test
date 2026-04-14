@@ -11,8 +11,6 @@ import(path.join(__dirname, 'lib/registerLoader.ts'))
 import { describe, before, after, it } from 'node:test'
 import fs from '@magic/fs'
 import is from '@magic/types'
-import deep from '@magic/deep'
-
 import { maybeInjectMagic } from './lib/index.ts'
 
 import type {
@@ -43,21 +41,21 @@ const discoveredFiles: string[] = []
 
 // Ordered lists matching run.ts - hooks run in this order
 const BEFORE_ALL_FILES = [
+  '/beforeAll.mjs',
+  '/beforeall.mjs',
   '/beforeAll.js',
   '/beforeall.js',
   '/beforeAll.ts',
   '/beforeall.ts',
-  '/beforeAll.mjs',
-  '/beforeall.mjs',
 ]
 
 const AFTER_ALL_FILES = [
+  '/afterAll.mjs',
+  '/afterall.mjs',
   '/afterAll.js',
   '/afterall.js',
   '/afterAll.ts',
   '/afterall.ts',
-  '/afterAll.mjs',
-  '/afterall.mjs',
 ]
 
 const scanDir = async (dir: string): Promise<void> => {
@@ -98,8 +96,8 @@ const extractExport = async (filePath: string): Promise<Record<string, unknown> 
 }
 
 // Collect all beforeAll and afterAll hooks with their filenames
-const beforeAllHooks: Array<{ file: string; fn: (suites: RunnerSuite[]) => Promise<void> }> = []
-const afterAllHooks: Array<{ file: string; fn: (suites: RunnerSuite[]) => Promise<void> }> = []
+const beforeAllHooks: Array<{ file: string; fn: () => Promise<void | CleanupFunction> }> = []
+const afterAllHooks: Array<{ file: string; fn: () => Promise<void | CleanupFunction> }> = []
 const beforeAllCleanup: (() => void | Promise<void>)[] = []
 
 const processHookFiles = async () => {
@@ -120,7 +118,7 @@ const processHookFiles = async () => {
       if (mod && is.function(mod.default)) {
         beforeAllHooks.push({
           file: fileName,
-          fn: mod.default as (suites: RunnerSuite[]) => Promise<void>,
+          fn: mod.default as () => Promise<void | CleanupFunction>,
         })
       }
       discoveredFiles.splice(discoveredFiles.indexOf(filePath), 1)
@@ -138,7 +136,7 @@ const processHookFiles = async () => {
       if (mod && is.function(mod.default)) {
         afterAllHooks.push({
           file: fileName,
-          fn: mod.default as () => Promise<void>,
+          fn: mod.default as () => Promise<void | CleanupFunction>,
         })
       }
       discoveredFiles.splice(discoveredFiles.indexOf(filePath), 1)
@@ -158,43 +156,46 @@ const getTestName = (testObj: WrappedTest, filePath: string, index: number): str
 }
 
 const runAssertion = async (result: unknown, expect: unknown): Promise<boolean> => {
+  // If expect is a Promise, resolve it first and use the resolved value for comparison
   if (is.promise(expect)) {
-    const exp = await expect
-    if (result !== true) {
-      return exp === result || exp === true
-    }
-    return exp === true
+    const resolved = await expect
+    return runAssertion(result, resolved)
   }
 
-  if (is.function(expect)) {
-    const exp = await expect(result)
-    if (result !== true) {
-      return exp === result || exp === true
-    }
-    return exp === true
-  }
-
+  // If expect is exactly true, result must be exactly true
   if (expect === true) {
     return result === true
   }
 
+  // If expect is exactly false, result must be exactly false
   if (expect === false) {
     return result === false
   }
 
+  // If expect is function, run it against result
+  if (is.fn(expect)) {
+    const exp = await expect(result)
+    // Match t.ts behavior exactly: when result !== true, check if exp === result OR exp === true
+    if (result !== true) {
+      return exp === result || exp === true
+    }
+    return exp === true
+  }
+
+  // For other cases (including undefined), use same logic as run/test.ts
+  let pass = false
+
   if (is.undefined(expect)) {
-    return result === undefined
+    pass = result === undefined
+  } else if (is.sameType(expect, result)) {
+    if (is.arr(expect) || is.obj(expect)) {
+      pass = is.deep.equal(result, expect)
+    } else {
+      pass = result === expect
+    }
   }
 
-  if (is.string(expect) || is.number(expect)) {
-    return result === expect
-  }
-
-  if (is.array(expect) || is.object(expect)) {
-    return deep.equal(result, expect)
-  }
-
-  return expect === result
+  return pass
 }
 
 const convertTest = async (
@@ -372,9 +373,9 @@ const run = async () => {
   for (const beforeAllEntry of BEFORE_ALL_FILES) {
     const hook = beforeAllHooks.find(h => h.file === path.basename(beforeAllEntry))
     if (hook) {
-      const result = await hook.fn(allSuites)
+      const result = await hook.fn()
       if (is.function(result)) {
-        beforeAllCleanup.push(result)
+        beforeAllCleanup.push(result as CleanupFunction)
       }
     }
   }
@@ -441,7 +442,7 @@ const run = async () => {
     for (const afterAllEntry of AFTER_ALL_FILES) {
       const hook = afterAllHooks.find(h => h.file === path.basename(afterAllEntry))
       if (hook) {
-        await hook.fn(allSuites)
+        await hook.fn()
       }
     }
 

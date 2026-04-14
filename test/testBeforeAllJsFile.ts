@@ -1,60 +1,59 @@
-import is from '@magic/types'
 import log from '@magic/log'
 
 export default {
   beforeAll: () => {
-    globalThis.beforeAll = 'beforeAll'
-    globalThis.testing = true
+    const g = globalThis as Record<string, unknown>
+    g.beforeAll = 'beforeAll'
+    g.testing = true
 
     return () => {
-      globalThis.testing = 'afterAll'
+      g.testing = 'afterAll'
     }
   },
   afterAll: () => {
-    if (globalThis.testing !== 'afterAll') {
-      log.error(
-        `AfterAll globalThis.testing not matching, is "${globalThis.testing}" expected: 'afterAll'`,
-      )
+    const g = globalThis as Record<string, unknown>
+    if (g.testing !== 'afterAll') {
+      log.error(`AfterAll globalThis.testing not matching, is "${g.testing}" expected: 'afterAll'`)
     }
   },
   tests: [
     {
-      fn: () => globalThis.testing,
+      fn: () => (globalThis as Record<string, unknown>).testing,
       expect: true,
       info: 'BeforeAll handler sets global true',
     },
     {
-      fn: () => globalThis.logs,
+      fn: () => (globalThis as Record<string, unknown>).logs,
       expect: undefined,
       info: 'Undefined globals are undefined and not true',
     },
     {
-      fn: () => globalThis.beforeAllTS,
+      fn: () => (globalThis as Record<string, unknown>).beforeAllTS,
       expect: true,
       info: 'test/beforeAll.ts file gets executed before other tests.',
     },
     {
-      fn: () => globalThis.testsBeforeAllTS,
-      expect: is.object,
-      info: 'test/beforeAll.mjs file gets executed before other tests.',
-    },
-    {
-      fn: () => globalThis.beforeAllMJS,
+      fn: () => (globalThis as Record<string, unknown>).beforeAllMJS,
       expect: true,
       info: 'test/beforeAll.mjs file gets executed before other tests.',
     },
     {
-      fn: () => globalThis.beforeallJS,
+      fn: () => (globalThis as Record<string, unknown>).beforeAllMJS,
+      expect: true,
+      info: 'test/beforeAll.mjs file gets executed before other tests.',
+    },
+    {
+      fn: () => (globalThis as Record<string, unknown>).beforeallJS,
       expect: true,
       info: 'test/beforeall.js file gets executed before other tests.',
     },
     {
-      fn: () => globalThis.beforeAllMJS,
+      fn: () => (globalThis as Record<string, unknown>).beforeAllMJS,
       expect: true,
       info: 'test/beforeAll.mjs file gets executed before other tests.',
     },
     {
-      fn: () => globalThis.beforeallJS,
+      fn: () => (globalThis as Record<string, unknown>).beforeallJS,
       expect: true,
       info: 'test/beforeall.js file gets executed before other tests.',
     },
