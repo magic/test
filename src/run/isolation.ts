@@ -336,6 +336,7 @@ export class Isolation {
     for (const keyStr in snapshot.props) {
       if (!Object.prototype.hasOwnProperty.call(snapshot.props, keyStr)) continue
       const stored = snapshot.props[keyStr]
+      if (!stored) continue
       const prop = this._reviveKeyFromString(keyStr)
       try {
         const desc: PropertyDescriptor = {
@@ -346,13 +347,15 @@ export class Isolation {
           desc.writable = !!stored.writable
           desc.value = stored.value
         } else {
-          desc.get = stored.get
-          desc.set = stored.set
+          if (stored.get) desc.get = stored.get
+          if (stored.set) desc.set = stored.set
         }
         Object.defineProperty(globalThis, prop as string, desc)
       } catch {
         try {
-          ;(globalThis as Record<string | symbol, unknown>)[prop] = stored.value
+          if ('value' in stored && stored.value !== undefined) {
+            ;(globalThis as Record<string | symbol, unknown>)[prop] = stored.value
+          }
         } catch {
           // ignore
         }
@@ -498,6 +501,7 @@ export const restoreFromSnapshot = (snapshot: Snapshot | null | undefined): void
   for (const keyStr in snapshot.props) {
     if (!Object.prototype.hasOwnProperty.call(snapshot.props, keyStr)) continue
     const stored = snapshot.props[keyStr]
+    if (!stored) continue
     const prop = isolation._reviveKeyFromString(keyStr)
     try {
       const desc: PropertyDescriptor = {
@@ -508,13 +512,15 @@ export const restoreFromSnapshot = (snapshot: Snapshot | null | undefined): void
         desc.writable = !!stored.writable
         desc.value = stored.value
       } else {
-        desc.get = stored.get
-        desc.set = stored.set
+        if (stored.get) desc.get = stored.get
+        if (stored.set) desc.set = stored.set
       }
       Object.defineProperty(globalThis, prop as string, desc)
     } catch {
       try {
-        ;(globalThis as Record<string | symbol, unknown>)[prop] = stored.value
+        if ('value' in stored && stored.value !== undefined) {
+          ;(globalThis as Record<string | symbol, unknown>)[prop] = stored.value
+        }
       } catch {
         // ignore
       }

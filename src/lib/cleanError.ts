@@ -15,9 +15,9 @@ export const cleanError = (e: unknown): string[] | Error | unknown => {
 
   const [err, file] = errObj.stack.split('\n')
   if (!file) {
-    return [err]
+    return err ? [err] : ['']
   }
 
-  const stack = [err, file.replace('    ', '')]
+  const stack = [err || '', file.replace('    ', '')]
   return stack
 }

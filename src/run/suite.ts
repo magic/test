@@ -150,7 +150,7 @@ const runTestArray = async (
           },
           err => {
             // Worker failed; create a failing TestResult
-            log.error(ERRORS.E_TEST_FN, {
+            log.error(ERRORS.E_TEST_FN!, {
               testKey: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
               testName: testToRun.name,
               parent: testToRun.parent,
@@ -384,13 +384,15 @@ export const runSuite = async (
     return suite
   } catch (e: unknown) {
     if (e instanceof Error && hasErrorCode(e)) {
-      if (e.code === ERRORS.E_EMPTY_SUITE) {
+      if (e.code && e.code === ERRORS.E_EMPTY_SUITE) {
         log.error(e.code, e.message)
+      } else if (e.code) {
+        log.error(ERRORS.E_RUN_SUITE_UNKNOWN!, { suite: name, error: e })
       } else {
-        log.error(ERRORS.E_RUN_SUITE_UNKNOWN, { suite: name, error: e })
+        log.error(ERRORS.E_RUN_SUITE_UNKNOWN!, { suite: name, error: e })
       }
     } else {
-      log.error(ERRORS.E_RUN_SUITE_UNKNOWN, { suite: name, error: e })
+      log.error(ERRORS.E_RUN_SUITE_UNKNOWN!, { suite: name, error: e })
     }
   }
 

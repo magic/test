@@ -18,7 +18,9 @@ export const processImports = async (
   let match
   const regex = new RegExp(SVELTE_IMPORT_REGEX.source, 'g')
   while ((match = regex.exec(code)) !== null) {
-    imports.push({ imported: match[1], path: match[2], full: match[0] })
+    if (match[1] && match[2] && match[0]) {
+      imports.push({ imported: match[1], path: match[2], full: match[0] })
+    }
   }
 
   for (const { imported, path: importPath, full } of imports) {

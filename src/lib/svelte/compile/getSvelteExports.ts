@@ -21,6 +21,7 @@ export const getSvelteExports = async (
   const sourceDir = path.dirname(filePath)
 
   while ((match = regex.exec(content)) !== null) {
+    if (!match[1] || !match[2]) continue
     const exportedNames = match[1].split(',').map(s => s.trim())
     const exportPath = match[2]
     let resolvedPath = path.resolve(sourceDir, exportPath)

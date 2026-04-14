@@ -118,7 +118,7 @@ export default [
       const obj = { method: () => 'test' }
       const spy = mock.spy(obj, 'method')
       ;(obj.method as any)('arg1', 'arg2')
-      return spy.calls.length === 1 && spy.calls[0][0] === 'arg1' && spy.calls[0][1] === 'arg2'
+      return spy.calls.length === 1 && spy.calls[0]?.[0] === 'arg1' && spy.calls[0]?.[1] === 'arg2'
     },
     expect: true,
     info: 'mock.spy tracks arguments of spied method',

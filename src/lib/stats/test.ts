@@ -50,11 +50,11 @@ export const test = (
     results.__PACKAGE_ROOT__ = { all: 0, pass: 0 }
   }
 
-  results.__PACKAGE_ROOT__.all++
-  results[currentName].all++
+  results.__PACKAGE_ROOT__!.all++
+  results[currentName]!.all++
   if (pass) {
-    results.__PACKAGE_ROOT__.pass++
-    results[currentName].pass++
+    results.__PACKAGE_ROOT__!.pass++
+    results[currentName]!.pass++
   }
 
   store.set({ results })

@@ -18,7 +18,7 @@ export const normalizeSingleAlias = (entry: unknown, configDir: string): AliasEn
 
   if (is.string(findVal)) {
     const regexMatch = findVal.match(/^\/(.+)\/([a-z]*)$/)
-    if (regexMatch) {
+    if (regexMatch && regexMatch[1] && regexMatch[2]) {
       try {
         findVal = new RegExp(regexMatch[1], regexMatch[2])
       } catch {

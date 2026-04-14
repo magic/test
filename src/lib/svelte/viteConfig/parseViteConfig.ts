@@ -25,7 +25,7 @@ export const parseViteConfig = async (
 
   let config: { resolve?: { alias: AliasEntry[] }; define?: Record<string, unknown> } = {}
 
-  if (aliasMatch) {
+  if (aliasMatch && aliasMatch[1]) {
     try {
       const aliasStr = aliasMatch[1]
       const cleaned = aliasStr
@@ -52,7 +52,7 @@ export const parseViteConfig = async (
 
         if (is.string(findVal)) {
           const regexMatch = findVal.match(/^\/(.+)\/([a-z]*)$/)
-          if (regexMatch) {
+          if (regexMatch && regexMatch[1] && regexMatch[2]) {
             try {
               findVal = new RegExp(regexMatch[1], regexMatch[2])
             } catch {
@@ -92,7 +92,7 @@ export const parseViteConfig = async (
   }
 
   const defineMatch = content.match(/define:\s*(\{[\s\S]*?\}|\[[\s\S]*?\])/)
-  if (defineMatch) {
+  if (defineMatch && defineMatch[1]) {
     try {
       const defineStr = defineMatch[1]
       const cleaned = defineStr

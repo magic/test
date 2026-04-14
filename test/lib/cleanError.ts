@@ -15,7 +15,7 @@ export default [
   },
   {
     fn: cleanError(new Error('testing')),
-    expect: (t: CleanErrorResult) => Array.isArray(t) && t[1].includes('cleanError.'),
+    expect: (t: CleanErrorResult) => Array.isArray(t) && t[1]?.includes('cleanError.'),
     info: 'cleaned Error gets first line of stack returned as cleanedError[1] expanded as expected',
   },
   {

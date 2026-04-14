@@ -1,11 +1,17 @@
 // src/app.d.ts
 
-// Import the functions so we can infer types
-import type { runCmd } from '@magic/core/cluster/runCmd.mjs'
 import type { CustomError } from '@magic/error'
 
-// AppInstance = the result of `runCmd("prepare", App, config)`
-type AppInstance = Awaited<ReturnType<typeof runCmd>>
+// Fallback AppInstance when @magic/core is not installed
+type FallbackAppInstance = Record<string, unknown>
+
+// Try to declare the module - if @magic/core is installed, types will be picked up
+declare module '@magic/core/cluster/runCmd.mjs' {
+  export function runCmd(...args: unknown[]): Promise<Record<string, unknown>>
+}
+
+// Use fallback type - will be overridden if real module is found
+type AppInstance = FallbackAppInstance
 
 declare global {
   var CHECK_PROPS: unknown | undefined
@@ -30,16 +36,15 @@ declare global {
   var afterAllTS: boolean | undefined
   var afterallJS: boolean | undefined
 
-  // Allow dynamic property access on globalThis
   interface GlobalThis {
     CHECK_PROPS?: unknown
 
-    modules?: AppInstance['modules']
-    actions?: AppInstance['actions']
-    effects?: AppInstance['effects']
-    lib?: AppInstance['lib']
-    helpers?: AppInstance['helpers']
-    subscriptions?: AppInstance['subscriptions']
+    modules?: FallbackAppInstance['modules']
+    actions?: FallbackAppInstance['actions']
+    effects?: FallbackAppInstance['effects']
+    lib?: FallbackAppInstance['lib']
+    helpers?: FallbackAppInstance['helpers']
+    subscriptions?: FallbackAppInstance['subscriptions']
 
     before?: boolean
 

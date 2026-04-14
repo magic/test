@@ -45,10 +45,10 @@ export default [
       ],
     },
     fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
-      const removeButtons = (target as HTMLElement).querySelectorAll<HTMLButtonElement>(
-        '.remove-btn',
+      const removeButtons = Array.from(
+        (target as HTMLElement).querySelectorAll<HTMLButtonElement>('.remove-btn'),
       )
-      removeButtons[0].click()
+      removeButtons[0]?.click()
       await tick()
       return (instance as { itemsList: unknown[] }).itemsList.length
     },
@@ -95,7 +95,7 @@ export default [
       const removeButtons = (target as HTMLElement).querySelectorAll<HTMLButtonElement>(
         '.remove-btn',
       )
-      removeButtons[0].click()
+      removeButtons[0]?.click()
       await tick()
       return (instance as { itemsList: unknown[] }).itemsList.length
     },

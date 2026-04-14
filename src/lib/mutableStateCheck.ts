@@ -13,13 +13,13 @@ const getImportNames = (content: string): string[] => {
   let match
 
   while ((match = namedImport.exec(content))) {
-    match[1].split(',').forEach(n => names.push(n.trim()))
+    if (match[1]) match[1].split(',').forEach(n => names.push(n.trim()))
   }
   while ((match = defaultImport.exec(content))) {
-    names.push(match[1])
+    if (match[1]) names.push(match[1])
   }
   while ((match = namespaceImport.exec(content))) {
-    names.push(match[1])
+    if (match[1]) names.push(match[1])
   }
 
   return names
@@ -178,7 +178,7 @@ const getFilePaths = (code: string): string[] => {
   if (fsMethodMatch) {
     fsMethodMatch.forEach((match: string) => {
       const pathMatch = match.match(/['"]([^'"]+)['"]/)
-      if (pathMatch) {
+      if (pathMatch && pathMatch[1]) {
         files.push(pathMatch[1])
       }
     })

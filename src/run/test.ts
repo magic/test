@@ -210,7 +210,7 @@ export const runTest = async (
         })
       }
 
-      log.error(ERRORS.E_TEST_NO_FN, {
+      log.error(ERRORS.E_TEST_NO_FN!, {
         testKey: test.key,
         testName: name,
         parent: parent || '',
@@ -231,7 +231,7 @@ export const runTest = async (
           afterCleanup = result as () => void | Promise<void>
         }
       } catch (e) {
-        log.error(ERRORS.E_TEST_BEFORE, {
+        log.error(ERRORS.E_TEST_BEFORE!, {
           testKey: key,
           testName: name,
           parent,
@@ -257,7 +257,7 @@ export const runTest = async (
         )
         res = await withTimeout(testPromise, timeoutMs, key)
       } catch (e) {
-        log.error(ERRORS.E_TEST_FN, {
+        log.error(ERRORS.E_TEST_FN!, {
           testKey: key,
           testName: name,
           parent,
@@ -281,7 +281,7 @@ export const runTest = async (
           expString = evalResult.expString
         }
       } catch (e) {
-        log.error(ERRORS.E_TEST_EXPECT, {
+        log.error(ERRORS.E_TEST_EXPECT!, {
           testKey: key,
           testName: name,
           parent,
@@ -292,18 +292,20 @@ export const runTest = async (
     }
 
     pass = results.every(r => r.pass)
-    if (pass) {
-      result = runs > 1 ? results.map(r => r.res) : results[0].res
+    if (pass && results.length > 0) {
+      result = runs > 1 ? results.map(r => r.res) : results[0]!.res
       const lastExp = results[results.length - 1]
-      exp = lastExp.exp
-      expString = lastExp.expString
+      if (lastExp) {
+        exp = lastExp.exp
+        expString = lastExp.expString
+      }
     }
 
     if (is.function(afterCleanup)) {
       try {
         await afterCleanup()
       } catch (e) {
-        log.error(ERRORS.E_TEST_AFTER, {
+        log.error(ERRORS.E_TEST_AFTER!, {
           testKey: key,
           testName: name,
           parent,
@@ -316,7 +318,7 @@ export const runTest = async (
       try {
         await test.after()
       } catch (e) {
-        log.error(ERRORS.E_TEST_AFTER, {
+        log.error(ERRORS.E_TEST_AFTER!, {
           testKey: key,
           testName: name,
           parent,
@@ -353,7 +355,7 @@ export const runTest = async (
 
     return testResult
   } catch (e) {
-    log.error(ERRORS.E_TEST_FN, {
+    log.error(ERRORS.E_TEST_FN!, {
       testKey: testKey,
       testName: testName,
       parent: testParent,

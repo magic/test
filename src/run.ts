@@ -29,16 +29,16 @@ const aggregateResults = (rawResults: TestResult[], store: Store): void => {
     if (!results[testKey]) {
       results[testKey] = { all: 0, pass: 0 }
     }
-    results[testKey].all++
-    if (r.pass) results[testKey].pass++
+    results[testKey]!.all++
+    if (r.pass) results[testKey]!.pass++
 
     // Parent-level (suite)
     if (r.parent && r.parent !== testKey) {
       if (!results[r.parent]) {
         results[r.parent] = { all: 0, pass: 0 }
       }
-      results[r.parent].all++
-      if (r.pass) results[r.parent].pass++
+      results[r.parent]!.all++
+      if (r.pass) results[r.parent]!.pass++
     }
 
     // Package-level
@@ -46,13 +46,13 @@ const aggregateResults = (rawResults: TestResult[], store: Store): void => {
       if (!results[r.pkg]) {
         results[r.pkg] = { all: 0, pass: 0 }
       }
-      results[r.pkg].all++
-      if (r.pass) results[r.pkg].pass++
+      results[r.pkg]!.all++
+      if (r.pass) results[r.pkg]!.pass++
     }
 
     // Package root
-    results.__PACKAGE_ROOT__.all++
-    if (r.pass) results.__PACKAGE_ROOT__.pass++
+    results.__PACKAGE_ROOT__!.all++
+    if (r.pass) results.__PACKAGE_ROOT__!.pass++
   }
 
   store.set({ results })
@@ -143,8 +143,8 @@ export const run = async (
   let testsObj: TestSuites = is.function(tests) ? tests() : tests
 
   if (!is.object(testsObj)) {
-    log.error(ERRORS.E_NO_TESTS, { received: testsObj })
-    return new Error(ERRORS.E_NO_TESTS)
+    log.error(ERRORS.E_NO_TESTS!, { received: testsObj })
+    return new Error(ERRORS.E_NO_TESTS!)
   }
 
   // Define all beforeAll/afterAll file variants in execution order
