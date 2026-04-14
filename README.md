@@ -47,8 +47,9 @@ incredibly fast.
 - [utility functions](#lib)
   - [deep](#lib-deep)
   - [fs](#lib-fs)
-  - [curry](#lib-curry)
-  - [vals](#lib-vals)
+- [curry](#lib-curry)
+- [log](#lib-log)
+- [vals](#lib-vals)
   - [env](#lib-env)
   - [Environment Constants](#lib-env-constants)
   - [promises](#lib-promises)
@@ -567,6 +568,26 @@ export default {
 }
 ```
 
+###### <a name="lib-log"></a>log
+
+Logging utility for test output. Colors supported automatically.
+
+```javascript
+import { log } from '@magic/test'
+
+log.debug('Debug info')
+log.info('Something happened')
+log.warn('Heads up')
+log.error('Something went wrong')
+log.critical('Game over')
+```
+
+Supports template strings and arrays:
+
+```javascript
+log.info('Testing', library, 'at version', version)
+```
+
 ###### <a name="lib-vals"></a> vals
 
 Exports JavaScript type constants for testing against any value. Useful for fuzzing and property-based testing.
@@ -868,23 +889,6 @@ export default [
 - `getReturns()` - Get all return values
 - `getErrors()` - Get all thrown errors
 
-##### <a name="lib-error"></a>error
-
-export [@magic/error](https://github.com/magic/error)
-which returns errors with optional names.
-
-```javascript
-import { error } from '@magic/test'
-
-export default [
-  {
-    fn: tryCatch(error('Message', 'E_NAME')),
-    expect: e => e.name === 'E_NAME' && e.message === 'Message',
-    info: 'Errors have messages and (optional) names.',
-  },
-]
-```
-
 ##### <a name="lib-dom"></a>DOM Environment
 
 @magic/test automatically initializes a DOM environment when imported, making browser APIs available in Node.js.
@@ -906,10 +910,7 @@ export default [
 **DOM Utilities:**
 
 ```javascript
-import { initDOM, getDocument, getWindow, isInitialized } from '@magic/test'
-
-// Check if DOM is already initialized
-isInitialized() // returns boolean
+import { initDOM, getDocument, getWindow } from '@magic/test'
 
 // Get the document and window instances
 const doc = getDocument()
@@ -1252,20 +1253,6 @@ const tests = {
 await run(tests)
 ```
 
-**Logging:**
-
-@magic/test exports a logging utility for test output:
-
-```javascript
-import { log } from '@magic/test'
-
-log.debug('Debug message')
-log.info('Info message')
-log.warn('Warning message')
-log.error('Error message')
-log.critical('Critical message')
-```
-
 #### <a name="usage-cli"></a>cli
 
 ##### package.json (recommended):
@@ -1300,7 +1287,7 @@ this both explains to everyone that your app has this dependencies
 and keeps your bash free of clutter
 
 ```bash
-  npm i -g magic/test
+  npm i -g @magic/test
 
   // run tests in production mode
   t -p
