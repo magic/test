@@ -35,7 +35,9 @@ export default [
   },
   {
     fn: () => {
-      const args = expectedArguments(function ({ a: _a, b: _b }: unknown) {})
+      const args = expectedArguments(function ({ a, b }: unknown) {
+        const _c = a + b
+      })
       return args.length > 1 && args[0]?.includes('{ a')
     },
     expect: true,
@@ -43,7 +45,9 @@ export default [
   },
   {
     fn: () => {
-      const args = expectedArguments(function ([_a, _b]: unknown) {})
+      const args = expectedArguments(function ([a, b]: unknown) {
+        const _c = a + b
+      })
       return args.length > 1 && args[0]?.includes('[a')
     },
     expect: true,

@@ -25,11 +25,14 @@ export const limitedPromiseAllSettled = async <T>(
   const consume = (): void => {
     while (running.length < limit && index < items.length) {
       const currentIndex = index++
-      const p = processItem(items[currentIndex], currentIndex).then(() => {
-        running.splice(running.indexOf(p), 1)
-        consume()
-      })
-      running.push(p)
+      const item = items[currentIndex]
+      if (item) {
+        const p = processItem(item, currentIndex).then(() => {
+          running.splice(running.indexOf(p), 1)
+          consume()
+        })
+        running.push(p)
+      }
     }
   }
 

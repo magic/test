@@ -71,7 +71,7 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
 
   // first resolve test/{dir/?}index.js or index.ts
   // if they exist, we will simply import it as is and do no recursion.
-  const indexFilePath = path.join(targetDir, 'index.js')
+  let indexFilePath = path.join(targetDir, 'index.js')
   const indexFileTsPath = path.join(targetDir, 'index.ts')
 
   if (await fs.exists(indexFileTsPath)) {

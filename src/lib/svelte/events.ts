@@ -118,7 +118,8 @@ export const mouseOut = (target: Element | Document, selector?: string): void =>
 
 export const keyDown = (target: Element | Document, options?: string | KeyboardEventInit): void => {
   const opts = is.string(options) ? { key: options } : options
-  target.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...opts }))
+  const { view: _view, ...rest } = opts || {}
+  target.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...rest }))
 }
 
 export const keyPress = (
@@ -126,12 +127,14 @@ export const keyPress = (
   options?: string | KeyboardEventInit,
 ): void => {
   const opts = is.string(options) ? { key: options } : options
-  target.dispatchEvent(new KeyboardEvent('keypress', { bubbles: true, cancelable: true, ...opts }))
+  const { view: _view, ...rest } = opts || {}
+  target.dispatchEvent(new KeyboardEvent('keypress', { bubbles: true, cancelable: true, ...rest }))
 }
 
 export const keyUp = (target: Element | Document, options?: string | KeyboardEventInit): void => {
   const opts = is.string(options) ? { key: options } : options
-  target.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, ...opts }))
+  const { view: _view, ...rest } = opts || {}
+  target.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, ...rest }))
 }
 
 export const type = async (target: Element | Document, text: string, delay = 0): Promise<void> => {

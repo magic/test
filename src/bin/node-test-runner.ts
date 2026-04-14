@@ -98,8 +98,8 @@ const extractExport = async (filePath: string): Promise<Record<string, unknown> 
 }
 
 // Collect all beforeAll and afterAll hooks with their filenames
-const beforeAllHooks: Array<{ file: string; fn: () => Promise<void> }> = []
-const afterAllHooks: Array<{ file: string; fn: () => Promise<void> }> = []
+const beforeAllHooks: Array<{ file: string; fn: (suites: RunnerSuite[]) => Promise<void> }> = []
+const afterAllHooks: Array<{ file: string; fn: (suites: RunnerSuite[]) => Promise<void> }> = []
 const beforeAllCleanup: (() => void | Promise<void>)[] = []
 
 const processHookFiles = async () => {
@@ -120,7 +120,7 @@ const processHookFiles = async () => {
       if (mod && is.function(mod.default)) {
         beforeAllHooks.push({
           file: fileName,
-          fn: mod.default as (tests: unknown) => void | Promise<void>,
+          fn: mod.default as (suites: RunnerSuite[]) => Promise<void>,
         })
       }
       discoveredFiles.splice(discoveredFiles.indexOf(filePath), 1)
@@ -138,7 +138,7 @@ const processHookFiles = async () => {
       if (mod && is.function(mod.default)) {
         afterAllHooks.push({
           file: fileName,
-          fn: mod.default as (tests: unknown) => void | Promise<void>,
+          fn: mod.default as () => Promise<void>,
         })
       }
       discoveredFiles.splice(discoveredFiles.indexOf(filePath), 1)
@@ -374,7 +374,7 @@ const run = async () => {
     if (hook) {
       const result = await hook.fn(allSuites)
       if (is.function(result)) {
-        beforeAllCleanup.push(result as CleanupFunction)
+        beforeAllCleanup.push(result)
       }
     }
   }

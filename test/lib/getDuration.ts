@@ -31,9 +31,8 @@ export default {
     {
       fn: () => {
         const g = globalThis as TestGlobals
-        const store = g.store as Store
-        store.state.startTime = null
-        return getDuration(store)
+        delete g.store?.state.startTime
+        return g.store && getDuration(g.store)
       },
       expect: '',
       info: 'returns empty string when startTime is null',

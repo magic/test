@@ -24,16 +24,19 @@ try {
       const kitMatch = content.match(/defineConfig\s*\(\s*\{[\s\S]*?kit\s*:\s*\{([\s\S]*?)\}/)
       if (kitMatch) {
         const kitBlock = kitMatch[1]
+        if (!kitBlock) continue
         const parseBase = () => {
-          const m = kitBlock.match(/base\s*:\s*['"]([^'"]+)['"]/)
+          const m = kitBlock?.match(/base\s*:\s*['"]([^'"]+)['"]/)
           return m ? m[1] : ''
         }
         const parseAssets = () => {
-          const m = kitBlock.match(/paths\s*:\s*\{[^}]*assets\s*:\s*['"]([^'"]+)['"]/)
+          const m = kitBlock?.match(/paths\s*:\s*\{[^}]*assets\s*:\s*['"]([^'"]+)['"]/)
           return m ? m[1] : ''
         }
-        base = parseBase()
-        assets = parseAssets()
+        const parsedBase = parseBase()
+        const parsedAssets = parseAssets()
+        if (parsedBase) base = parsedBase
+        if (parsedAssets) assets = parsedAssets
         break
       }
     }
@@ -100,7 +103,8 @@ export function match(url: string | URL): Promise<MatchResult | null> {
         const bracketNames = (id.match(/\[([^/]+)\]/g) || []).map(p => p.slice(1, -1))
         const paramNames = colonNames.concat(bracketNames)
         paramNames.forEach((name, idx) => {
-          params[name] = decodeURIComponent(m[idx + 1])
+          const val = m[idx + 1]
+          if (val) params[name] = decodeURIComponent(val)
         })
         return Promise.resolve({ id, params })
       }

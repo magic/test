@@ -5,14 +5,6 @@
 import { get } from 'svelte/store'
 import { getContext, getDefaultContext, type Navigation, type Page } from './state.ts'
 
-interface BeforeNavigate {
-  from: URL
-  to: URL
-  type: string
-  willUnload: boolean
-  cancel: () => void
-}
-
 interface AfterNavigate {
   from: URL
   to: URL
@@ -49,7 +41,7 @@ export async function goto(
   const beforeList = [...ctx.callbacks.before]
   for (const cb of beforeList) {
     try {
-      cb({ ...navObj, cancel: () => {} })
+      cb({ ...navObj })
     } catch (_e) {
       // ignore nav errors
     }
@@ -71,7 +63,7 @@ export async function goto(
   const afterList = [...ctx.callbacks.after]
   for (const cb of afterList) {
     try {
-      cb({ from, to: targetUrl, type: 'goto' })
+      cb({ from, to: targetUrl, type: 'goto', willUnload: false, delta: 0, complete: () => {} })
     } catch (_e) {
       // ignore nav errors
     }
@@ -81,7 +73,14 @@ export async function goto(
   const onList = [...ctx.callbacks.on]
   for (const cb of onList) {
     try {
-      const result = cb({ from, to: targetUrl, type: 'goto' })
+      const result = cb({
+        from,
+        to: targetUrl,
+        type: 'goto',
+        willUnload: false,
+        delta: 0,
+        complete: () => {},
+      })
       if (typeof result === 'function') {
         onCleanups.push(result)
       }
@@ -135,7 +134,7 @@ export function preloadCode(_pathname: string): Promise<void> {
   return Promise.resolve()
 }
 
-export function beforeNavigate(cb: (nav: BeforeNavigate) => void): () => void {
+export function beforeNavigate(cb: (nav: Navigation) => void): () => void {
   const ctx = getCtx()
   ctx.callbacks.before.push(cb)
   return () => {
@@ -153,7 +152,7 @@ export function afterNavigate(cb: (nav: AfterNavigate) => void): () => void {
   }
 }
 
-export function onNavigate(cb: (nav: OnNavigate) => (() => void) | void): void {
+export function onNavigate(cb: (nav: Navigation) => (() => void) | void): void {
   const ctx = getCtx()
   ctx.callbacks.on.push(cb)
 }
