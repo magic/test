@@ -2165,6 +2165,13 @@ update dependencies
 - add some internal tests
 - update dependencies
 
-##### 0.2.31 - unreleased
+##### 0.2.31
+
+- added html support (using happy-dom, experimental!)
+- added svelte support (experimental!)
+- various improvements to test logic and structure of internal lib
+- more tests.
+
+##### 0.2.32 - unreleased
 
 ...
