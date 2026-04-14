@@ -98,8 +98,8 @@ const extractExport = async (filePath: string): Promise<Record<string, unknown> 
 }
 
 // Collect all beforeAll and afterAll hooks with their filenames
-const beforeAllHooks: Array<{ file: string; fn: Function }> = []
-const afterAllHooks: Array<{ file: string; fn: Function }> = []
+const beforeAllHooks: Array<{ file: string; fn: () => Promise<void> }> = []
+const afterAllHooks: Array<{ file: string; fn: () => Promise<void> }> = []
 const beforeAllCleanup: (() => void | Promise<void>)[] = []
 
 const processHookFiles = async () => {
