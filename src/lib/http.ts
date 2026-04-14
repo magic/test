@@ -7,7 +7,6 @@ import is from '@magic/types'
 
 type BodyObject = Record<string, unknown>
 type RequestBody = string | BodyObject
-type ResponseData = unknown
 
 interface HttpOptions {
   timeout?: number

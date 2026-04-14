@@ -7,7 +7,7 @@ export async function resolve(
   specifier: string,
   context: { parentURL?: string },
   nextResolve: (specifier: string, context?: object) => Promise<{ url: string }>,
-): Promise<{ url: string, shortCircuit?: boolean }> {
+): Promise<{ url: string; shortCircuit?: boolean }> {
   // console.error('[resolve] called:', specifier.slice(0, 40))
   try {
     // Handle .js -> .ts conversion for imports without compiled JS
@@ -107,7 +107,7 @@ export async function load(
   url: string,
   context: { format?: string },
   nextLoad: (url: string, context?: object) => Promise<{ format?: string; source?: string }>,
-): Promise<{ format?: string; source?: string, shortCircuit?: boolean }> {
+): Promise<{ format?: string; source?: string; shortCircuit?: boolean }> {
   // Handle .js -> .ts conversion for magic/test source files
   if (url.includes('/magic/util/test/src/') && url.endsWith('.js')) {
     const tsUrl = url.replace(/\.js$/, '.ts')

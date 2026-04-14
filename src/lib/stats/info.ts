@@ -76,7 +76,11 @@ export const info = (suites: unknown[], store: Store): boolean => {
     const percentage = printPercent(passPercent)
 
     const logOutput = `${name} => Pass: ${pass}/${all} ${percentage}%`
-    passPercent === 100 ? log.info(logOutput) : log.warn(logOutput)
+    if (passPercent === 100) {
+      log.info(logOutput)
+    } else {
+      log.warn(logOutput)
+    }
   })
 
   const result = results.__PACKAGE_ROOT__ || { pass: 0, all: 0 }

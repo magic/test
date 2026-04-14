@@ -43,7 +43,7 @@ export class Store {
         key !== 'startTime' &&
         key !== 'results'
       ) {
-        ;(this.state as any)[key] = (val as any)[key]
+        this.state[key] = val[key]
       }
     }
   }

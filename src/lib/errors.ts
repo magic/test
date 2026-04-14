@@ -39,7 +39,7 @@ export const createError = (code: string, message: string): CustomError => {
  */
 export const errorify = (code: string, data: unknown): CustomError => {
   const msgTemplate = ERROR_MESSAGES[code]
-  let msg = ''
+  let msg
 
   if (is.fn(msgTemplate)) {
     msg = msgTemplate(data)

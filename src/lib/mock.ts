@@ -1,5 +1,4 @@
 import { env } from './env.ts'
-
 /**
  * MockFn interface
  */
