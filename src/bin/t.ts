@@ -60,7 +60,9 @@ npm example:
 const run = async () => {
   const pkgPath = path.join(cwd, 'package.json')
   const content = await fs.readFile(pkgPath, 'utf-8')
-  const { name } = JSON.parse(content)
+  const { name, version } = JSON.parse(content)
+
+  log(`### ${log.color('green', 'Testing package:')} ${name}@${version}\n`)
 
   const isProd = res.env.NODE_ENV === 'production'
 

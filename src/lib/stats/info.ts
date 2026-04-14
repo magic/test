@@ -12,9 +12,7 @@ import type { InputValue, TestResult, TestResults } from '../../types.ts'
 /**
  * Prints test results for a package and its suites.
  */
-export const info = (pkg: string, suites: unknown[], store: Store): boolean => {
-  log(`###  Testing package: ${pkg}`)
-
+export const info = (suites: unknown[], store: Store): boolean => {
   const results = store.get('results') as TestResults | undefined
 
   if (!results) {

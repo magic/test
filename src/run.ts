@@ -14,7 +14,7 @@ const cwd = process.cwd()
  * Aggregate raw test results into the store's results object.
  * This replaces the incremental stats.test() calls to avoid race conditions.
  */
-const aggregateResults = (rawResults: TestResult[], store: Store, pkg: string): void => {
+const aggregateResults = (rawResults: TestResult[], store: Store): void => {
   const results: Record<string, { all: number; pass: number }> = {
     __PACKAGE_ROOT__: { all: 0, pass: 0 },
   }
@@ -56,21 +56,6 @@ const aggregateResults = (rawResults: TestResult[], store: Store, pkg: string): 
   }
 
   store.set({ results })
-}
-
-/**
- * Check if a value is a TestCollection (array of tests or test object with hooks)
- * @param {unknown} value
- * @returns {value is TestCollection}
- */
-const isTestCollection = (value: unknown): value is TestCollection => {
-  if (is.array(value)) {
-    return true
-  }
-  if (is.objectNative(value) && 'tests' in value) {
-    return true
-  }
-  return false
 }
 
 /**
@@ -220,11 +205,6 @@ export const run = async (
     testsObj = filtered
   }
 
-  let packagePath = path.join(cwd, 'package.json')
-
-  const content = await fs.readFile(packagePath, 'utf8')
-  const { name } = JSON.parse(content)
-
   // After removing hook files, all remaining entries should be processed as test suites.
   // convertSuite will handle arrays, functions, and objects (including plain test objects).
   const testEntries: [string, unknown][] = Object.entries(testsObj)
@@ -253,7 +233,7 @@ export const run = async (
   }
 
   // Aggregate all raw results into store (single pass, race-free)
-  aggregateResults(rawResults, store, name)
+  aggregateResults(rawResults, store)
 
   // Run all afterAll files
   for (const afterAll of afterAllFns) {
@@ -270,5 +250,5 @@ export const run = async (
     await fs.rmrf(tmpDir)
   }
 
-  stats.info(name, suites, store)
+  stats.info(suites, store)
 }
