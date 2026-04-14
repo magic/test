@@ -45,19 +45,20 @@ incredibly fast.
   - [beforeEach and afterEach](#tests-each-hooks)
   - [test @magic-modules](#tests-magic-modules)
 - [utility functions](#lib)
+  - [deep](#lib-deep)
+  - [fs](#lib-fs)
   - [curry](#lib-curry)
   - [vals](#lib-vals)
   - [env](#lib-env)
+  - [Environment Constants](#lib-env-constants)
   - [promises](#lib-promises)
-  - [stringify](#lib-stringify)
-  - [handleResponse](#lib-handleResponse)
   - [http](#lib-http)
-  - [css](#lib-css)
   - [tryCatch](#lib-trycatch)
   - [error](#lib-error)
   - [version](#lib-version)
   - [mock](#lib-mock)
-  - [svelte](#lib-svelte)
+  - [DOM Environment](#lib-dom)
+  - [svelte (experimental!)](#lib-svelte)
 - [Native Node.js Test Runner](#native-runner)
   - [Usage](#native-usage)
   - [Using in External Libraries](#native-external)
@@ -92,9 +93,9 @@ import yourLibToTest from '../path/to/your/lib.js'
 
 export default [
   { fn: () => true, expect: true, info: 'true is true' },
-  // note that the function will be called automagically. expect: true can be omitted.
+  // note that the function will be called automagically. expect: true is optional.
   { fn: yourLibToTest.returnsTrue, /* expect: true, */ info: 'yourLibToTest returns true' },
-  // if you need arguments, just call the function, this will also use async/await for promises.
+  // if you need arguments, call the function. also works with async/await.
   {
     fn: yourLibToTest.withArgs('argument1', 'argument2'),
     expect: 'string',
@@ -134,13 +135,24 @@ run the test:
   npm test
 ```
 
-example output:
-(failing tests will print some information, passing tests are silent)
+example output, from this repository, lots of worker tests:
+(passing test files are silent if -p is passed)
 
 ```
 ###  Testing package: @magic/test
 
-Ran 716 tests in 375.2ms. Passed 716/716 100%
+Ran 1235 tests in 1.7s. Passed 1235/1235 100%
+
+```
+
+fastest tests from a private project
+
+```
+###  Testing package: @artificialmuseum/engine
+
+Ran 90307 tests in 274.5ms. Passed 90307/90307 100%
+Ran 90307 tests in 265.5ms. Passed 90307/90307 100%
+Ran 90307 tests in 268.1ms. Passed 90307/90307 100%
 ```
 
 run coverage reports and get full test report including from passing tests:
@@ -192,7 +204,7 @@ if test/lib/index.js exists, no other files from that subdirectory will be loade
 ```javascript
 export default { fn: true, expect: true, info: 'expect true to be true' }
 
-// expect: true is the default and can be omitted
+// expect: true is the default
 export default { fn: true, info: 'expect true to be true' }
 
 // if fn is a function expect is the returned value of the function
@@ -249,7 +261,7 @@ export default [
 
 ###### Caveat:
 
-if you want to test if a function is a function, you need to wrap the function
+if you want to test if a function is a function, wrap the function
 
 ```javascript
 import { is } from '@magic/test'
@@ -270,7 +282,7 @@ export default {
 export default { fn: () => true, expect: true, info: 'TypeScript test works!' }
 ```
 
-This requires Node.js 14.2.0 or later.
+This requires Node.js 22.18.0 or later.
 
 ##### <a name="tests-multiple"></a> multiple tests
 
@@ -402,7 +414,7 @@ export default [
     fn: () => { global.testing = 'changed in test' },
     // if beforeAll returns a function, it will execute after the test suite.
     beforeAll,
-    // this is optional and can be omitted if beforeall returns a function.
+    // this is optional if beforeall returns a function.
     // in this example, afterAll will trigger twice.
     afterAll,
     expect: () => global.testing === 'changed in test',
@@ -461,7 +473,7 @@ export default {
 ##### <a name="tests-magic-modules"></a>test @magic-modules
 
 @magic-modules assume all html tags to be globally defined.
-to create those globals for your test and check if a @magic-module returns the correct markup, just call one of the tags in your test function:
+to create those globals for your test and check if a @magic-module returns the correct markup, call one of the tags in your test function:
 
 ```javascript
 export default [
@@ -473,10 +485,73 @@ export default [
 
 @magic/test exports some utility functions that make working with complex test workflows simpler.
 
+###### <a name="lib-deep"></a>deep
+
+Exported from [@magic/deep](https://github.com/magic/deep), deep equality and comparison utilities.
+
+```javascript
+import { deep, is } from '@magic/test'
+
+export default [
+  {
+    fn: () => ({ a: 1, b: 2 }),
+    expect: deep.equal({ a: 1, b: 2 }),
+    info: 'deep equals comparison',
+  },
+  {
+    fn: () => ({ a: 1 }),
+    expect: deep.different({ a: 2 }),
+    info: 'deep different comparison',
+  },
+  {
+    fn: () => ({ a: { b: 1 } }),
+    expect: deep.equal({ a: { b: 1 } }),
+    info: 'nested deep equality',
+  },
+]
+```
+
+**Available functions:**
+
+- `deep.equal(a, b)` - deep equality check
+- `deep.different(a, b)` - deep difference check
+- `deep.contains(container, item)` - deep inclusion check
+- `deep.changes(a, b)` - get differences between objects
+
+###### <a name="lib-fs"></a>fs
+
+Exported from [@magic/fs](https://github.com/magic/fs), file system utilities.
+
+```javascript
+import { fs } from '@magic/test'
+
+export default [
+  {
+    fn: async () => {
+      const content = await fs.readFile('./package.json', 'utf-8')
+      return content.includes('name')
+    },
+    expect: true,
+    info: 'read file content',
+  },
+]
+```
+
+**Common methods:**
+
+- `fs.readFile(path, encoding)` - read file content
+- `fs.writeFile(path, data)` - write file content
+- `fs.exists(path)` - check if file exists
+- `fs.mkdir(path, options)` - create directory
+- `fs.rmdir(path)` - remove directory
+- `fs.stat(path)` - get file stats
+- `fs.readdir(path)` - read directory contents
+- Plus async versions in `fs.promises`
+
 ###### <a name="lib-curry"></a>curry
 
-Currying can be used to split the arguments of a function into multiple nested functions.
-This helps if you have a function with complicated arguments that you just want to quickly shim.
+Currying splits a function's arguments into nested functions.
+Useful for shimming functions with many arguments.
 
 ```javascript
 import { curry } from '@magic/test'
@@ -526,17 +601,24 @@ Environment detection utilities for conditional test behavior.
 **Available utilities:**
 
 - `isNodeProd` - checks if NODE_ENV is set to production
+- `isNodeDev` - checks if NODE_ENV is set to development
 - `isProd` - checks if -p flag is passed to the CLI
 - `isVerbose` - checks if -l flag is passed to the CLI
+- `getErrorLength` - returns error length limit from MAGIC_TEST_ERROR_LENGTH env var (0 = unlimited)
 
 ```javascript
-import { env } from '@magic/test'
+import { env, isProd, isTest, isDev } from '@magic/test'
 
 export default [
   {
     fn: env.isNodeProd,
     expect: process.env.NODE_ENV === 'production',
     info: 'checks if NODE_ENV is production',
+  },
+  {
+    fn: env.isNodeDev,
+    expect: process.env.NODE_ENV === 'development',
+    info: 'checks if NODE_ENV is development',
   },
   {
     fn: env.isProd,
@@ -548,6 +630,29 @@ export default [
     expect: process.argv.includes('-l'),
     info: 'checks if -l flag is passed',
   },
+  {
+    fn: env.getErrorLength,
+    expect: 70, // default, can be overridden by MAGIC_TEST_ERROR_LENGTH
+    info: 'get error length limit',
+  },
+]
+```
+
+##### <a name="lib-env-constants"></a>Environment Constants
+
+These boolean constants reflect the current NODE_ENV:
+
+- `isProd` - true when NODE_ENV is 'production'
+- `isTest` - true when NODE_ENV is 'test' (default)
+- `isDev` - true when NODE_ENV is 'development'
+
+```javascript
+import { isProd, isTest, isDev } from '@magic/test'
+
+export default [
+  { fn: isProd, expect: process.env.NODE_ENV === 'production' },
+  { fn: isTest, expect: process.env.NODE_ENV === 'test' },
+  { fn: isDev, expect: process.env.NODE_ENV === 'development' },
 ]
 ```
 
@@ -573,53 +678,7 @@ export default [
 ]
 ```
 
-###### <a name="lib-stringify"></a>stringify
-
-Converts values to strings for comparison testing. Useful for comparing complex objects.
-
-```javascript
-import { stringify } from '@magic/test'
-
-export default [
-  {
-    fn: () => stringify({ a: 1, b: 2 }),
-    expect: '{"a":1,"b":2}',
-    info: 'stringifies object to JSON',
-  },
-  {
-    fn: () => stringify([1, 2, 3]),
-    expect: '[1,2,3]',
-    info: 'stringifies array',
-  },
-]
-```
-
-###### <a name="lib-handleResponse"></a>handleResponse
-
-Processes HTTP responses, automatically handling JSON parsing and error detection.
-
-```javascript
-import { handleResponse } from '@magic/test'
-
-export default [
-  {
-    fn: async () => {
-      const response = { ok: true, json: () => Promise.resolve({ data: 'test' }) }
-      return handleResponse(response)
-    },
-    expect: { data: 'test' },
-    info: 'handles JSON response',
-  },
-  {
-    fn: async () => {
-      const response = { ok: false, status: 404 }
-      return handleResponse(response)
-    },
-    expect: is.error,
-    info: 'throws on error response',
-  },
-]
-```
+**Note:** `stringify` and `handleResponse` are internal utilities and are not exported.
 
 ###### <a name="lib-http"></a>http
 
@@ -673,10 +732,7 @@ export default [
 - Raw string returns for non-JSON responses
 - `rejectUnauthorized: false` for self-signed certificates
 
-##### <a name="lib-css"></a>css
-
-exports [@magic/css](https://github.com/magic/css)
-which allows parsing and stringification of css-in-js objects.
+**Note:** `css` is internal, not exported.
 
 ###### <a name="lib-trycatch"></a> tryCatch
 
@@ -829,9 +885,51 @@ export default [
 ]
 ```
 
+##### <a name="lib-dom"></a>DOM Environment
+
+@magic/test automatically initializes a DOM environment when imported, making browser APIs available in Node.js.
+
+**Available globals:**
+
+- Core: `document`, `window`, `self`, `navigator`, `location`, `history`
+- DOM types: `Node`, `Element`, `HTMLElement`, `SVGElement`, `Document`, `DocumentFragment`
+- Events: `Event`, `CustomEvent`, `MouseEvent`, `KeyboardEvent`, `InputEvent`, `TouchEvent`, `PointerEvent`
+- Forms: `FormData`, `File`, `FileList`, `Blob`
+- Networking: `URL`, `URLSearchParams`, `XMLHttpRequest`, `fetch`, `WebSocket`
+- Storage: `Storage`, `sessionStorage`, `localStorage`
+- Observers: `MutationObserver`, `IntersectionObserver`, `ResizeObserver`
+- File APIs: `FileReader`, `AbortController`, `AbortSignal`
+- Streams: `ReadableStream`, `WritableStream`, `TransformStream`
+- Misc: `DOMParser`, `XMLSerializer`, `TextEncoder`, `TextDecoder`, `atob`, `btoa`
+- Timers: `setTimeout`, `setInterval`, `requestAnimationFrame`
+
+**DOM Utilities:**
+
+```javascript
+import { initDOM, getDocument, getWindow, isInitialized } from '@magic/test'
+
+// Check if DOM is already initialized
+isInitialized() // returns boolean
+
+// Get the document and window instances
+const doc = getDocument()
+const win = getWindow()
+
+// Manually re-initialize if needed
+initDOM()
+```
+
+**Canvas/Image Polyfills:**
+
+- `new Image()` - Parses PNG data URLs to extract dimensions
+- `canvas.getContext('2d')` - Returns node-canvas context
+- `canvas.toDataURL()` - Serializes canvas to data URL
+
 ###### <a name="lib-svelte"></a>Svelte Testing
 
-@magic/test includes built-in support for testing Svelte 5 components. It provides a complete testing harness that compiles Svelte components, mounts them in a DOM environment, and provides utilities for interacting with and asserting on component behavior.
+**Svelte support is VERY experimental and will be expanded whenever we write tests for our libraries.**
+
+@magic/test has built-in support for testing Svelte 5 components. Compiles Svelte, mounts them in a DOM, and gives you utilities to interact and assert.
 
 ```javascript
 import { mount, html, tryCatch } from '@magic/test'
@@ -887,7 +985,7 @@ export default [
 ]
 ```
 
-This works automatically for all `$state` and `$derived` runes in your component. No configuration needed - just write tests as usual.
+This works automatically for all `$state` and `$derived` runes in your component.
 
 **Exported Functions:**
 
@@ -963,9 +1061,55 @@ export default [
 ]
 ```
 
+**SvelteKit Mocks:**
+
+Mocks SvelteKit's $app modules:
+
+```javascript
+import { browser, dev, prod, createStaticPage } from '@magic/test'
+
+export default [
+  {
+    fn: () => browser, // true if in browser environment
+    expect: false,
+    info: 'not in browser by default',
+  },
+  {
+    fn: () => dev, // true if in dev mode
+    expect: process.env.NODE_ENV === 'development',
+    info: 'dev reflects NODE_ENV',
+  },
+  {
+    fn: () => prod, // true if in production mode
+    expect: false,
+    info: 'not in prod by default',
+  },
+]
+```
+
+**compileSvelte:**
+
+Compile Svelte component source to a module for testing:
+
+```javascript
+import { compileSvelte } from '@magic/test'
+
+export default [
+  {
+    fn: async () => {
+      const source = `<button>Click</button>`
+      const { js, css } = compileSvelte(source, 'button.svelte')
+      return js.code.includes('button') && css.code === ''
+    },
+    expect: true,
+    info: 'compiles Svelte source to module',
+  },
+]
+```
+
 #### <a name="native-runner"></a>Native Node.js Test Runner
 
-@magic/test includes a native Node.js test runner that uses the built-in `--test` flag. This provides better integration with Node.js ecosystem tools and IDEs.
+@magic/test includes a native Node.js test runner using `--test`.
 
 ##### <a name="native-usage"></a>Usage
 
@@ -1089,6 +1233,39 @@ const tests = {
 run(tests)
 ```
 
+**Programmatic API:**
+
+The `run` function accepts test suites and runs them programmatically:
+
+```javascript
+import { run, is } from '@magic/test'
+
+const tests = {
+  myLib: [
+    { fn: () => true, expect: true, info: 'true is true' },
+    { fn: () => 'test', expect: is.string, info: 'returns a string' },
+    { fn: () => ({ a: 1 }), expect: is.deep.equal({ a: 1 }), info: 'deep equals' },
+  ],
+}
+
+// run returns a promise
+await run(tests)
+```
+
+**Logging:**
+
+@magic/test exports a logging utility for test output:
+
+```javascript
+import { log } from '@magic/test'
+
+log.debug('Debug message')
+log.info('Info message')
+log.warn('Warning message')
+log.error('Error message')
+log.critical('Critical message')
+```
+
 #### <a name="usage-cli"></a>cli
 
 ##### package.json (recommended):
@@ -1116,7 +1293,7 @@ then use the npm run scripts
 
 ##### <a name="usage-global"></a>Globally (not recommended):
 
-you can of course install this library globally,
+you can install this library globally,
 but the recommendation is to add the dependency and scripts to the package.json file.
 
 this both explains to everyone that your app has this dependencies
@@ -1929,7 +2106,7 @@ update dependencies
 
 - update dependencies
 - percentage outputs print nicer numbers
-- added http export that allows http requests in tests, there might be dragons and future updates are expected. only supports get requests for now.
+- added http export that allows http requests in tests. only supports get requests for now.
 
 ##### 0.2.16
 
