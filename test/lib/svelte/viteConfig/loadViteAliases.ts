@@ -38,8 +38,7 @@ export default {
         await configCache.clear()
         await fs.rmrf(TEST_ROOT)
         await fs.mkdir(TEST_ROOT, { recursive: true })
-        // Small delay to ensure filesystem operations complete
-        await new Promise(r => setTimeout(r, 5))
+
         // Valid config
         await fs.writeFile(
           CONFIG_PATH,
@@ -49,8 +48,9 @@ export default {
             })
           `,
         )
+
         // Small delay to ensure file is written before parsing
-        await new Promise(r => setTimeout(r, 5))
+        await new Promise(r => setTimeout(r, 10))
         const result = await loadViteAliases(TEST_ROOT)
         return result
       },
@@ -63,8 +63,12 @@ export default {
         await configCache.clear()
         await fs.rmrf(TEST_ROOT)
         await fs.mkdir(TEST_ROOT, { recursive: true })
+
         // Config with parse error (invalid syntax)
         await fs.writeFile(CONFIG_PATH, `invalid syntax`)
+
+        await new Promise(r => setTimeout(r, 10))
+
         const result = await loadViteAliases(TEST_ROOT)
         return result
       },
