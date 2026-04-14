@@ -4,7 +4,7 @@ export const transformForNode = (code: string, filePath: string): string => {
   const componentName = path.basename(filePath, '.svelte')
   const safeName = componentName.replace(/[^a-zA-Z0-9]/g, '_') + '$$component'
 
-  let transformed = code.replace(/_unknown_/g, safeName)
+  const transformed = code.replace(/_unknown_/g, safeName)
 
   return transformed
 }

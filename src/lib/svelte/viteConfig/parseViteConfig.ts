@@ -2,19 +2,15 @@ import fs from '@magic/fs'
 import is from '@magic/types'
 import path from 'node:path'
 
-import { configCache, type AliasEntry } from './cache.ts'
+import { configCache } from './cache.ts'
+import type { AliasEntry, ViteConfig } from '@magic/test/types.ts'
 
-export const parseViteConfig = async (
-  configPath: string,
-): Promise<{ resolve?: { alias: AliasEntry[] }; define?: Record<string, unknown> }> => {
+export const parseViteConfig = async (configPath: string): Promise<ViteConfig> => {
   const cached = configCache.get(configPath)
   if (cached) {
     const stats = await fs.stat(configPath)
     if (stats.mtime.getTime() === cached.mtime) {
-      return cached.config as {
-        resolve?: { alias: AliasEntry[] }
-        define?: Record<string, unknown>
-      }
+      return cached.config
     }
   }
 
@@ -23,7 +19,7 @@ export const parseViteConfig = async (
 
   const aliasMatch = content.match(/alias:\s*(\{[\s\S]*?\}|\[[\s\S]*?\])/)
 
-  let config: { resolve?: { alias: AliasEntry[] }; define?: Record<string, unknown> } = {}
+  const config: ViteConfig = {}
 
   if (aliasMatch && aliasMatch[1]) {
     try {

@@ -92,7 +92,7 @@ const extractExport = async (filePath: string): Promise<Record<string, unknown> 
   try {
     const mod = await import(filePath)
     return mod
-  } catch (e) {
+  } catch {
     return null
   }
 }

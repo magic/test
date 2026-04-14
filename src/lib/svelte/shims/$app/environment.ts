@@ -30,7 +30,7 @@ function getViteConfig(): ViteKitConfig {
           const parseValStr = (key: string): string | undefined => {
             const m = kitBlock.match(new RegExp(`${key}\\s*:\\s*([^,\\}\\n]+)`))
             if (m) {
-              let val = m[1].trim()
+              const val = m[1].trim()
               if (val.startsWith("'") || val.startsWith('"')) return val.slice(1, -1)
               return val
             }

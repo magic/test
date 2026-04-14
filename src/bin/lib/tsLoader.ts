@@ -1,13 +1,13 @@
 import fs from '@magic/fs'
 import path from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { pathToFileURL } from 'node:url'
 import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.ts'
 
 export async function resolve(
   specifier: string,
   context: { parentURL?: string },
   nextResolve: (specifier: string, context?: object) => Promise<{ url: string }>,
-): Promise<{ url: string }> {
+): Promise<{ url: string, shortCircuit?: boolean }> {
   // console.error('[resolve] called:', specifier.slice(0, 40))
   try {
     // Handle .js -> .ts conversion for imports without compiled JS
@@ -27,7 +27,7 @@ export async function resolve(
         if (aliasResolved) {
           return { url: pathToFileURL(aliasResolved).href }
         }
-      } catch (e) {
+      } catch {
         // ignore
       }
     }
@@ -95,7 +95,7 @@ export async function resolve(
         }
       }
     }
-  } catch (e) {
+  } catch {
     // fall through
   }
 
@@ -107,7 +107,7 @@ export async function load(
   url: string,
   context: { format?: string },
   nextLoad: (url: string, context?: object) => Promise<{ format?: string; source?: string }>,
-): Promise<{ format?: string; source?: string }> {
+): Promise<{ format?: string; source?: string, shortCircuit?: boolean }> {
   // Handle .js -> .ts conversion for magic/test source files
   if (url.includes('/magic/util/test/src/') && url.endsWith('.js')) {
     const tsUrl = url.replace(/\.js$/, '.ts')

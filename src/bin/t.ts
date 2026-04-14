@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import path from 'node:path'
-import url from 'node:url'
 
 import cli from '@magic/cli'
 import fs from '@magic/fs'
@@ -9,9 +8,6 @@ import is from '@magic/types'
 import log from '@magic/log'
 
 import { abort } from '../run.ts'
-
-const __filename = url.fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 const cwd = process.cwd()
 const res = cli({

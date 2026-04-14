@@ -1,4 +1,4 @@
-import type { CustomWindow } from './types.ts'
+import type { Window, Document } from 'happy-dom'
 
 export {
   type SimpleEvent,
@@ -12,22 +12,20 @@ export { imageCache, parsePngDimensions, createImagePolyfill } from './image.ts'
 
 export { createCanvasPolyfill } from './canvas.ts'
 
-import { happyWindow, happyDocument, define, initGlobals } from './globals.ts'
+import { define, initGlobals } from './globals.ts'
 
-export { happyWindow, happyDocument, define, initGlobals }
+export { define, initGlobals }
 
-export const initDOM = (): void => {
-  initGlobals()
+export const initDOM = (): { window: Window; document: Document } => {
+  return initGlobals()
 }
 
-export const getDocument = (): unknown => {
-  initGlobals()
-  return happyDocument
+export const getDocument = (): Document => {
+  const { document } = initGlobals()
+  return document
 }
 
-export const getWindow = (): CustomWindow => {
-  initGlobals()
-  return happyWindow!
+export const getWindow = (): Window => {
+  const { window } = initGlobals()
+  return window
 }
-
-export const isInitialized = (): boolean => happyWindow !== null

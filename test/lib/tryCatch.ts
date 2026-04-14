@@ -1,8 +1,6 @@
 import is from '@magic/types'
 import { tryCatch } from '../../src/index.js'
 
-const catchFn = (...args: unknown[]) => args
-
 const catchPromise = (arg: unknown) => (res: (v: unknown) => void, rej: (e: Error) => void) =>
   setTimeout(() => (arg ? res(arg) : rej(new Error('test'))))
 

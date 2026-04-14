@@ -1,7 +1,5 @@
 // src/app.d.ts
 
-import type { CustomError } from '@magic/error'
-
 // Fallback AppInstance when @magic/core is not installed
 type FallbackAppInstance = Record<string, unknown>
 

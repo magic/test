@@ -10,7 +10,6 @@ import { run, abort } from '../run.ts'
 
 import { maybeInjectMagic, readRecursive } from './lib/index.ts'
 
-import type { TestSuites } from '../types.ts'
 import type { CustomError } from '@magic/error'
 
 const getShardConfig = () => {

@@ -58,7 +58,9 @@ export default {
       await fs.unlink('vite.config.js')
       try {
         await fs.unlink('test/.tmp/test-alias-component.svelte')
-      } catch {}
+      } catch {
+        // intentionally left blank
+      }
 
       configCache.clear()
       aliasCache.clear()

@@ -250,7 +250,7 @@ export const runSuite = async (
   }
 
   const { parent = '', name = '', pkg = '' } = suite
-  let { tests } = props
+  const { tests } = props
 
   let results: (TestResult | Suite)[] = []
 

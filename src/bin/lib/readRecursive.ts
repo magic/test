@@ -38,7 +38,7 @@ const CONCURRENCY_LIMIT = 50
 
 const importFile = async (filePath: string): Promise<unknown> => {
   try {
-    let mod = await import(filePath)
+    const mod = await import(filePath)
 
     // catch es6 export default
     if (is.module(mod)) {
@@ -71,8 +71,8 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
 
   // first resolve test/{dir/?}index.js or index.ts
   // if they exist, we will simply import it as is and do no recursion.
-  let indexFilePath = path.join(targetDir, 'index.js')
-  let indexFileTsPath = path.join(targetDir, 'index.ts')
+  const indexFilePath = path.join(targetDir, 'index.js')
+  const indexFileTsPath = path.join(targetDir, 'index.ts')
 
   if (await fs.exists(indexFileTsPath)) {
     indexFilePath = indexFileTsPath
@@ -101,7 +101,7 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
 
     // Use allSettled with concurrency limit to prevent file descriptor exhaustion
     const results = await limitedPromiseAllSettled(filteredFiles, CONCURRENCY_LIMIT, async file => {
-      let filePath = path.join(targetDir, file)
+      const filePath = path.join(targetDir, file)
 
       // Check for symlink cycles using realpath
       let realPath: string
@@ -134,7 +134,7 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
           return { type: 'skip', file } as ImportResult
         }
 
-        let fileP = filePath.replace(testDir, '')
+        const fileP = filePath.replace(testDir, '')
 
         const importPath = pathToFileURL(filePath).href
 

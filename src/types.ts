@@ -1,12 +1,3 @@
-// src/app.d.ts
-
-// Import the functions so we can infer types
-import type { CustomError } from '@magic/error'
-
-/* -------------------------------------------------------------
- * Test framework type definitions (converted from JSDoc)
- * ----------------------------------------------------------- */
-
 export type TestExpect = ((...args: unknown[]) => unknown) | Promise<unknown> | unknown
 
 export interface Test {
@@ -365,4 +356,16 @@ export interface IStore {
   get<K extends keyof State>(key: K, def?: State[K]): State[K] | undefined
   get(key: string, def?: unknown): unknown
   reset(): void
+}
+
+export type AliasEntry = {
+  find: string | RegExp
+  replacement: string
+}
+
+export type ViteConfig = {
+  resolve?: {
+    alias: AliasEntry[]
+  }
+  define?: Record<string, unknown>
 }

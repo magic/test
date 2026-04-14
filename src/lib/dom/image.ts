@@ -1,6 +1,8 @@
+import type { Window } from 'happy-dom'
+
 import { loadImage } from 'canvas'
 
-import type { CustomWindow, ImageInstance, ImageConstructor } from './types.ts'
+import type { ImageInstance, ImageConstructor } from './types.ts'
 
 export const imageCache = new Map<string, unknown>()
 
@@ -29,9 +31,9 @@ export const parsePngDimensions = (dataUrl: string): { width: number; height: nu
   }
 }
 
-export const createImagePolyfill = (win: CustomWindow): new () => ImageInstance => {
-  const OriginalImage = win.Image as ImageConstructor
-  const HTMLImageElement = win.HTMLImageElement as { prototype: ImageInstance }
+export const createImagePolyfill = (win: Window): new () => ImageInstance => {
+  const OriginalImage = win.Image as unknown as ImageConstructor
+  const HTMLImageElement = win.HTMLImageElement as unknown as { prototype: ImageInstance }
   const srcDesc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src')
 
   const PolyfilledImage = function (this: ImageInstance): ImageInstance {

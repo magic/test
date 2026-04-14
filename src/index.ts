@@ -12,7 +12,7 @@ import { initDOM } from './lib/dom/index.ts'
 
 export { curry, env, http, mock, promise, vals, version, tryCatch } from './lib/index.ts'
 
-export { initDOM, getDocument, getWindow, isInitialized } from './lib/dom/index.ts'
+export { initDOM, getDocument, getWindow } from './lib/dom/index.ts'
 
 export {
   compileSvelte,

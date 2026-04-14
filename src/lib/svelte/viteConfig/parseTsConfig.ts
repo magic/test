@@ -49,7 +49,7 @@ export const parseTsConfig = async (rootDir: string): Promise<AliasEntry[]> => {
         if (Array.isArray(value) && value[0]?.startsWith('../')) {
           // ../src/lib/* -> the ../ is relative to .svelte-kit/, so we need to go UP one level
           // then back to src/lib/. So ../src/lib/* becomes src/lib/*
-          let normalizedTarget = value[0].replace(/^\.\.\//, '')
+          const normalizedTarget = value[0].replace(/^\.\.\//, '')
           normalizedSvelteKitPaths[key] = [normalizedTarget]
         } else {
           normalizedSvelteKitPaths[key] = value

@@ -1,8 +1,9 @@
 import { createCanvas, loadImage } from 'canvas'
 
-import type { CustomWindow, CanvasRenderingContext2D } from './types.ts'
+import type { CanvasRenderingContext2D } from './types.ts'
+import type { Window } from 'happy-dom'
 
-export const createCanvasPolyfill = (win: CustomWindow, _happyDocument: unknown): void => {
+export const createCanvasPolyfill = (win: Window): void => {
   const HTMLCanvasElement = win.HTMLCanvasElement as {
     prototype: {
       getContext: (type: string, ...args: unknown[]) => unknown

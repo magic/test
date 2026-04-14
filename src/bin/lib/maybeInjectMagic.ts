@@ -109,7 +109,7 @@ export const maybeInjectMagic = async () => {
 
     if (is.ownProp(app, 'lib') && is.object(app.lib)) {
       const lib = Object.fromEntries(
-        Object.entries(app.lib).map(([k, v]) => [cases.camel(k), `lib.${cases.camel(k)}`]),
+        Object.entries(app.lib).map(([k]) => [cases.camel(k), `lib.${cases.camel(k)}`]),
       )
       globalThis.lib = lib
     }
