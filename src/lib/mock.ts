@@ -93,9 +93,9 @@ export const spy = (
 }
 
 export const log = {
-  log: (_?: unknown) => !env.isNodeProd(),
-  warn: (_?: unknown) => !env.isNodeProd(),
-  error: (_?: unknown) => true,
-  time: (_?: unknown) => !env.isNodeProd(),
-  timeEnd: (_?: unknown) => !env.isNodeProd(),
+  log: (..._: unknown[]) => !env.isNodeProd(),
+  warn: (..._: unknown[]) => !env.isNodeProd(),
+  error: (..._: unknown[]) => true,
+  time: (..._: unknown[]) => !env.isNodeProd(),
+  timeEnd: (..._: unknown[]) => !env.isNodeProd(),
 }

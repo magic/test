@@ -192,9 +192,8 @@ export default {
         await fs.mkdir(testDir, { recursive: true })
         const configPath = path.join(testDir, 'vite.config.js')
         await fs.writeFile(configPath, `export default defineConfig({})`)
-        const first = await parseViteConfig(configPath)
-        const second = await parseViteConfig(configPath)
-        return second
+        const config = await parseViteConfig(configPath)
+        return config
       },
       expect: {},
       info: 'uses cache on subsequent calls',

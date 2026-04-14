@@ -112,7 +112,7 @@ const run = async () => {
   argv.push(binFile)
 
   if (process.argv.length > 2) {
-    const [_1, _2, ...argvs] = process.argv
+    const [, , ...argvs] = process.argv
     argv = [...argv, ...argvs]
   }
 

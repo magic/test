@@ -48,7 +48,7 @@ import {
 } from '../../../src/lib/svelte/events.js'
 
 initDOM()
-const doc = getDocument() as any
+const doc = getDocument()
 
 export default [
   // click
