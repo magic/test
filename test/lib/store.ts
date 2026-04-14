@@ -19,7 +19,7 @@ export default [
   },
   {
     fn: () => {
-      ;(store as any).set({ testKey: 'testValue' })
+      store.set({ testKey: 'testValue' } as Record<string, unknown>)
       return store.get('testKey') === 'testValue'
     },
     expect: true,
@@ -27,7 +27,7 @@ export default [
   },
   {
     fn: () => {
-      ;(store as any).set({ anotherKey: 'anotherValue' })
+      store.set({ anotherKey: 'anotherValue' } as Record<string, unknown>)
       return store.get('anotherKey')
     },
     expect: 'anotherValue',
@@ -40,7 +40,7 @@ export default [
   },
   {
     fn: () => {
-      ;(store as any).set({ testKey: 'value' })
+      store.set({ testKey: 'value' } as Record<string, unknown>)
       store.reset()
       return store.get('testKey') === undefined
     },

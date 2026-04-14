@@ -38,7 +38,7 @@ try {
       }
     }
   }
-} catch (e) {
+} catch {
   // ignore, use defaults
 }
 
@@ -105,7 +105,9 @@ export function match(url: string | URL): Promise<MatchResult | null> {
         return Promise.resolve({ id, params })
       }
     }
-  } catch (e) {}
+  } catch (_e) {
+    // ignore match errors
+  }
   return Promise.resolve(null)
 }
 

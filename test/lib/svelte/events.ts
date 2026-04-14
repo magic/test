@@ -476,14 +476,13 @@ export default [
   },
   // volumeChange event
   {
-    fn: async () => {
+    fn: () => {
       const div = doc.createElement('div')
       doc.body.appendChild(div)
       let fired = false
       div.addEventListener('volumechange', () => {
         fired = true
       })
-      const { volumeChange } = await import('../../../src/lib/svelte/events.js')
       volumeChange(div)
       return fired
     },
@@ -506,5 +505,193 @@ export default [
     },
     expect: true,
     info: 'fireEvent can fire events on descendant elements via selector',
+  },
+  // type function
+  {
+    fn: () => {
+      const inputEl = doc.createElement('input')
+      doc.body.appendChild(inputEl)
+      type(inputEl, 'hello')
+      // happy-dom doesn't fully support type(), just check it runs without error
+      return true
+    },
+    expect: true,
+    info: 'type function runs without error',
+  },
+  // blur function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      blur(div)
+      return true
+    },
+    expect: true,
+    info: 'blur function runs without error',
+  },
+  // focus function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      focus(div)
+      return true
+    },
+    expect: true,
+    info: 'focus function runs without error',
+  },
+  // focusIn function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      focusIn(div)
+      return true
+    },
+    expect: true,
+    info: 'focusIn function runs without error',
+  },
+  // focusOut function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      focusOut(div)
+      return true
+    },
+    expect: true,
+    info: 'focusOut function runs without error',
+  },
+  // copy function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      copy(div)
+      return true
+    },
+    expect: true,
+    info: 'copy function runs without error',
+  },
+  // cut function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      cut(div)
+      return true
+    },
+    expect: true,
+    info: 'cut function runs without error',
+  },
+  // paste function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      paste(div)
+      return true
+    },
+    expect: true,
+    info: 'paste function runs without error',
+  },
+  // dragStart function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      dragStart(div)
+      return true
+    },
+    expect: true,
+    info: 'dragStart function runs without error',
+  },
+  // drag function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      drag(div)
+      return true
+    },
+    expect: true,
+    info: 'drag function runs without error',
+  },
+  // dragEnd function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      dragEnd(div)
+      return true
+    },
+    expect: true,
+    info: 'dragEnd function runs without error',
+  },
+  // dragOver function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      dragOver(div)
+      return true
+    },
+    expect: true,
+    info: 'dragOver function runs without error',
+  },
+  // dragEnter function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      dragEnter(div)
+      return true
+    },
+    expect: true,
+    info: 'dragEnter function runs without error',
+  },
+  // dragLeave function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      dragLeave(div)
+      return true
+    },
+    expect: true,
+    info: 'dragLeave function runs without error',
+  },
+  // drop function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      drop(div)
+      return true
+    },
+    expect: true,
+    info: 'drop function runs without error',
+  },
+  // resize function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      resize(div)
+      return true
+    },
+    expect: true,
+    info: 'resize function runs without error',
+  },
+  // scroll function
+  {
+    fn: () => {
+      const div = doc.createElement('div')
+      doc.body.appendChild(div)
+      scroll(div)
+      return true
+    },
+    expect: true,
+    info: 'scroll function runs without error',
   },
 ]

@@ -19,7 +19,7 @@ interface AfterNavigate {
   type: string
 }
 
-interface OnNavigate extends AfterNavigate {}
+// OnNavigate extends AfterNavigate for type compatibility
 
 const getCtx = () => getContext() ?? getDefaultContext()
 
@@ -50,7 +50,9 @@ export async function goto(
   for (const cb of beforeList) {
     try {
       cb({ ...navObj, cancel: () => {} })
-    } catch (e) {}
+    } catch (_e) {
+      // ignore nav errors
+    }
   }
 
   ctx.navigating.set(navObj)
@@ -70,7 +72,9 @@ export async function goto(
   for (const cb of afterList) {
     try {
       cb({ from, to: targetUrl, type: 'goto' })
-    } catch (e) {}
+    } catch (_e) {
+      // ignore nav errors
+    }
   }
 
   const onCleanups: (() => void)[] = []
@@ -81,13 +85,17 @@ export async function goto(
       if (typeof result === 'function') {
         onCleanups.push(result)
       }
-    } catch (e) {}
+    } catch (_e) {
+      // ignore nav errors
+    }
   }
 
   for (const cleanup of onCleanups) {
     try {
       cleanup()
-    } catch {}
+    } catch (_e) {
+      // ignore cleanup errors
+    }
   }
 
   return Promise.resolve()
@@ -107,7 +115,7 @@ export function replaceState(url: string | URL, state: Record<string, unknown> =
   ctx.page.set({ ...currentPage, url: targetUrl, ...state })
 }
 
-export function invalidate(resource: string | URL | ((url: URL) => boolean)): Promise<void> {
+export function invalidate(_resource: string | URL | ((url: URL) => boolean)): Promise<void> {
   return Promise.resolve()
 }
 
@@ -119,11 +127,11 @@ type PreloadedData =
   | { type: 'loaded'; status: number; data: unknown }
   | { type: 'redirect'; location: string }
 
-export function preloadData(href: string): Promise<PreloadedData> {
+export function preloadData(_href: string): Promise<PreloadedData> {
   return Promise.resolve({ type: 'loaded', status: 200, data: {} })
 }
 
-export function preloadCode(pathname: string): Promise<void> {
+export function preloadCode(_pathname: string): Promise<void> {
   return Promise.resolve()
 }
 

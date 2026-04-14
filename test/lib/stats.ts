@@ -29,7 +29,7 @@ export default [
       store.set({ results: {} })
       stats.test({ name: 'test1', parent: 'suite1', pkg: 'pkg1', pass: true }, store)
       stats.test({ name: 'test2', parent: 'suite1', pkg: 'pkg1', pass: false }, store)
-      const results = store.get('results') as any
+      const results = store.get('results') as Record<string, { all: number; pass: number }>
       return results.suite1.all === 2 && results.suite1.pass === 1
     },
     expect: (r: boolean) => r === true,

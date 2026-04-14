@@ -143,7 +143,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithState } as any)
+      const result = await preprocessor.script({ content: sourceWithState })
       return result.code.includes('export { count, name }')
     },
     expect: true,
@@ -152,7 +152,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithDerived } as any)
+      const result = await preprocessor.script({ content: sourceWithDerived })
       return result.code.includes('export { count, doubled }')
     },
     expect: true,
@@ -161,7 +161,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithBoth } as any)
+      const result = await preprocessor.script({ content: sourceWithBoth })
       return result.code.includes('export {')
     },
     expect: true,
@@ -170,7 +170,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithoutScript } as any)
+      const result = await preprocessor.script({ content: sourceWithoutScript })
       return result.code === sourceWithoutScript
     },
     expect: true,
@@ -179,7 +179,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithEmptyScript } as any)
+      const result = await preprocessor.script({ content: sourceWithEmptyScript })
       return result.code === sourceWithEmptyScript
     },
     expect: true,
@@ -188,7 +188,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithNoRunes } as any)
+      const result = await preprocessor.script({ content: sourceWithNoRunes })
       return result.code === sourceWithNoRunes
     },
     expect: true,
@@ -197,7 +197,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithDestructuredProps } as any)
+      const result = await preprocessor.script({ content: sourceWithDestructuredProps })
       return result.code.includes('export { count }')
     },
     expect: true,
@@ -206,7 +206,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithScriptNoClose } as any)
+      const result = await preprocessor.script({ content: sourceWithScriptNoClose })
       return result.code.includes('export { count }')
     },
     expect: true,
@@ -215,7 +215,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithScriptTagOnly } as any)
+      const result = await preprocessor.script({ content: sourceWithScriptTagOnly })
       return result.code.includes('export { count }')
     },
     expect: true,
@@ -224,7 +224,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithOnlyState } as any)
+      const result = await preprocessor.script({ content: sourceWithOnlyState })
       return result.code.includes('export { x }')
     },
     expect: true,
@@ -233,7 +233,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithModuleScript } as any)
+      const result = await preprocessor.script({ content: sourceWithModuleScript })
       return result.code.includes('export { count }')
     },
     expect: true,
@@ -242,7 +242,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithConstNotState } as any)
+      const result = await preprocessor.script({ content: sourceWithConstNotState })
       return result.code.includes('export { count }')
     },
     expect: true,
@@ -251,7 +251,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithObjectDestructuring } as any)
+      const result = await preprocessor.script({ content: sourceWithObjectDestructuring })
       return result.code.includes('export { count }')
     },
     expect: true,
@@ -267,7 +267,7 @@ export default [
     },
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithMalformedScript } as any)
+      const result = await preprocessor.script({ content: sourceWithMalformedScript })
       return result.code.includes('export { count }') || result.code === sourceWithMalformedScript
     },
     expect: true,
@@ -276,7 +276,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithNestedBraces } as any)
+      const result = await preprocessor.script({ content: sourceWithNestedBraces })
       return result.code.includes('export { count }')
     },
     expect: true,
@@ -285,7 +285,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithOnlyModuleScript } as any)
+      const result = await preprocessor.script({ content: sourceWithOnlyModuleScript })
       return result.code === sourceWithOnlyModuleScript
     },
     expect: true,
@@ -294,7 +294,7 @@ export default [
   {
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithNoScriptCloseAtAll } as any)
+      const result = await preprocessor.script({ content: sourceWithNoScriptCloseAtAll })
       return result.code.includes('export {') || result.code === sourceWithNoScriptCloseAtAll
     },
     expect: true,
@@ -310,7 +310,7 @@ export default [
     },
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithOpenScriptTag } as any)
+      const result = await preprocessor.script({ content: sourceWithOpenScriptTag })
       return result.code.includes('export { count }') || result.code === sourceWithOpenScriptTag
     },
     expect: true,
@@ -326,7 +326,7 @@ export default [
     },
     fn: async () => {
       const preprocessor = testExportsPreprocessor()
-      const result = await preprocessor.script({ content: sourceWithMultipleScriptTags } as any)
+      const result = await preprocessor.script({ content: sourceWithMultipleScriptTags })
       const hasA = result.code.includes('a = $state(1)')
       const hasB = result.code.includes('b = $state(2)')
       return hasA && hasB
@@ -334,4 +334,4 @@ export default [
     expect: true,
     info: 'handles multiple script tags',
   },
-] as any
+]

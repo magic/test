@@ -2,11 +2,16 @@ import { is } from '@magic/types'
 import { getDuration } from '../../src/lib/getDuration.js'
 import { Store } from '../../src/lib/store.js'
 
+interface TestGlobals {
+  store?: Store
+}
+
 const beforeAll = () => {
-  ;(globalThis as any).store = new Store()
+  const g = globalThis as TestGlobals
+  g.store = new Store()
 
   return () => {
-    ;(globalThis as any).store = undefined
+    g.store = undefined
   }
 }
 
@@ -15,7 +20,8 @@ export default {
   tests: [
     {
       fn: () => {
-        const store = (globalThis as any).store as Store
+        const g = globalThis as TestGlobals
+        const store = g.store as Store
         store.state.startTime = undefined
         return getDuration(store)
       },
@@ -24,8 +30,9 @@ export default {
     },
     {
       fn: () => {
-        const store = (globalThis as any).store as Store
-        ;(store.state as any).startTime = null
+        const g = globalThis as TestGlobals
+        const store = g.store as Store
+        store.state.startTime = null
         return getDuration(store)
       },
       expect: '',
@@ -33,7 +40,8 @@ export default {
     },
     {
       fn: () => {
-        const store = (globalThis as any).store as Store
+        const g = globalThis as TestGlobals
+        const store = g.store as Store
         store.state.startTime = [0, 0]
         const result = getDuration(store)
         return result

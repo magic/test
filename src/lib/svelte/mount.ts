@@ -10,14 +10,15 @@ import { initDOM, getDocument, getWindow } from '../../lib/dom/index.ts'
 import type { ComponentProps } from '../../types.ts'
 import { createContext, runWithContext } from './shims/$app/state.ts'
 import { detectSvelteKitImports, needsSvelteKitContext } from './detect-sveltekit-imports.js'
+import type { SvelteComponent } from 'svelte'
 
-let svelteMount: Function | undefined
+let svelteMount: (component: unknown, options: unknown) => unknown | undefined
 
-let svelteUnmount: Function | undefined
+let svelteUnmount: (component: unknown, options?: unknown) => Promise<void> | undefined
 
-let svelteCreateRawSnippet: Function | null = null
+let svelteCreateRawSnippet: ((snippet: () => { render: () => string }) => unknown) | null = null
 
-let svelteTick: Function | undefined
+let svelteTick: (() => Promise<void>) | undefined
 
 let svelteInitialized = false
 
@@ -42,7 +43,7 @@ const initSvelte = async () => {
     return
   } catch (e) {
     const err = is.error(e) ? e : new Error(String(e))
-    throw new Error(`Failed to initialize Svelte: ${err.message}`)
+    throw new Error(`Failed to initialize Svelte: ${err.message}`, { cause: e })
   }
 }
 
@@ -74,7 +75,7 @@ export const tick = async () => {
 
 interface MountResult {
   target: unknown
-  component: unknown
+  component: SvelteComponent
   unmount: () => Promise<void>
   css: unknown
 }
@@ -143,7 +144,7 @@ export const mount = async (
   }
 
   return runWithContext(ctx, async () => {
-    const { js, css, importUrl } = await compileSvelteWithWrite(resolvedPath)
+    const { css, importUrl } = await compileSvelteWithWrite(resolvedPath)
 
     let mod
     try {
@@ -207,19 +208,21 @@ export const mount = async (
         props: processedProps,
       })
     } catch (mountError) {
-      const err = mountError as Error
-      if (err.message.includes('can only be used during component initialisation')) {
+      if (
+        mountError instanceof Error &&
+        mountError.message.includes('can only be used during component initialisation')
+      ) {
         throw new Error(
-          `Lifecycle error in ${resolvedPath}: ${err.message}. Make sure lifecycle functions are called at the top level of the component script.`,
-          { cause: err },
+          `Lifecycle error in ${resolvedPath}: ${mountError.message}. Make sure lifecycle functions are called at the top level of the component script.`,
+          { cause: mountError },
         )
       }
 
-      if (err.message.includes('https://svelte.dev/')) {
-        throw new Error(`[svelte] ${err.message} ${resolvedPath}`, { cause: err })
+      if (mountError instanceof Error && mountError.message.includes('https://svelte.dev/')) {
+        throw new Error(`[svelte] ${mountError.message} ${resolvedPath}`, { cause: mountError })
       }
 
-      throw err
+      throw mountError
     }
 
     // Wait for initial effects to run (e.g., $effect) before returning
@@ -235,7 +238,7 @@ export const mount = async (
     const unmount = async () => {
       if (!svelteUnmount) throw new Error('Svelte not initialized')
       await runWithContext(ctx, async () => {
-        await (svelteUnmount as Function)(component, { outro: true })
+        await svelteUnmount!(component, { outro: true })
       })
     }
 

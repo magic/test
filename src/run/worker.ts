@@ -2,17 +2,10 @@ import { parentPort, workerData } from 'node:worker_threads'
 
 import is from '@magic/types'
 
-import { cleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/index.ts'
-import { isolation, restoreFromSnapshot } from './isolation.ts'
+import { cleanError, cleanFunctionString, getTestKey } from '../lib/index.ts'
+import { restoreFromSnapshot } from './isolation.ts'
 import { getViteDefine } from '../lib/svelte/viteConfig/index.ts'
-import type {
-  WrappedTest,
-  CleanupFunction,
-  TestResult,
-  TestObject,
-  EvaluateResult,
-  Suite,
-} from '../types.ts'
+import type { WrappedTest, CleanupFunction, TestResult, EvaluateResult } from '../types.ts'
 
 /**
  * Type guard to check if an object has test properties (fn or tests).
@@ -121,7 +114,7 @@ const importFile = async (filePath: string): Promise<unknown> => {
   }
 }
 
-const runTestFn = async (test: WrappedTest, key: string): Promise<RunFnResult> => {
+const runTestFn = async (test: WrappedTest, _key: string): Promise<RunFnResult> => {
   const { fn, before, after, expect, runs = 1 } = test
 
   let afterCleanup
@@ -135,7 +128,7 @@ const runTestFn = async (test: WrappedTest, key: string): Promise<RunFnResult> =
   let result
   let exp
   let expString
-  let pass = false
+  let pass
 
   const results = []
   for (let i = 0; i < runs; i++) {
@@ -148,9 +141,25 @@ const runTestFn = async (test: WrappedTest, key: string): Promise<RunFnResult> =
       } else {
         res = fn
       }
-    } catch (e) {
-      results.push({ res, pass: false })
+    } catch {
+      results.push({ res: undefined, pass: false })
       continue
+    }
+
+    try {
+      const evalResult = await evaluateResult(res, expect)
+      const runPass = evalResult.pass
+
+      results.push({ res, pass: runPass, exp: evalResult.exp, expString: evalResult.expString })
+
+      if (!runPass) {
+        pass = false
+        result = res
+        exp = evalResult.exp
+        expString = evalResult.expString
+      }
+    } catch {
+      results.push({ res, pass: false })
     }
 
     try {
@@ -174,10 +183,10 @@ const runTestFn = async (test: WrappedTest, key: string): Promise<RunFnResult> =
 
   pass = results.every(r => r.pass)
   if (pass) {
-    result = runs > 1 ? results.map(r => r.res) : results[0].res
+    result = runs > 1 ? results.map(r => r.res) : results[0]?.res
     const lastExp = results[results.length - 1]
-    exp = lastExp.exp
-    expString = lastExp.expString
+    exp = lastExp?.exp
+    expString = lastExp?.expString
   }
 
   let afterCleanupError = null
@@ -209,7 +218,7 @@ const runSingleTest = async (
   testParent: string,
   testName: string,
 ): Promise<TestResult> => {
-  const { fn, expect, info } = test
+  const { fn, info } = test
 
   if (!is.ownProp(test, 'fn')) {
     return {
@@ -239,7 +248,7 @@ const runSingleTest = async (
     pass = testResult.pass
     exp = testResult.exp
     expString = testResult.expString
-  } catch (e) {
+  } catch {
     // Error already logged by inner functions
   }
 
@@ -255,14 +264,6 @@ const runSingleTest = async (
     info,
     pkg: testPkg,
   }
-}
-
-const findTestByKey = (tests: WrappedTest[], testKey: string): WrappedTest | undefined => {
-  for (const t of tests) {
-    const key = getTestKey(t.pkg, t.parent, t.name)
-    if (key === testKey) return t
-  }
-  return undefined
 }
 
 const main = async () => {

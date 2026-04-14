@@ -11,27 +11,8 @@ interface ActionResult<Success, Failure> {
   error?: unknown
 }
 
-export async function applyAction<
-  Success extends Record<string, unknown> | undefined,
-  Failure extends Record<string, unknown> | undefined,
->(result: ActionResult<Success, Failure>): Promise<void> {
-  // In test environment, we can't update page state like a real browser
-  // This is a no-op implementation
-}
-
-export function deserialize<
-  Success extends Record<string, unknown> | undefined,
-  Failure extends Record<string, unknown> | undefined,
->(result: string): ActionResult<Success, Failure> {
-  try {
-    return JSON.parse(result) as ActionResult<Success, Failure>
-  } catch {
-    return {
-      type: 'error',
-      error: new Error('Failed to deserialize result'),
-    } as ActionResult<Success, Failure>
-  }
-}
+type ActionSuccess = Record<string, unknown> | undefined
+type ActionFailure = Record<string, unknown> | undefined
 
 interface EnhanceOptions<Success, Failure> {
   reset?: boolean
@@ -45,12 +26,29 @@ interface EnhanceOptions<Success, Failure> {
   }) => void | Promise<void>
 }
 
-export function enhance<
-  Success extends Record<string, unknown> | undefined,
-  Failure extends Record<string, unknown> | undefined,
->(
-  formElement: HTMLFormElement,
-  submit?: (args: {
+export const applyAction = async <Success extends ActionSuccess, Failure extends ActionFailure>(
+  _result: ActionResult<Success, Failure>,
+): Promise<void> => {
+  // In test environment, we can't update page state like a real browser
+  // This is a no-op implementation
+}
+
+export function deserialize<Success extends ActionSuccess, Failure extends ActionFailure>(
+  result: string,
+): ActionResult<Success, Failure> {
+  try {
+    return JSON.parse(result) as ActionResult<Success, Failure>
+  } catch {
+    return {
+      type: 'error',
+      error: new Error('Failed to deserialize result'),
+    } as ActionResult<Success, Failure>
+  }
+}
+
+export function enhance<Success extends ActionSuccess, Failure extends ActionFailure>(
+  _formElement: HTMLFormElement,
+  _submit?: (args: {
     formData: FormData
     action: URL
     cancel: () => void

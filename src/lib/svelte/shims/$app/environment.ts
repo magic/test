@@ -53,7 +53,7 @@ function getViteConfig(): ViteKitConfig {
         }
       }
     }
-  } catch (e) {
+  } catch {
     // ignore
   }
   return {}

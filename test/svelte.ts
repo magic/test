@@ -1,4 +1,4 @@
-import { mount, html, component, click, trigger, scroll, props } from '../src/index.js'
+import { mount, html, click, trigger, scroll, props } from '../src/index.js'
 import { flushSync } from 'svelte'
 
 export default [
@@ -16,10 +16,10 @@ export default [
   },
   {
     fn: async () => {
-      const { component: instance, unmount } = await mount(
+      const { component, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
-      const result = (component(instance) as { count: number }).count
+      const result = component.count
       await unmount()
       return result
     },
@@ -28,12 +28,12 @@ export default [
   },
   {
     fn: async () => {
-      const { component: instance, unmount } = await mount(
+      const { component, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
-      ;(instance as { count: number }).count = 5
+      component.count = 5
       flushSync()
-      const result = (component(instance) as { count: number }).count
+      const result = component.count
       await unmount()
       return result
     },
@@ -46,11 +46,13 @@ export default [
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
-      const button = target.querySelector('button') as HTMLElement
-      button.addEventListener('click', () => {
+      const button = target.querySelector('button')
+      button?.addEventListener('click', () => {
         called = true
       })
-      trigger(button, 'click')
+      if (button) {
+        trigger(button, 'click')
+      }
       await unmount()
       return called
     },
@@ -63,9 +65,11 @@ export default [
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
       const div = target.querySelector('.count')
-      scroll(div, 0, 100)
+      if (div) {
+        scroll(div, 0, 100)
+      }
       flushSync()
-      const result = div.scrollTop
+      const result = div?.scrollTop
       await unmount()
       return result
     },
@@ -79,10 +83,12 @@ export default [
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
       const button = target.querySelector('button')
-      button.addEventListener('click', () => {
+      button?.addEventListener('click', () => {
         clicked = true
       })
-      click(target, 'button')
+      if (target) {
+        click(target, 'button')
+      }
       await unmount()
       return clicked
     },

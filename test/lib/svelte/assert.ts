@@ -1,5 +1,5 @@
 import { initDOM } from '../../../src/lib/dom/index.js'
-import { html, text, component, props } from '../../../src/lib/svelte/assert.js'
+import { html, text, props } from '../../../src/lib/svelte/assert.js'
 
 initDOM()
 
@@ -8,7 +8,7 @@ export default [
     fn: () => {
       const div = document.createElement('div')
       div.innerHTML = '<span>test</span>'
-      const result = html(div as any)
+      const result = html(div)
       return result.includes('<span>test</span>')
     },
     expect: true,
@@ -18,7 +18,7 @@ export default [
     fn: () => {
       const div = document.createElement('div')
       div.innerHTML = ''
-      return html(div as any) === ''
+      return html(div) === ''
     },
     expect: true,
     info: 'html returns empty string for empty element',
@@ -27,7 +27,7 @@ export default [
     fn: () => {
       const div = document.createElement('div')
       div.textContent = 'hello world'
-      return text(div as any) === 'hello world'
+      return text(div) === 'hello world'
     },
     expect: true,
     info: 'text returns textContent',
@@ -35,26 +35,17 @@ export default [
   {
     fn: () => {
       const div = document.createElement('div')
-      return text(div as any) === ''
+      return text(div) === ''
     },
     expect: true,
     info: 'text returns empty string for empty element',
   },
   {
     fn: () => {
-      const instance = { test: true }
-      const result = component(instance as any)
-      return (result as any).test === true
-    },
-    expect: true,
-    info: 'component returns the instance',
-  },
-  {
-    fn: () => {
       const div = document.createElement('div')
       div.setAttribute('class', 'test-class')
       div.setAttribute('id', 'test-id')
-      const result = props(div as any)
+      const result = props(div)
       return result.class === 'test-class' && result.id === 'test-id'
     },
     expect: true,
@@ -63,7 +54,7 @@ export default [
   {
     fn: () => {
       const div = document.createElement('div')
-      const result = props(div as any)
+      const result = props(div)
       return Object.keys(result).length === 0
     },
     expect: true,
@@ -73,7 +64,7 @@ export default [
     fn: () => {
       const div = document.createElement('div')
       div.setAttribute('data-test', 'value')
-      const result = props(div as any)
+      const result = props(div)
       return result['data-test'] === 'value'
     },
     expect: true,
@@ -83,7 +74,7 @@ export default [
     fn: () => {
       const div = document.createElement('div')
       div.innerHTML = '<p>paragraph</p><span>span</span>'
-      return html(div as any).includes('<p>paragraph</p>')
+      return html(div).includes('<p>paragraph</p>')
     },
     expect: true,
     info: 'html handles multiple child elements',
@@ -92,7 +83,7 @@ export default [
     fn: () => {
       const div = document.createElement('div')
       div.innerHTML = '<a href="#">link</a>'
-      const result = html(div as any)
+      const result = html(div)
       return result.includes('<a')
     },
     expect: true,

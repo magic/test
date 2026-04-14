@@ -118,11 +118,11 @@ export const updated = {
   check: (): Promise<boolean> => Promise.resolve(false),
 }
 
-export function reset() {
+export const reset = () => {
   resetDefaultContext()
 }
 
-export function createContext(): ShimContext {
+export const createContext = (): ShimContext => {
   return {
     page: writable<Page>(makeDefaultPage()),
     navigating: writable<Navigation | null>(null),
@@ -130,19 +130,19 @@ export function createContext(): ShimContext {
   }
 }
 
-export function runWithContext<T>(ctx: ShimContext, fn: () => Promise<T>): Promise<T> {
+export const runWithContext = <T>(ctx: ShimContext, fn: () => Promise<T>): Promise<T> => {
   return storage.run(ctx, fn)
 }
 
-export function getContext(): ShimContext | undefined {
+export const getContext = (): ShimContext | undefined => {
   return storage.getStore()
 }
 
-export function getDefaultContext(): ShimContext {
+export const getDefaultContext = (): ShimContext => {
   return defaultContext
 }
 
-export function resetDefaultContext(): void {
+export const resetDefaultContext = (): void => {
   defaultContext.page.set(makeDefaultPage())
   defaultContext.navigating.set(null)
   defaultContext.callbacks.before = []

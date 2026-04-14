@@ -82,13 +82,10 @@ export const testExportsPreprocessor = () => {
     name: 'magic-test-exports',
     script: async ({
       content,
-      attributes,
-      markup,
-      filename,
     }: {
       content: string
-      attributes: Record<string, string | boolean>
-      markup: string
+      attributes?: Record<string, string | boolean>
+      markup?: string
       filename?: string
     }) => {
       if (!content.includes('<script')) {
@@ -122,13 +119,11 @@ export const viteDefinePreprocessor = () => {
     name: 'magic-vite-define',
     script: async ({
       content,
-      attributes,
-      markup,
       filename,
     }: {
       content: string
-      attributes: Record<string, string | boolean>
-      markup: string
+      attributes?: Record<string, string | boolean>
+      markup?: string
       filename?: string
     }) => {
       if (!filename) {

@@ -1,4 +1,3 @@
-import is from '@magic/types'
 import { suiteNeedsIsolation } from '../../src/lib/suiteNeedsIsolation.js'
 
 export default [
@@ -13,17 +12,20 @@ export default [
     info: 'detects after in nested tests object',
   },
   {
-    fn: () => suiteNeedsIsolation('invalid' as any),
+    // @ts-expect-error invalid argument type for test
+    fn: () => suiteNeedsIsolation('invalid'),
     expect: false,
     info: 'returns false for non-object/array input',
   },
   {
-    fn: () => suiteNeedsIsolation(123 as any),
+    // @ts-expect-error invalid argument type for test
+    fn: () => suiteNeedsIsolation(123),
     expect: false,
     info: 'returns false for number input',
   },
   {
-    fn: () => suiteNeedsIsolation(null as any),
+    // @ts-expect-error invalid argument type for test
+    fn: () => suiteNeedsIsolation(null),
     expect: false,
     info: 'returns false for null input',
   },

@@ -1,7 +1,7 @@
 import is from '@magic/types'
 
 import {
-  HTMLElement,
+  Element,
   Document,
   Window,
   Event,
@@ -29,32 +29,29 @@ class TransitionEvent extends Event {
   elapsedTime?: number
 }
 
-const getElement = (
-  target: HTMLElement | Document,
-  selector?: string,
-): HTMLElement | Document | null => {
+const getElement = (target: Element | Document, selector?: string): Element | Document | null => {
   if (selector) {
-    return target.querySelector(selector) as HTMLElement | null
+    return target.querySelector(selector) as Element | null
   }
 
   return target
 }
 
-export const click = (target: HTMLElement, selector?: string): void => {
+export const click = (target: Element, selector?: string): void => {
   const el = getElement(target, selector)
-  if (el && is.instance(el, HTMLElement) && 'click' in el && is.fn(el.click)) {
+  if (el && is.instance(el, Element) && 'click' in el && is.fn(el.click)) {
     el.click()
   }
 }
 
-export const dblClick = (target: HTMLElement | Document, selector?: string): void => {
+export const dblClick = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }))
   }
 }
 
-export const contextMenu = (target: HTMLElement | Document, selector?: string): void => {
+export const contextMenu = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }))
@@ -62,7 +59,7 @@ export const contextMenu = (target: HTMLElement | Document, selector?: string): 
 }
 
 export const trigger = (
-  target: HTMLElement | Document,
+  target: Element | Document,
   eventType: string,
   options: EventInit = {},
 ): void => {
@@ -70,84 +67,74 @@ export const trigger = (
   target.dispatchEvent(event)
 }
 
-export const mouseDown = (target: HTMLElement | Document, selector?: string): void => {
+export const mouseDown = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))
   }
 }
 
-export const mouseUp = (target: HTMLElement | Document, selector?: string): void => {
+export const mouseUp = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }))
   }
 }
 
-export const mouseMove = (target: HTMLElement | Document, selector?: string): void => {
+export const mouseMove = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, cancelable: true }))
   }
 }
 
-export const mouseEnter = (target: HTMLElement | Document, selector?: string): void => {
+export const mouseEnter = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false, cancelable: true }))
   }
 }
 
-export const mouseLeave = (target: HTMLElement | Document, selector?: string): void => {
+export const mouseLeave = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: false, cancelable: true }))
   }
 }
 
-export const mouseOver = (target: HTMLElement | Document, selector?: string): void => {
+export const mouseOver = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true }))
   }
 }
 
-export const mouseOut = (target: HTMLElement | Document, selector?: string): void => {
+export const mouseOut = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, cancelable: true }))
   }
 }
 
-export const keyDown = (
-  target: HTMLElement | Document,
-  options?: string | KeyboardEventInit,
-): void => {
+export const keyDown = (target: Element | Document, options?: string | KeyboardEventInit): void => {
   const opts = is.string(options) ? { key: options } : options
   target.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...opts }))
 }
 
 export const keyPress = (
-  target: HTMLElement | Document,
+  target: Element | Document,
   options?: string | KeyboardEventInit,
 ): void => {
   const opts = is.string(options) ? { key: options } : options
   target.dispatchEvent(new KeyboardEvent('keypress', { bubbles: true, cancelable: true, ...opts }))
 }
 
-export const keyUp = (
-  target: HTMLElement | Document,
-  options?: string | KeyboardEventInit,
-): void => {
+export const keyUp = (target: Element | Document, options?: string | KeyboardEventInit): void => {
   const opts = is.string(options) ? { key: options } : options
   target.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: true, ...opts }))
 }
 
-export const type = async (
-  target: HTMLElement | Document,
-  text: string,
-  delay = 0,
-): Promise<void> => {
+export const type = async (target: Element | Document, text: string, delay = 0): Promise<void> => {
   for (const char of text) {
     keyDown(target, { key: char })
     keyUp(target, { key: char })
@@ -158,7 +145,7 @@ export const type = async (
 }
 
 export const input = (
-  target: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | HTMLElement,
+  target: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | Element,
   value: string,
 ): void => {
   Object.defineProperty(target, 'value', { value, writable: false, configurable: true })
@@ -166,14 +153,14 @@ export const input = (
 }
 
 export const change = (
-  target: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | HTMLElement,
+  target: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | Element,
   value: string,
 ): void => {
   Object.defineProperty(target, 'value', { value, writable: false, configurable: true })
   target.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }))
 }
 
-export const blur = (target: HTMLElement | Document, selector?: string): void => {
+export const blur = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     const event =
@@ -184,7 +171,7 @@ export const blur = (target: HTMLElement | Document, selector?: string): void =>
   }
 }
 
-export const focus = (target: HTMLElement | Document, selector?: string): void => {
+export const focus = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     const event =
@@ -195,7 +182,7 @@ export const focus = (target: HTMLElement | Document, selector?: string): void =
   }
 }
 
-export const focusIn = (target: HTMLElement | Document, selector?: string): void => {
+export const focusIn = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     const event =
@@ -206,7 +193,7 @@ export const focusIn = (target: HTMLElement | Document, selector?: string): void
   }
 }
 
-export const focusOut = (target: HTMLElement | Document, selector?: string): void => {
+export const focusOut = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     const event =
@@ -217,140 +204,132 @@ export const focusOut = (target: HTMLElement | Document, selector?: string): voi
   }
 }
 
-export const submit = (target: HTMLFormElement | HTMLElement): void => {
+export const submit = (target: HTMLFormElement | Element): void => {
   target.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
 }
 
-export const pointerDown = (target: HTMLElement | Document, selector?: string): void => {
+export const pointerDown = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }))
   }
 }
 
-export const pointerUp = (target: HTMLElement | Document, selector?: string): void => {
+export const pointerUp = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true }))
   }
 }
 
-export const pointerMove = (target: HTMLElement | Document, selector?: string): void => {
+export const pointerMove = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, cancelable: true }))
   }
 }
 
-export const pointerOver = (target: HTMLElement | Document, selector?: string): void => {
+export const pointerOver = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, cancelable: true }))
   }
 }
 
-export const pointerOut = (target: HTMLElement | Document, selector?: string): void => {
+export const pointerOut = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new PointerEvent('pointerout', { bubbles: true, cancelable: true }))
   }
 }
 
-export const touchStart = (target: HTMLElement | Document, selector?: string): void => {
+export const touchStart = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, cancelable: true }))
   }
 }
 
-export const touchEnd = (target: HTMLElement | Document, selector?: string): void => {
+export const touchEnd = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true }))
   }
 }
 
-export const touchMove = (target: HTMLElement | Document, selector?: string): void => {
+export const touchMove = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new TouchEvent('touchmove', { bubbles: true, cancelable: true }))
   }
 }
 
-export const copy = (target: HTMLElement | Document): void => {
+export const copy = (target: Element | Document): void => {
   target.dispatchEvent(new ClipboardEvent('copy', { bubbles: true, cancelable: true }))
 }
 
-export const cut = (target: HTMLElement | Document): void => {
+export const cut = (target: Element | Document): void => {
   target.dispatchEvent(new ClipboardEvent('cut', { bubbles: true, cancelable: true }))
 }
 
-export const paste = (target: HTMLElement | Document): void => {
+export const paste = (target: Element | Document): void => {
   target.dispatchEvent(new ClipboardEvent('paste', { bubbles: true, cancelable: true }))
 }
 
-export const dragStart = (target: HTMLElement | Document, selector?: string): void => {
+export const dragStart = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new DragEvent('dragstart', { bubbles: true, cancelable: true }))
   }
 }
 
-export const drag = (target: HTMLElement | Document, selector?: string): void => {
+export const drag = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new DragEvent('drag', { bubbles: true, cancelable: true }))
   }
 }
 
-export const dragEnd = (target: HTMLElement | Document, selector?: string): void => {
+export const dragEnd = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new DragEvent('dragend', { bubbles: true, cancelable: false }))
   }
 }
 
-export const dragOver = (target: HTMLElement | Document, selector?: string): void => {
+export const dragOver = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true }))
   }
 }
 
-export const dragEnter = (target: HTMLElement | Document, selector?: string): void => {
+export const dragEnter = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new DragEvent('dragenter', { bubbles: true, cancelable: true }))
   }
 }
 
-export const dragLeave = (target: HTMLElement | Document, selector?: string): void => {
+export const dragLeave = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new DragEvent('dragleave', { bubbles: true, cancelable: true }))
   }
 }
 
-export const drop = (target: HTMLElement | Document, selector?: string): void => {
+export const drop = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true }))
   }
 }
 
-export const resize = (target: HTMLElement | Window): void => {
+export const resize = (target: Element | Window): void => {
   target.dispatchEvent(new Event('resize', { bubbles: false, cancelable: false }))
 }
 
-export const scroll = (
-  target: HTMLElement & {
-    scrollTo?: (options?: ScrollToOptions) => void
-    scrollTop?: number
-    scrollLeft?: number
-  },
-  x = 0,
-  y = 0,
-): void => {
+export const scroll = (target: Element, x = 0, y = 0): void => {
   if (is.fn(target.scrollTo)) {
     target.scrollTo(x, y)
   } else {
@@ -360,51 +339,51 @@ export const scroll = (
   target.dispatchEvent(new Event('scroll', { bubbles: true, cancelable: false }))
 }
 
-export const animationStart = (target: HTMLElement | Document, selector?: string): void => {
+export const animationStart = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new AnimationEvent('animationstart', { bubbles: true, cancelable: false }))
   }
 }
 
-export const animationEnd = (target: HTMLElement | Document, selector?: string): void => {
+export const animationEnd = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new AnimationEvent('animationend', { bubbles: true, cancelable: false }))
   }
 }
 
-export const animationIteration = (target: HTMLElement | Document, selector?: string): void => {
+export const animationIteration = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new AnimationEvent('animationiteration', { bubbles: true, cancelable: false }))
   }
 }
 
-export const transitionEnd = (target: HTMLElement | Document, selector?: string): void => {
+export const transitionEnd = (target: Element | Document, selector?: string): void => {
   const el = getElement(target, selector)
   if (el) {
     el.dispatchEvent(new TransitionEvent('transitionend', { bubbles: true, cancelable: true }))
   }
 }
 
-export const play = (target: HTMLMediaElement | HTMLElement): void => {
+export const play = (target: HTMLMediaElement | Element): void => {
   target.dispatchEvent(new Event('play', { bubbles: true, cancelable: false }))
 }
 
-export const pause = (target: HTMLMediaElement | HTMLElement): void => {
+export const pause = (target: HTMLMediaElement | Element): void => {
   target.dispatchEvent(new Event('pause', { bubbles: true, cancelable: false }))
 }
 
-export const ended = (target: HTMLMediaElement | HTMLElement): void => {
+export const ended = (target: HTMLMediaElement | Element): void => {
   target.dispatchEvent(new Event('ended', { bubbles: true, cancelable: false }))
 }
 
-export const volumeChange = (target: HTMLMediaElement | HTMLElement): void => {
+export const volumeChange = (target: HTMLMediaElement | Element): void => {
   target.dispatchEvent(new Event('volumechange', { bubbles: true, cancelable: false }))
 }
 
-export const checked = (target: HTMLInputElement | HTMLSelectElement | HTMLElement): void => {
+export const checked = (target: HTMLInputElement | HTMLSelectElement | Element): void => {
   Object.defineProperty(target, 'checked', { value: true, writable: false, configurable: true })
   target.dispatchEvent(new Event('change', { bubbles: true, cancelable: false }))
 }
@@ -415,7 +394,7 @@ type FireEventOptions = {
 }
 
 export const fireEvent = (
-  target: HTMLElement | Document,
+  target: Element | Document,
   eventName: string,
   options: EventInit & FireEventOptions = {},
 ): void => {

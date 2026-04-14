@@ -1,5 +1,6 @@
 // import is from '@magic/types'
-import { mock, tryCatch } from '../../src/index.js'
+import { mock } from '../../src/index.js'
+import { tryCatch } from '../../src/lib/tryCatch.js'
 
 export default [
   // {
@@ -100,7 +101,7 @@ export default [
   {
     fn: () => {
       const obj = { greet: () => 'hello' }
-      const spy = mock.spy(obj, 'greet', () => 'world')
+      mock.spy(obj, 'greet', () => 'world')
       const result = obj.greet()
       return result === 'world'
     },
@@ -110,9 +111,9 @@ export default [
   {
     fn: () => {
       const obj = { greet: () => 'original' }
-      const spy = mock.spy(obj, 'greet', () => 'mocked')
+      const _spy = mock.spy(obj, 'greet', () => 'mocked')
       obj.greet()
-      spy.mockRestore()
+      _spy.mockRestore()
       return obj.greet() === 'original'
     },
     expect: true,
@@ -120,10 +121,12 @@ export default [
   },
   {
     fn: () => {
-      const obj = { method: () => 'test' }
-      const spy = mock.spy(obj, 'method')
-      ;(obj.method as any)('arg1', 'arg2')
-      return spy.calls.length === 1 && spy.calls[0]?.[0] === 'arg1' && spy.calls[0]?.[1] === 'arg2'
+      const obj = { method: (..._args: unknown[]) => 'test' }
+      const _spy = mock.spy(obj, 'method')
+      obj.method('arg1', 'arg2')
+      return (
+        _spy.calls.length === 1 && _spy.calls[0]?.[0] === 'arg1' && _spy.calls[0]?.[1] === 'arg2'
+      )
     },
     expect: true,
     info: 'mock.spy tracks arguments of spied method',

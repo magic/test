@@ -14,7 +14,7 @@ export default [
         pkg: 'suite-pkg1',
         tests: [],
         store,
-      } as any)
+      })
       return result === undefined
     },
     expect: true,
@@ -30,7 +30,7 @@ export default [
         pkg: 'suite-pkg2',
         tests: [],
         store,
-      } as any)
+      })
       return result === undefined
     },
     expect: true,
@@ -48,7 +48,7 @@ export default [
           child: [{ fn: true, expect: true }],
         },
         store,
-      } as any)
+      })
       return result && result.tests && result.tests.length > 0
     },
     expect: true,
@@ -67,7 +67,7 @@ export default [
           { fn: () => 2, expect: 2 },
         ],
         store,
-      } as any)
+      })
       return result && result.tests && result.tests.length === 2
     },
     expect: true,
@@ -89,7 +89,7 @@ export default [
           child: [{ fn: true, expect: true }],
         },
         store,
-      } as any)
+      })
       return result && !!beforeAllCalled
     },
     expect: true,
@@ -111,7 +111,7 @@ export default [
           child: [{ fn: true, expect: true }],
         },
         store,
-      } as any)
+      })
       return result && !!afterAllCalled
     },
     expect: true,
@@ -135,7 +135,7 @@ export default [
           child: [{ fn: true, expect: true }],
         },
         store,
-      } as any)
+      })
       return result && !!cleanupCalled
     },
     expect: true,
@@ -151,7 +151,7 @@ export default [
         pkg: 'suite-pkg8',
         tests: [{ fn: true, expect: true }],
         store,
-      } as any)
+      })
       return result && result.name === 'named-suite'
     },
     expect: true,
@@ -167,7 +167,7 @@ export default [
         pkg: 'suite-pkg9',
         tests: [{ fn: true, expect: true }],
         store,
-      } as any)
+      })
       return result && result.parent === 'parent-suite'
     },
     expect: true,
@@ -183,7 +183,7 @@ export default [
         pkg: 'my-pkg-suite',
         tests: [{ fn: true, expect: true }],
         store,
-      } as any)
+      })
       return result && result.pkg === 'my-pkg-suite'
     },
     expect: true,
@@ -199,7 +199,7 @@ export default [
         pkg: 'suite-pkg11',
         tests: [{ fn: () => true, expect: true }],
         store,
-      } as any)
+      })
       return result && typeof result.duration === 'string'
     },
     expect: true,
@@ -219,7 +219,7 @@ export default [
           },
         },
         store,
-      } as any)
+      })
       return result && result.tests && result.tests.length > 0
     },
     expect: true,

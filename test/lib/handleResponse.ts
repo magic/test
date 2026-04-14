@@ -5,7 +5,7 @@ interface MockResponse {
   statusCode: number
   headers: { 'content-type': string }
   setEncoding: () => void
-  on: (event: string, callback: (data?: any) => void) => MockResponse
+  on: (event: string, callback: (data?: string) => void) => MockResponse
   resume: () => void
 }
 
@@ -22,7 +22,7 @@ const createMockResponse = (
     statusCode,
     headers: { 'content-type': contentType },
     setEncoding: () => {},
-    on: (event: string, callback: (data?: any) => void) => {
+    on: (event: string, callback: (data?: string) => void) => {
       if (event === 'data') {
         dataCallback = () => callback(data)
       } else if (event === 'end') {
@@ -51,7 +51,7 @@ export default [
       let result: unknown
       const { res, wait } = createMockResponse(200, 'application/json', '{"a":1}')
       handleResponse(
-        res as any,
+        res,
         (v: unknown) => (result = v),
         (e: unknown) => e,
       )
@@ -66,7 +66,7 @@ export default [
       let error: unknown
       const { res, wait } = createMockResponse(404, 'application/json', '{}')
       handleResponse(
-        res as any,
+        res,
         (v: unknown) => v,
         (e: unknown) => (error = e),
       )
@@ -81,7 +81,7 @@ export default [
       let result: unknown
       const { res, wait } = createMockResponse(200, 'text/plain', 'hello world')
       handleResponse(
-        res as any,
+        res,
         (v: unknown) => (result = v),
         (e: unknown) => e,
       )
@@ -96,7 +96,7 @@ export default [
       let error: unknown
       const { res, wait } = createMockResponse(200, 'application/json', 'invalid json')
       handleResponse(
-        res as any,
+        res,
         (v: unknown) => v,
         (e: unknown) => (error = e),
       )
@@ -111,7 +111,7 @@ export default [
       let result: unknown
       const { res, wait } = createMockResponse(201, 'application/json', '{"created":true}')
       handleResponse(
-        res as any,
+        res,
         (v: unknown) => (result = v),
         (e: unknown) => e,
       )
@@ -126,7 +126,7 @@ export default [
       let error: unknown
       const { res, wait } = createMockResponse(500, 'text/plain', 'Server Error')
       handleResponse(
-        res as any,
+        res,
         (v: unknown) => v,
         (e: unknown) => (error = e),
       )

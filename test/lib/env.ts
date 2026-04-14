@@ -1,4 +1,3 @@
-import is from '@magic/types'
 import { env } from '../../src/index.js'
 
 export default [

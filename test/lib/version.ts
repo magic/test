@@ -1,4 +1,5 @@
-import { test, version } from '../../src/lib/version.js'
+import type { Test } from '../../src/types.js'
+import { version } from '../../src/lib/version.js'
 import is from '@magic/types'
 
 const lib = {
@@ -30,7 +31,7 @@ const spec = {
 export default [
   {
     fn: () => version(lib, spec, 'lib'),
-    expect: (results: any[]) => results.some(result => result.fn === true),
+    expect: (results: Test[]) => results.some(result => result.fn === true),
     info: 'should test all basic types correctly',
   },
   {
@@ -53,7 +54,7 @@ export default [
       }
       return version(nestedLib, nestedSpec, 'nestedLib')
     },
-    expect: (results: any[]) => is.arr(results),
+    expect: (results: Test[]) => is.arr(results),
     info: 'should handle nested objects',
   },
   {
@@ -76,26 +77,26 @@ export default [
       }
       return version(arrayLib, arraySpec, 'arrayLib')
     },
-    expect: (results: any[]) => results.some(result => result.fn === true),
+    expect: (results: Test[]) => results.some(result => result.fn === true),
     info: 'should handle array specifications',
   },
   {
     fn: () => version(lib, {}, 'lib'),
-    expect: (results: any[]) =>
-      results.every(result => !result.fn && result.info.includes('Spec missing')),
+    expect: (results: Test[]) =>
+      results.every(result => !result.fn && result.info?.includes('Spec missing')),
     info: 'should handle missing specs',
   },
   {
     fn: () => version(lib, { array: 'nonexistent' }, 'lib'),
-    expect: (results: any[]) =>
-      results.some(result => !result.fn && result.info.includes('does not have this function')),
+    expect: (results: Test[]) =>
+      results.some(result => !result.fn && result.info?.includes('does not have this function')),
     info: 'should handle wrong specs',
   },
   {
     fn: () => version(lib, { object: 'object' }, 'lib'),
-    expect: (results: any[]) =>
+    expect: (results: Test[]) =>
       results.some(
-        result => !result.fn && result.info.includes('specifies object, but no children defined'),
+        result => !result.fn && result.info?.includes('specifies object, but no children defined'),
       ),
     info: 'should handle object spec without children',
   },
@@ -109,7 +110,7 @@ export default [
       }
       return version(functionLib, functionSpec, 'functionLib')
     },
-    expect: (results: any[]) => results.every(result => result.fn === true),
+    expect: (results: Test[]) => results.every(result => result.fn === true),
     info: 'should handle function specs',
   },
   {
@@ -122,7 +123,7 @@ export default [
       }
       return version(libWithFalse, specWithFalse, 'libWithFalse')
     },
-    expect: (results: any[]) => results.every(result => result.fn === true),
+    expect: (results: Test[]) => results.every(result => result.fn === true),
     info: 'should handle false spec for array',
   },
   {
@@ -134,9 +135,9 @@ export default [
         0: { fn: 'fn' },
       }
 
-      return version(arrayOfLibs as any, arrayOfLibsSpec as any, 'arrayOfLibs')
+      return version(arrayOfLibs, arrayOfLibsSpec, 'arrayOfLibs')
     },
-    expect: (results: any[]) => results.every(result => result.fn === true),
+    expect: (results: Test[]) => results.every(result => result.fn === true),
     info: 'should handle function specs',
   },
 ]

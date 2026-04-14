@@ -1,19 +1,11 @@
 import is from '@magic/types'
 import log from '@magic/log'
 
-import { cleanError, cleanFunctionString, getTestKey, createStore, ERRORS } from '../lib/index.ts'
+import { cleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/index.ts'
 import { Store } from '../lib/store.ts'
 import { isolation } from './isolation.ts'
 import { runSuite } from './suite.ts'
-import type {
-  WrappedTest,
-  ComponentProps,
-  TestResult,
-  EvaluateResult,
-  TestCollection,
-  TestObject,
-  Suite,
-} from '../types.ts'
+import type { WrappedTest, ComponentProps, TestResult, EvaluateResult, Suite } from '../types.ts'
 
 const DEFAULT_TEST_TIMEOUT = 10000
 
@@ -188,7 +180,6 @@ export const runTest = async (
   const testKey = test.key || ''
   const testName = test.name || ''
   const testParent = test.parent || ''
-  const testPkg = test.pkg || ''
 
   const { componentFile, componentProps } = prepareTest(test)
 

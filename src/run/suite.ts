@@ -119,8 +119,6 @@ const runTestArray = async (
         return runTest(testToRun, store, rawResults)
       }
 
-      const keyForResult =
-        testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name)
       return isolation
         .executeInWorker({
           testFileUrl,

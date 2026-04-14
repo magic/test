@@ -142,13 +142,13 @@ export class Isolation {
   /**
    * Improved deepClone: returns primitives, copies common built-ins.
    */
-  deepClone(value: unknown, seen: WeakMap<object, unknown> = new WeakMap()): unknown {
+  deepClone<T>(value: T, seen: WeakMap<object, unknown> = new WeakMap()): T {
     if (value === null || !is.object(value)) {
       return value
     }
 
     if (seen.has(value)) {
-      return seen.get(value)
+      return seen.get(value) as T
     }
 
     if (is.arr(value)) {
@@ -161,14 +161,14 @@ export class Isolation {
           copy.push(cloned)
         }
       }
-      return copy
+      return copy as T
     }
 
     if (is.date(value)) {
-      return new Date(value.getTime())
+      return new Date(value.getTime()) as T
     }
     if (is.regex(value)) {
-      return new RegExp(value.source, value.flags)
+      return new RegExp(value.source, value.flags) as T
     }
 
     if (is.set(value)) {
@@ -181,7 +181,7 @@ export class Isolation {
           out.add(cloned)
         }
       }
-      return out
+      return out as T
     }
     if (is.map(value)) {
       const out = new Map()
@@ -194,23 +194,23 @@ export class Isolation {
           out.set(clonedK, clonedV)
         }
       }
-      return out
+      return out as T
     }
 
     if (ArrayBuffer.isView(value)) {
       // TypedArray - cast via unknown to access slice
-      return (value as unknown as { slice(): unknown }).slice()
+      return (value as unknown as { slice(): unknown }).slice() as T
     }
 
     if (value instanceof ArrayBuffer) {
-      return value.slice()
+      return value.slice() as T
     }
 
     if (is.error(value)) {
-      return value
+      return value as T
     }
     if (is.function(value)) {
-      return value
+      return value as T
     }
 
     const proto = Object.getPrototypeOf(value)
@@ -245,7 +245,7 @@ export class Isolation {
       }
     }
 
-    return copy
+    return copy as T
   }
 
   /**

@@ -1,6 +1,18 @@
 import http from 'node:http'
 import { http as httpModule } from '../../src/lib/http.js'
 
+interface TestGlobals {
+  httpTestPort?: number
+}
+
+interface HttpResponse {
+  success?: boolean
+  method?: string
+  body?: unknown
+  status?: string
+  error?: string
+}
+
 let server: http.Server
 
 const beforeAll = async () => {
@@ -48,8 +60,9 @@ const beforeAll = async () => {
       }
     })
     server.listen(0, () => {
-      const port = (server.address() as any).port
-      ;(globalThis as any).httpTestPort = port
+      const addr = server.address() as { port: number }
+      const g = globalThis as TestGlobals
+      g.httpTestPort = addr.port
       resolve()
     })
   })
@@ -59,7 +72,8 @@ const afterAll = async () => {
   if (server) {
     server.close()
   }
-  delete (globalThis as any).httpTestPort
+  const g = globalThis as TestGlobals
+  g.httpTestPort = undefined
 }
 
 export default {
@@ -68,132 +82,139 @@ export default {
   tests: [
     {
       fn: async () => {
-        const port = (globalThis as any).httpTestPort
-        const result = await httpModule.get(`http://localhost:${port}/get`)
+        const g = globalThis as TestGlobals
+        const result = await httpModule.get(`http://localhost:${g.httpTestPort}/get`)
         return result
       },
-      expect: (r: any) => r.success === true && r.method === 'GET',
+      expect: (r: HttpResponse) => r.success === true && r.method === 'GET',
       info: 'http.get works',
     },
     {
       fn: async () => {
-        const port = (globalThis as any).httpTestPort
-        const result = await httpModule.post(`http://localhost:${port}/post`, {
+        const g = globalThis as TestGlobals
+        const result = await httpModule.post(`http://localhost:${g.httpTestPort}/post`, {
           test: 'data',
         })
         return result
       },
-      expect: (r: any) => r.success === true && r.body.test === 'data',
+      expect: (r: HttpResponse) =>
+        r.success === true && r.body && (r.body as Record<string, unknown>).test === 'data',
       info: 'http.post works with JSON body',
     },
     {
       fn: async () => {
-        const port = (globalThis as any).httpTestPort
-        const result = await httpModule.post(`http://localhost:${port}/post`, 'plain string')
+        const g = globalThis as TestGlobals
+        const result = await httpModule.post(
+          `http://localhost:${g.httpTestPort}/post`,
+          'plain string',
+        )
         return result
       },
-      expect: (r: any) => r.success === true && r.body === 'plain string',
+      expect: (r: HttpResponse) => r.success === true && r.body === 'plain string',
       info: 'http.post works with string body',
     },
     {
       fn: async () => {
-        let error: any = null
+        let error: Error | null = null
         try {
-          const port = (globalThis as any).httpTestPort
-          await httpModule.get(`http://localhost:${port}/notfound`)
+          const g = globalThis as TestGlobals
+          await httpModule.get(`http://localhost:${g.httpTestPort}/notfound`)
         } catch (e) {
-          error = e
+          error = e as Error
         }
         return error ? error.message.includes('404') : false
       },
-      expect: (r: any) => r === true,
+      expect: (r: boolean) => r === true,
       info: 'http.get rejects on 404',
     },
     {
       fn: async () => {
-        let error: any = null
+        let error: Error | null = null
         try {
-          const port = (globalThis as any).httpTestPort
-          await httpModule.get(`http://localhost:${port}/server-error`)
+          const g = globalThis as TestGlobals
+          await httpModule.get(`http://localhost:${g.httpTestPort}/server-error`)
         } catch (e) {
-          error = e
+          error = e as Error
         }
         return error ? error.message.includes('500') : false
       },
-      expect: (r: any) => r === true,
+      expect: (r: boolean) => r === true,
       info: 'http.get rejects on 500',
     },
     {
       fn: async () => {
-        let error: any = null
+        let error: Error | null = null
         try {
-          const port = (globalThis as any).httpTestPort
-          await httpModule.get(`http://localhost:${port}/timeout`, {
+          const g = globalThis as TestGlobals
+          await httpModule.get(`http://localhost:${g.httpTestPort}/timeout`, {
             timeout: 100,
           })
         } catch (e) {
-          error = e
+          error = e as Error
         }
         return error ? error.message.includes('timeout') : false
       },
-      expect: (r: any) => r === true,
+      expect: (r: boolean) => r === true,
       info: 'http.get times out with custom timeout',
     },
     {
       fn: async () => {
-        let error: any = null
+        let error: Error | null = null
         try {
           await httpModule.get('not-a-valid-url')
         } catch (e) {
-          error = e
+          error = e as Error
         }
         return error ? error.message.includes('Invalid URL') : false
       },
-      expect: (r: any) => r === true,
+      expect: (r: boolean) => r === true,
       info: 'http.get throws on invalid URL',
     },
     {
       fn: async () => {
-        let error: any = null
+        let error: Error | null = null
         try {
           await httpModule.get('ftp://example.com')
         } catch (e) {
-          error = e
+          error = e as Error
         }
         return error ? error.message.includes('Unsupported protocol') : false
       },
-      expect: (r: any) => r === true,
+      expect: (r: boolean) => r === true,
       info: 'http.get throws on unsupported protocol',
     },
     {
       fn: async () => {
-        let error: any = null
+        let error: Error | null = null
         try {
-          const port = (globalThis as any).httpTestPort
+          const g = globalThis as TestGlobals
           await httpModule.post(
-            `http://localhost:${port}/timeout`,
+            `http://localhost:${g.httpTestPort}/timeout`,
             { test: 'data' },
             { timeout: 100 },
           )
         } catch (e) {
-          error = e
+          error = e as Error
         }
         return error ? error.message.includes('timeout') : false
       },
-      expect: (r: any) => r === true,
+      expect: (r: boolean) => r === true,
       info: 'http.post times out with custom timeout',
     },
     {
       fn: async () => {
-        const port = (globalThis as any).httpTestPort
-        const result: any = await httpModule.post(
-          `http://localhost:${port}/post`,
+        const g = globalThis as TestGlobals
+        const result = await httpModule.post(
+          `http://localhost:${g.httpTestPort}/post`,
           { test: 'https-reject' },
           { rejectUnauthorized: false },
         )
-        return result.success === true && result.body.test === 'https-reject'
+        return (
+          result.success === true &&
+          (result.body as Record<string, unknown>).test === 'https-reject'
+        )
       },
-      expect: (r: any) => r === true,
+      expect: (r: boolean) => r === true,
       info: 'http.post accepts rejectUnauthorized option',
     },
   ],

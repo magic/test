@@ -1,4 +1,3 @@
-import is from '@magic/types'
 import {
   testModifiesGlobals,
   suiteModifiesGlobals,
@@ -11,16 +10,14 @@ import {
   testUsesSharedFiles,
 } from '../../src/lib/mutableStateCheck.js'
 
-const { fn, expect } = globalThis as any
-
 export default [
   {
     fn: () =>
       testModifiesGlobals({
         before: () => {
-          ;(globalThis as any).foo = 'bar'
+          globalThis.foo = 'bar'
         },
-      } as any),
+      }),
     expect: true,
     info: 'detects globalThis.x = value',
   },
@@ -28,9 +25,9 @@ export default [
     fn: () =>
       testModifiesGlobals({
         before: () => {
-          ;(globalThis as any)['key'] = 'value'
+          globalThis['key'] = 'value'
         },
-      } as any),
+      }),
     expect: true,
     info: 'detects globalThis[key] = value',
   },
@@ -38,9 +35,9 @@ export default [
     fn: () =>
       testModifiesGlobals({
         after: () => {
-          ;(globalThis as any).foo = 'bar'
+          globalThis.foo = 'bar'
         },
-      } as any),
+      }),
     expect: true,
     info: 'detects global modification in after hook',
   },
@@ -48,9 +45,9 @@ export default [
     fn: () =>
       testModifiesGlobals({
         before: () => {
-          delete (globalThis as any).foo
+          delete globalThis.foo
         },
-      } as any),
+      }),
     expect: true,
     info: 'detects delete globalThis.x',
   },
@@ -58,9 +55,9 @@ export default [
     fn: () =>
       testModifiesGlobals({
         before: () => {
-          ;(globalThis as any).window = { document: {} }
+          globalThis.window = { document: {} }
         },
-      } as any),
+      }),
     expect: true,
     info: 'detects window.x = value',
   },
@@ -70,7 +67,7 @@ export default [
         before: () => {
           process.env.NODE_ENV = 'test'
         },
-      } as any),
+      }),
     expect: true,
     info: 'detects process.x = value',
   },
@@ -78,9 +75,9 @@ export default [
     fn: () =>
       testModifiesGlobals({
         before: () => {
-          ;(globalThis as any).global = { foo: 'bar' }
+          globalThis.global = { foo: 'bar' }
         },
-      } as any),
+      }),
     expect: true,
     info: 'detects global.x = value',
   },
@@ -88,9 +85,9 @@ export default [
     fn: () =>
       testModifiesGlobals({
         before: () => {
-          ;(globalThis as any).self = { worker: {} }
+          globalThis.self = { worker: {} }
         },
-      } as any),
+      }),
     expect: true,
     info: 'detects self.x = value',
   },
@@ -98,9 +95,9 @@ export default [
     fn: () =>
       testModifiesGlobals({
         before: () => {
-          ;(globalThis as any).newGlobal = 'test'
+          globalThis.newGlobal = 'test'
         },
-      } as any),
+      }),
     expect: true,
     info: 'detects new globalThis assignments',
   },
@@ -108,7 +105,7 @@ export default [
     fn: () =>
       testModifiesGlobals({
         fn: () => true,
-      } as any),
+      }),
     expect: false,
     info: 'returns false when no global modification',
   },
@@ -116,9 +113,9 @@ export default [
     fn: () =>
       testModifiesGlobals({
         before: () => {
-          const local = 'test'
+          const _local = 'test'
         },
-      } as any),
+      }),
     expect: false,
     info: 'ignores local variable assignments',
   },
@@ -126,10 +123,11 @@ export default [
     fn: () =>
       testModifiesGlobals({
         before: () => {
-          const obj: any = {}
-          obj.prop = 'value'
+          const _obj = { prop: 'value' }
+
+          return () => {}
         },
-      } as any),
+      }),
     expect: false,
     info: 'ignores object property assignment on local objects',
   },
@@ -137,10 +135,10 @@ export default [
     fn: () =>
       suiteModifiesGlobals({
         beforeAll: () => {
-          ;(globalThis as any).suiteGlobal = 'test'
+          globalThis.suiteGlobal = 'test'
         },
         tests: [],
-      } as any),
+      }),
     expect: true,
     info: 'suiteModifiesGlobals detects beforeAll',
   },
@@ -148,15 +146,15 @@ export default [
     fn: () =>
       suiteModifiesGlobals({
         afterAll: () => {
-          ;(globalThis as any).suiteGlobal = 'test'
+          globalThis.suiteGlobal = 'test'
         },
         tests: [],
-      } as any),
+      }),
     expect: true,
     info: 'suiteModifiesGlobals detects afterAll',
   },
   {
-    fn: () => suiteModifiesGlobals({ tests: [] } as any),
+    fn: () => suiteModifiesGlobals({ tests: [] }),
     expect: false,
     info: 'suiteModifiesGlobals returns false for clean suite',
   },
@@ -164,9 +162,9 @@ export default [
     fn: () =>
       suiteBeforeAllModifiesGlobals({
         beforeAll: () => {
-          ;(globalThis as any).beforeAll = 'test'
+          globalThis.beforeAll = 'test'
         },
-      } as any),
+      }),
     expect: true,
     info: 'detects global modification in beforeAll',
   },
@@ -174,7 +172,7 @@ export default [
     fn: () =>
       suiteBeforeAllModifiesGlobals({
         beforeAll: () => {},
-      } as any),
+      }),
     expect: false,
     info: 'ignores non-global modification in beforeAll',
   },
@@ -182,9 +180,9 @@ export default [
     fn: () =>
       suiteAfterAllModifiesGlobals({
         afterAll: () => {
-          ;(globalThis as any).afterAll = 'test'
+          globalThis.afterAll = 'test'
         },
-      } as any),
+      }),
     expect: true,
     info: 'detects global modification in afterAll',
   },
@@ -193,7 +191,7 @@ export default [
       testImportsMutableModuleState(
         {
           imports: [{ specifier: 'fs', namespace: false }],
-        } as any,
+        },
         'test.js',
       ),
     expect: false,
@@ -204,7 +202,7 @@ export default [
       testImportsMutableModuleState(
         {
           imports: [{ specifier: 'node:fs', namespace: false }],
-        } as any,
+        },
         'test.js',
       ),
     expect: false,
@@ -215,7 +213,7 @@ export default [
       testImportsMutableModuleState(
         {
           imports: [],
-        } as any,
+        },
         'test.js',
       ),
     expect: false,
@@ -226,7 +224,7 @@ export default [
       testUsesFixedPorts({
         specifier: 'node:http',
         imports: [{ specifier: 'node:http', namespace: false }],
-      } as any),
+      }),
     expect: false,
     info: 'detects fixed port usage in http',
   },
@@ -234,7 +232,7 @@ export default [
     fn: () =>
       testUsesSharedFiles({
         imports: [{ specifier: 'node:fs', namespace: false }],
-      } as any),
+      }),
     expect: false,
     info: 'detects fs imports for shared files check',
   },
