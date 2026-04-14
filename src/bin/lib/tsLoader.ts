@@ -3,96 +3,120 @@ import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.ts'
 
-const EXTENSIONS = ['.ts', '.js']
-
-const hasExtension = (specifier: string): boolean => {
-  return EXTENSIONS.some(ext => specifier.endsWith(ext))
-}
-
-const tryExtensions = async (
+export async function resolve(
   specifier: string,
   context: { parentURL?: string },
   nextResolve: (specifier: string, context?: object) => Promise<{ url: string }>,
-  parentDir?: string,
-): Promise<{ url: string }> => {
-  for (const ext of EXTENSIONS) {
-    const trySpecifier = specifier + ext
-    let tryPath = trySpecifier
-    if (parentDir) {
-      tryPath = path.resolve(parentDir, trySpecifier)
-    }
-
-    const exists = await fs.exists(tryPath)
-    if (exists) {
-      try {
-        return await nextResolve(trySpecifier, context)
-      } catch {
-        // This extension failed, try next
-      }
-    }
-  }
-
-  throw new Error(`Cannot find module ${specifier}`)
-}
-
-export const resolve = async (
-  specifier: string,
-  context: { parentURL?: string },
-  nextResolve: (specifier: string, context?: object) => Promise<{ url: string }>,
-): Promise<{ url: string }> => {
-  // Handle Vite/SvelteKit path aliases ($lib, $app, etc.) for test files
-  if (context.parentURL) {
-    const parentPath = new URL(context.parentURL).pathname
-    try {
-      const aliasResolved = await resolveViteAlias(specifier, parentPath)
-      if (aliasResolved) {
-        return { url: pathToFileURL(aliasResolved).href }
-      }
-    } catch {
-      // ignore and fall through to normal resolution
-    }
-  }
-
-  // Handle relative imports without extension - check .ts first (preferred)
-  if (specifier.startsWith('.') && !hasExtension(specifier)) {
-    const parentDir = context.parentURL
-      ? path.dirname(new URL(context.parentURL).pathname)
-      : undefined
-
-    // First try default resolution
-    try {
-      return await nextResolve(specifier, context)
-    } catch {
-      return tryExtensions(specifier, context, nextResolve, parentDir)
-    }
-  }
-
-  // Handle .js files - check if .ts version exists and prefer it
-  if (specifier.endsWith('.js')) {
-    let basePath = specifier
-    if (context.parentURL) {
+): Promise<{ url: string }> {
+  // console.error('[resolve] called:', specifier.slice(0, 40))
+  try {
+    // Handle .js -> .ts conversion for imports without compiled JS
+    if (specifier.endsWith('.js') && context.parentURL) {
       const parentDir = path.dirname(new URL(context.parentURL).pathname)
-      basePath = path.resolve(parentDir, specifier)
+      const jsPath = path.resolve(parentDir, specifier)
+      const tsPath = jsPath.slice(0, -3) + '.ts'
+      if ((await fs.exists(tsPath)) && !(await fs.exists(jsPath))) {
+        return nextResolve(specifier.replace(/\.js$/, '.ts'), context)
+      }
     }
 
-    // Check if corresponding .ts file exists
-    const tsPath = basePath.replace(/\.js$/, '.ts')
-    const tsExists = await fs.exists(tsPath)
-
-    if (tsExists) {
-      const tsSpecifier = specifier.replace(/\.js$/, '.ts')
-      return nextResolve(tsSpecifier, context)
+    // Try alias resolution
+    if (context.parentURL) {
+      try {
+        const aliasResolved = await resolveViteAlias(specifier, new URL(context.parentURL).pathname)
+        if (aliasResolved) {
+          return { url: pathToFileURL(aliasResolved).href }
+        }
+      } catch (e) {
+        // ignore
+      }
     }
 
-    // .ts doesn't exist, try .js as-is
-    try {
-      return await nextResolve(specifier, context)
-    } catch (initialError) {
-      // Fallback: try converting .js to .ts
-      const tsSpecifier = specifier.replace(/\.js$/, '.ts')
-      return nextResolve(tsSpecifier, context)
+    // Handle .svelte files
+    if (specifier.endsWith('.svelte') && context.parentURL) {
+      const parentDir = path.dirname(new URL(context.parentURL).pathname)
+      const resolvedPath = path.resolve(parentDir, specifier)
+      if (await fs.exists(resolvedPath)) {
+        const { compileSvelteWithWrite } = await import('../../lib/svelte/compile/index.ts')
+        const { importUrl } = await compileSvelteWithWrite(resolvedPath)
+        return { url: importUrl, shortCircuit: true }
+      }
+    }
+
+    // Handle scoped packages (non-magic)
+    if (specifier.startsWith('@') && specifier.includes('/') && context.parentURL) {
+      if (specifier.startsWith('@magic/')) {
+        return nextResolve(specifier, context)
+      }
+      const parts = specifier.split('/')
+      const packageName = parts[0] + '/' + parts[1]
+      const nodeModulesPath = path.join(process.cwd(), 'node_modules', packageName)
+      const pkgPath = path.join(nodeModulesPath, 'package.json')
+
+      if (await fs.exists(pkgPath)) {
+        const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'))
+
+        if (pkg.exports?.['.']?.svelte && !pkg.exports?.['.']?.import) {
+          const sveltePath = path.join(nodeModulesPath, pkg.exports['.'].svelte)
+          if (await fs.exists(sveltePath)) {
+            const { compileSvelteWithWrite } = await import('../../lib/svelte/compile/index.ts')
+            const { importUrl } = await compileSvelteWithWrite(sveltePath)
+            return { url: importUrl, shortCircuit: true }
+          }
+        }
+
+        if (pkg.exports) {
+          for (const [key, val] of Object.entries(pkg.exports)) {
+            if (key !== '.' && typeof val === 'string' && val.endsWith('.js')) {
+              const jsPath = path.join(nodeModulesPath, val)
+              if (await fs.exists(jsPath)) {
+                return { url: pathToFileURL(jsPath).href }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Handle relative imports without extension - check .svelte
+    if (
+      specifier.startsWith('.') &&
+      !specifier.endsWith('.ts') &&
+      !specifier.endsWith('.js') &&
+      !specifier.endsWith('.mjs')
+    ) {
+      if (context.parentURL) {
+        const parentDir = path.dirname(new URL(context.parentURL).pathname)
+        const sveltePath = path.resolve(parentDir, specifier + '.svelte')
+        if (await fs.exists(sveltePath)) {
+          const { compileSvelteWithWrite } = await import('../../lib/svelte/compile/index.ts')
+          const { importUrl } = await compileSvelteWithWrite(sveltePath)
+          return { url: importUrl, shortCircuit: true }
+        }
+      }
+    }
+  } catch (e) {
+    // fall through
+  }
+
+  // Always pass through to nextResolve to avoid shortCircuit error
+  return nextResolve(specifier, context)
+}
+
+export async function load(
+  url: string,
+  context: { format?: string },
+  nextLoad: (url: string, context?: object) => Promise<{ format?: string; source?: string }>,
+): Promise<{ format?: string; source?: string }> {
+  // Handle .js -> .ts conversion for magic/test source files
+  if (url.includes('/magic/util/test/src/') && url.endsWith('.js')) {
+    const tsUrl = url.replace(/\.js$/, '.ts')
+    const filePath = tsUrl.replace('file://', '')
+    if (await fs.exists(filePath)) {
+      const source = await fs.readFile(filePath, 'utf-8')
+      return { format: 'module', source, shortCircuit: true }
     }
   }
 
-  return nextResolve(specifier, context)
+  return nextLoad(url, context)
 }
