@@ -1,4 +1,5 @@
-import { ERRORS, ERROR_MESSAGES, createError, errorify } from '../../src/lib/index.js'
+import is from '@magic/types'
+import { ERRORS, ERROR_MESSAGES, createError } from '../../src/lib/index.js'
 
 export default [
   {
@@ -57,12 +58,12 @@ export default [
     info: 'E_NO_TESTS has correct message',
   },
   {
-    fn: () => (ERROR_MESSAGES.E_EMPTY_SUITE as any)('myTest'),
+    fn: () => ERROR_MESSAGES.E_EMPTY_SUITE('myTest'),
     expect: 'myTest is not exporting tests.',
     info: 'E_EMPTY_SUITE message function works',
   },
   {
-    fn: () => (ERROR_MESSAGES.E_TEST_NO_FN as any)('testKey'),
+    fn: () => ERROR_MESSAGES.E_TEST_NO_FN('testKey'),
     expect: 'test.fn is not a function in testKey',
     info: 'E_TEST_NO_FN message function works',
   },
@@ -77,49 +78,14 @@ export default [
   {
     fn: () => {
       const err = createError('E_TEST', 'test error message')
-      return (err as any).code
+      return err.code
     },
     expect: 'E_TEST',
     info: 'createError sets code',
   },
   {
-    fn: () => {
-      const err = createError('E_TEST', 'test error message')
-      return err instanceof Error
-    },
-    expect: true,
+    fn: createError('E_TEST', 'test error message'),
+    expect: is.error,
     info: 'createError returns Error instance',
-  },
-  {
-    fn: () => {
-      const err = errorify('E_NO_TESTS', undefined)
-      return err.message
-    },
-    expect: 'No test suites found.',
-    info: 'errorify with string message',
-  },
-  {
-    fn: () => {
-      const err = errorify('E_EMPTY_SUITE', 'mySuite')
-      return err.message
-    },
-    expect: 'mySuite is not exporting tests.',
-    info: 'errorify with function message',
-  },
-  {
-    fn: () => {
-      const err = errorify('UNKNOWN_CODE', 'some data')
-      return err.message
-    },
-    expect: 'some data',
-    info: 'errorify falls back to string data for unknown codes',
-  },
-  {
-    fn: () => {
-      const err = errorify('E_NO_TESTS', undefined)
-      return (err as any).code
-    },
-    expect: 'E_NO_TESTS',
-    info: 'errorify sets error code',
   },
 ]

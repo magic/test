@@ -1,4 +1,3 @@
-import is from '@magic/types'
 import type { CustomError } from '@magic/error'
 
 export const ERRORS: Record<string, string> = {
@@ -14,16 +13,16 @@ export const ERRORS: Record<string, string> = {
   E_MAGIC_TEST: 'E_MAGIC_TEST',
 }
 
-export const ERROR_MESSAGES: Record<string, string | ((...args: unknown[]) => string)> = {
-  E_EMPTY_SUITE: test => `${test} is not exporting tests.`,
+export const ERROR_MESSAGES = {
+  E_EMPTY_SUITE: (test: string) => `${test} is not exporting tests.`,
   E_NO_TESTS: 'No test suites found.',
-  E_TEST_NO_FN: test => `test.fn is not a function in ${test}`,
-  E_TEST_EXPECT: (test, error) => `Expect failed for ${test}: ${error}`,
-  E_TEST_BEFORE: (test, error) => `Before hook failed for ${test}: ${error}`,
-  E_TEST_AFTER: (test, error) => `After hook failed for ${test}: ${error}`,
-  E_TEST_FN: (test, error) => `Test function failed for ${test}: ${error}`,
-  E_IMPORT: msg => `Failed to import: ${msg}`,
-}
+  E_TEST_NO_FN: (test: string) => `test.fn is not a function in ${test}`,
+  E_TEST_EXPECT: (test: string, error: Error) => `Expect failed for ${test}: ${error}`,
+  E_TEST_BEFORE: (test: string, error: Error) => `Before hook failed for ${test}: ${error}`,
+  E_TEST_AFTER: (test: string, error: Error) => `After hook failed for ${test}: ${error}`,
+  E_TEST_FN: (test: string, error: Error) => `Test function failed for ${test}: ${error}`,
+  E_IMPORT: (msg: string) => `Failed to import: ${msg}`,
+} as const
 
 /**
  * Create an error with a code
@@ -32,22 +31,4 @@ export const createError = (code: string, message: string): CustomError => {
   const err = new Error(message) as CustomError
   err.code = code
   return err
-}
-
-/**
- * Create an error from a code and optional data
- */
-export const errorify = (code: string, data: unknown): CustomError => {
-  const msgTemplate = ERROR_MESSAGES[code]
-  let msg
-
-  if (is.fn(msgTemplate)) {
-    msg = msgTemplate(data)
-  } else if (is.string(msgTemplate)) {
-    msg = msgTemplate
-  } else {
-    msg = String(data)
-  }
-
-  return createError(code, msg)
 }

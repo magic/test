@@ -28,4 +28,4 @@ export {
   testUsesSharedFiles,
 } from './mutableStateCheck.ts'
 
-export { ERRORS, ERROR_MESSAGES, createError, errorify } from './errors.ts'
+export { ERRORS, ERROR_MESSAGES, createError } from './errors.ts'
