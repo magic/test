@@ -51,6 +51,15 @@ export default [
   }
 `),
 
+  p('repeated for easy copy pasting (without comments and trailing commas)'),
+
+  Pre(`
+  "scripts": {
+    "test": "t -p",
+    "coverage": "t"
+  }
+`),
+
   h3({ id: 'getting-started-quick-tests' }, 'quick tests'),
 
   p('without coverage'),
@@ -67,12 +76,37 @@ npm test
 `),
 
   h3({ id: 'getting-started-coverage' }, 'coverage'),
-  p([
-    '@magic/test will automagically generate coverage reports',
-    ' if it is not called with the -p flag.',
-  ]),
+p([
+  '@magic/test will automagically generate coverage reports',
+  ' if it is not called with the -p flag.',
+]),
+
+  p('Example output:'),
+
+  Pre(`
+### Testing package: @magic/test
+Passed 2/2 100%
+`),
+
+  p('Faster output from a bigger project:'),
+
+  Pre(`
+### Testing package: @artificialmuseum/engine
+Ran 90307 tests in 274.5ms. Passed 90307/90307 100%
+Ran 90307 tests in 265.5ms. Passed 90307/90307 100%
+Ran 90307 tests in 268.1ms. Passed 90307/90307 100%
+`),
 
   h3({ id: 'test-suites' }, 'data/fs driven test suite creation:'),
+
+  p('Expectations for optimal test messages:'),
+
+  ul([
+    li('src and test directories have the same structure and files'),
+    li('tests one src file per test file'),
+    li('tests one function per suite'),
+    li('tests one feature per test'),
+  ]),
 
   h4({ id: 'expectations-for-optimal-test-messages' }, 'expectations for optimal test messages:'),
   ul([
@@ -227,7 +261,7 @@ export default {
 export default { fn: () => true, expect: true, info: 'TypeScript test works!' }
 `),
 
-  p('This requires Node.js 14.2.0 or later.'),
+  p('This requires Node.js 22.18.0 or later.'),
 
   h3({ id: 'tests-multiple' }, 'multiple tests'),
 
@@ -459,6 +493,81 @@ export default [
     ' that make working with complex test workflows simpler.',
   ]),
 
+  h4({ id: 'lib-deep' }, 'deep'),
+
+  p([
+    'Exported from ',
+    Link({ to: 'https://github.com/magic/deep', text: '@magic/deep' }),
+    ', deep equality and comparison utilities.',
+  ]),
+
+  Pre(`
+import { deep, is } from '@magic/test'
+
+export default [
+  {
+    fn: () => ({ a: 1, b: 2 }),
+    expect: deep.equal({ a: 1, b: 2 }),
+    info: 'deep equals comparison',
+  },
+  {
+    fn: () => ({ a: 1 }),
+    expect: deep.different({ a: 2 }),
+    info: 'deep different comparison',
+  },
+  {
+    fn: () => ({ a: { b: 1 } }),
+    expect: deep.equal({ a: { b: 1 } }),
+    info: 'nested deep equality',
+  },
+]
+`),
+
+  p('Available functions:'),
+
+  ul([
+    li('deep.equal(a, b) - deep equality check'),
+    li('deep.different(a, b) - deep difference check'),
+    li('deep.contains(container, item) - deep inclusion check'),
+    li('deep.changes(a, b) - get differences between objects'),
+  ]),
+
+  h4({ id: 'lib-fs' }, 'fs'),
+
+  p([
+    'Exported from ',
+    Link({ to: 'https://github.com/magic/fs', text: '@magic/fs' }),
+    ', file system utilities.',
+  ]),
+
+  Pre(`
+import { fs } from '@magic/test'
+
+export default [
+  {
+    fn: async () => {
+      const content = await fs.readFile('./package.json', 'utf-8')
+      return content.includes('name')
+    },
+    expect: true,
+    info: 'read file content',
+  },
+]
+`),
+
+  p('Common methods:'),
+
+  ul([
+    li('fs.readFile(path, encoding) - read file content'),
+    li('fs.writeFile(path, data) - write file content'),
+    li('fs.exists(path) - check if file exists'),
+    li('fs.mkdir(path, options) - create directory'),
+    li('fs.rmdir(path) - remove directory'),
+    li('fs.stat(path) - get file stats'),
+    li('fs.readdir(path) - read directory contents'),
+    li('Plus async versions in fs.promises'),
+  ]),
+
   h4({ id: 'lib-curry' }, 'curry'),
 
   p([
@@ -477,6 +586,26 @@ export default {
   expect: true,
   info: 'expect will be called with a and b and a will equal b',
 }
+`),
+
+  h4({ id: 'lib-log' }, 'log'),
+
+  p('Logging utility for test output. Colors supported automatically.'),
+
+  Pre(`
+import { log } from '@magic/test'
+
+log.debug('Debug info')
+log.info('Something happened')
+log.warn('Heads up')
+log.error('Something went wrong')
+log.critical('Game over')
+`),
+
+  p('Supports template strings and arrays:'),
+
+  Pre(`
+log.info('Testing', library, 'at version', version)
 `),
 
   h4({ id: 'lib-vals' }, 'vals'),
@@ -517,18 +646,25 @@ export default [
 
   ul([
     li('isNodeProd - checks if NODE_ENV is set to production'),
+    li('isNodeDev - checks if NODE_ENV is set to development'),
     li('isProd - checks if -p flag is passed to the CLI'),
     li('isVerbose - checks if -l flag is passed to the CLI'),
+    li('getErrorLength - returns error length limit from MAGIC_TEST_ERROR_LENGTH env var (0 = unlimited)'),
   ]),
 
   Pre(`
-import { env } from '@magic/test'
+import { env, isProd, isTest, isDev } from '@magic/test'
 
 export default [
   {
     fn: env.isNodeProd,
     expect: process.env.NODE_ENV === 'production',
     info: 'checks if NODE_ENV is production',
+  },
+  {
+    fn: env.isNodeDev,
+    expect: process.env.NODE_ENV === 'development',
+    info: 'checks if NODE_ENV is development',
   },
   {
     fn: env.isProd,
@@ -540,6 +676,25 @@ export default [
     expect: process.argv.includes('-l'),
     info: 'checks if -l flag is passed',
   },
+  {
+    fn: env.getErrorLength,
+    expect: 70,
+    info: 'get error length limit',
+  },
+]
+`),
+
+  h4({ id: 'lib-env-constants' }, 'Environment Constants'),
+
+  p('These boolean constants reflect the current NODE_ENV:'),
+
+  Pre(`
+import { isProd, isTest, isDev } from '@magic/test'
+
+export default [
+  { fn: isProd, expect: process.env.NODE_ENV === 'production' },
+  { fn: isTest, expect: process.env.NODE_ENV === 'test' },
+  { fn: isDev, expect: process.env.NODE_ENV === 'development' },
 ]
 `),
 
@@ -562,41 +717,6 @@ export default [
     fn: promise(cb => setTimeOut(() => cb(new Error('error'), 200)),
     expect: is.error,
     info: 'handle promise errors in a nice way',
-  },
-]
-`),
-
-  h4({ id: 'lib-stringify' }, 'stringify'),
-
-  p('Converts values to strings for comparison testing.'),
-
-  Pre(`
-import { stringify } from '@magic/test'
-
-export default [
-  {
-    fn: () => stringify({ a: 1, b: 2 }),
-    expect: '{"a":1,"b":2}',
-    info: 'stringifies object to JSON',
-  },
-]
-`),
-
-  h4({ id: 'lib-handleResponse' }, 'handleResponse'),
-
-  p('Processes HTTP responses, automatically handling JSON parsing and error detection.'),
-
-  Pre(`
-import { handleResponse } from '@magic/test'
-
-export default [
-  {
-    fn: async () => {
-      const response = { ok: true, json: () => Promise.resolve({ data: 'test' }) }
-      return handleResponse(response)
-    },
-    expect: { data: 'test' },
-    info: 'handles JSON response',
   },
 ]
 `),
@@ -647,14 +767,6 @@ export default [
 `),
 
   p('Note: HTTP module automatically handles protocol detection, JSON parsing, and rejectUnauthorized: false'),
-
-  h4({ id: 'lib-css' }, 'css'),
-
-  p([
-    'exports ',
-    Link({ to: 'https://github.com/magic/css', text: '@magic/css' }),
-    ', which allows parsing and stringification of css-in-js objects.',
-  ]),
 
   h4({ id: 'lib-trycatch' }, 'trycatch'),
 
@@ -805,6 +917,44 @@ export default version(lib, spec)
 
   p('The spec supports testing parent objects without checking their child properties by using `false` as the second element:'),
 
+  h4({ id: 'lib-dom' }, 'DOM Environment'),
+
+  p('@magic/test automatically initializes a DOM environment when imported, making browser APIs available in Node.js.'),
+
+  p('Available globals:'),
+
+  ul([
+    li('Core: document, window, self, navigator, location, history'),
+    li('DOM types: Node, Element, HTMLElement, SVGElement, Document, DocumentFragment'),
+    li('Events: Event, CustomEvent, MouseEvent, KeyboardEvent, InputEvent, TouchEvent, PointerEvent'),
+    li('Forms: FormData, File, FileList, Blob'),
+    li('Networking: URL, URLSearchParams, XMLHttpRequest, fetch, WebSocket'),
+    li('Storage: Storage, sessionStorage, localStorage'),
+    li('Observers: MutationObserver, IntersectionObserver, ResizeObserver'),
+    li('Timers: setTimeout, setInterval, requestAnimationFrame'),
+  ]),
+
+  p('DOM Utilities:'),
+
+  Pre(`
+import { initDOM, getDocument, getWindow } from '@magic/test'
+
+// Get the document and window instances
+const doc = getDocument()
+const win = getWindow()
+
+// Manually re-initialize if needed
+initDOM()
+`),
+
+  p('Canvas/Image Polyfills:'),
+
+  ul([
+    li('new Image() - Parses PNG data URLs to extract dimensions'),
+    li('canvas.getContext("2d") - Returns node-canvas context'),
+    li('canvas.toDataURL() - Serializes canvas to data URL'),
+  ]),
+
   h4({ id: 'lib-svelte' }, 'svelte'),
 
   p([
@@ -837,9 +987,28 @@ export default [
     li('text(target) - Returns textContent'),
     li('component(instance) - Returns component instance'),
     li('props(target) - Returns attribute name/value pairs'),
-    li('click(target, selector) - Clicks an element'),
-    li('trigger(target, eventType, options) - Dispatches custom event'),
-    li('scroll(target, x, y) - Scrolls element to x/y'),
+    li('click(target, selector?) - Clicks an element'),
+    li('dblClick(target) - Double clicks'),
+    li('contextMenu(target) - Right click'),
+    li('mouseDown(target) - Mouse down'),
+    li('mouseUp(target) - Mouse up'),
+    li('mouseMove(target) - Mouse move'),
+    li('mouseEnter/Leave/Over/Out - Mouse events'),
+    li('keyDown/Press/Up - Keyboard events'),
+    li('type(target, text) - Type text into input'),
+    li('input(target, value) - Input value'),
+    li('change(target, value) - Change event'),
+    li('blur/focus - Focus events'),
+    li('submit(target) - Submit form'),
+    li('pointer/touch events - Pointer and touch'),
+    li('copy/cut/paste - Clipboard'),
+    li('drag events - Drag and drop'),
+    li('resize(target, w, h) - Resize'),
+    li('scroll(target, x, y) - Scroll'),
+    li('animation/transition events - CSS events'),
+    li('play/pause - Media'),
+    li('trigger(target, eventType, options) - Custom event'),
+    li('checked(target) - Checkbox state'),
   ]),
 
   p('Test Properties:'),
@@ -925,6 +1094,52 @@ export default [
     fn: tryCatch(mount, component, { props: null }),
     expect: t => t.message === 'Props must be an object, got object',
     info: 'throws when props is null',
+  },
+]
+`),
+
+  p('SvelteKit Mocks:'),
+
+  p('Mocks SvelteKit $app modules:'),
+
+  Pre(`
+import { browser, dev, prod, createStaticPage } from '@magic/test'
+
+export default [
+  {
+    fn: () => browser, // true if in browser environment
+    expect: false,
+    info: 'not in browser by default',
+  },
+  {
+    fn: () => dev, // true if in dev mode
+    expect: process.env.NODE_ENV === 'development',
+    info: 'dev reflects NODE_ENV',
+  },
+  {
+    fn: () => prod, // true if in production mode
+    expect: false,
+    info: 'not in prod by default',
+  },
+]
+`),
+
+  h4({ id: 'compileSvelte' }, 'compileSvelte'),
+
+  p('Compile Svelte component source to a module for testing:'),
+
+  Pre(`
+import { compileSvelte } from '@magic/test'
+
+export default [
+  {
+    fn: async () => {
+      const source = \`<button>Click</button>\`
+      const { js, css } = compileSvelte(source, 'button.svelte')
+      return js.code.includes('button') && css.code === ''
+    },
+    expect: true,
+    info: 'compiles Svelte source to module',
   },
 ]
 `),
@@ -1224,6 +1439,13 @@ echo "Exit code: $?"  # 0 = success, 1 = failure
 npm test
 # or
 t -p
+`),
+
+  p('Shard large test suites:'),
+
+  Pre(`
+# Split tests across multiple processes
+t --shards 4 --shard-id 0
 `),
 
   p('Run tests in parallel with native runner:'),
