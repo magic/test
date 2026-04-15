@@ -2,13 +2,14 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2022", "DOM"],
-    "module": "preserve",
-    "moduleResolution": "bundler",
-    "rootDir": ".",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationDir": "./dist",
     "allowJs": true,
     "checkJs": true,
-    "emitDeclarationOnly": true,
-    "declaration": true,
     "maxNodeModuleJsDepth": 2,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -26,18 +27,18 @@
     "noImplicitOverride": true,
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
+    "rewriteRelativeImportExtensions": true,
+    "skipLibCheck": true,
     "paths": {
-      "@magic/test": ["./src/index.js"],
-      "@magic/test/*": ["./src/*"]
+      "@magic/test": ["./dist/index.js"],
+      "@magic/test/*": ["./dist/*"]
     },
-    "types": ["@types/node"],
-
-    "allowImportingTsExtensions": true
+    "types": ["@types/node"]
   },
 
-  "include": ["test/**/*", "src/**/*"],
+  "include": ["src/**/*"],
 
-  "exclude": ["node_modules", "coverage", ".tmp", "dist", "build", "**/*.min.js", "**/*.bundle.js"],
+  "exclude": ["node_modules", "dist/**/*", "coverage", ".tmp"],
 
   "ts-node": {
     "esm": true,
