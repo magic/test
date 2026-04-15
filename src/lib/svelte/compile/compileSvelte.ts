@@ -3,13 +3,13 @@ import path from 'node:path'
 import { compile, preprocess } from 'svelte/compiler'
 import fs from '@magic/fs'
 
-import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.ts'
+import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.js'
 
-import { cache } from './cache.ts'
-import { TMP_DIR } from './constants.ts'
-import { cleanTempFiles } from './cleanTempFiles.ts'
-import { acquireLock } from './acquireLock.ts'
-import type { CssObject } from './types.ts'
+import { cache } from './cache.js'
+import { TMP_DIR } from './constants.js'
+import { cleanTempFiles } from './cleanTempFiles.js'
+import { acquireLock } from './acquireLock.js'
+import type { CssObject } from './types.js'
 
 export const compileSvelte = async (
   filePath: string,

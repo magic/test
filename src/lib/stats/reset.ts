@@ -1,4 +1,4 @@
-import type { Store } from '../store.ts'
+import type { Store } from '../store.js'
 
 /**
  * Reset the store to default state.

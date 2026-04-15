@@ -1,13 +1,13 @@
 import log from '@magic/log'
 
-import { env } from '../env.ts'
-import { stringify } from '../stringify.ts'
-import { getDuration } from '../getDuration.ts'
-import { Store } from '../store.ts'
-import { isTestResult } from './isTestResult.ts'
-import { printPercent } from './printPercent.ts'
+import { env } from '../env.js'
+import { stringify } from '../stringify.js'
+import { getDuration } from '../getDuration.js'
+import { Store } from '../store.js'
+import { isTestResult } from './isTestResult.js'
+import { printPercent } from './printPercent.js'
 
-import type { InputValue, TestResult, TestResults } from '../../types.ts'
+import type { InputValue, TestResult, TestResults } from '../../types.js'
 
 /**
  * Prints test results for a package and its suites.

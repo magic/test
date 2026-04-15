@@ -8,7 +8,7 @@ export { default as error } from '@magic/error'
 
 export { run } from './run.ts'
 
-import { initDOM } from './lib/dom/index.ts'
+import { initDOM } from './lib/dom/index.js'
 
 export { curry, env, http, mock, promise, vals, version, tryCatch } from './lib/index.ts'
 

@@ -6,10 +6,10 @@ import { fileURLToPath } from 'node:url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-import { classifyImport } from './classifyImport.ts'
-import { findProjectRoot } from './findProjectRoot.ts'
-import { loadViteAliases } from './loadViteAliases.ts'
-import { parseTsConfig } from './parseTsConfig.ts'
+import { classifyImport } from './classifyImport.js'
+import { findProjectRoot } from './findProjectRoot.js'
+import { loadViteAliases } from './loadViteAliases.js'
+import { parseTsConfig } from './parseTsConfig.js'
 
 /**
  * Resolve Vite/SvelteKit aliases ($lib, $app, $env, etc.)

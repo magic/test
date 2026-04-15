@@ -1,23 +1,23 @@
-import type { ResolveAndCompileResult } from './types.ts'
+import type { ResolveAndCompileResult } from './types.js'
 
 import path from 'node:path'
 
 import fs from '@magic/fs'
 
-import { resolveAlias, resolveViteAlias } from '../viteConfig/index.ts'
+import { resolveAlias, resolveViteAlias } from '../viteConfig/index.js'
 
-import { importCache } from './cache.ts'
-import { TMP_DIR } from './constants.ts'
-import { acquireLock } from './acquireLock.ts'
-import { isSvelteFile } from './isSvelteFile.ts'
-import { getSvelteExports } from './getSvelteExports.ts'
+import { importCache } from './cache.js'
+import { TMP_DIR } from './constants.js'
+import { acquireLock } from './acquireLock.js'
+import { isSvelteFile } from './isSvelteFile.js'
+import { getSvelteExports } from './getSvelteExports.js'
 
-import { compileSvelte } from './compileSvelte.ts'
-import { processImports } from './processImports.ts'
-import { computeRelativePath } from './computeRelativePath.ts'
-import { classifyImport } from './classifyImport.ts'
-import { getTempFilePath } from './getTempFilePath.ts'
-import { compileBarrel } from './compileBarrel.ts'
+import { compileSvelte } from './compileSvelte.js'
+import { processImports } from './processImports.js'
+import { computeRelativePath } from './computeRelativePath.js'
+import { classifyImport } from './classifyImport.js'
+import { getTempFilePath } from './getTempFilePath.js'
+import { compileBarrel } from './compileBarrel.js'
 
 export const resolveAndCompileImport = async (
   importPath: string,

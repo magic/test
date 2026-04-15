@@ -12,7 +12,7 @@ export { imageCache, parsePngDimensions, createImagePolyfill } from './image.ts'
 
 export { createCanvasPolyfill } from './canvas.ts'
 
-import { define, initGlobals } from './globals.ts'
+import { define, initGlobals } from './globals.js'
 
 export { define, initGlobals }
 

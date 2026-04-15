@@ -7,7 +7,7 @@ import fs from '@magic/fs'
 import is from '@magic/types'
 import log from '@magic/log'
 
-import { abort } from '../run.ts'
+import { abort } from '../run.js'
 
 const cwd = process.cwd()
 const res = cli({
@@ -62,12 +62,12 @@ const run = async () => {
 
   const isProd = res.env.NODE_ENV === 'production'
 
-  let binPath = path.join(cwd, 'node_modules', '@magic', 'test', 'src', 'bin')
+  let binPath = path.join(cwd, 'node_modules', '@magic', 'test', 'dist', 'bin')
   if (name === '@magic/test') {
-    binPath = path.join(cwd, 'src', 'bin')
+    binPath = path.join(cwd, 'dist', 'bin')
   }
 
-  const binFile = path.join(binPath, 'unit.ts')
+  const binFile = path.join(binPath, 'unit.js')
 
   const isWin = process.platform === 'win32'
 

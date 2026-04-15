@@ -2,10 +2,10 @@ import fs from '@magic/fs'
 import is from '@magic/types'
 import path from 'node:path'
 
-import { findProjectRoot } from './findProjectRoot.ts'
-import { parseTsConfig } from './parseTsConfig.ts'
-import { loadViteAliases } from './loadViteAliases.ts'
-import { classifyImport } from './classifyImport.ts'
+import { findProjectRoot } from './findProjectRoot.js'
+import { parseTsConfig } from './parseTsConfig.js'
+import { loadViteAliases } from './loadViteAliases.js'
+import { classifyImport } from './classifyImport.js'
 
 export const resolveAlias = async (
   importPath: string,

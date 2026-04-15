@@ -1,4 +1,4 @@
-import { fileLocks } from './cache.ts'
+import { fileLocks } from './cache.js'
 
 export const acquireLock = async (filePath: string): Promise<() => void> => {
   while (fileLocks.has(filePath)) {

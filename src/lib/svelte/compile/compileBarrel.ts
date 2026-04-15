@@ -2,12 +2,12 @@ import path from 'node:path'
 
 import fs from '@magic/fs'
 
-import { barrelCache, processingBarrels } from './cache.ts'
-import { TMP_DIR } from './constants.ts'
-import { getSvelteExports } from './getSvelteExports.ts'
-import { processImports } from './processImports.ts'
-import { compileSvelte } from './compileSvelte.ts'
-import { computeRelativePath } from './computeRelativePath.ts'
+import { barrelCache, processingBarrels } from './cache.js'
+import { TMP_DIR } from './constants.js'
+import { getSvelteExports } from './getSvelteExports.js'
+import { processImports } from './processImports.js'
+import { compileSvelte } from './compileSvelte.js'
+import { computeRelativePath } from './computeRelativePath.js'
 
 export const compileBarrel = async (
   filePath: string,

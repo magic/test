@@ -1,12 +1,12 @@
 import is from '@magic/types'
 import path from 'node:path'
 
-import { findConfigFile } from './findConfigFile.ts'
+import { findConfigFile } from './findConfigFile.js'
 
-import { aliasCache, type AliasEntry } from './cache.ts'
-import { parseViteConfig } from './parseViteConfig.ts'
-import { normalizeAlias } from './normalizeAlias.ts'
-import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.ts'
+import { aliasCache, type AliasEntry } from './cache.js'
+import { parseViteConfig } from './parseViteConfig.js'
+import { normalizeAlias } from './normalizeAlias.js'
+import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
 
 export const loadViteAliases = async (rootDir: string): Promise<AliasEntry[]> => {
   const cacheKey = rootDir + ':vite'

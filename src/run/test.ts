@@ -1,11 +1,11 @@
 import is from '@magic/types'
 import log from '@magic/log'
 
-import { cleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/index.ts'
-import { Store } from '../lib/store.ts'
-import { isolation } from './isolation.ts'
-import { runSuite } from './suite.ts'
-import type { WrappedTest, ComponentProps, TestResult, EvaluateResult, Suite } from '../types.ts'
+import { cleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/index.js'
+import { Store } from '../lib/store.js'
+import { isolation } from './isolation.js'
+import { runSuite } from './suite.js'
+import type { WrappedTest, ComponentProps, TestResult, EvaluateResult, Suite } from '../types.js'
 
 const DEFAULT_TEST_TIMEOUT = 10000
 

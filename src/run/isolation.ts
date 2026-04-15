@@ -2,7 +2,7 @@ import { Worker } from 'node:worker_threads'
 
 import is from '@magic/types'
 
-import type { Snapshot, PropertyDescriptorRecord, TestResult } from '../types.ts'
+import type { Snapshot, PropertyDescriptorRecord, TestResult } from '../types.js'
 
 const skipProps = [
   // Node/CommonJS built-ins
@@ -437,7 +437,7 @@ export class Isolation {
     suiteSnapshot?: Snapshot
   }): Promise<TestResult> {
     return new Promise((resolve, reject) => {
-      const worker = new Worker(new URL('./worker.ts', import.meta.url), {
+      const worker = new Worker(new URL('./worker.js', import.meta.url), {
         workerData: {
           testFileUrl: options.testFileUrl,
           testIndex: options.testIndex,

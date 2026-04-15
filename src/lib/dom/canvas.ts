@@ -1,6 +1,6 @@
 import { createCanvas, loadImage } from 'canvas'
 
-import type { CanvasRenderingContext2D } from './types.ts'
+import type { CanvasRenderingContext2D } from './types.js'
 import type { Window } from 'happy-dom'
 
 export const createCanvasPolyfill = (win: Window): void => {

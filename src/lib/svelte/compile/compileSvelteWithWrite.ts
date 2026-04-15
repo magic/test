@@ -3,10 +3,10 @@ import { pathToFileURL } from 'node:url'
 
 import fs from '@magic/fs'
 
-import { TMP_DIR } from './constants.ts'
-import type { CssObject } from './types.ts'
-import { compileSvelteWithImports } from './compileSvelteWithImports.ts'
-import { transformForNode } from './transformForNode.ts'
+import { TMP_DIR } from './constants.js'
+import type { CssObject } from './types.js'
+import { compileSvelteWithImports } from './compileSvelteWithImports.js'
+import { transformForNode } from './transformForNode.js'
 
 export const compileSvelteWithWrite = async (
   filePath: string,

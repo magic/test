@@ -4,9 +4,9 @@ import is from '@magic/types'
 import log from '@magic/log'
 import fs from '@magic/fs'
 
-import { stats, createStore, ERRORS, Store } from './lib/index.ts'
-import { runSuite } from './run/suite.ts'
-import type { TestSuites, TestCollection, CleanupFunction, TestResult } from './types.ts'
+import { stats, createStore, ERRORS, Store } from './lib/index.js'
+import { runSuite } from './run/suite.js'
+import type { TestSuites, TestCollection, CleanupFunction, TestResult } from './types.js'
 
 const cwd = process.cwd()
 

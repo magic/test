@@ -2,10 +2,10 @@ import { parentPort, workerData } from 'node:worker_threads'
 
 import is from '@magic/types'
 
-import { cleanError, cleanFunctionString, getTestKey } from '../lib/index.ts'
-import { restoreFromSnapshot } from './isolation.ts'
-import { getViteDefine } from '../lib/svelte/viteConfig/index.ts'
-import type { WrappedTest, CleanupFunction, TestResult, EvaluateResult } from '../types.ts'
+import { cleanError, cleanFunctionString, getTestKey } from '../lib/index.js'
+import { restoreFromSnapshot } from './isolation.js'
+import { getViteDefine } from '../lib/svelte/viteConfig/index.js'
+import type { WrappedTest, CleanupFunction, TestResult, EvaluateResult } from '../types.js'
 
 /**
  * Type guard to check if an object has test properties (fn or tests).

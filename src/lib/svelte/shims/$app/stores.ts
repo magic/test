@@ -3,7 +3,7 @@
 // Provides stores as Svelte stores for backward compatibility
 
 import { writable, get, type Readable } from 'svelte/store'
-import { getDefaultContext, type Page, type Navigation } from './state.ts'
+import { getDefaultContext, type Page, type Navigation } from './state.js'
 
 function createPageStore(): Readable<Page> {
   const ctx = getDefaultContext()

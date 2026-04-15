@@ -3,9 +3,9 @@ import { pathToFileURL } from 'node:url'
 
 import fs from '@magic/fs'
 import is from '@magic/types'
-import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.ts'
-import { getViteDefine } from '../../lib/svelte/viteConfig/index.ts'
-import type { TestSuites, TestCollection } from '../../types.ts'
+import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js'
+import { getViteDefine } from '../../lib/svelte/viteConfig/index.js'
+import type { TestSuites, TestCollection } from '../../types.js'
 
 interface ImportResult {
   type: 'file' | 'directory' | 'error' | 'skip'

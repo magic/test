@@ -1,9 +1,9 @@
 import is from '@magic/types'
 
-import { findConfigFile } from './findConfigFile.ts'
-import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.ts'
-import { defineCache } from './cache.ts'
-import { parseViteConfig } from './parseViteConfig.ts'
+import { findConfigFile } from './findConfigFile.js'
+import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
+import { defineCache } from './cache.js'
+import { parseViteConfig } from './parseViteConfig.js'
 
 export const loadViteDefine = async (rootDir: string): Promise<Record<string, unknown>> => {
   const cacheKey = rootDir + ':vite-define'

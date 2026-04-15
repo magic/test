@@ -11,7 +11,7 @@ import(path.join(__dirname, 'lib/registerLoader.ts'))
 import { describe, before, after, it } from 'node:test'
 import fs from '@magic/fs'
 import is from '@magic/types'
-import { maybeInjectMagic } from './lib/index.ts'
+import { maybeInjectMagic } from './lib/index.js'
 
 import type {
   WrappedTest,

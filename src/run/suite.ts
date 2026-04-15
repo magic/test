@@ -5,7 +5,7 @@ import error from '@magic/error'
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { runTest } from './test.ts'
+import { runTest } from './test.js'
 import {
   getFNS,
   getTestKey,
@@ -17,8 +17,8 @@ import {
   testUsesFixedPorts,
   testUsesSharedFiles,
 } from '../lib/index.ts'
-import { Store } from '../lib/store.ts'
-import { isolation } from './isolation.ts'
+import { Store } from '../lib/store.js'
+import { isolation } from './isolation.js'
 import type {
   Suite,
   TestCollection,
