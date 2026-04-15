@@ -2165,13 +2165,17 @@ update dependencies
 - add some internal tests
 - update dependencies
 
-##### 0.3.0
+##### 0.3.0 - BROKEN. node can not strip types in node_modules...
 
 - added html support (using happy-dom, experimental!)
 - added svelte support (experimental!)
 - various improvements to test logic and structure of internal lib
 - more tests.
 
-##### 0.3.1 - unreleased
+##### 0.3.1
+
+- publish dist dir with .js files for consumers.
+
+##### 0.3.2 - unreleased
 
 ...
