@@ -7,6 +7,8 @@ import { restoreFromSnapshot } from './isolation.js'
 import { getViteDefine } from '../lib/svelte/viteConfig/index.js'
 import type { WrappedTest, CleanupFunction, TestResult, EvaluateResult } from '../types.js'
 
+import '../bin/lib/registerLoader.js'
+
 /**
  * Type guard to check if an object has test properties (fn or tests).
  */

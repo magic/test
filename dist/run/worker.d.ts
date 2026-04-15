@@ -1,1 +1,1 @@
-export {}
+import '../bin/lib/registerLoader.js'
