@@ -1,2 +1,2 @@
-export { compileSvelte } from './compileSvelte.ts'
-export { compileSvelteWithWrite } from './compileSvelteWithWrite.ts'
+export { compileSvelte } from './compileSvelte.js'
+export { compileSvelteWithWrite } from './compileSvelteWithWrite.js'

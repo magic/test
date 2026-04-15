@@ -1,6 +1,6 @@
 import { mount, html, tick } from '../src/index.js'
 import { flushSync as flushSyncSvelte } from 'svelte'
-import { reset as resetPage } from '../src/lib/svelte/shims/$app/state.ts'
+import { reset as resetPage } from '../src/lib/svelte/shims/$app/state.js'
 
 export default [
   // $app/environment

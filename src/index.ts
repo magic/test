@@ -6,15 +6,15 @@ export { default as deep } from '@magic/deep'
 export { default as fs } from '@magic/fs'
 export { default as error } from '@magic/error'
 
-export { run } from './run.ts'
+export { run } from './run.js'
 
 import { initDOM } from './lib/dom/index.js'
 
-export { curry, env, http, mock, promise, vals, version, tryCatch } from './lib/index.ts'
+export { curry, env, http, mock, promise, vals, version, tryCatch } from './lib/index.js'
 
-export { initDOM, getDocument, getWindow } from './lib/dom/index.ts'
+export { initDOM, getDocument, getWindow } from './lib/dom/index.js'
 
-export * from './types.ts'
+export * from './types.js'
 
 export {
   compileSvelte,

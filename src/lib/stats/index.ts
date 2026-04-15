@@ -1,3 +1,3 @@
-export { test } from './test.ts'
-export { info } from './info.ts'
-export { reset } from './reset.ts'
+export { test } from './test.js'
+export { info } from './info.js'
+export { reset } from './reset.js'

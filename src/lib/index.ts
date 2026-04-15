@@ -1,19 +1,19 @@
-export { isNodeDev, isNodeProd, isProd, isVerbose, getErrorLength, env } from './env.ts'
-export { getTestKey } from './getTestKey.ts'
-export { http } from './http.ts'
-export { promise } from './promise.ts'
-export * as stats from './stats/index.ts'
-export { Store, createStore } from './store.ts'
-export { vals } from './vals.ts'
-export { version } from './version.ts'
-export { tryCatch } from './tryCatch.ts'
-export { curry } from './curry.ts'
-export { cleanError } from './cleanError.ts'
-export { cleanFunctionString } from './cleanFunctionString.ts'
-export * as mock from './mock.ts'
+export { isNodeDev, isNodeProd, isProd, isVerbose, getErrorLength, env } from './env.js'
+export { getTestKey } from './getTestKey.js'
+export { http } from './http.js'
+export { promise } from './promise.js'
+export * as stats from './stats/index.js'
+export { Store, createStore } from './store.js'
+export { vals } from './vals.js'
+export { version } from './version.js'
+export { tryCatch } from './tryCatch.js'
+export { curry } from './curry.js'
+export { cleanError } from './cleanError.js'
+export { cleanFunctionString } from './cleanFunctionString.js'
+export * as mock from './mock.js'
 
-export { getFNS } from './getFNS.ts'
-export { suiteNeedsIsolation } from './suiteNeedsIsolation.ts'
+export { getFNS } from './getFNS.js'
+export { suiteNeedsIsolation } from './suiteNeedsIsolation.js'
 
 export {
   testModifiesGlobals,
@@ -28,4 +28,4 @@ export {
   testUsesSharedFiles,
 } from './mutableStateCheck.ts'
 
-export { ERRORS, ERROR_MESSAGES, createError } from './errors.ts'
+export { ERRORS, ERROR_MESSAGES, createError } from './errors.js'

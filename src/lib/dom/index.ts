@@ -8,9 +8,9 @@ export {
   type CustomWindow,
 } from './types.ts'
 
-export { imageCache, parsePngDimensions, createImagePolyfill } from './image.ts'
+export { imageCache, parsePngDimensions, createImagePolyfill } from './image.js'
 
-export { createCanvasPolyfill } from './canvas.ts'
+export { createCanvasPolyfill } from './canvas.js'
 
 import { define, initGlobals } from './globals.js'
 
