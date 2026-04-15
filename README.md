@@ -2174,10 +2174,15 @@ update dependencies
 
 ##### 0.3.1 - BROKEN, dist dir missing
 
-##### 0.3.2
+##### 0.3.2 - BROKEN: some .ts references for worker.ts and unit.ts
 
 - publish dist dir with .js files for consumers.
 
-##### 0.3.3 - unreleased
+##### 0.3.3
+
+- replace all import .ts with .js
+- some test output fixes
+
+##### 0.3.4 - unreleased
 
 ...
