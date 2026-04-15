@@ -2172,10 +2172,12 @@ update dependencies
 - various improvements to test logic and structure of internal lib
 - more tests.
 
-##### 0.3.1
+##### 0.3.1 - BROKEN, dist dir missing
+
+##### 0.3.2
 
 - publish dist dir with .js files for consumers.
 
-##### 0.3.2 - unreleased
+##### 0.3.3 - unreleased
 
 ...
