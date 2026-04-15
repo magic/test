@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-import(path.join(__dirname, 'lib/registerLoader.ts'))
+import(path.join(__dirname, 'lib/registerLoader.js'))
 
 import { describe, before, after, it } from 'node:test'
 import fs from '@magic/fs'
@@ -20,7 +20,7 @@ import type {
   CleanupFunction,
   SuiteHookWithArg,
   ComponentProps,
-} from '../types.ts'
+} from '../types.js'
 
 /**
  * Internal suite type for node-test-runner
@@ -218,7 +218,7 @@ const convertTest = async (
     if (!fnExists) {
       result = undefined
     } else if (testObj.component) {
-      const { mount } = await import(path.join(__dirname, '..', 'lib', 'svelte', 'mount.ts'))
+      const { mount } = await import(path.join(__dirname, '..', 'lib', 'svelte', 'mount.js'))
       let componentFile, componentProps
 
       if (is.string(testObj.component)) {
