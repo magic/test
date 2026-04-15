@@ -28,10 +28,8 @@ export const resolveAndCompileImport = async (
       return { filePath: importPath, js: { code: '' }, url: relativePath }
     }
   }
-  if (importType === 'scoped') {
-    return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
-  }
-  if (importType === 'bare') {
+  // Skip node_modules resolution for now
+  if (importType === 'scoped' || importType === 'bare') {
     return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
   }
   let resolvedPath
@@ -72,12 +70,30 @@ export const resolveAndCompileImport = async (
     }
   }
   if (!path.extname(resolvedPath)) {
-    const extensions = ['.ts', '.js', '.svelte', '/index.ts', '/index.js', '/index.svelte']
-    for (const ext of extensions) {
-      const withExt = resolvedPath + ext
-      if (await fs.exists(withExt)) {
-        resolvedPath = withExt
-        break
+    // Check if it's a file without extension - if so, return it directly
+    try {
+      const stat = await fs.stat(resolvedPath)
+      if (stat.isFile()) {
+        // File exists without extension, use it as-is
+      } else if (stat.isDirectory()) {
+        const extensions = ['.ts', '.js', '/index.ts', '/index.js']
+        for (const ext of extensions) {
+          const withExt = resolvedPath + ext
+          if (await fs.exists(withExt)) {
+            resolvedPath = withExt
+            break
+          }
+        }
+      }
+    } catch {
+      // File doesn't exist, try extensions
+      const extensions = ['.ts', '.js', '/index.ts', '/index.js']
+      for (const ext of extensions) {
+        const withExt = resolvedPath + ext
+        if (await fs.exists(withExt)) {
+          resolvedPath = withExt
+          break
+        }
       }
     }
   } else if (resolvedPath.endsWith('.js')) {
@@ -102,15 +118,28 @@ export const resolveAndCompileImport = async (
     }
   }
   if (!(await fs.exists(resolvedPath))) {
-    if (await fs.exists(resolvedPath + '.svelte')) {
-      resolvedPath = resolvedPath + '.svelte'
-    } else if (await fs.exists(path.join(resolvedPath, 'index.svelte'))) {
-      resolvedPath = path.join(resolvedPath, 'index.svelte')
-    } else if (!path.extname(resolvedPath) && !resolvedPath.includes('.')) {
-      const sourceDirName = path.dirname(sourceFilePath)
-      const possiblePath = path.join(sourceDirName, importPath.replace(/^\.\//, ''))
-      if (await fs.exists(possiblePath)) {
-        resolvedPath = possiblePath
+    if (resolvedPath.endsWith('.svelte')) {
+      const svelteJsPath = resolvedPath + '.js'
+      if (await fs.exists(svelteJsPath)) {
+        resolvedPath = svelteJsPath
+      }
+    }
+    if (!(await fs.exists(resolvedPath))) {
+      if (await fs.exists(resolvedPath + '.svelte')) {
+        resolvedPath = resolvedPath + '.svelte'
+      } else if (await fs.exists(path.join(resolvedPath, 'index.svelte'))) {
+        resolvedPath = path.join(resolvedPath, 'index.svelte')
+      } else if (!path.extname(resolvedPath) && !resolvedPath.includes('.')) {
+        const sourceDirName = path.dirname(sourceFilePath)
+        const possiblePath = path.join(sourceDirName, importPath.replace(/^\.\//, ''))
+        if (await fs.exists(possiblePath)) {
+          resolvedPath = possiblePath
+        }
+      } else {
+        const svelteJsPath = resolvedPath + '.svelte.js'
+        if (await fs.exists(svelteJsPath)) {
+          resolvedPath = svelteJsPath
+        }
       }
     }
   }
@@ -163,4 +192,64 @@ export const resolveAndCompileImport = async (
   } finally {
     release()
   }
+}
+const resolveNodeModulesImport = async (importPath, sourceFilePath, importChain) => {
+  if (importChain.includes(importPath)) {
+    return null
+  }
+  const parts = importPath.split('/')
+  if (!parts[0]) {
+    return null
+  }
+  let packageName = parts[0]
+  if (packageName.startsWith('@') && parts[1]) {
+    packageName = parts[0] + '/' + parts[1]
+  }
+  const nodeModulesPath = path.join(process.cwd(), 'node_modules', packageName)
+  const pkgPath = path.join(nodeModulesPath, 'package.json')
+  if (!(await fs.exists(pkgPath))) {
+    return null
+  }
+  const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'))
+  let entryPath = null
+  if (pkg.exports?.['.']?.import || pkg.exports?.['.']?.main) {
+    entryPath = path.join(nodeModulesPath, pkg.exports['.'].import || pkg.exports['.'].main)
+  } else if (pkg.exports?.['.']?.svelte) {
+    entryPath = path.join(nodeModulesPath, pkg.exports['.'].svelte)
+  } else if (pkg.module) {
+    entryPath = path.join(nodeModulesPath, pkg.module)
+  } else if (pkg.main) {
+    entryPath = path.join(nodeModulesPath, pkg.main)
+  }
+  if (!entryPath) {
+    return null
+  }
+  const ext = path.extname(entryPath)
+  if (ext === '.svelte') {
+    const { js } = await compileSvelte(entryPath)
+    const relPath = path.relative(process.cwd(), entryPath)
+    const tmpFile = path.join(TMP_DIR, 'node_modules', relPath.replace(/\.svelte$/, '.svelte.js'))
+    const tmpFileAbs = path.join(process.cwd(), tmpFile)
+    await fs.mkdirp(path.dirname(tmpFile))
+    await fs.writeFile(tmpFile, js.code)
+    const sourceTmpFile = getTempFilePath(sourceFilePath)
+    const fromDir = path.dirname(sourceTmpFile)
+    const relativePath = computeRelativePath(fromDir, tmpFileAbs)
+    return { filePath: entryPath, js: { code: js.code }, url: relativePath }
+  }
+  if (ext === '.js' || ext === '.ts') {
+    const exports = await getSvelteExports(entryPath)
+    if (exports.length > 0) {
+      const barrelResult = await compileBarrel(entryPath, importChain)
+      const sourceTmpFile = getTempFilePath(sourceFilePath)
+      const fromDir = path.dirname(sourceTmpFile)
+      const relativePath = computeRelativePath(fromDir, barrelResult.wrapperAbsPath)
+      return { filePath: entryPath, js: barrelResult.js, url: relativePath }
+    }
+    const sourceTmpFile = getTempFilePath(sourceFilePath)
+    const fromDir = path.dirname(sourceTmpFile)
+    const relativePath = computeRelativePath(fromDir, entryPath)
+    return { filePath: entryPath, js: { code: '' }, url: relativePath }
+  }
+  return null
 }

@@ -10,8 +10,9 @@ import { transformForNode } from './transformForNode.js'
 
 export const compileSvelteWithWrite = async (
   filePath: string,
+  importChain: string[] = [],
 ): Promise<{ js: { code: string }; css: CssObject | null; tmpFile: string; importUrl: string }> => {
-  const { js, css } = await compileSvelteWithImports(filePath)
+  const { js, css } = await compileSvelteWithImports(filePath, importChain)
 
   const transformedCode = transformForNode(js.code, filePath)
 

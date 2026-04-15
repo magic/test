@@ -45,16 +45,47 @@ export const resolveAlias = async (
     }
 
     if (resolved) {
+      // If resolved path already has an extension, check if it exists
+      if (path.extname(resolved)) {
+        if (await fs.exists(resolved)) {
+          return resolved
+        }
+        return null
+      }
+
+      // Check if resolved path is a file (not directory) - if it's a file without extension, return it
+      try {
+        const stat = await fs.stat(resolved)
+        if (stat.isFile()) {
+          return resolved
+        }
+      } catch {}
+
+      // Check if resolved path is a directory (skip it if so)
+      try {
+        const stat = await fs.stat(resolved)
+        if (stat.isDirectory()) {
+          const withExtensions = [
+            '.svelte',
+            '.ts',
+            '.js',
+            '/index.svelte',
+            '/index.ts',
+            '/index.js',
+          ]
+          for (const ext of withExtensions) {
+            const withExt = resolved + ext
+            const exists = await fs.exists(withExt)
+            if (exists) {
+              return withExt
+            }
+          }
+          return null
+        }
+      } catch {}
+
       // Try with extensions, handling .js->.ts conversion
-      const withExtensions = [
-        '',
-        '.js',
-        '.svelte',
-        '.ts',
-        '/index.js',
-        '/index.svelte',
-        '/index.ts',
-      ]
+      const withExtensions = ['.svelte', '.ts', '.js', '/index.svelte', '/index.ts', '/index.js']
 
       // Also try removing .js extension and adding .ts
       let baseResolved = resolved
@@ -66,35 +97,12 @@ export const resolveAlias = async (
         const withExt = resolved + ext
         const exists = await fs.exists(withExt)
         if (exists) {
-          // Skip if withExt is a directory and ext is empty (raw resolved path is a directory)
-          if (ext === '') {
-            try {
-              const stat = await fs.stat(withExt)
-              if (stat.isDirectory()) {
-                continue
-              }
-            } catch {
-              continue
-            }
-          }
           return withExt
         }
         // Also try without .js
         if (baseResolved !== resolved) {
           const noJsExt = baseResolved + ext
           if (await fs.exists(noJsExt)) {
-            // Similarly, skip if noJsExt is a directory when ext is empty?
-            // baseResolved likely is a file without extension, but if ext is '' then noJsExt = baseResolved (file). Check directory?
-            if (ext === '') {
-              try {
-                const stat = await fs.stat(noJsExt)
-                if (stat.isDirectory()) {
-                  continue
-                }
-              } catch {
-                continue
-              }
-            }
             return noJsExt
           }
         }

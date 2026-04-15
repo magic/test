@@ -4,8 +4,8 @@ import fs from '@magic/fs'
 import { TMP_DIR } from './constants.js'
 import { compileSvelteWithImports } from './compileSvelteWithImports.js'
 import { transformForNode } from './transformForNode.js'
-export const compileSvelteWithWrite = async filePath => {
-  const { js, css } = await compileSvelteWithImports(filePath)
+export const compileSvelteWithWrite = async (filePath, importChain = []) => {
+  const { js, css } = await compileSvelteWithImports(filePath, importChain)
   const transformedCode = transformForNode(js.code, filePath)
   const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
   const relPath = path.relative(process.cwd(), resolvedPath)
