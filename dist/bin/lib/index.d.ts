@@ -1,2 +1,2 @@
-export { readRecursive } from './readRecursive.ts'
-export { maybeInjectMagic } from './maybeInjectMagic.ts'
+export { readRecursive } from './readRecursive.js'
+export { maybeInjectMagic } from './maybeInjectMagic.js'

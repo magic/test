@@ -6,8 +6,8 @@ export {
   type CanvasRenderingContext2D,
   type CustomWindow,
 } from './types.ts'
-export { imageCache, parsePngDimensions, createImagePolyfill } from './image.ts'
-export { createCanvasPolyfill } from './canvas.ts'
+export { imageCache, parsePngDimensions, createImagePolyfill } from './image.js'
+export { createCanvasPolyfill } from './canvas.js'
 import { define, initGlobals } from './globals.js'
 export { define, initGlobals }
 export declare const initDOM: () => {

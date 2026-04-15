@@ -22,7 +22,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-import(__rewriteRelativeImportExtension(path.join(__dirname, 'lib/registerLoader.ts')))
+import(__rewriteRelativeImportExtension(path.join(__dirname, 'lib/registerLoader.js')))
 import { describe, before, after, it } from 'node:test'
 import fs from '@magic/fs'
 import is from '@magic/types'
@@ -181,7 +181,7 @@ const convertTest = async (testObj, filePath, index) => {
       result = undefined
     } else if (testObj.component) {
       const { mount } = await import(
-        __rewriteRelativeImportExtension(path.join(__dirname, '..', 'lib', 'svelte', 'mount.ts'))
+        __rewriteRelativeImportExtension(path.join(__dirname, '..', 'lib', 'svelte', 'mount.js'))
       )
       let componentFile, componentProps
       if (is.string(testObj.component)) {

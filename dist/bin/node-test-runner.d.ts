@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import type { TestHooks, TestItem } from '../types.ts'
+import type { TestHooks, TestItem } from '../types.js'
 /**
  * Internal suite type for node-test-runner
  */

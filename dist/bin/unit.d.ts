@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-import './lib/registerLoader.ts'
+import './lib/registerLoader.js'
