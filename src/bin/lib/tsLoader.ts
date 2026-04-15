@@ -25,7 +25,7 @@ export async function resolve(
       try {
         const aliasResolved = await resolveViteAlias(specifier, new URL(context.parentURL).pathname)
         if (aliasResolved) {
-          return { url: pathToFileURL(aliasResolved).href }
+          return { url: pathToFileURL(aliasResolved).href, shortCircuit: true }
         }
       } catch {
         // ignore
@@ -70,7 +70,7 @@ export async function resolve(
             if (key !== '.' && typeof val === 'string' && val.endsWith('.js')) {
               const jsPath = path.join(nodeModulesPath, val)
               if (await fs.exists(jsPath)) {
-                return { url: pathToFileURL(jsPath).href }
+                return { url: pathToFileURL(jsPath).href, shortCircuit: true }
               }
             }
           }
