@@ -1,0 +1,10 @@
+export declare const Action: {}
+export declare const Navigation: {}
+export declare const Page: {}
+export declare const Snapshot: {}
+export declare const Config: {}
+export declare const Cookie: {}
+export declare const Error: {}
+export declare const HttpError: {}
+export declare const RequestEvent: {}
+export declare const ResolveOptions: {}
