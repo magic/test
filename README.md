@@ -2187,6 +2187,10 @@ update dependencies
 
 - also run registerLoader in workers
 
-##### 0.3.5 - unreleased
+##### 0.3.5
+
+- better tsLoader resolve mechanism
+
+##### 0.3.6 - unreleased
 
 ...
