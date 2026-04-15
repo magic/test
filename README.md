@@ -2183,6 +2183,10 @@ update dependencies
 - replace all import .ts with .js
 - some test output fixes
 
-##### 0.3.4 - unreleased
+##### 0.3.4
+
+- also run registerLoader in workers
+
+##### 0.3.5 - unreleased
 
 ...
