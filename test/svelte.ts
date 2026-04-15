@@ -51,7 +51,7 @@ export default [
         called = true
       })
       if (button) {
-        trigger(button as unknown, 'click')
+        trigger(button, 'click')
       }
       await unmount()
       return called
@@ -87,7 +87,7 @@ export default [
         clicked = true
       })
       if (target) {
-        click(target as unknown, 'button')
+        click(target, 'button')
       }
       await unmount()
       return clicked
@@ -101,7 +101,7 @@ export default [
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
       const button = (target as HTMLElement).querySelector('button')!
-      const result = props(button as unknown as Element)
+      const result = props(button)
       await unmount()
       return result
     },
@@ -119,7 +119,7 @@ export default [
       return result
     },
     expect:
-      '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----> <button>Toggle</button>',
+      '<div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----><!----> <button>Toggle</button>',
     info: 'SvelteKit wrapper provides correct $app/environment values (dev mode)',
   },
   // SvelteKit component state updates correctly with toggle
@@ -131,7 +131,7 @@ export default [
       // Initial state: showEnv = true
       const initial = html(target)
       // Click button to toggle
-      click(target as unknown, 'button')
+      click(target, 'button')
       await flushSync()
       const afterToggle = html(target)
       await unmount()
@@ -139,8 +139,9 @@ export default [
     },
     expect: {
       initial:
-        '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----> <button>Toggle</button>',
-      afterToggle: '<!----><!----> <button>Toggle</button>',
+        '<div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----><!----> <button>Toggle</button>',
+      afterToggle:
+        '<div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----><!----> <button>Toggle</button>',
     },
     info: 'SvelteKit component state updates correctly with toggle',
   },
