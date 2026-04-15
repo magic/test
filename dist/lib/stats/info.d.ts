@@ -1,4 +1,4 @@
-import { Store } from '../store.ts'
+import { Store } from '../store.js'
 /**
  * Prints test results for a package and its suites.
  */

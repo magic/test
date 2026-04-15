@@ -1,4 +1,4 @@
-import { Store } from '../store.ts'
+import { Store } from '../store.js'
 /**
  * Record a test result in the store, updating statistics for the test,
  * its parent, package, and global counters.

@@ -53,11 +53,11 @@ const run = async () => {
   const { name, version } = JSON.parse(content)
   log(`### ${log.color('green', 'Testing package:')} ${name}@${version}\n`)
   const isProd = res.env.NODE_ENV === 'production'
-  let binPath = path.join(cwd, 'node_modules', '@magic', 'test', 'src', 'bin')
+  let binPath = path.join(cwd, 'node_modules', '@magic', 'test', 'dist', 'bin')
   if (name === '@magic/test') {
-    binPath = path.join(cwd, 'src', 'bin')
+    binPath = path.join(cwd, 'dist', 'bin')
   }
-  const binFile = path.join(binPath, 'unit.ts')
+  const binFile = path.join(binPath, 'unit.js')
   const isWin = process.platform === 'win32'
   let cmd = 'node'
   let argv = []

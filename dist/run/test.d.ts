@@ -1,5 +1,5 @@
-import { Store } from '../lib/store.ts'
-import type { WrappedTest, TestResult, Suite } from '../types.ts'
+import { Store } from '../lib/store.js'
+import type { WrappedTest, TestResult, Suite } from '../types.js'
 /**
  * Run a test or delegate to a suite.
  *

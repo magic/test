@@ -1,4 +1,4 @@
-import type { ViteConfig } from '../../../types.ts'
+import type { ViteConfig } from '../../../types.js'
 export declare const configCache: Map<
   string,
   {

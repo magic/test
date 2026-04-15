@@ -1,4 +1,4 @@
-import type { ComponentProps } from '../../types.ts'
+import type { ComponentProps } from '../../types.js'
 import type { SvelteComponent } from 'svelte'
 /**
  * Create a raw snippet for passing as children prop
