@@ -14,17 +14,17 @@ export default {
     configCache.clear()
     await fs.mkdirp(TEST_ROOT)
 
-    return async () => {
-      await fs.rmrf(TEST_ROOT)
-    }
+    // return async () => {
+    //   await fs.rmrf(TEST_ROOT)
+    // }
   },
   tests: [
     {
-      fn: async () => {
+      before: async () => {
         await aliasCache.clear()
         await configCache.clear()
-        await fs.rmrf(TEST_ROOT)
-        await fs.mkdir(TEST_ROOT, { recursive: true })
+      },
+      fn: async () => {
         // No config file
         const result = await loadViteAliases(TEST_ROOT)
         return result
@@ -33,11 +33,9 @@ export default {
       info: 'returns [] when no config file exists',
     },
     {
-      fn: async () => {
+      before: async () => {
         await aliasCache.clear()
         await configCache.clear()
-        await fs.rmrf(TEST_ROOT)
-        await fs.mkdir(TEST_ROOT, { recursive: true })
 
         // Valid config
         await fs.writeFile(
@@ -48,9 +46,8 @@ export default {
             })
           `,
         )
-
-        // Small delay to ensure file is written before parsing
-        await new Promise(r => setTimeout(r, 10))
+      },
+      fn: async () => {
         const result = await loadViteAliases(TEST_ROOT)
         return result
       },
@@ -61,8 +58,6 @@ export default {
       fn: async () => {
         await aliasCache.clear()
         await configCache.clear()
-        await fs.rmrf(TEST_ROOT)
-        await fs.mkdir(TEST_ROOT, { recursive: true })
 
         // Config with parse error (invalid syntax)
         await fs.writeFile(CONFIG_PATH, `invalid syntax`)
@@ -79,8 +74,7 @@ export default {
       fn: async () => {
         await aliasCache.clear()
         await configCache.clear()
-        await fs.rmrf(TEST_ROOT)
-        await fs.mkdir(TEST_ROOT, { recursive: true })
+
         // Cache hit: pre-populate cache
         aliasCache.set(TEST_ROOT + ':vite', [{ find: '$lib', replacement: '/root/src/lib' }])
         const result = await loadViteAliases(TEST_ROOT)

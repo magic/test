@@ -143,7 +143,6 @@ export default [
       )
       const result = html(target)
       await unmount()
-      console.log({ result })
       return result
     },
     expect:
