@@ -27,6 +27,11 @@ export const resolveAndCompileImport = async (
 ): Promise<ResolveAndCompileResult> => {
   const importType = classifyImport(importPath)
 
+  // Cycle detection - prevent infinite loops
+  if (importChain.includes(sourceFilePath)) {
+    return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
+  }
+
   if (importPath === 'svelte') {
     const svelteClient = path.resolve(process.cwd(), 'node_modules/svelte/src/index-client.js')
     if (await fs.exists(svelteClient)) {
@@ -37,8 +42,16 @@ export const resolveAndCompileImport = async (
     }
   }
 
-  // Skip node_modules resolution for now
+  // For scoped/bare imports, try node_modules resolution first
   if (importType === 'scoped' || importType === 'bare') {
+    const nodeModulesResult = await resolveNodeModulesImport(
+      importPath,
+      sourceFilePath,
+      importChain,
+    )
+    if (nodeModulesResult) {
+      return nodeModulesResult
+    }
     return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
   }
 
@@ -88,7 +101,14 @@ export const resolveAndCompileImport = async (
       if (stat.isFile()) {
         // File exists without extension, use it as-is
       } else if (stat.isDirectory()) {
-        const extensions = ['.ts', '.js', '/index.ts', '/index.js']
+        const extensions = [
+          '.ts',
+          '.js',
+          '.svelte.js',
+          '/index.ts',
+          '/index.js',
+          '/index.svelte.js',
+        ]
         for (const ext of extensions) {
           const withExt = resolvedPath + ext
           if (await fs.exists(withExt)) {
@@ -99,7 +119,7 @@ export const resolveAndCompileImport = async (
       }
     } catch {
       // File doesn't exist, try extensions
-      const extensions = ['.ts', '.js', '/index.ts', '/index.js']
+      const extensions = ['.ts', '.js', '.svelte.js', '/index.ts', '/index.js', '/index.svelte.js']
       for (const ext of extensions) {
         const withExt = resolvedPath + ext
         if (await fs.exists(withExt)) {
@@ -133,28 +153,12 @@ export const resolveAndCompileImport = async (
   }
 
   if (!(await fs.exists(resolvedPath))) {
-    if (resolvedPath.endsWith('.svelte')) {
-      const svelteJsPath = resolvedPath + '.js'
-      if (await fs.exists(svelteJsPath)) {
-        resolvedPath = svelteJsPath
-      }
-    }
-    if (!(await fs.exists(resolvedPath))) {
-      if (await fs.exists(resolvedPath + '.svelte')) {
-        resolvedPath = resolvedPath + '.svelte'
-      } else if (await fs.exists(path.join(resolvedPath, 'index.svelte'))) {
-        resolvedPath = path.join(resolvedPath, 'index.svelte')
-      } else if (!path.extname(resolvedPath) && !resolvedPath.includes('.')) {
-        const sourceDirName = path.dirname(sourceFilePath)
-        const possiblePath = path.join(sourceDirName, importPath.replace(/^\.\//, ''))
-        if (await fs.exists(possiblePath)) {
-          resolvedPath = possiblePath
-        }
-      } else {
-        const svelteJsPath = resolvedPath + '.svelte.js'
-        if (await fs.exists(svelteJsPath)) {
-          resolvedPath = svelteJsPath
-        }
+    const extensions = ['.ts', '.js', '.svelte.js', '/index.ts', '/index.js', '/index.svelte.js']
+    for (const ext of extensions) {
+      const withExt = resolvedPath + ext
+      if (await fs.exists(withExt)) {
+        resolvedPath = withExt
+        break
       }
     }
   }
@@ -180,7 +184,7 @@ export const resolveAndCompileImport = async (
 
   const relPath = path.relative(process.cwd(), resolvedPath)
   const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
-  const tmpFileAbs = path.join(process.cwd(), tmpFile)
+  const tmpFileAbs = path.resolve(process.cwd(), tmpFile)
 
   const release = await acquireLock(tmpFile)
 
@@ -239,6 +243,11 @@ const resolveNodeModulesImport = async (
     packageName = parts[0] + '/' + parts[1]
   }
 
+  // Cycle detection - check if this package is already being processed
+  if (importChain.some(p => p.includes(packageName))) {
+    return null
+  }
+
   const nodeModulesPath = path.join(process.cwd(), 'node_modules', packageName)
   const pkgPath = path.join(nodeModulesPath, 'package.json')
 
@@ -250,10 +259,10 @@ const resolveNodeModulesImport = async (
 
   let entryPath: string | null = null
 
-  if (pkg.exports?.['.']?.import || pkg.exports?.['.']?.main) {
-    entryPath = path.join(nodeModulesPath, pkg.exports['.'].import || pkg.exports['.'].main)
-  } else if (pkg.exports?.['.']?.svelte) {
+  if (pkg.exports?.['.']?.svelte) {
     entryPath = path.join(nodeModulesPath, pkg.exports['.'].svelte)
+  } else if (pkg.exports?.['.']?.import || pkg.exports?.['.']?.main) {
+    entryPath = path.join(nodeModulesPath, pkg.exports['.'].import || pkg.exports['.'].main)
   } else if (pkg.module) {
     entryPath = path.join(nodeModulesPath, pkg.module)
   } else if (pkg.main) {
@@ -270,7 +279,7 @@ const resolveNodeModulesImport = async (
 
     const relPath = path.relative(process.cwd(), entryPath)
     const tmpFile = path.join(TMP_DIR, 'node_modules', relPath.replace(/\.svelte$/, '.svelte.js'))
-    const tmpFileAbs = path.join(process.cwd(), tmpFile)
+    const tmpFileAbs = path.resolve(process.cwd(), tmpFile)
 
     await fs.mkdirp(path.dirname(tmpFile))
     await fs.writeFile(tmpFile, js.code)
