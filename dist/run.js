@@ -4,6 +4,7 @@ import log from '@magic/log'
 import fs from '@magic/fs'
 import { stats, createStore, ERRORS } from './lib/index.js'
 import { runSuite } from './run/suite.js'
+import { TMP_DIR } from './lib/svelte/compile/constants.js'
 const cwd = process.cwd()
 /**
  * Aggregate raw test results into the store's results object.
@@ -55,11 +56,8 @@ export let aborted = false
  */
 export const abort = async () => {
   aborted = true
-  const tmpDir = path.join(cwd, 'test', '.tmp')
   try {
-    if (await fs.exists(tmpDir)) {
-      await fs.rmrf(tmpDir)
-    }
+    await fs.rmrf(TMP_DIR)
   } catch {
     // Ignore cleanup errors during abort
   }
