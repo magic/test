@@ -11,7 +11,7 @@ import { findProjectRoot } from './findProjectRoot.js'
 import { loadViteAliases } from './loadViteAliases.js'
 import { parseTsConfig } from './parseTsConfig.js'
 
-const SVELTE_EXTENSIONS = ['.svelte', '.ts', '.js', '/index.svelte', '/index.ts', '/index.js']
+const SVELTE_EXTENSIONS = ['.ts', '.js', '.svelte.js', '/index.ts', '/index.js', '/index.svelte.js']
 
 /**
  * Resolve Vite/SvelteKit aliases ($lib, $app, $env, etc.)

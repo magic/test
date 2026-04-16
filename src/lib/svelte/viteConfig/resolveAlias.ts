@@ -66,12 +66,12 @@ export const resolveAlias = async (
         const stat = await fs.stat(resolved)
         if (stat.isDirectory()) {
           const withExtensions = [
-            '.svelte',
             '.ts',
             '.js',
-            '/index.svelte',
+            '.svelte.js',
             '/index.ts',
             '/index.js',
+            '/index.svelte.js',
           ]
           for (const ext of withExtensions) {
             const withExt = resolved + ext
@@ -85,7 +85,14 @@ export const resolveAlias = async (
       } catch {}
 
       // Try with extensions, handling .js->.ts conversion
-      const withExtensions = ['.svelte', '.ts', '.js', '/index.svelte', '/index.ts', '/index.js']
+      const withExtensions = [
+        '.ts',
+        '.js',
+        '.svelte.js',
+        '/index.ts',
+        '/index.js',
+        '/index.svelte.js',
+      ]
 
       // Also try removing .js extension and adding .ts
       let baseResolved = resolved
