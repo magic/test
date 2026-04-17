@@ -430,12 +430,13 @@ export class Isolation {
    */
   executeInWorker(options: {
     testFileUrl: string
-    testIndex: number
+    testIndex?: number
+    testIndices?: number[]
     testPkg: string
     testParent: string
     testName: string
     suiteSnapshot?: Snapshot
-  }): Promise<TestResult> {
+  }): Promise<TestResult | TestResult[]> {
     return new Promise((resolve, reject) => {
       const worker = new Worker(new URL('./worker.js', import.meta.url), {
         workerData: {
@@ -452,7 +453,7 @@ export class Isolation {
       worker.on('message', result => {
         if (settled) return
         settled = true
-        resolve(result as TestResult)
+        resolve(result as TestResult | TestResult[])
       })
       worker.on('error', err => {
         if (settled) return
