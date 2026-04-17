@@ -30,6 +30,27 @@ import type {
   TestObject,
 } from '../types.ts'
 
+const GLOBAL_MODIFICATION_RE = /(?:globalThis|window|global|self|process\.env)/
+
+const testNeedsIsolation = (test: WrappedTest): boolean => {
+  if (test.component) return true
+  if (test.before || test.after) return true
+  if (test.fn) {
+    const fnStr = test.fn.toString()
+    if (GLOBAL_MODIFICATION_RE.test(fnStr)) return true
+  }
+  return false
+}
+
+const suiteHasBeforeAllOrAfterAll = (tests: TestCollection): boolean => {
+  if (is.object(tests) && !is.arr(tests)) {
+    const hasBefore = 'beforeAll' in tests && is.fn(tests.beforeAll)
+    const hasAfter = 'afterAll' in tests && is.fn(tests.afterAll)
+    return hasBefore || hasAfter
+  }
+  return false
+}
+
 /**
  * Type guard to check if an Error has a `code` property.
  */
@@ -148,9 +169,13 @@ const runTestArray = async (
   rawResults: TestResult[] = [],
   testFileUrl: string,
   useWorkers: boolean,
+  hasBeforeAll: boolean,
+  beforeAll?: () => unknown | Promise<unknown>,
+  afterAll?: () => unknown | Promise<unknown>,
   suiteSnapshot?: Snapshot,
 ): Promise<(TestResult | Suite)[]> => {
   if (needsIsolation && useWorkers) {
+    const allResults: TestResult[] = []
     const testsWithHooks: { test: WrappedTest; index: number }[] = []
     const testsWithoutHooks: { test: WrappedTest; index: number }[] = []
 
@@ -162,17 +187,15 @@ const runTestArray = async (
         pkg: t.pkg || pkg,
       }
 
-      if (t.component || hasTestHooks(t)) {
+      if (testNeedsIsolation(t)) {
         testsWithHooks.push({ test: testToRun, index: i })
       } else {
         testsWithoutHooks.push({ test: testToRun, index: i })
       }
     })
 
-    const allResults: TestResult[] = []
-    const hasAnyHooks = testsWithHooks.length > 0
-
-    if (testsWithoutHooks.length > 0 && !hasAnyHooks) {
+    // Rule 1 & 3: hasBeforeAll → batch in one worker
+    if (hasBeforeAll && testsWithoutHooks.length > 0) {
       try {
         const batchResults = await isolation.executeBatchInWorker({
           testFileUrl,
@@ -181,6 +204,8 @@ const runTestArray = async (
           testParent: parent,
           testNames: testsWithoutHooks.map(t => t.test.name),
           suiteSnapshot,
+          beforeAll: beforeAll?.toString(),
+          afterAll: afterAll?.toString(),
         })
         allResults.push(...processWorkerResults(batchResults, rawResults))
       } catch (err) {
@@ -190,65 +215,48 @@ const runTestArray = async (
       }
     }
 
-    const individualPromises = tests.map((t, i) => {
-      const testToRun = {
-        ...t,
-        name: t.name || name,
-        parent: t.parent || parent,
-        pkg: t.pkg || pkg,
-      }
-
-      if (t.component) {
-        return runTest(testToRun, store, rawResults).then(r => ({ result: r, index: i }))
-      }
-
-      return isolation
-        .executeInWorker({
-          testFileUrl,
-          testIndex: i,
-          testPkg: testToRun.pkg,
-          testParent: testToRun.parent,
-          testName: testToRun.name,
-          suiteSnapshot,
-        })
-        .then(
-          (result): { result: TestResult; index: number } => {
-            const r = result as TestResult
-            rawResults.push(r)
-            if (r.afterCleanupError) {
-              log.warn('afterCleanup error in', r.name || testToRun.name, r.afterCleanupError)
-            }
-            if (r.afterError) {
-              log.warn('after error in', r.name || testToRun.name, r.afterError)
-            }
-            return { result: r, index: i }
-          },
-          err => {
-            const failResult = handleWorkerError(testToRun, err, rawResults)
-            return { result: failResult, index: i }
-          },
-        )
-    })
-
-    const individualResults = await Promise.all(individualPromises)
-    const filteredResults = individualResults.filter(
-      (r): r is { result: TestResult; index: number } => !!r,
-    )
-
-    const resultsMap = new Map<number, TestResult>()
-    for (const { result, index } of filteredResults) {
-      resultsMap.set(index, result)
+    // Rule 2: no beforeAll → parallel on main thread
+    if (!hasBeforeAll && testsWithoutHooks.length > 0) {
+      const promises = testsWithoutHooks.map(t => runTest(t.test, store, rawResults))
+      const resolved = await Promise.all(promises)
+      const testResults = resolved.filter((r): r is TestResult => !!r && 'pass' in r)
+      allResults.push(...testResults)
     }
 
-    const sortedResults: TestResult[] = []
-    for (let i = 0; i < tests.length; i++) {
-      const r = resultsMap.get(i)
-      if (r) {
-        sortedResults.push(r)
+    // Rules 2 & 3: tests with hooks → individual workers
+    if (testsWithHooks.length > 0) {
+      const individualPromises = testsWithHooks.map(({ test, index }) => {
+        if (test.component) {
+          return runTest(test, store, rawResults).then(r => ({ result: r, index }))
+        }
+        return isolation
+          .executeInWorker({
+            testFileUrl,
+            testIndex: index,
+            testPkg: test.pkg,
+            testParent: test.parent,
+            testName: test.name,
+            suiteSnapshot,
+            beforeAll: beforeAll?.toString(),
+            afterAll: afterAll?.toString(),
+          })
+          .then(
+            result => ({ result: result as TestResult, index }),
+            err => ({ result: handleWorkerError(test, err, rawResults), index }),
+          )
+      })
+
+      const individualResults = await Promise.all(individualPromises)
+      const resultsMap = new Map<number, TestResult>(
+        individualResults.map(r => [r.index, r.result as TestResult]),
+      )
+      for (let i = 0; i < tests.length; i++) {
+        const r = resultsMap.get(i)
+        if (r) allResults.push(r)
       }
     }
 
-    return sortedResults
+    return allResults
   }
 
   // No isolation needed: run in parallel without isolation
@@ -290,7 +298,25 @@ const runTestObject = async (
   if (is.arr(testsObj.tests)) {
     const testArray = testsObj.tests as WrappedTest[]
     const needsIsolation = suiteNeedsIsolation(testArray)
+    const hasBeforeAll = suiteHasBeforeAllOrAfterAll(testsObj)
+    const modifiesGlobals = suiteModifiesGlobals(testsObj)
     const { afterAllCleanup } = await handleSuiteHooks(testsObj)
+
+    // Compute test file URL for worker
+    const testFileUrl = pathToFileURL(path.join(process.cwd(), 'test', pkg)).href
+
+    // Determine if workers needed
+    let useWorkers = false
+    let suiteSnapshot
+    if (needsIsolation && modifiesGlobals) {
+      useWorkers = true
+      const beforeAllModifiesGlobal = /globalThis|^global\b/.test(
+        testsObj.beforeAll?.toString() || '',
+      )
+      if (beforeAllModifiesGlobal) {
+        suiteSnapshot = isolation.buildSnapshot()
+      }
+    }
 
     const results = await runTestArray(
       testArray,
@@ -300,8 +326,12 @@ const runTestObject = async (
       pkg,
       store,
       rawResults,
-      '',
-      false,
+      testFileUrl,
+      useWorkers,
+      hasBeforeAll,
+      testsObj.beforeAll,
+      testsObj.afterAll,
+      suiteSnapshot,
     )
 
     // Run afterAll cleanup
@@ -378,7 +408,7 @@ export const runSuite = async (
 
     const suiteKey = `${pkg}.${parent}.${name}`
     const needsIsolation = suiteNeedsIsolation(tests)
-    const hasBeforeAll = suiteHasBeforeAll(tests)
+    const hasBeforeAll = suiteHasBeforeAllOrAfterAll(tests)
     const modifiesGlobals = suiteModifiesGlobals(tests)
 
     const executeSuite = async () => {
@@ -435,6 +465,9 @@ export const runSuite = async (
           rawResults,
           testFileUrl,
           useWorkers,
+          hasBeforeAll,
+          undefined,
+          undefined,
           suiteSnapshot,
         )
       } else if (is.objectNative(tests)) {
