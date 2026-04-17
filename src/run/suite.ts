@@ -134,14 +134,12 @@ const runTestArray = async (
             for (const res of r) {
               if (res) {
                 rawResults.push(res)
-
-                // Log cleanup errors from worker
-                if (res.afterCleanupError) {
-                  log.warn('afterCleanup error in', res.name, res.afterCleanupError)
-                }
-                if (res.afterError) {
-                  log.warn('after error in', res.name, res.afterError)
-                }
+              }
+              if (res.afterCleanupError) {
+                log.warn('afterCleanup error in', res.name, res.afterCleanupError)
+              }
+              if (res.afterError) {
+                log.warn('after error in', res.name, res.afterError)
               }
             }
             return r
@@ -195,26 +193,20 @@ const runTestArray = async (
         })
         .then(
           (result): TestResult => {
-            let r: TestResult | undefined
-            if (is.arr(result) && result.length > 0) {
-              r = result[0]
-            } else if (!is.arr(result)) {
-              r = result
-            }
-
+            const r = (is.arr(result) ? result[0] : result) as TestResult
             if (r) {
               rawResults.push(r)
-
-              // Log cleanup errors from worker
-              if (r.afterCleanupError) {
-                log.warn('afterCleanup error in', r.name || testToRun.name, r.afterCleanupError)
-              }
-              if (r.afterError) {
-                log.warn('after error in', r.name || testToRun.name, r.afterError)
-              }
             }
 
-            return r as TestResult
+            // Log cleanup errors from worker
+            if (r.afterCleanupError) {
+              log.warn('afterCleanup error in', r.name || testToRun.name, r.afterCleanupError)
+            }
+            if (r.afterError) {
+              log.warn('after error in', r.name || testToRun.name, r.afterError)
+            }
+
+            return r
           },
           err => {
             // Worker failed; create a failing TestResult

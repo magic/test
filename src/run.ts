@@ -6,7 +6,6 @@ import fs from '@magic/fs'
 
 import { stats, createStore, ERRORS, Store } from './lib/index.js'
 import { runSuite } from './run/suite.js'
-import { killAllWorkers } from './run/isolation.js'
 import type { TestSuites, TestCollection, CleanupFunction, TestResult } from './types.js'
 import { TMP_DIR } from './lib/svelte/compile/constants.ts'
 
@@ -72,7 +71,6 @@ export let aborted = false
  */
 export const abort = async () => {
   aborted = true
-  killAllWorkers()
 
   try {
     await fs.rmrf(TMP_DIR)
@@ -87,8 +85,6 @@ export const abort = async () => {
 export const resetAbort = () => {
   aborted = false
 }
-
-export { killAllWorkers } from './run/isolation.js'
 
 type RunOptions = {
   shards?: number

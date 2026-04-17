@@ -12,7 +12,6 @@ export declare const abort: () => Promise<void>
  * Reset abort flag
  */
 export declare const resetAbort: () => void
-export { killAllWorkers } from './run/isolation.js'
 type RunOptions = {
   shards?: number
   shardId?: number
@@ -32,3 +31,4 @@ export declare const run: (
   tests: TestSuites | (() => TestSuites),
   options?: RunOptions,
 ) => Promise<Error | void>
+export {}

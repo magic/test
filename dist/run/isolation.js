@@ -3,32 +3,22 @@ import os from 'node:os'
 import is from '@magic/types'
 const MAX_WORKERS = Math.max(1, os.cpus().length - 2)
 const workerQueue = []
-export const activeWorkers = new Set()
-export const killAllWorkers = () => {
-  for (const worker of activeWorkers) {
-    worker.terminate()
-  }
-  activeWorkers.clear()
-  workerQueue.length = 0
-}
+const activeWorkers = new Set()
 const runWorker = () => {
   if (workerQueue.length === 0) return
   const task = workerQueue.shift()
   if (!task) return
   activeWorkers.add(task.worker)
-  let resolved = false
   task.worker.on('message', result => {
-    resolved = true
     task.resolve(result)
   })
   task.worker.on('error', err => {
-    resolved = true
     task.reject(err)
   })
   task.worker.on('exit', code => {
     activeWorkers.delete(task.worker)
-    if (!resolved) {
-      task.reject(new Error(`Worker exited without result: code ${code}`))
+    if (code !== 0) {
+      task.reject(new Error(`Worker exited with code ${code}`))
     }
     runWorker()
   })
@@ -422,8 +412,6 @@ export class Isolation {
    * Run a test in a worker thread for true isolation
    */
   executeInWorker(options) {
-    const DEFAULT_TIMEOUT = 30000
-    const timeoutMs = parseInt(process.env.MAGIC_TEST_TIMEOUT || '', 10) || DEFAULT_TIMEOUT
     return new Promise((resolve, reject) => {
       const workerData = {
         testFileUrl: options.testFileUrl,
@@ -443,20 +431,9 @@ export class Isolation {
       const worker = new Worker(new URL('./worker.js', import.meta.url), {
         workerData,
       })
-      const timeout = setTimeout(() => {
-        worker.terminate()
-        reject(new Error(`Worker timeout after ${timeoutMs}ms: ${options.testName}`))
-      }, timeoutMs)
-      const cleanup = () => clearTimeout(timeout)
       enqueueWorker({
-        resolve: val => {
-          cleanup()
-          resolve(val)
-        },
-        reject: err => {
-          cleanup()
-          reject(err)
-        },
+        resolve,
+        reject,
         worker,
       })
     })

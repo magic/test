@@ -4,7 +4,6 @@ import log from '@magic/log'
 import fs from '@magic/fs'
 import { stats, createStore, ERRORS } from './lib/index.js'
 import { runSuite } from './run/suite.js'
-import { killAllWorkers } from './run/isolation.js'
 import { TMP_DIR } from './lib/svelte/compile/constants.js'
 const cwd = process.cwd()
 /**
@@ -57,7 +56,6 @@ export let aborted = false
  */
 export const abort = async () => {
   aborted = true
-  killAllWorkers()
   try {
     await fs.rmrf(TMP_DIR)
   } catch {
@@ -70,7 +68,6 @@ export const abort = async () => {
 export const resetAbort = () => {
   aborted = false
 }
-export { killAllWorkers } from './run/isolation.js'
 /**
  * FNV-1a hash function for sharding
  * @param {string} testPath
