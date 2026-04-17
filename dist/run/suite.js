@@ -244,17 +244,11 @@ export const runSuite = async props => {
         if (modifiesGlobals || usesModuleMutation || usesFixedPorts || usesSharedFiles) {
           useWorkers = true
           if (hasBeforeAll) {
-            const testObj = tests
-            const beforeAllFn = testObj.beforeAll
-            const beforeAllModifiesGlobal =
-              beforeAllFn && /globalThis|^global\b/.test(beforeAllFn.toString())
-            if (beforeAllModifiesGlobal) {
-              suiteSnapshot = isolation.buildSnapshot()
-              try {
-                structuredClone(suiteSnapshot)
-              } catch {
-                // Snapshot not cloneable, workers still work without snapshot
-              }
+            suiteSnapshot = isolation.buildSnapshot()
+            try {
+              structuredClone(suiteSnapshot)
+            } catch {
+              // Snapshot not cloneable, workers still work without snapshot
             }
           }
         }

@@ -27,6 +27,12 @@ export default {
       expect: undefined,
       info: 'Undefined globals are undefined and not true',
     },
+
+    {
+      fn: () => (globalThis as Record<string, unknown>).beforeAll,
+      expect: 'beforeAll',
+      info: 'beforeAll in test definition works when exporting tests as object',
+    },
     {
       fn: () => (globalThis as Record<string, unknown>).beforeAllTS,
       expect: true,
