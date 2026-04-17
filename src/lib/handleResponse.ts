@@ -1,3 +1,5 @@
+import is from '@magic/types'
+
 /**
  * Error types for handleResponse
  */
@@ -72,8 +74,9 @@ export const handleResponse = (
   maxSize?: number,
 ): void => {
   const { statusCode } = res
-  const contentType =
-    typeof res.headers['content-type'] === 'string' ? res.headers['content-type'] : undefined
+  const contentType = is.string(res.headers['content-type'])
+    ? res.headers['content-type']
+    : undefined
 
   let err
 

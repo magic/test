@@ -243,7 +243,7 @@ export class Isolation {
         })
       } else {
         // Skip function-valued data properties; they cannot be transferred to workers
-        if (typeof desc.value === 'function') continue
+        if (is.function(desc.value)) continue
         Object.defineProperty(copy, key, {
           configurable: !!desc.configurable,
           enumerable: !!desc.enumerable,
@@ -269,7 +269,7 @@ export class Isolation {
       if (!desc) continue
       if (desc.configurable === false) continue
       // Skip function-valued data properties (cannot be cloned)
-      if ('value' in desc && typeof desc.value === 'function') continue
+      if ('value' in desc && is.function(desc.value)) continue
       // Skip accessor properties (get/set are functions and cannot be cloned)
       if (desc.get || desc.set) continue
       const stored = {
@@ -388,7 +388,7 @@ export class Isolation {
     const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
     if (!desc) return false
     if (desc.configurable === false) return false
-    if ('value' in desc && typeof desc.value === 'function') return false
+    if ('value' in desc && is.function(desc.value)) return false
     if (desc.get || desc.set) return false
     return true
   }
@@ -413,15 +413,23 @@ export class Isolation {
    */
   executeInWorker(options) {
     return new Promise((resolve, reject) => {
+      const workerData = {
+        testFileUrl: options.testFileUrl,
+        testPkg: options.testPkg,
+        testParent: options.testParent,
+        testName: options.testName,
+      }
+      if (options.testIndex !== undefined) {
+        workerData.testIndex = options.testIndex
+      }
+      if (options.testIndices !== undefined) {
+        workerData.testIndices = options.testIndices
+      }
+      if (options.suiteSnapshot !== undefined) {
+        workerData.suiteSnapshot = options.suiteSnapshot
+      }
       const worker = new Worker(new URL('./worker.js', import.meta.url), {
-        workerData: {
-          testFileUrl: options.testFileUrl,
-          testIndex: options.testIndex,
-          testPkg: options.testPkg,
-          testParent: options.testParent,
-          testName: options.testName,
-          suiteSnapshot: options.suiteSnapshot,
-        },
+        workerData,
       })
       enqueueWorker({
         resolve,

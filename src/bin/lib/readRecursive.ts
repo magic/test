@@ -21,7 +21,7 @@ interface ImportResult {
 const isImportResult = (obj: unknown): obj is ImportResult => {
   return (
     obj != null &&
-    typeof obj === 'object' &&
+    is.object(obj) &&
     'type' in obj &&
     (obj.type === 'file' || obj.type === 'directory' || obj.type === 'error' || obj.type === 'skip')
   )

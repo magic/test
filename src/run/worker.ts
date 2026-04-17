@@ -38,11 +38,11 @@ type RunFnResult = {
 const makeSafe = (value: unknown): unknown => {
   try {
     // Quick path: primitives are safe
-    if (value === null || typeof value !== 'object') {
+    if (value === null || !is.object(value)) {
       return value
     }
     // Functions cannot be cloned
-    if (typeof value === 'function') {
+    if (is.function(value)) {
       return value.toString()
     }
     // Attempt a structured clone to verify cloneability
@@ -52,11 +52,11 @@ const makeSafe = (value: unknown): unknown => {
     // Fallback: convert to a string representation (or keep undefined/null)
     if (value === undefined || value === null) return value
     if (
-      typeof value === 'string' ||
-      typeof value === 'number' ||
-      typeof value === 'boolean' ||
+      is.string(value) ||
+      is.number(value) ||
+      is.boolean(value) ||
       typeof value === 'bigint' ||
-      typeof value === 'symbol'
+      is.symbol(value)
     ) {
       return value
     }

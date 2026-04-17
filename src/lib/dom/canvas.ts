@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import { createCanvas, loadImage } from 'canvas'
 
 import type { CanvasRenderingContext2D } from './types.js'
@@ -35,10 +36,7 @@ export const createCanvasPolyfill = (win: Window): void => {
         img: unknown,
         ...drawArgs: unknown[]
       ): void {
-        if (
-          img &&
-          typeof (img as { _nodeCanvasImage?: unknown })._nodeCanvasImage !== 'undefined'
-        ) {
+        if (img && !is.undefined((img as { _nodeCanvasImage?: unknown })._nodeCanvasImage)) {
           return drawImageWithUnknownArgs.call(
             this,
             (img as { _nodeCanvasImage: unknown })._nodeCanvasImage,
@@ -48,11 +46,11 @@ export const createCanvasPolyfill = (win: Window): void => {
 
         if (
           img &&
-          typeof (img as { width?: number }).width === 'number' &&
-          typeof (img as { height?: number }).height === 'number' &&
+          is.number((img as { width?: number }).width) &&
+          is.number((img as { height?: number }).height) &&
           (img as { width: number }).width > 0 &&
           (img as { height: number }).height > 0 &&
-          typeof (img as { src?: string }).src === 'string' &&
+          is.string((img as { src?: string }).src) &&
           (img as { src: string }).src.startsWith('data:image')
         ) {
           try {

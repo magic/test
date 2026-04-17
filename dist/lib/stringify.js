@@ -31,7 +31,7 @@ export const stringify = object => {
     return object.substring(0, limit)
   } else if (is.function(object)) {
     return object.toString()
-  } else if (Array.isArray(object)) {
+  } else if (is.array(object)) {
     return object.map(item => stringify(item))
   } else if (is.objectNative(object)) {
     const copy = { ...object }

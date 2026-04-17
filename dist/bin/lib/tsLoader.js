@@ -1,6 +1,7 @@
-import fs from '@magic/fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+import fs from '@magic/fs'
+import is from '@magic/types'
 import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.js'
 export async function resolve(specifier, context, nextResolve) {
   try {
@@ -58,7 +59,7 @@ export async function resolve(specifier, context, nextResolve) {
         }
         if (pkg.exports) {
           for (const [key, val] of Object.entries(pkg.exports)) {
-            if (key !== '.' && typeof val === 'string') {
+            if (key !== '.' && is.string(val)) {
               const exportPath = path.join(nodeModulesPath, val)
               if (await fs.exists(exportPath)) {
                 if (exportPath.endsWith('.svelte')) {
@@ -103,7 +104,7 @@ export async function resolve(specifier, context, nextResolve) {
         }
         if (pkg.exports) {
           for (const [key, val] of Object.entries(pkg.exports)) {
-            if (key !== '.' && typeof val === 'string') {
+            if (key !== '.' && is.string(val)) {
               const exportPath = path.join(nodeModulesPath, val)
               if (await fs.exists(exportPath)) {
                 if (exportPath.endsWith('.svelte')) {

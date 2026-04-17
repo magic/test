@@ -2,6 +2,8 @@
 // Provides navigation functions that manipulate the page store
 // Context-aware: resolves to current AsyncLocalStorage context
 
+import is from '@magic/types'
+
 import { get } from 'svelte/store'
 import {
   getContext,
@@ -33,7 +35,7 @@ export async function goto(
   const ctx = getCtx()
   const currentPage = get(ctx.page) as Page
   const from: URL = currentPage.url
-  const targetUrl = typeof url === 'string' ? new URL(url, from.origin) : url
+  const targetUrl = is.string(url) ? new URL(url, from.origin) : url
 
   const navObj = {
     from,
@@ -96,7 +98,7 @@ export async function goto(
         delta: 0,
         complete: () => {},
       } as Navigation)
-      if (typeof result === 'function') {
+      if (is.function(result)) {
         onCleanups.push(result)
       }
     } catch (_e) {
@@ -118,14 +120,14 @@ export async function goto(
 export function pushState(url: string | URL, state: Record<string, unknown> = {}): void {
   const ctx = getCtx()
   const currentPage = get(ctx.page) as Page
-  const targetUrl = typeof url === 'string' ? new URL(url, currentPage.url.origin) : url
+  const targetUrl = is.string(url) ? new URL(url, currentPage.url.origin) : url
   ctx.page.set({ ...currentPage, url: targetUrl, ...state })
 }
 
 export function replaceState(url: string | URL, state: Record<string, unknown> = {}): void {
   const ctx = getCtx()
   const currentPage = get(ctx.page) as Page
-  const targetUrl = typeof url === 'string' ? new URL(url, currentPage.url.origin) : url
+  const targetUrl = is.string(url) ? new URL(url, currentPage.url.origin) : url
   ctx.page.set({ ...currentPage, url: targetUrl, ...state })
 }
 
