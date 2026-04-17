@@ -98,14 +98,13 @@ const evaluateResult = async (res: unknown, expect: unknown): Promise<EvaluateRe
 
 const importFile = async (filePath: string): Promise<unknown> => {
   try {
-    const defines = await getViteDefine()
+    const defines = await getViteDefine(filePath)
     for (const [key, value] of Object.entries(defines)) {
       // @ts-expect-error - dynamic globalThis property assignment
       globalThis[key] = value
     }
 
     const mod = await import(filePath)
-
     if (mod && mod.default) {
       return mod.default
     }
