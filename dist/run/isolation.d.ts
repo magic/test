@@ -31,13 +31,12 @@ export declare class Isolation {
    */
   executeInWorker(options: {
     testFileUrl: string
-    testIndex?: number
-    testIndices?: number[]
+    testIndex: number
     testPkg: string
     testParent: string
     testName: string
     suiteSnapshot?: Snapshot
-  }): Promise<TestResult | TestResult[]>
+  }): Promise<TestResult>
 }
 /**
  * Apply a snapshot to the current globalThis context.

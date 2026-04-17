@@ -90,13 +90,6 @@ const handleSuiteHooks = async (tests: TestCollection): Promise<CleanupResult> =
 }
 
 /**
- * Check if any test needs individual isolation (has before/after hooks)
- */
-const testsNeedIndividualIsolation = (tests: WrappedTest[]): boolean => {
-  return tests.some(t => is.function(t.before) || is.function(t.after))
-}
-
-/**
  * Run an array of tests
  */
 const runTestArray = async (
@@ -112,61 +105,7 @@ const runTestArray = async (
   suiteSnapshot?: Snapshot,
 ): Promise<(TestResult | Suite)[]> => {
   if (needsIsolation && useWorkers) {
-    const needsIndividualWorkers = testsNeedIndividualIsolation(tests)
-
-    // If tests don't need individual isolation, run all in one worker
-    if (!needsIndividualWorkers) {
-      const testIndices = tests.map((_, i) => i)
-      const firstTest = tests[0]
-
-      return isolation
-        .executeInWorker({
-          testFileUrl,
-          testIndices,
-          testPkg: pkg,
-          testParent: parent,
-          testName: name,
-          suiteSnapshot,
-        })
-        .then(
-          (results): TestResult[] => {
-            const r = Array.isArray(results) ? results : [results]
-            for (const res of r) {
-              rawResults.push(res)
-              if (res.afterCleanupError) {
-                log.warn('afterCleanup error in', res.name, res.afterCleanupError)
-              }
-              if (res.afterError) {
-                log.warn('after error in', res.name, res.afterError)
-              }
-            }
-            return r
-          },
-          err => {
-            log.error(ERRORS.E_TEST_FN!, {
-              testKey: getTestKey(pkg, parent, name),
-              testName: name,
-              parent,
-              error: cleanError(err),
-            })
-            const failResult = {
-              result: undefined,
-              msg: '',
-              pass: false,
-              parent: parent || '',
-              name: firstTest?.name || name,
-              expect: undefined,
-              expString: undefined,
-              key: getTestKey(pkg, parent, name),
-              info: firstTest?.info || '',
-              pkg,
-            }
-            return [failResult]
-          },
-        )
-    }
-
-    // Run tests in parallel using worker threads (one worker per test)
+    // Run tests in parallel using worker threads
     const promises = tests.map((t, i) => {
       const testToRun = {
         ...t,
