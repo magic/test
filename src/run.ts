@@ -251,4 +251,6 @@ export const run = async (
   }
 
   stats.info(suites, store)
+
+  process.exit(0)
 }
