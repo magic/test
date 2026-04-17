@@ -76,10 +76,8 @@ const handleSuiteHooks = async (tests: TestCollection): Promise<CleanupResult> =
     'beforeAll' in tests &&
     is.function(tests.beforeAll)
   ) {
-    const testsWithHooks = tests
-    const beforeAllFn = testsWithHooks.beforeAll
-    if (is.fn(beforeAllFn)) {
-      const beforeResult = await beforeAllFn()
+    if (is.fn(tests.beforeAll)) {
+      const beforeResult = await tests.beforeAll()
       if (is.function(beforeResult)) {
         afterAllCleanup = beforeResult
       }
@@ -87,6 +85,54 @@ const handleSuiteHooks = async (tests: TestCollection): Promise<CleanupResult> =
   }
 
   return { afterAllCleanup }
+}
+
+const hasTestHooks = (test: WrappedTest): boolean => {
+  return is.function(test.before) || is.function(test.after)
+}
+
+const createFailResult = (testToRun: WrappedTest): TestResult => {
+  return {
+    result: undefined,
+    msg: '',
+    pass: false,
+    parent: testToRun.parent || '',
+    name: testToRun.name,
+    expect: undefined,
+    expString: undefined,
+    key: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
+    info: testToRun.info || '',
+    pkg: testToRun.pkg,
+  }
+}
+
+const processWorkerResults = (results: TestResult[], rawResults: TestResult[]): TestResult[] => {
+  for (const r of results) {
+    rawResults.push(r)
+    if (r.afterCleanupError) {
+      log.warn('afterCleanup error in', r.name, r.afterCleanupError)
+    }
+    if (r.afterError) {
+      log.warn('after error in', r.name, r.afterError)
+    }
+  }
+  return results
+}
+
+const handleWorkerError = (
+  testToRun: WrappedTest,
+  error: unknown,
+  rawResults: TestResult[],
+): TestResult => {
+  log.error(ERRORS.E_TEST_FN!, {
+    testKey: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
+    testName: testToRun.name,
+    parent: testToRun.parent,
+    error: cleanError(error),
+  })
+  const failResult = createFailResult(testToRun, error)
+  rawResults.push(failResult)
+  return failResult
 }
 
 /**
@@ -105,8 +151,10 @@ const runTestArray = async (
   suiteSnapshot?: Snapshot,
 ): Promise<(TestResult | Suite)[]> => {
   if (needsIsolation && useWorkers) {
-    // Run tests in parallel using worker threads
-    const promises = tests.map((t, i) => {
+    const testsWithHooks: { test: WrappedTest; index: number }[] = []
+    const testsWithoutHooks: { test: WrappedTest; index: number }[] = []
+
+    tests.forEach((t, i) => {
       const testToRun = {
         ...t,
         name: t.name || name,
@@ -114,9 +162,44 @@ const runTestArray = async (
         pkg: t.pkg || pkg,
       }
 
-      // Component tests require DOM, can't run in workers (happy-dom singleton)
+      if (t.component || hasTestHooks(t)) {
+        testsWithHooks.push({ test: testToRun, index: i })
+      } else {
+        testsWithoutHooks.push({ test: testToRun, index: i })
+      }
+    })
+
+    const allResults: TestResult[] = []
+    const hasAnyHooks = testsWithHooks.length > 0
+
+    if (testsWithoutHooks.length > 0 && !hasAnyHooks) {
+      try {
+        const batchResults = await isolation.executeBatchInWorker({
+          testFileUrl,
+          testIndices: testsWithoutHooks.map(t => t.index),
+          testPkg: pkg,
+          testParent: parent,
+          testNames: testsWithoutHooks.map(t => t.test.name),
+          suiteSnapshot,
+        })
+        allResults.push(...processWorkerResults(batchResults, rawResults))
+      } catch (err) {
+        for (const { test } of testsWithoutHooks) {
+          allResults.push(handleWorkerError(test, err, rawResults))
+        }
+      }
+    }
+
+    const individualPromises = tests.map((t, i) => {
+      const testToRun = {
+        ...t,
+        name: t.name || name,
+        parent: t.parent || parent,
+        pkg: t.pkg || pkg,
+      }
+
       if (t.component) {
-        return runTest(testToRun, store, rawResults)
+        return runTest(testToRun, store, rawResults).then(r => ({ result: r, index: i }))
       }
 
       return isolation
@@ -129,49 +212,43 @@ const runTestArray = async (
           suiteSnapshot,
         })
         .then(
-          (result): TestResult => {
+          (result): { result: TestResult; index: number } => {
             const r = result as TestResult
-            // Collect result for aggregation
             rawResults.push(r)
-
-            // Log cleanup errors from worker
             if (r.afterCleanupError) {
               log.warn('afterCleanup error in', r.name || testToRun.name, r.afterCleanupError)
             }
             if (r.afterError) {
               log.warn('after error in', r.name || testToRun.name, r.afterError)
             }
-
-            return r
+            return { result: r, index: i }
           },
           err => {
-            // Worker failed; create a failing TestResult
-            log.error(ERRORS.E_TEST_FN!, {
-              testKey: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
-              testName: testToRun.name,
-              parent: testToRun.parent,
-              error: cleanError(err),
-            })
-            const failResult = {
-              result: undefined,
-              msg: '',
-              pass: false,
-              parent: testToRun.parent || '',
-              name: testToRun.name,
-              expect: undefined,
-              expString: undefined,
-              key: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
-              info: testToRun.info || '',
-              pkg: testToRun.pkg,
-            }
-            rawResults.push(failResult)
-            return failResult
+            const failResult = handleWorkerError(testToRun, err, rawResults)
+            return { result: failResult, index: i }
           },
         )
     })
 
-    const resolved = await Promise.all(promises)
-    return resolved.filter(r => !!r)
+    const individualResults = await Promise.all(individualPromises)
+    const filteredResults = individualResults.filter(
+      (r): r is { result: TestResult; index: number } => !!r,
+    )
+
+    const resultsMap = new Map<number, TestResult>()
+    for (const { result, index } of filteredResults) {
+      resultsMap.set(index, result)
+    }
+
+    const sortedResults: TestResult[] = []
+    for (let i = 0; i < tests.length; i++) {
+      const r = resultsMap.get(i)
+      if (r) {
+        sortedResults.push(r)
+      }
+    }
+
+    return sortedResults
   }
 
   // No isolation needed: run in parallel without isolation

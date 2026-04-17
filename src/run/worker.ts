@@ -268,7 +268,57 @@ const runSingleTest = async (
   }
 }
 
+const runSingleTestFromFile = async (
+  tests: unknown,
+  testIndex: number,
+  testPkg: string,
+  testParent: string,
+  testName: string,
+): Promise<TestResult> => {
+  let test: WrappedTest | undefined
+  if (is.array(tests) && tests[testIndex] != null && hasTestProperties(tests[testIndex])) {
+    test = tests[testIndex] as WrappedTest
+  } else if (hasTestProperties(tests)) {
+    test = tests as WrappedTest
+  }
+
+  if (!test) {
+    return {
+      result: undefined,
+      msg: '',
+      pass: false,
+      parent: testParent || '',
+      name: testName,
+      expect: undefined,
+      expString: undefined,
+      key: getTestKey(testPkg, testParent, testName),
+      info: '',
+      pkg: testPkg,
+    }
+  }
+
+  const enriched = {
+    ...test,
+    name: test.name || testName,
+    parent: test.parent || testParent,
+    pkg: test.pkg || testPkg,
+  }
+
+  const key = getTestKey(testPkg, testParent, testName)
+  return runSingleTest(enriched, key, testPkg, testParent, testName)
+}
+
 const main = async () => {
+  const batchMode = workerData.batchMode === true
+
+  if (batchMode) {
+    await runBatchMode()
+  } else {
+    await runSingleMode()
+  }
+}
+
+const runSingleMode = async () => {
   const { testFileUrl, testIndex, testPkg, testParent, testName, suiteSnapshot } = workerData
 
   try {
@@ -277,43 +327,8 @@ const main = async () => {
     }
 
     const tests = await importFile(testFileUrl)
+    const result = await runSingleTestFromFile(tests, testIndex, testPkg, testParent, testName)
 
-    let test: WrappedTest | undefined
-    if (is.array(tests) && tests[testIndex] != null && hasTestProperties(tests[testIndex])) {
-      test = tests[testIndex] as WrappedTest
-    } else if (hasTestProperties(tests)) {
-      test = tests as WrappedTest
-    }
-
-    if (!test) {
-      if (parentPort)
-        parentPort.postMessage({
-          result: undefined,
-          msg: '',
-          pass: false,
-          parent: testParent || '',
-          name: testName,
-          expect: undefined,
-          expString: undefined,
-          key: getTestKey(testPkg, testParent, testName),
-          info: '',
-          pkg: testPkg,
-        })
-      return
-    }
-
-    // Merge context fields from the worker request into the test
-    const enriched = {
-      ...test,
-      name: test.name || testName,
-      parent: test.parent || testParent,
-      pkg: test.pkg || testPkg,
-    }
-
-    const key = getTestKey(testPkg, testParent, testName)
-    const result = await runSingleTest(enriched, key, testPkg, testParent, testName)
-    // Sanitize result to ensure it can be sent via postMessage (structured clone)
-    // Do NOT sanitize expect - it's used for display and may be a function
     const payload = {
       ...result,
       result: makeSafe(result.result),
@@ -334,6 +349,49 @@ const main = async () => {
         pkg: testPkg,
         error: cleanError(is.error(e) ? e : new Error(String(e))),
       })
+  }
+}
+
+const runBatchMode = async () => {
+  const { testFileUrl, testIndices, testPkg, testParent, testNames, suiteSnapshot } = workerData
+
+  try {
+    if (suiteSnapshot) {
+      restoreFromSnapshot(suiteSnapshot)
+    }
+
+    const tests = await importFile(testFileUrl)
+
+    const results: TestResult[] = []
+    for (let i = 0; i < testIndices.length; i++) {
+      const testIndex = testIndices[i]
+      const testName = testNames[i]
+
+      const result = await runSingleTestFromFile(tests, testIndex, testPkg, testParent, testName)
+      results.push({
+        ...result,
+        result: makeSafe(result.result),
+      })
+    }
+
+    if (parentPort) parentPort.postMessage(results)
+  } catch (e) {
+    if (parentPort) {
+      const results: TestResult[] = testNames.map((testName: string) => ({
+        result: undefined,
+        msg: '',
+        pass: false,
+        parent: testParent || '',
+        name: testName,
+        expect: undefined,
+        expString: undefined,
+        key: getTestKey(testPkg, testParent, testName),
+        info: '',
+        pkg: testPkg,
+        error: cleanError(is.error(e) ? e : new Error(String(e))),
+      }))
+      parentPort.postMessage(results)
+    }
   }
 }
 
