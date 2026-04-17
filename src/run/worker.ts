@@ -276,8 +276,19 @@ const runSingleTestFromFile = async (
   testName: string,
 ): Promise<TestResult> => {
   let test: WrappedTest | undefined
-  if (is.array(tests) && tests[testIndex] != null && hasTestProperties(tests[testIndex])) {
-    test = tests[testIndex] as WrappedTest
+
+  // Handle object format: { beforeAll, tests: [...] }
+  if (is.objectNative(tests) && 'tests' in tests && is.array((tests as { tests: unknown }).tests)) {
+    const testArray = (tests as { tests: WrappedTest[] }).tests
+    if (testArray[testIndex] != null && hasTestProperties(testArray[testIndex])) {
+      test = testArray[testIndex] as WrappedTest
+    }
+  } else if (is.array(tests)) {
+    // Handle array format: [...]
+    const arr = tests as unknown[]
+    if (arr[testIndex] != null && hasTestProperties(arr[testIndex])) {
+      test = arr[testIndex] as WrappedTest
+    }
   } else if (hasTestProperties(tests)) {
     test = tests as WrappedTest
   }
