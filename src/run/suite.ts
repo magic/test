@@ -69,22 +69,6 @@ const defaultSuite = {
 }
 
 /**
- * Check if suite has a beforeAll hook
- */
-const suiteHasBeforeAll = (tests: TestCollection): boolean => {
-  if (
-    tests &&
-    is.object(tests) &&
-    !is.arr(tests) &&
-    'beforeAll' in tests &&
-    is.fn(tests.beforeAll)
-  ) {
-    return true
-  }
-  return false
-}
-
-/**
  * Handle suite-level beforeAll and afterAll hooks
  */
 const handleSuiteHooks = async (tests: TestCollection): Promise<CleanupResult> => {
@@ -106,10 +90,6 @@ const handleSuiteHooks = async (tests: TestCollection): Promise<CleanupResult> =
   }
 
   return { afterAllCleanup }
-}
-
-const hasTestHooks = (test: WrappedTest): boolean => {
-  return is.function(test.before) || is.function(test.after)
 }
 
 const createFailResult = (testToRun: WrappedTest): TestResult => {
