@@ -8,7 +8,9 @@ export async function resolve(
   context: { parentURL?: string },
   nextResolve: (specifier: string, context?: object) => Promise<{ url: string }>,
 ): Promise<{ url: string; shortCircuit?: boolean }> {
+  // console.error('[resolve] called:', specifier.slice(0, 40))
   try {
+    // Handle .js -> .ts conversion for imports without compiled JS
     if (specifier.endsWith('.js') && context.parentURL) {
       const parentDir = path.dirname(new URL(context.parentURL).pathname)
       const jsPath = path.resolve(parentDir, specifier)
@@ -18,6 +20,7 @@ export async function resolve(
       }
     }
 
+    // Try alias resolution
     if (context.parentURL) {
       try {
         const aliasResolved = await resolveViteAlias(specifier, new URL(context.parentURL).pathname)
@@ -29,6 +32,7 @@ export async function resolve(
       }
     }
 
+    // Handle .svelte files
     if (specifier.endsWith('.svelte') && context.parentURL) {
       const parentDir = path.dirname(new URL(context.parentURL).pathname)
       const resolvedPath = path.resolve(parentDir, specifier)
@@ -39,6 +43,7 @@ export async function resolve(
       }
     }
 
+    // Handle scoped packages (non-magic)
     if (specifier.startsWith('@') && specifier.includes('/') && context.parentURL) {
       if (specifier.startsWith('@magic/')) {
         return nextResolve(specifier, context)
@@ -51,15 +56,7 @@ export async function resolve(
       if (await fs.exists(pkgPath)) {
         const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'))
 
-        if (pkg.exports?.['.']?.main || pkg.exports?.['.']?.import) {
-          const mainPath = pkg.exports['.'].main || pkg.exports['.'].import
-          const resolvedPath = path.join(nodeModulesPath, mainPath)
-          if (await fs.exists(resolvedPath)) {
-            return { url: pathToFileURL(resolvedPath).href, shortCircuit: true }
-          }
-        }
-
-        if (pkg.exports?.['.']?.svelte) {
+        if (pkg.exports?.['.']?.svelte && !pkg.exports?.['.']?.import) {
           const sveltePath = path.join(nodeModulesPath, pkg.exports['.'].svelte)
           if (await fs.exists(sveltePath)) {
             const { compileSvelteWithWrite } = await import('../../lib/svelte/compile/index.ts')
@@ -70,18 +67,10 @@ export async function resolve(
 
         if (pkg.exports) {
           for (const [key, val] of Object.entries(pkg.exports)) {
-            if (key !== '.' && typeof val === 'string') {
-              const exportPath = path.join(nodeModulesPath, val)
-              if (await fs.exists(exportPath)) {
-                if (exportPath.endsWith('.svelte')) {
-                  const { compileSvelteWithWrite } =
-                    await import('../../lib/svelte/compile/index.ts')
-                  const { importUrl } = await compileSvelteWithWrite(exportPath)
-                  return { url: importUrl, shortCircuit: true }
-                }
-                if (exportPath.endsWith('.js')) {
-                  return { url: pathToFileURL(exportPath).href, shortCircuit: true }
-                }
+            if (key !== '.' && typeof val === 'string' && val.endsWith('.js')) {
+              const jsPath = path.join(nodeModulesPath, val)
+              if (await fs.exists(jsPath)) {
+                return { url: pathToFileURL(jsPath).href, shortCircuit: true }
               }
             }
           }
@@ -89,79 +78,15 @@ export async function resolve(
       }
     }
 
-    if (!specifier.startsWith('@') && specifier.includes('/') && context.parentURL) {
-      const parts = specifier.split('/')
-      const packageName = parts[0]
-      if (!packageName) {
-        return nextResolve(specifier, context)
-      }
-      const nodeModulesPath = path.join(process.cwd(), 'node_modules', packageName)
-      const pkgPath = path.join(nodeModulesPath, 'package.json')
-
-      if (await fs.exists(pkgPath)) {
-        const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'))
-
-        if (pkg.exports?.['.']?.main || pkg.exports?.['.']?.import) {
-          const mainPath = pkg.exports['.'].main || pkg.exports['.'].import
-          const resolvedPath = path.join(nodeModulesPath, mainPath)
-          if (await fs.exists(resolvedPath)) {
-            return { url: pathToFileURL(resolvedPath).href, shortCircuit: true }
-          }
-        }
-
-        if (pkg.exports?.['.']?.svelte) {
-          const sveltePath = path.join(nodeModulesPath, pkg.exports['.'].svelte)
-          if (await fs.exists(sveltePath)) {
-            const { compileSvelteWithWrite } = await import('../../lib/svelte/compile/index.ts')
-            const { importUrl } = await compileSvelteWithWrite(sveltePath)
-            return { url: importUrl, shortCircuit: true }
-          }
-        }
-
-        if (pkg.exports) {
-          for (const [key, val] of Object.entries(pkg.exports)) {
-            if (key !== '.' && typeof val === 'string') {
-              const exportPath = path.join(nodeModulesPath, val)
-              if (await fs.exists(exportPath)) {
-                if (exportPath.endsWith('.svelte')) {
-                  const { compileSvelteWithWrite } =
-                    await import('../../lib/svelte/compile/index.ts')
-                  const { importUrl } = await compileSvelteWithWrite(exportPath)
-                  return { url: importUrl, shortCircuit: true }
-                }
-                if (exportPath.endsWith('.js')) {
-                  return { url: pathToFileURL(exportPath).href, shortCircuit: true }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    if (specifier.startsWith('.') && specifier.endsWith('.svelte')) {
-      if (context.parentURL) {
-        const parentDir = path.dirname(new URL(context.parentURL).pathname)
-        const svelteJsPath = path.resolve(parentDir, specifier + '.js')
-        if (await fs.exists(svelteJsPath)) {
-          return { url: pathToFileURL(svelteJsPath).href, shortCircuit: true }
-        }
-      }
-    }
-
+    // Handle relative imports without extension - check .svelte
     if (
       specifier.startsWith('.') &&
       !specifier.endsWith('.ts') &&
       !specifier.endsWith('.js') &&
-      !specifier.endsWith('.mjs') &&
-      !specifier.endsWith('.svelte')
+      !specifier.endsWith('.mjs')
     ) {
       if (context.parentURL) {
         const parentDir = path.dirname(new URL(context.parentURL).pathname)
-        const svelteJsPath = path.resolve(parentDir, specifier + '.svelte.js')
-        if (await fs.exists(svelteJsPath)) {
-          return { url: pathToFileURL(svelteJsPath).href, shortCircuit: true }
-        }
         const sveltePath = path.resolve(parentDir, specifier + '.svelte')
         if (await fs.exists(sveltePath)) {
           const { compileSvelteWithWrite } = await import('../../lib/svelte/compile/index.ts')
@@ -174,6 +99,7 @@ export async function resolve(
     // fall through
   }
 
+  // Always pass through to nextResolve to avoid shortCircuit error
   return nextResolve(specifier, context)
 }
 
@@ -182,6 +108,7 @@ export async function load(
   context: { format?: string },
   nextLoad: (url: string, context?: object) => Promise<{ format?: string; source?: string }>,
 ): Promise<{ format?: string; source?: string; shortCircuit?: boolean }> {
+  // Handle .js -> .ts conversion for magic/test source files
   if (url.includes('/magic/util/test/src/') && url.endsWith('.js')) {
     const tsUrl = url.replace(/\.js$/, '.ts')
     const filePath = tsUrl.replace('file://', '')

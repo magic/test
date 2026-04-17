@@ -11,8 +11,6 @@ import { findProjectRoot } from './findProjectRoot.js'
 import { loadViteAliases } from './loadViteAliases.js'
 import { parseTsConfig } from './parseTsConfig.js'
 
-const SVELTE_EXTENSIONS = ['.svelte', '.ts', '.js', '/index.svelte', '/index.ts', '/index.js']
-
 /**
  * Resolve Vite/SvelteKit aliases ($lib, $app, $env, etc.)
  * This is called from compile.js for non-relative imports
@@ -87,74 +85,51 @@ export const resolveViteAlias = async (
     }
 
     if (resolved) {
-      // If resolved path already has an extension, check if it exists
-      if (path.extname(resolved)) {
-        if (await fs.exists(resolved)) {
-          return resolved
-        }
-        return null
-      }
+      // Check if file exists with various extensions
+      const extensions = ['', '.js', '.svelte', '.ts', '/index.js', '/index.svelte', '/index.ts']
 
-      // Check if resolved path is a file (not directory) - if it's a file without extension, return it
-      try {
-        const stat = await fs.stat(resolved)
-        if (stat.isFile()) {
-          return resolved
-        }
-      } catch {}
-
-      try {
-        const stat = await fs.stat(resolved)
-        if (stat.isDirectory()) {
-          for (const ext of SVELTE_EXTENSIONS) {
-            const withExt = resolved + ext
-            const exists = await fs.exists(withExt)
-            if (exists) {
-              return withExt
-            }
-          }
-          return null
-        }
-      } catch {}
-
-      for (const ext of SVELTE_EXTENSIONS) {
+      for (const ext of extensions) {
         const withExt = resolved + ext
         const exists = await fs.exists(withExt)
         if (exists) {
+          // Skip if withExt is a directory and ext is empty (raw resolved path is a directory)
+          if (ext === '') {
+            try {
+              const stat = await fs.stat(withExt)
+              if (stat.isDirectory()) {
+                continue
+              }
+            } catch {
+              continue
+            }
+          }
           return withExt
         }
       }
     }
   }
 
+  // Fallback: $lib maps to src/lib
   if (importPath.startsWith('$lib')) {
-    const aliasPath = importPath.slice(1)
+    const aliasPath = importPath.slice(1) // Remove $
     const libPath = path.join(rootDir, 'src', aliasPath)
 
-    // If libPath already has an extension, check if it exists
-    if (path.extname(libPath)) {
-      if (await fs.exists(libPath)) {
-        return libPath
-      }
-    } else {
-      try {
-        const stat = await fs.stat(libPath)
-        if (stat.isDirectory()) {
-          for (const ext of SVELTE_EXTENSIONS) {
-            const withExt = libPath + ext
-            if (await fs.exists(withExt)) {
-              return withExt
+    const extensions = ['', '.js', '.svelte', '.ts', '/index.js', '/index.svelte', '/index.ts']
+    for (const ext of extensions) {
+      const withExt = libPath + ext
+      if (await fs.exists(withExt)) {
+        // Skip if withExt is a directory and ext is empty
+        if (ext === '') {
+          try {
+            const stat = await fs.stat(withExt)
+            if (stat.isDirectory()) {
+              continue
             }
+          } catch {
+            continue
           }
-          return null
         }
-      } catch {}
-
-      for (const ext of SVELTE_EXTENSIONS) {
-        const withExt = libPath + ext
-        if (await fs.exists(withExt)) {
-          return withExt
-        }
+        return withExt
       }
     }
   }

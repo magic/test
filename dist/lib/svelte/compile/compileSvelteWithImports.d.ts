@@ -1,8 +1,5 @@
 import type { CssObject } from './types.js'
-export declare const compileSvelteWithImports: (
-  filePath: string,
-  importChain?: string[],
-) => Promise<{
+export declare const compileSvelteWithImports: (filePath: string) => Promise<{
   js: {
     code: string
   }
