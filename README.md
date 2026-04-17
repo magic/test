@@ -2191,6 +2191,14 @@ update dependencies
 
 - better tsLoader resolve mechanism
 
-##### 0.3.6 - unreleased
+##### 0.3.6 - broken
+
+- tried implementing better isolation
+
+##### 0.3.7
+
+- advanced worker isolation, executing minimum number of needed workers for tests. lots of internal changes to achieve this.
+
+##### 0.3.8 - unreleased
 
 ...
