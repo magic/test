@@ -1,4 +1,4 @@
-import { mount, html, click, trigger, scroll, props } from '../src/index.js'
+import { mount, html, click, trigger, scroll, props, is } from '../src/index.js'
 import { flushSync } from 'svelte'
 
 export default [
@@ -119,10 +119,9 @@ export default [
       return result
     },
     expect:
-      '<div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----><!----> <button>Toggle</button>',
+      '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----> <button>Toggle</button>',
     info: 'SvelteKit wrapper provides correct $app/environment values (dev mode)',
   },
-  // SvelteKit component state updates correctly with toggle
   {
     fn: async () => {
       const { target, unmount } = await mount(
@@ -139,9 +138,8 @@ export default [
     },
     expect: {
       initial:
-        '<div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----><!----> <button>Toggle</button>',
-      afterToggle:
-        '<div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----><!----> <button>Toggle</button>',
+        '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----> <button>Toggle</button>',
+      afterToggle: '<!----><!----> <button>Toggle</button>',
     },
     info: 'SvelteKit component state updates correctly with toggle',
   },
