@@ -130,11 +130,9 @@ const runTestArray = async (
         })
         .then(
           (results): TestResult[] => {
-            const r = is.array(results) ? results : [results]
+            const r = Array.isArray(results) ? results : [results]
             for (const res of r) {
-              if (res) {
-                rawResults.push(res)
-              }
+              rawResults.push(res)
               if (res.afterCleanupError) {
                 log.warn('afterCleanup error in', res.name, res.afterCleanupError)
               }
@@ -172,7 +170,7 @@ const runTestArray = async (
     const promises = tests.map((t, i) => {
       const testToRun = {
         ...t,
-        name: t.name || t.info || `test${i}`,
+        name: t.name || name,
         parent: t.parent || parent,
         pkg: t.pkg || pkg,
       }
@@ -193,10 +191,9 @@ const runTestArray = async (
         })
         .then(
           (result): TestResult => {
-            const r = (is.arr(result) ? result[0] : result) as TestResult
-            if (r) {
-              rawResults.push(r)
-            }
+            const r = result as TestResult
+            // Collect result for aggregation
+            rawResults.push(r)
 
             // Log cleanup errors from worker
             if (r.afterCleanupError) {
