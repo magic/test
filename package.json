@@ -22,7 +22,7 @@
     "clean": "magic clean",
     "serve": "magic serve",
     "dev": "magic dev",
-    "test": "node dist/bin/t.js",
+    "test": "node dist/bin/t.js -- -p",
     "test:native": "node --test dist/bin/node-test-runner.js --coverage && c8 report",
     "test:ci": "node dist/bin/t.js -p",
     "coverage": "node dist/bin/t.js",
