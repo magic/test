@@ -1,16 +1,31 @@
 import { Worker } from 'node:worker_threads'
 import os from 'node:os'
+
 import is from '@magic/types'
+
+import type { Snapshot, PropertyDescriptorRecord, TestResult } from '../types.js'
+
 const MAX_WORKERS = Math.max(1, os.cpus().length - 2)
-const workerQueue = []
-const activeWorkers = new Set()
-const runWorker = () => {
+
+type WorkerTask = {
+  resolve: (value: TestResult | TestResult[]) => void
+  reject: (reason?: unknown) => void
+  worker: Worker
+}
+
+const workerQueue: WorkerTask[] = []
+const activeWorkers = new Set<Worker>()
+
+const runWorker = (): void => {
   if (workerQueue.length === 0) return
+
   const task = workerQueue.shift()
   if (!task) return
+
   activeWorkers.add(task.worker)
+
   task.worker.on('message', result => {
-    task.resolve(result)
+    task.resolve(result as TestResult | TestResult[])
   })
   task.worker.on('error', err => {
     task.reject(err)
@@ -23,12 +38,14 @@ const runWorker = () => {
     runWorker()
   })
 }
-const enqueueWorker = task => {
+
+const enqueueWorker = (task: WorkerTask): void => {
   workerQueue.push(task)
   if (activeWorkers.size < MAX_WORKERS) {
     runWorker()
   }
 }
+
 const skipProps = [
   // Node/CommonJS built-ins
   'console',
@@ -154,25 +171,30 @@ const skipProps = [
   'fetch',
   'DOMException',
 ]
+
 export class Isolation {
-  snapshots
-  suiteSnapshots
+  private snapshots: Map<string, Snapshot>
+  private suiteSnapshots: Map<string, Snapshot>
+
   constructor() {
     this.snapshots = new Map()
     this.suiteSnapshots = new Map()
   }
+
   /**
    * Improved deepClone: returns primitives, copies common built-ins.
    */
-  deepClone(value, seen = new WeakMap()) {
+  deepClone<T>(value: T, seen: WeakMap<object, unknown> = new WeakMap()): T {
     if (value === null || !is.object(value)) {
       return value
     }
+
     if (seen.has(value)) {
-      return seen.get(value)
+      return seen.get(value) as T
     }
+
     if (is.arr(value)) {
-      const copy = []
+      const copy: unknown[] = []
       seen.set(value, copy)
       for (const v of value) {
         const cloned = this.deepClone(v, seen)
@@ -181,14 +203,16 @@ export class Isolation {
           copy.push(cloned)
         }
       }
-      return copy
+      return copy as T
     }
+
     if (is.date(value)) {
-      return new Date(value.getTime())
+      return new Date(value.getTime()) as T
     }
     if (is.regex(value)) {
-      return new RegExp(value.source, value.flags)
+      return new RegExp(value.source, value.flags) as T
     }
+
     if (is.set(value)) {
       const out = new Set()
       seen.set(value, out)
@@ -199,7 +223,7 @@ export class Isolation {
           out.add(cloned)
         }
       }
-      return out
+      return out as T
     }
     if (is.map(value)) {
       const out = new Map()
@@ -212,28 +236,38 @@ export class Isolation {
           out.set(clonedK, clonedV)
         }
       }
-      return out
+      return out as T
     }
+
     if (ArrayBuffer.isView(value)) {
       // TypedArray - cast via unknown to access slice
-      return value.slice()
+      return (value as unknown as { slice(): unknown }).slice() as T
     }
+
     if (value instanceof ArrayBuffer) {
-      return value.slice()
+      return value.slice() as T
     }
+
     if (is.error(value)) {
-      return value
+      return value as T
     }
     if (is.function(value)) {
-      return value
+      return value as T
     }
+
     const proto = Object.getPrototypeOf(value)
-    const copy = Object.create(proto)
+    const copy = Object.create(proto) as Record<string, unknown>
     seen.set(value, copy)
-    const allKeys = [...Object.getOwnPropertyNames(value), ...Object.getOwnPropertySymbols(value)]
+
+    const allKeys = [
+      ...Object.getOwnPropertyNames(value),
+      ...Object.getOwnPropertySymbols(value),
+    ] as (string | symbol)[]
+
     for (const key of allKeys) {
       const desc = Object.getOwnPropertyDescriptor(value, key)
       if (!desc) continue
+
       if (desc.get || desc.set) {
         Object.defineProperty(copy, key, {
           configurable: !!desc.configurable,
@@ -252,31 +286,39 @@ export class Isolation {
         })
       }
     }
-    return copy
+
+    return copy as T
   }
+
   /**
    * Build a snapshot: store descriptors, values (deep-cloned), and symbol keys
    */
-  buildSnapshot() {
-    const snapshot = { props: {} }
+  buildSnapshot(): Snapshot {
+    const snapshot: Snapshot = { props: {} }
+
     const allKeys = [
       ...Object.getOwnPropertyNames(globalThis),
       ...Object.getOwnPropertySymbols(globalThis),
-    ]
+    ] as (string | symbol)[]
+
     for (const key of allKeys) {
       if (!this.shouldCaptureProperty(key)) continue
+
       const desc = Object.getOwnPropertyDescriptor(globalThis, key)
       if (!desc) continue
       if (desc.configurable === false) continue
+
       // Skip function-valued data properties (cannot be cloned)
       if ('value' in desc && typeof desc.value === 'function') continue
       // Skip accessor properties (get/set are functions and cannot be cloned)
       if (desc.get || desc.set) continue
-      const stored = {
+
+      const stored: PropertyDescriptorRecord = {
         configurable: !!desc.configurable,
         enumerable: !!desc.enumerable,
         writable: 'writable' in desc ? !!desc.writable : false,
       }
+
       if ('value' in desc) {
         try {
           stored.value = this.deepClone(desc.value)
@@ -288,11 +330,14 @@ export class Isolation {
         stored.get = desc.get
         stored.set = desc.set
       }
+
       snapshot.props[String(key)] = stored
     }
+
     return snapshot
   }
-  captureSuiteSnapshot(suiteKey) {
+
+  captureSuiteSnapshot(suiteKey: string): void {
     try {
       const snapshot = this.buildSnapshot()
       this.suiteSnapshots.set(suiteKey, snapshot)
@@ -301,37 +346,42 @@ export class Isolation {
       // Still ignore to not break tests, but make visible
     }
   }
-  restoreSuiteSnapshot(suiteKey) {
+
+  restoreSuiteSnapshot(suiteKey: string): void {
     this.restoreSnapshotFromMap(this.suiteSnapshots, suiteKey)
   }
-  restoreSnapshotFromMap(snapshotMap, key) {
+
+  restoreSnapshotFromMap(snapshotMap: Map<string, Snapshot>, key: string): void {
     const snapshot = snapshotMap.get(key)
     if (!snapshot) return
+
     const currentNames = [
       ...Object.getOwnPropertyNames(globalThis),
       ...Object.getOwnPropertySymbols(globalThis),
-    ]
+    ] as (string | symbol)[]
     const snapshotNames = new Set(Object.keys(snapshot.props))
+
     for (const prop of currentNames) {
       if (!this.shouldCaptureProperty(prop)) continue
       if (!snapshotNames.has(String(prop))) {
         try {
           const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
           if (desc && desc.configurable !== false) {
-            delete globalThis[prop]
+            delete (globalThis as Record<string | symbol, unknown>)[prop]
           }
         } catch {
           // ignore
         }
       }
     }
+
     for (const keyStr in snapshot.props) {
       if (!Object.prototype.hasOwnProperty.call(snapshot.props, keyStr)) continue
       const stored = snapshot.props[keyStr]
       if (!stored) continue
       const prop = this._reviveKeyFromString(keyStr)
       try {
-        const desc = {
+        const desc: PropertyDescriptor = {
           configurable: !!stored.configurable,
           enumerable: !!stored.enumerable,
         }
@@ -342,20 +392,22 @@ export class Isolation {
           if (stored.get) desc.get = stored.get
           if (stored.set) desc.set = stored.set
         }
-        Object.defineProperty(globalThis, prop, desc)
+        Object.defineProperty(globalThis, prop as string, desc)
       } catch {
         try {
           if ('value' in stored && stored.value !== undefined) {
-            globalThis[prop] = stored.value
+            ;(globalThis as Record<string | symbol, unknown>)[prop] = stored.value
           }
         } catch {
           // ignore
         }
       }
     }
+
     snapshotMap.delete(key)
   }
-  captureSnapshot(testKey) {
+
+  captureSnapshot(testKey: string): void {
     try {
       const snapshot = this.buildSnapshot()
       this.snapshots.set(testKey, snapshot)
@@ -363,13 +415,15 @@ export class Isolation {
       // ignore
     }
   }
-  restoreSnapshot(testKey) {
+
+  restoreSnapshot(testKey: string): void {
     this.restoreSnapshotFromMap(this.snapshots, testKey)
   }
+
   /**
    * helper to map stringified symbol keys back to Symbol if needed
    */
-  _reviveKeyFromString(keyStr) {
+  _reviveKeyFromString(keyStr: string): string | symbol {
     if (keyStr.startsWith('Symbol(')) {
       const syms = Object.getOwnPropertySymbols(globalThis)
       for (const s of syms) {
@@ -379,12 +433,14 @@ export class Isolation {
     }
     return keyStr
   }
+
   /**
    * shouldCaptureProperty unchanged but include symbol type check
    */
-  shouldCaptureProperty(prop) {
+  shouldCaptureProperty(prop: string | symbol): boolean {
     const name = is.symbol(prop) ? String(prop) : prop
     if (skipProps.includes(name)) return false
+
     const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
     if (!desc) return false
     if (desc.configurable === false) return false
@@ -392,7 +448,8 @@ export class Isolation {
     if (desc.get || desc.set) return false
     return true
   }
-  async executeSuiteIsolated(suiteKey, fn) {
+
+  async executeSuiteIsolated<T>(suiteKey: string, fn: () => Promise<T>): Promise<T> {
     this.captureSuiteSnapshot(suiteKey)
     try {
       return await fn()
@@ -400,7 +457,8 @@ export class Isolation {
       this.restoreSuiteSnapshot(suiteKey)
     }
   }
-  async executeIsolated(testKey, fn) {
+
+  async executeIsolated<T>(testKey: string, fn: () => Promise<T>): Promise<T> {
     this.captureSnapshot(testKey)
     try {
       return await fn()
@@ -408,10 +466,19 @@ export class Isolation {
       this.restoreSnapshot(testKey)
     }
   }
+
   /**
    * Run a test in a worker thread for true isolation
    */
-  executeInWorker(options) {
+  executeInWorker(options: {
+    testFileUrl: string
+    testIndex?: number
+    testIndices?: number[]
+    testPkg: string
+    testParent: string
+    testName: string
+    suiteSnapshot?: Snapshot
+  }): Promise<TestResult | TestResult[]> {
     return new Promise((resolve, reject) => {
       const worker = new Worker(new URL('./worker.js', import.meta.url), {
         workerData: {
@@ -423,6 +490,7 @@ export class Isolation {
           suiteSnapshot: options.suiteSnapshot,
         },
       })
+
       enqueueWorker({
         resolve,
         reject,
@@ -431,38 +499,42 @@ export class Isolation {
     })
   }
 }
+
 /**
  * Apply a snapshot to the current globalThis context.
  * Deletes properties not in the snapshot, restores properties from snapshot.
  * Standalone version for use in worker threads.
  */
-export const restoreFromSnapshot = snapshot => {
+export const restoreFromSnapshot = (snapshot: Snapshot | null | undefined): void => {
   if (!snapshot) return
+
   const currentNames = [
     ...Object.getOwnPropertyNames(globalThis),
     ...Object.getOwnPropertySymbols(globalThis),
-  ]
+  ] as (string | symbol)[]
   const snapshotNames = new Set(Object.keys(snapshot.props))
+
   for (const prop of currentNames) {
     if (!isolation.shouldCaptureProperty(prop)) continue
     if (!snapshotNames.has(String(prop))) {
       try {
         const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
         if (desc && desc.configurable !== false) {
-          delete globalThis[prop]
+          delete (globalThis as Record<string | symbol, unknown>)[prop]
         }
       } catch {
         // ignore
       }
     }
   }
+
   for (const keyStr in snapshot.props) {
     if (!Object.prototype.hasOwnProperty.call(snapshot.props, keyStr)) continue
     const stored = snapshot.props[keyStr]
     if (!stored) continue
     const prop = isolation._reviveKeyFromString(keyStr)
     try {
-      const desc = {
+      const desc: PropertyDescriptor = {
         configurable: !!stored.configurable,
         enumerable: !!stored.enumerable,
       }
@@ -473,11 +545,11 @@ export const restoreFromSnapshot = snapshot => {
         if (stored.get) desc.get = stored.get
         if (stored.set) desc.set = stored.set
       }
-      Object.defineProperty(globalThis, prop, desc)
+      Object.defineProperty(globalThis, prop as string, desc)
     } catch {
       try {
         if ('value' in stored && stored.value !== undefined) {
-          globalThis[prop] = stored.value
+          ;(globalThis as Record<string | symbol, unknown>)[prop] = stored.value
         }
       } catch {
         // ignore
@@ -485,4 +557,5 @@ export const restoreFromSnapshot = snapshot => {
     }
   }
 }
+
 export const isolation = new Isolation()
