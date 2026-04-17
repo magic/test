@@ -7,7 +7,6 @@ import fs from '@magic/fs'
 import { stats, createStore, ERRORS, Store } from './lib/index.js'
 import { runSuite } from './run/suite.js'
 import type { TestSuites, TestCollection, CleanupFunction, TestResult } from './types.js'
-import { TMP_DIR } from './lib/svelte/compile/constants.ts'
 
 const cwd = process.cwd()
 
@@ -72,8 +71,11 @@ export let aborted = false
 export const abort = async () => {
   aborted = true
 
+  const tmpDir = path.join(cwd, 'test', '.tmp')
   try {
-    await fs.rmrf(TMP_DIR)
+    if (await fs.exists(tmpDir)) {
+      await fs.rmrf(tmpDir)
+    }
   } catch {
     // Ignore cleanup errors during abort
   }
