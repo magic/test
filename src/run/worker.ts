@@ -379,7 +379,6 @@ const main = async () => {
     }
 
     if (parentPort) parentPort.postMessage(results)
-    process.exit(0)
   } catch (e) {
     if (parentPort)
       parentPort.postMessage({
@@ -395,7 +394,6 @@ const main = async () => {
         pkg: testPkg,
         error: cleanError(is.error(e) ? e : new Error(String(e))),
       })
-    process.exit(1)
   }
 }
 
