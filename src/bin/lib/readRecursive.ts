@@ -83,7 +83,7 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
     const fileP = indexFilePath.replace(testDir, '')
     const importPath = pathToFileURL(indexFilePath).href
     try {
-      const defines = await getViteDefine(indexFilePath)
+      const defines = await getViteDefine()
       for (const [key, value] of Object.entries(defines)) {
         // @ts-expect-error - dynamic globalThis property assignment
         globalThis[key] = value
@@ -139,7 +139,7 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
         const importPath = pathToFileURL(filePath).href
 
         try {
-          const defines = await getViteDefine(filePath)
+          const defines = await getViteDefine()
           for (const [key, value] of Object.entries(defines)) {
             // @ts-expect-error - dynamic globalThis property assignment
             globalThis[key] = value

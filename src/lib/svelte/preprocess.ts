@@ -130,7 +130,7 @@ export const viteDefinePreprocessor = () => {
         return { code: content }
       }
 
-      const defines = await getViteDefine(filename)
+      const defines = await getViteDefine()
 
       if (!defines || Object.keys(defines).length === 0) {
         return { code: content }
