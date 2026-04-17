@@ -1,4 +1,4 @@
-import { mount, html, click, trigger, scroll, props, is } from '../src/index.js'
+import { mount, html, click, trigger, scroll, props } from '../src/index.js'
 import { flushSync } from 'svelte'
 
 export default [
