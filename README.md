@@ -2191,12 +2191,6 @@ update dependencies
 
 - better tsLoader resolve mechanism
 
-##### 0.3.6
-
-- add MAX_WORKERS equal to cpu count - 2
-- better test isolation, if suites do not need individual workers per test but need isolation, they will run in one worker.
-- fix beforeAll usage in worker tests
-
-##### 0.3.7 - unreleased
+##### 0.3.6 - unreleased
 
 ...
