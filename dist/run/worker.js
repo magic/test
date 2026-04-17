@@ -279,13 +279,39 @@ const main = async () => {
   }
 }
 const runSingleMode = async () => {
-  const { testFileUrl, testIndex, testPkg, testParent, testName, suiteSnapshot } = workerData
+  const {
+    testFileUrl,
+    testIndex,
+    testPkg,
+    testParent,
+    testName,
+    suiteSnapshot,
+    beforeAll,
+    afterAll,
+  } = workerData
   try {
     if (suiteSnapshot) {
       restoreFromSnapshot(suiteSnapshot)
     }
+    // Run beforeAll if provided
+    let afterAllCleanup
+    if (beforeAll) {
+      const beforeAllFn = new Function(beforeAll)()
+      const result = await beforeAllFn()
+      if (typeof result === 'function') {
+        afterAllCleanup = result
+      }
+    }
     const tests = await importFile(testFileUrl)
     const result = await runSingleTestFromFile(tests, testIndex, testPkg, testParent, testName)
+    // Run afterAll if provided (or cleanup from beforeAll)
+    if (afterAllCleanup) {
+      await afterAllCleanup()
+    }
+    if (afterAll) {
+      const afterAllFn = new Function(afterAll)()
+      await afterAllFn()
+    }
     const payload = {
       ...result,
       result: makeSafe(result.result),
@@ -309,10 +335,28 @@ const runSingleMode = async () => {
   }
 }
 const runBatchMode = async () => {
-  const { testFileUrl, testIndices, testPkg, testParent, testNames, suiteSnapshot } = workerData
+  const {
+    testFileUrl,
+    testIndices,
+    testPkg,
+    testParent,
+    testNames,
+    suiteSnapshot,
+    beforeAll,
+    afterAll,
+  } = workerData
   try {
     if (suiteSnapshot) {
       restoreFromSnapshot(suiteSnapshot)
+    }
+    // Run beforeAll if provided
+    let afterAllCleanup
+    if (beforeAll) {
+      const beforeAllFn = new Function(beforeAll)()
+      const result = await beforeAllFn()
+      if (typeof result === 'function') {
+        afterAllCleanup = result
+      }
     }
     const tests = await importFile(testFileUrl)
     const results = []
@@ -324,6 +368,14 @@ const runBatchMode = async () => {
         ...result,
         result: makeSafe(result.result),
       })
+    }
+    // Run afterAll if provided (or cleanup from beforeAll)
+    if (afterAllCleanup) {
+      await afterAllCleanup()
+    }
+    if (afterAll) {
+      const afterAllFn = new Function(afterAll)()
+      await afterAllFn()
     }
     if (parentPort) parentPort.postMessage(results)
   } catch (e) {

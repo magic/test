@@ -36,6 +36,8 @@ export declare class Isolation {
     testParent: string
     testName: string
     suiteSnapshot?: Snapshot
+    beforeAll?: string
+    afterAll?: string
   }): Promise<TestResult>
   /**
    * Run multiple tests in a single worker for better performance
@@ -47,6 +49,8 @@ export declare class Isolation {
     testParent: string
     testNames: string[]
     suiteSnapshot?: Snapshot
+    beforeAll?: string
+    afterAll?: string
   }): Promise<TestResult[]>
 }
 /**

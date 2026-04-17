@@ -200,4 +200,5 @@ export const run = async (tests, options = {}) => {
     await fs.rmrf(tmpDir)
   }
   stats.info(suites, store)
+  process.exit(0)
 }
