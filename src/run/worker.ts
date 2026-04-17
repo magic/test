@@ -5,7 +5,13 @@ import is from '@magic/types'
 import { cleanError, cleanFunctionString, getTestKey } from '../lib/index.js'
 import { restoreFromSnapshot } from './isolation.js'
 import { getViteDefine } from '../lib/svelte/viteConfig/index.js'
-import type { WrappedTest, CleanupFunction, TestResult, EvaluateResult, Snapshot } from '../types.js'
+import type {
+  WrappedTest,
+  CleanupFunction,
+  TestResult,
+  EvaluateResult,
+  Snapshot,
+} from '../types.js'
 
 import '../bin/lib/registerLoader.js'
 
