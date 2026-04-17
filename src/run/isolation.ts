@@ -480,15 +480,23 @@ export class Isolation {
     suiteSnapshot?: Snapshot
   }): Promise<TestResult | TestResult[]> {
     return new Promise((resolve, reject) => {
+      const workerData: Record<string, unknown> = {
+        testFileUrl: options.testFileUrl,
+        testPkg: options.testPkg,
+        testParent: options.testParent,
+        testName: options.testName,
+      }
+      if (options.testIndex !== undefined) {
+        workerData.testIndex = options.testIndex
+      }
+      if (options.testIndices !== undefined) {
+        workerData.testIndices = options.testIndices
+      }
+      if (options.suiteSnapshot !== undefined) {
+        workerData.suiteSnapshot = options.suiteSnapshot
+      }
       const worker = new Worker(new URL('./worker.js', import.meta.url), {
-        workerData: {
-          testFileUrl: options.testFileUrl,
-          testIndex: options.testIndex,
-          testPkg: options.testPkg,
-          testParent: options.testParent,
-          testName: options.testName,
-          suiteSnapshot: options.suiteSnapshot,
-        },
+        workerData,
       })
 
       enqueueWorker({
