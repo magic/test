@@ -188,7 +188,10 @@ const runTestArray = async (
             afterAll: afterAll?.toString(),
           })
           .then(
-            result => ({ result: result, index }),
+            result => {
+              rawResults.push(result)
+              return { result: result, index }
+            },
             err => ({ result: handleWorkerError(test, err, rawResults), index }),
           )
       })
