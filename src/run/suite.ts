@@ -221,7 +221,10 @@ const runTestArray = async (
             afterAll: afterAll?.toString(),
           })
           .then(
-            result => ({ result: result as TestResult, index }),
+            result => {
+              rawResults.push(result as TestResult)
+              return { result: result as TestResult, index }
+            },
             err => ({ result: handleWorkerError(test, err, rawResults), index }),
           )
       })
