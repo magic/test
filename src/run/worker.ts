@@ -350,15 +350,11 @@ const runSingleMode = async () => {
 
     // Run afterAll if provided (or cleanup from beforeAll)
     if (afterAllCleanup) {
-      try {
-        await afterAllCleanup()
-      } catch {}
+      await afterAllCleanup()
     }
     if (afterAll) {
       const afterAllFn = new Function(afterAll)()
-      try {
-        await afterAllFn()
-      } catch {}
+      await afterAllFn()
     }
 
     const payload = {
@@ -427,15 +423,11 @@ const runBatchMode = async () => {
 
     // Run afterAll if provided (or cleanup from beforeAll)
     if (afterAllCleanup) {
-      try {
-        await afterAllCleanup()
-      } catch {}
+      await afterAllCleanup()
     }
     if (afterAll) {
       const afterAllFn = new Function(afterAll)()
-      try {
-        await afterAllFn()
-      } catch {}
+      await afterAllFn()
     }
 
     if (parentPort) parentPort.postMessage(results)
