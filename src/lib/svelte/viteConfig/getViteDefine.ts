@@ -1,38 +1,13 @@
-import is from '@magic/types'
+import path from 'node:path'
 
-import { findConfigFile } from './findConfigFile.js'
-import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
-import { defineCache } from './cache.js'
-import { parseViteConfig } from './parseViteConfig.js'
+import { findProjectRoot } from './findProjectRoot.js'
+import { loadViteDefine } from './loadViteDefine.js'
 
 /**
  * Get vite define variables for a source file
- * Times out after 3 seconds to avoid hanging in workers
  */
-export const getViteDefine = async (): Promise<Record<string, unknown>> => {
-  const rootDir = process.cwd()
-
-  const cacheKey = rootDir + ':vite-define'
-  const cached = defineCache.get(cacheKey)
-  if (cached) {
-    return cached
-  }
-
-  const configPath = await findConfigFile(rootDir, VITE_CONFIG_NAMES)
-
-  if (!configPath) {
-    defineCache.set(cacheKey, {})
-    return {}
-  }
-
-  try {
-    const config = await parseViteConfig(configPath)
-    const defineConfig = config.define as Record<string, unknown> | undefined
-    defineCache.set(cacheKey, defineConfig || {})
-    return defineConfig || {}
-  } catch (e) {
-    const message = is.error(e) ? e.message : String(e)
-    console.warn(`[svelte-alias] Failed to parse vite.config define: ${message}`)
-    return {}
-  }
+export const getViteDefine = async (sourceFilePath: string): Promise<Record<string, unknown>> => {
+  const sourceDir = path.dirname(sourceFilePath)
+  const rootDir = await findProjectRoot(sourceDir)
+  return await loadViteDefine(rootDir)
 }
