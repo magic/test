@@ -4,7 +4,7 @@ import cli from '@magic/cli'
 import fs from '@magic/fs'
 import is from '@magic/types'
 import log from '@magic/log'
-import { abort } from '../run.js'
+import { abort, killAllWorkers } from '../run.js'
 const cwd = process.cwd()
 const res = cli({
   options: [
@@ -141,6 +141,7 @@ const shutdown = () => {
     childProcess.kill('SIGTERM')
   }
   abort()
+  killAllWorkers()
   setTimeout(() => {
     if (childProcess && !childProcess.killed) {
       childProcess.kill('SIGKILL')

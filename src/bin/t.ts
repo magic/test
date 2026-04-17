@@ -170,6 +170,7 @@ const shutdown = () => {
   }
 
   abort()
+  killAllWorkers()
   setTimeout(() => {
     if (childProcess && !childProcess.killed) {
       childProcess.kill('SIGKILL')
