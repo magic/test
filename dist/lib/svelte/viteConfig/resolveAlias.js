@@ -52,12 +52,12 @@ export const resolveAlias = async (importPath, sourceFilePath) => {
         const stat = await fs.stat(resolved)
         if (stat.isDirectory()) {
           const withExtensions = [
+            '.svelte',
             '.ts',
             '.js',
-            '.svelte.js',
+            '/index.svelte',
             '/index.ts',
             '/index.js',
-            '/index.svelte.js',
           ]
           for (const ext of withExtensions) {
             const withExt = resolved + ext
@@ -70,14 +70,7 @@ export const resolveAlias = async (importPath, sourceFilePath) => {
         }
       } catch {}
       // Try with extensions, handling .js->.ts conversion
-      const withExtensions = [
-        '.ts',
-        '.js',
-        '.svelte.js',
-        '/index.ts',
-        '/index.js',
-        '/index.svelte.js',
-      ]
+      const withExtensions = ['.svelte', '.ts', '.js', '/index.svelte', '/index.ts', '/index.js']
       // Also try removing .js extension and adding .ts
       let baseResolved = resolved
       if (resolved.endsWith('.js')) {
