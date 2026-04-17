@@ -14,7 +14,15 @@ type WorkerTask = {
 }
 
 const workerQueue: WorkerTask[] = []
-const activeWorkers = new Set<Worker>()
+export const activeWorkers = new Set<Worker>()
+
+export const killAllWorkers = (): void => {
+  for (const worker of activeWorkers) {
+    worker.terminate()
+  }
+  activeWorkers.clear()
+  workerQueue.length = 0
+}
 
 const runWorker = (): void => {
   if (workerQueue.length === 0) return
@@ -24,16 +32,19 @@ const runWorker = (): void => {
 
   activeWorkers.add(task.worker)
 
+  let resolved = false
   task.worker.on('message', result => {
+    resolved = true
     task.resolve(result as TestResult | TestResult[])
   })
   task.worker.on('error', err => {
+    resolved = true
     task.reject(err)
   })
   task.worker.on('exit', code => {
     activeWorkers.delete(task.worker)
-    if (code !== 0) {
-      task.reject(new Error(`Worker exited with code ${code}`))
+    if (!resolved) {
+      task.reject(new Error(`Worker exited without result: code ${code}`))
     }
     runWorker()
   })
@@ -479,6 +490,9 @@ export class Isolation {
     testName: string
     suiteSnapshot?: Snapshot
   }): Promise<TestResult | TestResult[]> {
+    const DEFAULT_TIMEOUT = 30000
+    const timeoutMs = parseInt(process.env.MAGIC_TEST_TIMEOUT || '', 10) || DEFAULT_TIMEOUT
+
     return new Promise((resolve, reject) => {
       const workerData: Record<string, unknown> = {
         testFileUrl: options.testFileUrl,
@@ -499,9 +513,22 @@ export class Isolation {
         workerData,
       })
 
+      const timeout = setTimeout(() => {
+        worker.terminate()
+        reject(new Error(`Worker timeout after ${timeoutMs}ms: ${options.testName}`))
+      }, timeoutMs)
+
+      const cleanup = () => clearTimeout(timeout)
+
       enqueueWorker({
-        resolve,
-        reject,
+        resolve: val => {
+          cleanup()
+          resolve(val)
+        },
+        reject: err => {
+          cleanup()
+          reject(err)
+        },
         worker,
       })
     })

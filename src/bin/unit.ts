@@ -6,7 +6,7 @@ import './lib/registerLoader.js'
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { run, abort } from '../run.js'
+import { run, abort, killAllWorkers } from '../run.js'
 
 import { maybeInjectMagic, readRecursive } from './lib/index.js'
 

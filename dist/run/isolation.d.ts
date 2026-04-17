@@ -1,4 +1,7 @@
+import { Worker } from 'node:worker_threads'
 import type { Snapshot, TestResult } from '../types.js'
+export declare const activeWorkers: Set<Worker>
+export declare const killAllWorkers: () => void
 export declare class Isolation {
   private snapshots
   private suiteSnapshots
