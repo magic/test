@@ -452,20 +452,26 @@ export class Isolation {
       })
 
       let settled = false
+      const cleanup = () => {
+        worker.terminate()
+      }
       worker.on('message', result => {
         if (settled) return
         settled = true
+        cleanup()
         resolve(result as TestResult)
       })
       worker.on('error', err => {
         if (settled) return
         settled = true
+        cleanup()
         reject(err)
       })
       worker.on('exit', code => {
         if (settled) return
         if (code !== 0) {
           settled = true
+          cleanup()
           reject(new Error(`Worker exited with code ${code}`))
         }
       })
@@ -501,20 +507,26 @@ export class Isolation {
       })
 
       let settled = false
+      const cleanup = () => {
+        worker.terminate()
+      }
       worker.on('message', result => {
         if (settled) return
         settled = true
+        cleanup()
         resolve(result as TestResult[])
       })
       worker.on('error', err => {
         if (settled) return
         settled = true
+        cleanup()
         reject(err)
       })
       worker.on('exit', code => {
         if (settled) return
         if (code !== 0) {
           settled = true
+          cleanup()
           reject(new Error(`Worker exited with code ${code}`))
         }
       })
