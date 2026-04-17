@@ -3,7 +3,7 @@ import log from '@magic/log'
 export default {
   beforeAll: () => {
     const g = globalThis as Record<string, unknown>
-    g.beforeAll = 'beforeAll'
+    g.beforeAllInFile = 'beforeAll'
     g.testing = true
 
     return () => {
@@ -17,6 +17,11 @@ export default {
     }
   },
   tests: [
+    {
+      fn: () => (globalThis as Record<string, unknown>).beforeAllInFile,
+      expect: 'beforeAll',
+      info: 'beforeAll in test object gets called before test',
+    },
     {
       fn: () => (globalThis as Record<string, unknown>).testing,
       expect: true,
