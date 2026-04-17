@@ -78,9 +78,6 @@
     "typescript-eslint": "8.58.2",
     "vite": "8.0.8"
   },
-  "overrides": {
-    "cookie": "^1.0.0"
-  },
   "contributors": [
     {
       "name": "jascha ehrenreich",
