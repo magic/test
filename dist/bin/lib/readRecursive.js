@@ -29,7 +29,7 @@ import { getViteDefine } from '../../lib/svelte/viteConfig/index.js'
 const isImportResult = obj => {
   return (
     obj != null &&
-    is.object(obj) &&
+    typeof obj === 'object' &&
     'type' in obj &&
     (obj.type === 'file' || obj.type === 'directory' || obj.type === 'error' || obj.type === 'skip')
   )

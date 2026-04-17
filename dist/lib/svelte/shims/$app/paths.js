@@ -1,6 +1,5 @@
 // Shim for $app/paths
 // Provides path utilities and asset resolution
-import is from '@magic/types'
 import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 // Default configuration
@@ -49,7 +48,7 @@ export function resolve(...args) {
   if (args.length === 1) {
     const pathname = args[0]
     if (
-      is.string(pathname) &&
+      typeof pathname === 'string' &&
       (pathname.startsWith('http://') || pathname.startsWith('https://'))
     ) {
       return pathname
@@ -58,7 +57,7 @@ export function resolve(...args) {
   }
   // Route ID + params
   const [routeId, params] = args
-  if (!params || !is.object(params)) return base + routeId
+  if (!params || typeof params !== 'object') return base + routeId
   // Support both :param and [param] syntax
   const resolved = routeId
     .replace(/:([^/]+)/g, (_, key) => {
@@ -75,7 +74,7 @@ export function resolve(...args) {
  */
 export function match(url) {
   try {
-    const urlStr = is.string(url) ? url : url.href || url.toString()
+    const urlStr = typeof url === 'string' ? url : url.href || url.toString()
     // This shim does not have route config; return null or try to match common patterns
     // For tests we only need to match '/blog/hello' to '/blog/[slug]'
     const routePatterns = [

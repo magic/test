@@ -124,36 +124,40 @@ export const change = (target, value) => {
 export const blur = (target, selector) => {
   const el = getElement(target, selector)
   if (el) {
-    const event = !is.undefined(FocusEvent)
-      ? new FocusEvent('blur', { bubbles: false, cancelable: false })
-      : new Event('blur', { bubbles: false, cancelable: false })
+    const event =
+      typeof FocusEvent !== 'undefined'
+        ? new FocusEvent('blur', { bubbles: false, cancelable: false })
+        : new Event('blur', { bubbles: false, cancelable: false })
     el.dispatchEvent(event)
   }
 }
 export const focus = (target, selector) => {
   const el = getElement(target, selector)
   if (el) {
-    const event = !is.undefined(FocusEvent)
-      ? new FocusEvent('focus', { bubbles: false, cancelable: false })
-      : new Event('focus', { bubbles: false, cancelable: false })
+    const event =
+      typeof FocusEvent !== 'undefined'
+        ? new FocusEvent('focus', { bubbles: false, cancelable: false })
+        : new Event('focus', { bubbles: false, cancelable: false })
     el.dispatchEvent(event)
   }
 }
 export const focusIn = (target, selector) => {
   const el = getElement(target, selector)
   if (el) {
-    const event = !is.undefined(FocusEvent)
-      ? new FocusEvent('focusin', { bubbles: true, cancelable: false })
-      : new Event('focusin', { bubbles: true, cancelable: false })
+    const event =
+      typeof FocusEvent !== 'undefined'
+        ? new FocusEvent('focusin', { bubbles: true, cancelable: false })
+        : new Event('focusin', { bubbles: true, cancelable: false })
     el.dispatchEvent(event)
   }
 }
 export const focusOut = (target, selector) => {
   const el = getElement(target, selector)
   if (el) {
-    const event = !is.undefined(FocusEvent)
-      ? new FocusEvent('focusout', { bubbles: true, cancelable: false })
-      : new Event('focusout', { bubbles: true, cancelable: false })
+    const event =
+      typeof FocusEvent !== 'undefined'
+        ? new FocusEvent('focusout', { bubbles: true, cancelable: false })
+        : new Event('focusout', { bubbles: true, cancelable: false })
     el.dispatchEvent(event)
   }
 }

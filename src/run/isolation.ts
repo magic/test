@@ -277,7 +277,7 @@ export class Isolation {
         })
       } else {
         // Skip function-valued data properties; they cannot be transferred to workers
-        if (is.function(desc.value)) continue
+        if (typeof desc.value === 'function') continue
         Object.defineProperty(copy, key, {
           configurable: !!desc.configurable,
           enumerable: !!desc.enumerable,
@@ -309,7 +309,7 @@ export class Isolation {
       if (desc.configurable === false) continue
 
       // Skip function-valued data properties (cannot be cloned)
-      if ('value' in desc && is.function(desc.value)) continue
+      if ('value' in desc && typeof desc.value === 'function') continue
       // Skip accessor properties (get/set are functions and cannot be cloned)
       if (desc.get || desc.set) continue
 
@@ -444,7 +444,7 @@ export class Isolation {
     const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
     if (!desc) return false
     if (desc.configurable === false) return false
-    if ('value' in desc && is.function(desc.value)) return false
+    if ('value' in desc && typeof desc.value === 'function') return false
     if (desc.get || desc.set) return false
     return true
   }

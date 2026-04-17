@@ -1,4 +1,3 @@
-import is from '@magic/types'
 /**
  * Error types for handleResponse
  */
@@ -53,9 +52,8 @@ export { JsonParseError, HttpStatusError, SizeLimitError, NetworkError, isRespon
  */
 export const handleResponse = (res, resolve, reject, url, maxSize) => {
   const { statusCode } = res
-  const contentType = is.string(res.headers['content-type'])
-    ? res.headers['content-type']
-    : undefined
+  const contentType =
+    typeof res.headers['content-type'] === 'string' ? res.headers['content-type'] : undefined
   let err
   if (!statusCode || statusCode < 200 || statusCode >= 300) {
     err = `Request failed: ${statusCode ?? 'unknown'}`

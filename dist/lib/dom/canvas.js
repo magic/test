@@ -1,4 +1,3 @@
-import is from '@magic/types'
 import { createCanvas, loadImage } from 'canvas'
 export const createCanvasPolyfill = win => {
   const HTMLCanvasElement = win.HTMLCanvasElement
@@ -10,16 +9,16 @@ export const createCanvasPolyfill = win => {
       const originalDrawImage = ctx.drawImage
       const drawImageWithUnknownArgs = originalDrawImage
       ctx.drawImage = function (img, ...drawArgs) {
-        if (img && !is.undefined(img._nodeCanvasImage)) {
+        if (img && typeof img._nodeCanvasImage !== 'undefined') {
           return drawImageWithUnknownArgs.call(this, img._nodeCanvasImage, ...drawArgs)
         }
         if (
           img &&
-          is.number(img.width) &&
-          is.number(img.height) &&
+          typeof img.width === 'number' &&
+          typeof img.height === 'number' &&
           img.width > 0 &&
           img.height > 0 &&
-          is.string(img.src) &&
+          typeof img.src === 'string' &&
           img.src.startsWith('data:image')
         ) {
           try {

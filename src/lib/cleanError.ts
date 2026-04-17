@@ -1,13 +1,15 @@
-import is from '@magic/types'
-
+/**
+ * @param {unknown} e
+ * @returns {string[] | Error | unknown}
+ */
 export const cleanError = (e: unknown): string[] | Error | unknown => {
-  if (!e || !is.object(e)) {
+  if (!e || typeof e !== 'object') {
     return e
   }
 
   const errObj = e as { stack?: string }
 
-  if (!errObj.stack || !is.string(errObj.stack)) {
+  if (!errObj.stack || typeof errObj.stack !== 'string') {
     return e
   }
 
