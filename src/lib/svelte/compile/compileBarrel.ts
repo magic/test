@@ -50,12 +50,12 @@ export const compileBarrel = async (
       await fs.mkdirp(path.dirname(tmpFile))
       await fs.writeFile(tmpFile, processed.code)
 
-      compiledExports.push({ name, absPath: path.resolve(tmpFile) })
+      compiledExports.push({ name, absPath: path.join(process.cwd(), tmpFile) })
     }
 
     const barrelRelPath = path.relative(process.cwd(), filePath)
     const wrapperFile = path.join(TMP_DIR, barrelRelPath.replace(/\.(ts|js)$/, '.barrel.js'))
-    const wrapperAbsPath = path.resolve(wrapperFile)
+    const wrapperAbsPath = path.join(process.cwd(), wrapperFile)
     const wrapperTmpDir = path.dirname(wrapperAbsPath)
 
     const wrapperExports = compiledExports
