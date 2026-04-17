@@ -43,7 +43,6 @@ const skipProps = [
   'Math',
   'Infinity',
   'NaN',
-  'undefined',
   'parseInt',
   'parseFloat',
   'isNaN',
@@ -392,6 +391,42 @@ export class Isolation {
           testParent: options.testParent,
           testName: options.testName,
           suiteSnapshot: options.suiteSnapshot,
+        },
+      })
+      let settled = false
+      worker.on('message', result => {
+        if (settled) return
+        settled = true
+        resolve(result)
+      })
+      worker.on('error', err => {
+        if (settled) return
+        settled = true
+        reject(err)
+      })
+      worker.on('exit', code => {
+        if (settled) return
+        if (code !== 0) {
+          settled = true
+          reject(new Error(`Worker exited with code ${code}`))
+        }
+      })
+    })
+  }
+  /**
+   * Run multiple tests in a single worker for better performance
+   */
+  executeBatchInWorker(options) {
+    return new Promise((resolve, reject) => {
+      const worker = new Worker(new URL('./worker.js', import.meta.url), {
+        workerData: {
+          testFileUrl: options.testFileUrl,
+          testIndices: options.testIndices,
+          testPkg: options.testPkg,
+          testParent: options.testParent,
+          testNames: options.testNames,
+          suiteSnapshot: options.suiteSnapshot,
+          batchMode: true,
         },
       })
       let settled = false

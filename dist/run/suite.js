@@ -59,16 +59,54 @@ const handleSuiteHooks = async tests => {
     'beforeAll' in tests &&
     is.function(tests.beforeAll)
   ) {
-    const testsWithHooks = tests
-    const beforeAllFn = testsWithHooks.beforeAll
-    if (is.fn(beforeAllFn)) {
-      const beforeResult = await beforeAllFn()
+    if (is.fn(tests.beforeAll)) {
+      const beforeResult = await tests.beforeAll()
       if (is.function(beforeResult)) {
         afterAllCleanup = beforeResult
       }
     }
   }
   return { afterAllCleanup }
+}
+const hasTestHooks = test => {
+  return is.function(test.before) || is.function(test.after)
+}
+const createFailResult = testToRun => {
+  return {
+    result: undefined,
+    msg: '',
+    pass: false,
+    parent: testToRun.parent || '',
+    name: testToRun.name,
+    expect: undefined,
+    expString: undefined,
+    key: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
+    info: testToRun.info || '',
+    pkg: testToRun.pkg,
+  }
+}
+const processWorkerResults = (results, rawResults) => {
+  for (const r of results) {
+    rawResults.push(r)
+    if (r.afterCleanupError) {
+      log.warn('afterCleanup error in', r.name, r.afterCleanupError)
+    }
+    if (r.afterError) {
+      log.warn('after error in', r.name, r.afterError)
+    }
+  }
+  return results
+}
+const handleWorkerError = (testToRun, error, rawResults) => {
+  log.error(ERRORS.E_TEST_FN, {
+    testKey: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
+    testName: testToRun.name,
+    parent: testToRun.parent,
+    error: cleanError(error),
+  })
+  const failResult = createFailResult(testToRun)
+  rawResults.push(failResult)
+  return failResult
 }
 /**
  * Run an array of tests
@@ -86,17 +124,49 @@ const runTestArray = async (
   suiteSnapshot,
 ) => {
   if (needsIsolation && useWorkers) {
-    // Run tests in parallel using worker threads
-    const promises = tests.map((t, i) => {
+    const testsWithHooks = []
+    const testsWithoutHooks = []
+    tests.forEach((t, i) => {
       const testToRun = {
         ...t,
         name: t.name || name,
         parent: t.parent || parent,
         pkg: t.pkg || pkg,
       }
-      // Component tests require DOM, can't run in workers (happy-dom singleton)
+      if (t.component || hasTestHooks(t)) {
+        testsWithHooks.push({ test: testToRun, index: i })
+      } else {
+        testsWithoutHooks.push({ test: testToRun, index: i })
+      }
+    })
+    const allResults = []
+    const hasAnyHooks = testsWithHooks.length > 0
+    if (testsWithoutHooks.length > 0 && !hasAnyHooks) {
+      try {
+        const batchResults = await isolation.executeBatchInWorker({
+          testFileUrl,
+          testIndices: testsWithoutHooks.map(t => t.index),
+          testPkg: pkg,
+          testParent: parent,
+          testNames: testsWithoutHooks.map(t => t.test.name),
+          suiteSnapshot,
+        })
+        allResults.push(...processWorkerResults(batchResults, rawResults))
+      } catch (err) {
+        for (const { test } of testsWithoutHooks) {
+          allResults.push(handleWorkerError(test, err, rawResults))
+        }
+      }
+    }
+    const individualPromises = tests.map((t, i) => {
+      const testToRun = {
+        ...t,
+        name: t.name || name,
+        parent: t.parent || parent,
+        pkg: t.pkg || pkg,
+      }
       if (t.component) {
-        return runTest(testToRun, store, rawResults)
+        return runTest(testToRun, store, rawResults).then(r => ({ result: r, index: i }))
       }
       return isolation
         .executeInWorker({
@@ -110,44 +180,35 @@ const runTestArray = async (
         .then(
           result => {
             const r = result
-            // Collect result for aggregation
             rawResults.push(r)
-            // Log cleanup errors from worker
             if (r.afterCleanupError) {
               log.warn('afterCleanup error in', r.name || testToRun.name, r.afterCleanupError)
             }
             if (r.afterError) {
               log.warn('after error in', r.name || testToRun.name, r.afterError)
             }
-            return r
+            return { result: r, index: i }
           },
           err => {
-            // Worker failed; create a failing TestResult
-            log.error(ERRORS.E_TEST_FN, {
-              testKey: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
-              testName: testToRun.name,
-              parent: testToRun.parent,
-              error: cleanError(err),
-            })
-            const failResult = {
-              result: undefined,
-              msg: '',
-              pass: false,
-              parent: testToRun.parent || '',
-              name: testToRun.name,
-              expect: undefined,
-              expString: undefined,
-              key: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
-              info: testToRun.info || '',
-              pkg: testToRun.pkg,
-            }
-            rawResults.push(failResult)
-            return failResult
+            const failResult = handleWorkerError(testToRun, err, rawResults)
+            return { result: failResult, index: i }
           },
         )
     })
-    const resolved = await Promise.all(promises)
-    return resolved.filter(r => !!r)
+    const individualResults = await Promise.all(individualPromises)
+    const filteredResults = individualResults.filter(r => !!r)
+    const resultsMap = new Map()
+    for (const { result, index } of filteredResults) {
+      resultsMap.set(index, result)
+    }
+    const sortedResults = []
+    for (let i = 0; i < tests.length; i++) {
+      const r = resultsMap.get(i)
+      if (r) {
+        sortedResults.push(r)
+      }
+    }
+    return sortedResults
   }
   // No isolation needed: run in parallel without isolation
   const promises = tests.map(t => {
@@ -173,8 +234,38 @@ const runTestObject = async (testsObj, name, parent, pkg, store, rawResults = []
     const result = await runTest(test, store, rawResults)
     return result ? [result] : []
   }
+  // Check if this is a test object with a tests array (e.g., { beforeAll, tests: [...] })
+  // In this case, we need to run the hooks and then run the tests directly
+  if (is.arr(testsObj.tests)) {
+    const testArray = testsObj.tests
+    const needsIsolation = suiteNeedsIsolation(testArray)
+    const { afterAllCleanup } = await handleSuiteHooks(testsObj)
+    const results = await runTestArray(
+      testArray,
+      needsIsolation,
+      name,
+      parent,
+      pkg,
+      store,
+      rawResults,
+      '',
+      false,
+    )
+    // Run afterAll cleanup
+    if (is.function(afterAllCleanup)) {
+      const cleanupResult = afterAllCleanup()
+      if (cleanupResult && is.promise(cleanupResult)) {
+        await cleanupResult
+      }
+    }
+    // Run afterAll hook
+    if (is.objectNative(testsObj) && is.function(testsObj.afterAll)) {
+      await testsObj.afterAll()
+    }
+    return results
+  }
   const entries = Object.entries(testsObj).filter(
-    ([key]) => key !== 'beforeAll' && key !== 'afterAll' && key !== 'fn',
+    ([key]) => key !== 'beforeAll' && key !== 'afterAll' && key !== 'fn' && key !== 'tests',
   )
   const promises = entries.map(([suiteName, nestedTests]) =>
     runSuite({

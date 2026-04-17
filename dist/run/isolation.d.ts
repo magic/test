@@ -37,6 +37,17 @@ export declare class Isolation {
     testName: string
     suiteSnapshot?: Snapshot
   }): Promise<TestResult>
+  /**
+   * Run multiple tests in a single worker for better performance
+   */
+  executeBatchInWorker(options: {
+    testFileUrl: string
+    testIndices: number[]
+    testPkg: string
+    testParent: string
+    testNames: string[]
+    suiteSnapshot?: Snapshot
+  }): Promise<TestResult[]>
 }
 /**
  * Apply a snapshot to the current globalThis context.
