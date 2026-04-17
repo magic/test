@@ -35,16 +35,12 @@ const runWorker = (): void => {
     if (code !== 0) {
       task.reject(new Error(`Worker exited with code ${code}`))
     }
-    // Always process next worker after any exit
     runWorker()
   })
 }
 
 const enqueueWorker = (task: WorkerTask): void => {
   workerQueue.push(task)
-  console.log(
-    `[WorkerPool] Enqueued. Queue: ${workerQueue.length}, Active: ${activeWorkers.size}, Max: ${MAX_WORKERS}`,
-  )
   if (activeWorkers.size < MAX_WORKERS) {
     runWorker()
   }
