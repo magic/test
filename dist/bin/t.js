@@ -47,6 +47,7 @@ npm example:
 `.trim(),
   },
 })
+let childProcess
 const run = async () => {
   const pkgPath = path.join(cwd, 'package.json')
   const content = await fs.readFile(pkgPath, 'utf-8')
@@ -118,12 +119,34 @@ const run = async () => {
       ...argv,
     ]
   }
-  await cli.spawn(cmd, argv)
+  childProcess = cli.spawn(cmd, argv)
+  return new Promise((resolve, reject) => {
+    childProcess.on('close', code => {
+      if (code === 0 || code === null) {
+        resolve(code)
+      } else {
+        reject(new Error(`Process exited with code ${code}`))
+      }
+    })
+    childProcess.on('error', reject)
+  })
 }
 run()
-const shutdown = async () => {
+let shuttingDown = false
+const shutdown = () => {
+  if (shuttingDown) return
+  shuttingDown = true
   log.warn('Received shutdown signal, aborting tests...')
-  await abort()
+  if (childProcess && !childProcess.killed) {
+    childProcess.kill('SIGTERM')
+  }
+  abort()
+  setTimeout(() => {
+    if (childProcess && !childProcess.killed) {
+      childProcess.kill('SIGKILL')
+    }
+    process.kill(process.pid, 'SIGKILL')
+  }, 1000)
   process.exit(1)
 }
 process.on('SIGTERM', shutdown).on('SIGINT', shutdown)

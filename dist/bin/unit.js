@@ -47,9 +47,15 @@ const handleError = error => {
   process.exit(1)
 }
 process.on('unhandledRejection', handleError).on('uncaughtException', handleError)
-const shutdown = async () => {
+let shuttingDown = false
+const shutdown = () => {
+  if (shuttingDown) return
+  shuttingDown = true
   log.warn('Received shutdown signal, aborting tests...')
-  await abort()
+  abort()
+  setTimeout(() => {
+    process.kill(process.pid, 'SIGKILL')
+  }, 1000)
   process.exit(1)
 }
 process.on('SIGTERM', shutdown).on('SIGINT', shutdown)
