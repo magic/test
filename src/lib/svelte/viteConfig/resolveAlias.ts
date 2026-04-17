@@ -59,7 +59,9 @@ export const resolveAlias = async (
         if (stat.isFile()) {
           return resolved
         }
-      } catch {}
+      } catch {
+        // intentionally empty
+      }
 
       // Check if resolved path is a directory (skip it if so)
       try {
@@ -82,7 +84,9 @@ export const resolveAlias = async (
           }
           return null
         }
-      } catch {}
+      } catch {
+        // intentionally empty
+      }
 
       // Try with extensions, handling .js->.ts conversion
       const withExtensions = [

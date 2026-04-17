@@ -101,7 +101,9 @@ export const resolveViteAlias = async (
         if (stat.isFile()) {
           return resolved
         }
-      } catch {}
+      } catch {
+        // intentionally empty
+      }
 
       try {
         const stat = await fs.stat(resolved)
@@ -115,7 +117,9 @@ export const resolveViteAlias = async (
           }
           return null
         }
-      } catch {}
+      } catch {
+        // intentionally empty
+      }
 
       for (const ext of SVELTE_EXTENSIONS) {
         const withExt = resolved + ext
@@ -148,7 +152,9 @@ export const resolveViteAlias = async (
           }
           return null
         }
-      } catch {}
+      } catch {
+        // intentionally empty
+      }
 
       for (const ext of SVELTE_EXTENSIONS) {
         const withExt = libPath + ext
