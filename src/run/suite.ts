@@ -130,7 +130,7 @@ const handleWorkerError = (
     parent: testToRun.parent,
     error: cleanError(error),
   })
-  const failResult = createFailResult(testToRun, error)
+  const failResult = createFailResult(testToRun)
   rawResults.push(failResult)
   return failResult
 }
@@ -285,8 +285,43 @@ const runTestObject = async (
     return result ? [result] : []
   }
 
+  // Check if this is a test object with a tests array (e.g., { beforeAll, tests: [...] })
+  // In this case, we need to run the hooks and then run the tests directly
+  if (is.arr(testsObj.tests)) {
+    const testArray = testsObj.tests as WrappedTest[]
+    const needsIsolation = suiteNeedsIsolation(testArray)
+    const { afterAllCleanup } = await handleSuiteHooks(testsObj)
+
+    const results = await runTestArray(
+      testArray,
+      needsIsolation,
+      name,
+      parent,
+      pkg,
+      store,
+      rawResults,
+      '',
+      false,
+    )
+
+    // Run afterAll cleanup
+    if (is.function(afterAllCleanup)) {
+      const cleanupResult = afterAllCleanup()
+      if (cleanupResult && is.promise(cleanupResult)) {
+        await cleanupResult
+      }
+    }
+
+    // Run afterAll hook
+    if (is.objectNative(testsObj) && is.function(testsObj.afterAll)) {
+      await testsObj.afterAll()
+    }
+
+    return results
+  }
+
   const entries = Object.entries(testsObj).filter(
-    ([key]) => key !== 'beforeAll' && key !== 'afterAll' && key !== 'fn',
+    ([key]) => key !== 'beforeAll' && key !== 'afterAll' && key !== 'fn' && key !== 'tests',
   )
 
   const promises = entries.map(([suiteName, nestedTests]) =>
