@@ -1,50 +1,8 @@
 import { Worker } from 'node:worker_threads'
-import os from 'node:os'
 
 import is from '@magic/types'
 
 import type { Snapshot, PropertyDescriptorRecord, TestResult } from '../types.js'
-
-const MAX_WORKERS = Math.max(1, os.cpus().length - 2)
-
-type WorkerTask = {
-  resolve: (value: TestResult | TestResult[]) => void
-  reject: (reason?: unknown) => void
-  worker: Worker
-}
-
-const workerQueue: WorkerTask[] = []
-const activeWorkers = new Set<Worker>()
-
-const runWorker = (): void => {
-  if (workerQueue.length === 0) return
-
-  const task = workerQueue.shift()
-  if (!task) return
-
-  activeWorkers.add(task.worker)
-
-  task.worker.on('message', result => {
-    task.resolve(result as TestResult | TestResult[])
-  })
-  task.worker.on('error', err => {
-    task.reject(err)
-  })
-  task.worker.on('exit', code => {
-    activeWorkers.delete(task.worker)
-    if (code !== 0) {
-      task.reject(new Error(`Worker exited with code ${code}`))
-    }
-    runWorker()
-  })
-}
-
-const enqueueWorker = (task: WorkerTask): void => {
-  workerQueue.push(task)
-  if (activeWorkers.size < MAX_WORKERS) {
-    runWorker()
-  }
-}
 
 const skipProps = [
   // Node/CommonJS built-ins
@@ -491,10 +449,23 @@ export class Isolation {
         },
       })
 
-      enqueueWorker({
-        resolve,
-        reject,
-        worker,
+      let settled = false
+      worker.on('message', result => {
+        if (settled) return
+        settled = true
+        resolve(result as TestResult | TestResult[])
+      })
+      worker.on('error', err => {
+        if (settled) return
+        settled = true
+        reject(err)
+      })
+      worker.on('exit', code => {
+        if (settled) return
+        if (code !== 0) {
+          settled = true
+          reject(new Error(`Worker exited with code ${code}`))
+        }
       })
     })
   }
