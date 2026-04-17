@@ -46,9 +46,7 @@ export const resolveAlias = async (importPath, sourceFilePath) => {
         if (stat.isFile()) {
           return resolved
         }
-      } catch {
-        // intentionally empty
-      }
+      } catch {}
       // Check if resolved path is a directory (skip it if so)
       try {
         const stat = await fs.stat(resolved)
@@ -70,9 +68,7 @@ export const resolveAlias = async (importPath, sourceFilePath) => {
           }
           return null
         }
-      } catch {
-        // intentionally empty
-      }
+      } catch {}
       // Try with extensions, handling .js->.ts conversion
       const withExtensions = [
         '.ts',

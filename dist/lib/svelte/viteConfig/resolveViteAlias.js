@@ -86,9 +86,7 @@ export const resolveViteAlias = async (importPath, sourceFilePath) => {
         if (stat.isFile()) {
           return resolved
         }
-      } catch {
-        // intentionally empty
-      }
+      } catch {}
       try {
         const stat = await fs.stat(resolved)
         if (stat.isDirectory()) {
@@ -101,9 +99,7 @@ export const resolveViteAlias = async (importPath, sourceFilePath) => {
           }
           return null
         }
-      } catch {
-        // intentionally empty
-      }
+      } catch {}
       for (const ext of SVELTE_EXTENSIONS) {
         const withExt = resolved + ext
         const exists = await fs.exists(withExt)
@@ -133,9 +129,7 @@ export const resolveViteAlias = async (importPath, sourceFilePath) => {
           }
           return null
         }
-      } catch {
-        // intentionally empty
-      }
+      } catch {}
       for (const ext of SVELTE_EXTENSIONS) {
         const withExt = libPath + ext
         if (await fs.exists(withExt)) {

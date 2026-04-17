@@ -373,9 +373,7 @@ const main = async () => {
     if (is.function(afterAllCleanup)) {
       try {
         await afterAllCleanup()
-      } catch {
-        // intentionally empty
-      }
+      } catch {}
     }
 
     if (parentPort) parentPort.postMessage(results)
