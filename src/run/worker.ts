@@ -5,7 +5,7 @@ import is from '@magic/types'
 import { cleanError, cleanFunctionString, getTestKey } from '../lib/index.js'
 import { restoreFromSnapshot } from './isolation.js'
 import { getViteDefine } from '../lib/svelte/viteConfig/index.js'
-import type { WrappedTest, CleanupFunction, TestResult, EvaluateResult, Snapshot } from '../types.js'
+import type { WrappedTest, CleanupFunction, TestResult, EvaluateResult } from '../types.js'
 
 import '../bin/lib/registerLoader.js'
 
@@ -269,57 +269,8 @@ const runSingleTest = async (
   }
 }
 
-const runSingleTestInWorker = async (
-  testIndex: number,
-  tests: unknown,
-  testPkg: string,
-  testParent: string,
-  testName: string,
-): Promise<TestResult> => {
-  let test: WrappedTest | undefined
-  if (is.array(tests) && tests[testIndex] != null && hasTestProperties(tests[testIndex])) {
-    test = tests[testIndex] as WrappedTest
-  } else if (hasTestProperties(tests)) {
-    test = tests as WrappedTest
-  }
-
-  if (!test) {
-    return {
-      result: undefined,
-      msg: '',
-      pass: false,
-      parent: testParent || '',
-      name: testName,
-      expect: undefined,
-      expString: undefined,
-      key: getTestKey(testPkg, testParent, testName),
-      info: '',
-      pkg: testPkg,
-    }
-  }
-
-  const enriched = {
-    ...test,
-    name: test.name || testName,
-    parent: test.parent || testParent,
-    pkg: test.pkg || testPkg,
-  }
-
-  const key = getTestKey(testPkg, testParent, testName)
-  return runSingleTest(enriched, key, testPkg, testParent, testName)
-}
-
 const main = async () => {
-  const { testFileUrl, testIndex, testIndices, testPkg, testParent, testName, suiteSnapshot } =
-    workerData as {
-      testFileUrl: string
-      testIndex?: number
-      testIndices?: number[]
-      testPkg: string
-      testParent: string
-      testName: string
-      suiteSnapshot?: Snapshot
-    }
+  const { testFileUrl, testIndex, testPkg, testParent, testName, suiteSnapshot } = workerData
 
   try {
     if (suiteSnapshot) {
@@ -336,9 +287,14 @@ const main = async () => {
       }
     }
 
-    const indices = testIndices ?? (testIndex !== undefined ? [testIndex] : [])
+    let test: WrappedTest | undefined
+    if (is.array(tests) && tests[testIndex] != null && hasTestProperties(tests[testIndex])) {
+      test = tests[testIndex] as WrappedTest
+    } else if (hasTestProperties(tests)) {
+      test = tests as WrappedTest
+    }
 
-    if (indices.length === 0) {
+    if (!test) {
       if (parentPort)
         parentPort.postMessage({
           result: undefined,
@@ -355,14 +311,16 @@ const main = async () => {
       return
     }
 
-    const results: TestResult[] = []
-    for (const idx of indices) {
-      const result = await runSingleTestInWorker(idx, tests, testPkg, testParent, testName)
-      results.push({
-        ...result,
-        result: makeSafe(result.result),
-      })
+    // Merge context fields from the worker request into the test
+    const enriched = {
+      ...test,
+      name: test.name || testName,
+      parent: test.parent || testParent,
+      pkg: test.pkg || testPkg,
     }
+
+    const key = getTestKey(testPkg, testParent, testName)
+    const result = await runSingleTest(enriched, key, testPkg, testParent, testName)
 
     if (is.function(afterAllCleanup)) {
       try {
@@ -370,7 +328,13 @@ const main = async () => {
       } catch {}
     }
 
-    if (parentPort) parentPort.postMessage(results)
+    // Sanitize result to ensure it can be sent via postMessage (structured clone)
+    // Do NOT sanitize expect - it's used for display and may be a function
+    const payload = {
+      ...result,
+      result: makeSafe(result.result),
+    }
+    if (parentPort) parentPort.postMessage(payload)
   } catch (e) {
     if (parentPort)
       parentPort.postMessage({
