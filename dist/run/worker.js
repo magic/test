@@ -97,7 +97,7 @@ const evaluateResult = async (res, expect) => {
 }
 const importFile = async filePath => {
   try {
-    const defines = await getViteDefine()
+    const defines = await getViteDefine(filePath)
     for (const [key, value] of Object.entries(defines)) {
       // @ts-expect-error - dynamic globalThis property assignment
       globalThis[key] = value
@@ -247,13 +247,6 @@ const main = async () => {
       restoreFromSnapshot(suiteSnapshot)
     }
     const tests = await importFile(testFileUrl)
-    let afterAllCleanup
-    if (tests && is.objectNative(tests) && is.function(tests.beforeAll)) {
-      const beforeResult = await tests.beforeAll()
-      if (is.function(beforeResult)) {
-        afterAllCleanup = beforeResult
-      }
-    }
     let test
     if (is.array(tests) && tests[testIndex] != null && hasTestProperties(tests[testIndex])) {
       test = tests[testIndex]
@@ -285,11 +278,6 @@ const main = async () => {
     }
     const key = getTestKey(testPkg, testParent, testName)
     const result = await runSingleTest(enriched, key, testPkg, testParent, testName)
-    if (is.function(afterAllCleanup)) {
-      try {
-        await afterAllCleanup()
-      } catch {}
-    }
     // Sanitize result to ensure it can be sent via postMessage (structured clone)
     // Do NOT sanitize expect - it's used for display and may be a function
     const payload = {

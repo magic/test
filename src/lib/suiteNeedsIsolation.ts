@@ -5,13 +5,6 @@ import type { Test, TestCollection, TestObject } from '../types.js'
  * Check if any test in the suite needs isolation (has before/after hooks)
  */
 export const suiteNeedsIsolation = (tests: TestCollection): boolean => {
-  if (is.objectNative(tests)) {
-    const testObj = tests as TestObject
-    if (is.function(testObj.beforeAll) || is.function(testObj.afterAll)) {
-      return true
-    }
-  }
-
   if (is.array(tests)) {
     return tests.some(test => is.function(test.before) || is.function(test.after))
   } else if (is.objectNative(tests)) {
