@@ -51,20 +51,20 @@ export async function resolve(
       if (await fs.exists(pkgPath)) {
         const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'))
 
+        if (pkg.exports?.['.']?.main || pkg.exports?.['.']?.import) {
+          const mainPath = pkg.exports['.'].main || pkg.exports['.'].import
+          const resolvedPath = path.join(nodeModulesPath, mainPath)
+          if (await fs.exists(resolvedPath)) {
+            return { url: pathToFileURL(resolvedPath).href, shortCircuit: true }
+          }
+        }
+
         if (pkg.exports?.['.']?.svelte) {
           const sveltePath = path.join(nodeModulesPath, pkg.exports['.'].svelte)
           if (await fs.exists(sveltePath)) {
             const { compileSvelteWithWrite } = await import('../../lib/svelte/compile/index.ts')
             const { importUrl } = await compileSvelteWithWrite(sveltePath)
             return { url: importUrl, shortCircuit: true }
-          }
-        }
-
-        if (pkg.exports?.['.']?.main || pkg.exports?.['.']?.import) {
-          const mainPath = pkg.exports['.'].main || pkg.exports['.'].import
-          const resolvedPath = path.join(nodeModulesPath, mainPath)
-          if (await fs.exists(resolvedPath)) {
-            return { url: pathToFileURL(resolvedPath).href, shortCircuit: true }
           }
         }
 
@@ -101,20 +101,20 @@ export async function resolve(
       if (await fs.exists(pkgPath)) {
         const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'))
 
+        if (pkg.exports?.['.']?.main || pkg.exports?.['.']?.import) {
+          const mainPath = pkg.exports['.'].main || pkg.exports['.'].import
+          const resolvedPath = path.join(nodeModulesPath, mainPath)
+          if (await fs.exists(resolvedPath)) {
+            return { url: pathToFileURL(resolvedPath).href, shortCircuit: true }
+          }
+        }
+
         if (pkg.exports?.['.']?.svelte) {
           const sveltePath = path.join(nodeModulesPath, pkg.exports['.'].svelte)
           if (await fs.exists(sveltePath)) {
             const { compileSvelteWithWrite } = await import('../../lib/svelte/compile/index.ts')
             const { importUrl } = await compileSvelteWithWrite(sveltePath)
             return { url: importUrl, shortCircuit: true }
-          }
-        }
-
-        if (pkg.exports?.['.']?.main || pkg.exports?.['.']?.import) {
-          const mainPath = pkg.exports['.'].main || pkg.exports['.'].import
-          const resolvedPath = path.join(nodeModulesPath, mainPath)
-          if (await fs.exists(resolvedPath)) {
-            return { url: pathToFileURL(resolvedPath).href, shortCircuit: true }
           }
         }
 
@@ -158,17 +158,15 @@ export async function resolve(
     ) {
       if (context.parentURL) {
         const parentDir = path.dirname(new URL(context.parentURL).pathname)
-        const extensions = ['.svelte.js', '.svelte', '/index.js', '/index.ts', '/index.svelte.js']
-        for (const ext of extensions) {
-          const candidate = path.resolve(parentDir, specifier + ext)
-          if (await fs.exists(candidate)) {
-            if (ext === '.svelte' || ext === '.svelte.js') {
-              const { compileSvelteWithWrite } = await import('../../lib/svelte/compile/index.ts')
-              const { importUrl } = await compileSvelteWithWrite(candidate)
-              return { url: importUrl, shortCircuit: true }
-            }
-            return { url: pathToFileURL(candidate).href, shortCircuit: true }
-          }
+        const svelteJsPath = path.resolve(parentDir, specifier + '.svelte.js')
+        if (await fs.exists(svelteJsPath)) {
+          return { url: pathToFileURL(svelteJsPath).href, shortCircuit: true }
+        }
+        const sveltePath = path.resolve(parentDir, specifier + '.svelte')
+        if (await fs.exists(sveltePath)) {
+          const { compileSvelteWithWrite } = await import('../../lib/svelte/compile/index.ts')
+          const { importUrl } = await compileSvelteWithWrite(sveltePath)
+          return { url: importUrl, shortCircuit: true }
         }
       }
     }
