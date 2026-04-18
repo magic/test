@@ -69,10 +69,10 @@
     "@magic/core": "0.0.156",
     "@magic/format": "0.0.73",
     "@types/node": "25.6.0",
-    "eslint": "10.2.0",
+    "eslint": "10.2.1",
     "prettier-plugin-svelte": "3.5.1",
     "svelte": "5.55.4",
-    "typescript": "6.0.2",
+    "typescript": "6.0.3",
     "typescript-eslint": "8.58.2",
     "vite": "8.0.8"
   },
