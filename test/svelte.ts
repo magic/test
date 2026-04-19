@@ -110,12 +110,9 @@ export default [
   },
   // SvelteKit wrapper provides correct $app/environment values (dev mode)
   {
-    fn: async () => {
-      const { target, unmount } = await mount(
-        './src/lib/svelte/testFixtures/components/SvelteKit.svelte',
-      )
+    component:  './src/lib/svelte/testFixtures/components/SvelteKit.svelte',
+    fn: async ({ target }) => {
       const result = html(target)
-      await unmount()
       return result
     },
     expect:
@@ -123,17 +120,14 @@ export default [
     info: 'SvelteKit wrapper provides correct $app/environment values (dev mode)',
   },
   {
-    fn: async () => {
-      const { target, unmount } = await mount(
-        './src/lib/svelte/testFixtures/components/SvelteKit.svelte',
-      )
+    component: 'src/lib/svelte/testFixtures/components/SvelteKit.svelte',
+    fn: async ({ target }) => {
       // Initial state: showEnv = true
       const initial = html(target)
       // Click button to toggle
       click(target, 'button')
       await flushSync()
       const afterToggle = html(target)
-      await unmount()
       return { initial, afterToggle }
     },
     expect: {
