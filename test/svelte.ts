@@ -110,7 +110,7 @@ export default [
   },
   // SvelteKit wrapper provides correct $app/environment values (dev mode)
   {
-    component:  './src/lib/svelte/testFixtures/components/SvelteKit.svelte',
+    component: './src/lib/svelte/testFixtures/components/SvelteKit.svelte',
     fn: async ({ target }) => {
       const result = html(target)
       return result

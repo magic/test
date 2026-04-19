@@ -43,7 +43,7 @@ const REGEX_PACKAGE_CONTENT = 'export const pkg = 1'
 const tryCatchRm = async (file: string) => {
   try {
     await fs.rmrf(file)
-  } catch(e) {
+  } catch (e) {
     const err = e as CustomError
     if (err.code !== 'ENOENT') {
       throw err
@@ -71,7 +71,7 @@ export default {
         tryCatchRm('vite.config.js'),
         tryCatchRm('test/.tmp/test-alias-component.svelte'),
       ])
-      
+
       configCache.clear()
       aliasCache.clear()
     }
