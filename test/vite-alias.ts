@@ -4,6 +4,7 @@ import { mount } from '../src/index.js'
 import { resolveAlias } from '../src/lib/svelte/viteConfig/index.js'
 import { configCache, aliasCache } from '../src/lib/svelte/viteConfig/cache.js'
 import { findProjectRoot } from '../src/lib/svelte/viteConfig/findProjectRoot.js'
+import type { CustomError } from '@magic/error'
 
 const VITE_CONFIG = `import { defineConfig } from 'vite'
 import path from 'path'
@@ -39,11 +40,22 @@ const REGEX_FILE_CONTENT = `export const test = 1`
 const REGEX_PACKAGE_FILE = 'test/.tmp/replacement-dir/package'
 const REGEX_PACKAGE_CONTENT = 'export const pkg = 1'
 
+const tryCatchRm = async (file: string) => {
+  try {
+    await fs.rmrf(file)
+  } catch(e) {
+    const err = e as CustomError
+    if (err.code !== 'ENOENT') {
+      throw err
+    }
+  }
+}
+
 export default {
   beforeAll: async () => {
-    await fs.mkdir(TEST_ALIAS_DIR, { recursive: true })
+    await fs.mkdirp(TEST_ALIAS_DIR)
     await fs.writeFile(path.join(TEST_ALIAS_DIR, 'ViteAlias.svelte'), TEST_BUTTON_CONTENT)
-    await fs.mkdir(REGEX_ALIAS_DIR, { recursive: true })
+    await fs.mkdirp(REGEX_ALIAS_DIR)
     await fs.writeFile(path.join(REGEX_ALIAS_DIR, 'TestRegex.svelte'), REGEX_FILE_CONTENT)
     await fs.writeFile(REGEX_PACKAGE_FILE, REGEX_PACKAGE_CONTENT)
     await fs.writeFile('test/.tmp/test-alias-component.svelte', TEST_COMPONENT_CONTENT)
@@ -53,15 +65,13 @@ export default {
     aliasCache.clear()
 
     return async () => {
-      await fs.rm(TEST_ALIAS_DIR, { recursive: true, force: true })
-      await fs.rm(REGEX_ALIAS_DIR, { recursive: true, force: true })
-      await fs.unlink('vite.config.js')
-      try {
-        await fs.unlink('test/.tmp/test-alias-component.svelte')
-      } catch {
-        // intentionally left blank
-      }
-
+      await Promise.all([
+        tryCatchRm(TEST_ALIAS_DIR),
+        tryCatchRm(REGEX_ALIAS_DIR),
+        tryCatchRm('vite.config.js'),
+        tryCatchRm('test/.tmp/test-alias-component.svelte'),
+      ])
+      
       configCache.clear()
       aliasCache.clear()
     }
