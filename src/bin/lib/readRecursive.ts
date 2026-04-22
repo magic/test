@@ -5,6 +5,10 @@ import fs from '@magic/fs'
 import is from '@magic/types'
 import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js'
 import { getViteDefine } from '../../lib/svelte/viteConfig/index.js'
+import {
+  resolveSvelteOnlyExports,
+  writeTempFile,
+} from '../../lib/svelte/compile/resolveSvelteOnlyExports.js'
 import type { TestSuites, TestCollection } from '../../types.js'
 
 interface ImportResult {
@@ -38,7 +42,18 @@ const CONCURRENCY_LIMIT = 50
 
 const importFile = async (filePath: string): Promise<unknown> => {
   try {
-    const mod = await import(filePath)
+    let code = await fs.readFile(filePath, 'utf-8')
+    const transformedCode = await resolveSvelteOnlyExports(code, path.dirname(filePath))
+
+    let importPath: string
+    if (transformedCode !== code) {
+      const tempFile = await writeTempFile(filePath, transformedCode)
+      importPath = pathToFileURL(tempFile).href
+    } else {
+      importPath = pathToFileURL(filePath).href
+    }
+
+    const mod = await import(importPath)
 
     // catch es6 export default
     if (is.module(mod)) {
@@ -136,8 +151,6 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
 
         const fileP = filePath.replace(testDir, '')
 
-        const importPath = pathToFileURL(filePath).href
-
         try {
           const defines = await getViteDefine(filePath)
           for (const [key, value] of Object.entries(defines)) {
@@ -145,7 +158,7 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
             globalThis[key] = value
           }
 
-          const test = await importFile(importPath)
+          const test = await importFile(filePath)
           return { type: 'file', file: fileP, test } as ImportResult
         } catch (err) {
           const error = is.error(err) ? err : new Error(String(err))

@@ -1,39 +1,48 @@
 import is from '@magic/types'
+import path from 'node:path'
 
 export class LRUCache<T> {
   maxSize: number
   cache = new Map<string, T>()
+  cwd: string | null = null
 
-  constructor(maxSize = 100) {
+  constructor(maxSize = 100, cwd?: string) {
     this.maxSize = maxSize
+    this.cwd = cwd || process.cwd()
+  }
+
+  normalizeKey(key: string): string {
+    if (path.isAbsolute(key) && this.cwd) {
+      return path.relative(this.cwd, key)
+    }
+    return key
   }
 
   get(key: string): T | undefined {
-    if (!this.cache.has(key)) {
+    const normalizedKey = this.normalizeKey(key)
+    if (!this.cache.has(normalizedKey)) {
       return undefined
     }
-
-    const value = this.cache.get(key)
+    const value = this.cache.get(normalizedKey)
     if (is.undefined(value)) {
       return undefined
     }
-
-    this.cache.delete(key)
-    this.cache.set(key, value)
+    this.cache.delete(normalizedKey)
+    this.cache.set(normalizedKey, value)
     return value
   }
 
   set(key: string, value: T): void {
-    if (this.cache.has(key)) {
-      this.cache.delete(key)
+    const normalizedKey = this.normalizeKey(key)
+    if (this.cache.has(normalizedKey)) {
+      this.cache.delete(normalizedKey)
     } else if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value
       if (firstKey) {
         this.cache.delete(firstKey)
       }
     }
-
-    this.cache.set(key, value)
+    this.cache.set(normalizedKey, value)
   }
 
   clear(): void {

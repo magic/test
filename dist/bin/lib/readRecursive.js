@@ -23,6 +23,10 @@ import fs from '@magic/fs'
 import is from '@magic/types'
 import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js'
 import { getViteDefine } from '../../lib/svelte/viteConfig/index.js'
+import {
+  resolveSvelteOnlyExports,
+  writeTempFile,
+} from '../../lib/svelte/compile/resolveSvelteOnlyExports.js'
 /**
  * Type guard for ImportResult.
  */
@@ -37,7 +41,16 @@ const isImportResult = obj => {
 const CONCURRENCY_LIMIT = 50
 const importFile = async filePath => {
   try {
-    const mod = await import(__rewriteRelativeImportExtension(filePath))
+    let code = await fs.readFile(filePath, 'utf-8')
+    const transformedCode = await resolveSvelteOnlyExports(code, path.dirname(filePath))
+    let importPath
+    if (transformedCode !== code) {
+      const tempFile = await writeTempFile(filePath, transformedCode)
+      importPath = pathToFileURL(tempFile).href
+    } else {
+      importPath = pathToFileURL(filePath).href
+    }
+    const mod = await import(__rewriteRelativeImportExtension(importPath))
     // catch es6 export default
     if (is.module(mod)) {
       const m = { ...mod }
@@ -119,14 +132,13 @@ export const readRecursive = async (dir = '') => {
           return { type: 'skip', file }
         }
         const fileP = filePath.replace(testDir, '')
-        const importPath = pathToFileURL(filePath).href
         try {
           const defines = await getViteDefine(filePath)
           for (const [key, value] of Object.entries(defines)) {
             // @ts-expect-error - dynamic globalThis property assignment
             globalThis[key] = value
           }
-          const test = await importFile(importPath)
+          const test = await importFile(filePath)
           return { type: 'file', file: fileP, test }
         } catch (err) {
           const error = is.error(err) ? err : new Error(String(err))

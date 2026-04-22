@@ -18,6 +18,8 @@ import { computeRelativePath } from './computeRelativePath.js'
 import { classifyImport } from './classifyImport.js'
 import { getTempFilePath } from './getTempFilePath.js'
 import { compileBarrel } from './compileBarrel.js'
+import { resolvePackageExport } from './resolvePackageExport.js'
+import { compileSvelteOnlyExport } from './resolveSvelteOnlyExports.js'
 
 export const resolveAndCompileImport = async (
   importPath: string,
@@ -38,10 +40,29 @@ export const resolveAndCompileImport = async (
   }
 
   if (importType === 'scoped') {
+    if (importPath.startsWith('@magic/')) {
+      return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
+    }
+    const resolved = await resolvePackageExport(importPath, sourceDir)
+    if (resolved.isSvelteOnly && resolved.resolvedPath) {
+      const compiledPath = await compileSvelteOnlyExport(resolved.resolvedPath, sourceDir)
+      const sourceTmpFile = getTempFilePath(sourceFilePath)
+      const fromDir = path.dirname(sourceTmpFile)
+      const relativePath = computeRelativePath(fromDir, compiledPath)
+      return { filePath: importPath, js: { code: '' }, url: relativePath }
+    }
     return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
   }
 
   if (importType === 'bare') {
+    const resolved = await resolvePackageExport(importPath, sourceDir)
+    if (resolved.isSvelteOnly && resolved.resolvedPath) {
+      const compiledPath = await compileSvelteOnlyExport(resolved.resolvedPath, sourceDir)
+      const sourceTmpFile = getTempFilePath(sourceFilePath)
+      const fromDir = path.dirname(sourceTmpFile)
+      const relativePath = computeRelativePath(fromDir, compiledPath)
+      return { filePath: importPath, js: { code: '' }, url: relativePath }
+    }
     return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
   }
 
@@ -97,6 +118,13 @@ export const resolveAndCompileImport = async (
     const tsPath = resolvedPath.slice(0, -3) + '.ts'
     if (await fs.exists(tsPath)) {
       resolvedPath = tsPath
+    }
+  } else if (resolvedPath.endsWith('.svelte')) {
+    if (!(await fs.exists(resolvedPath))) {
+      const svelteJsPath = resolvedPath + '.js'
+      if (await fs.exists(svelteJsPath)) {
+        resolvedPath = svelteJsPath
+      }
     }
   }
 
