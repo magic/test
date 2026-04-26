@@ -190,14 +190,33 @@ export const resolvePackageExport = async (
             }
           }
         }
-        return { resolvedPath: null, isSvelteOnly: false }
+        // import condition exists but no direct Svelte re-exports found
+        // Check svelte condition before returning false
+        const sveltePath = conditions.svelte as string | undefined
+        if (sveltePath) {
+          const resolved = await tryResolvePath(nodeModulesPath, sveltePath)
+          if (resolved) {
+            // Only return isSvelteOnly: true if the svelte condition file actually has Svelte re-exports
+            // This prevents false positives for packages like @systemkollektiv/i18n that have
+            // a svelte condition but don't actually re-export any Svelte components
+            const svelteReExports = await hasSvelteReExports(resolved)
+            if (svelteReExports) {
+              return { resolvedPath: resolved, isSvelteOnly: true, hasSvelteReExports: true }
+            }
+            // svelte condition exists but no Svelte re-exports found
+            // Continue to check subpath exports
+          }
+        }
       }
 
       const sveltePath = conditions.svelte as string | undefined
       if (sveltePath) {
         const resolved = await tryResolvePath(nodeModulesPath, sveltePath)
         if (resolved) {
-          return { resolvedPath: resolved, isSvelteOnly: true }
+          const svelteReExports = await hasSvelteReExports(resolved)
+          if (svelteReExports) {
+            return { resolvedPath: resolved, isSvelteOnly: true, hasSvelteReExports: true }
+          }
         }
 
         const fallbackCandidates = [
@@ -210,13 +229,47 @@ export const resolvePackageExport = async (
 
         const fallbackResolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
         if (fallbackResolved) {
-          return { resolvedPath: fallbackResolved, isSvelteOnly: true }
+          const svelteReExports = await hasSvelteReExports(fallbackResolved)
+          if (svelteReExports) {
+            return { resolvedPath: fallbackResolved, isSvelteOnly: true, hasSvelteReExports: true }
+          }
         }
 
-        throw new Error(
-          `Package ${pkgName.name} has svelte-only exports but no fallback found. ` +
-            `Svelte path: ${sveltePath}, checked fallbacks: ${fallbackCandidates.join(', ')}`,
-        )
+        // No Svelte re-exports found in root export conditions
+        // Check subpath exports for Svelte re-exports
+        const pkgExports = pkg.exports as Record<string, unknown> | undefined
+        const subpathKeys = pkgExports
+          ? Object.keys(pkgExports).filter(
+              k =>
+                k !== '.' &&
+                (k.includes('component') || k.includes('svelte') || k.endsWith('.svelte')),
+            )
+          : []
+        for (const subpathKey of subpathKeys) {
+          const subpathExport = pkgExports?.[subpathKey]
+          const subpathStr =
+            typeof subpathExport === 'string'
+              ? subpathExport
+              : ((subpathExport as Record<string, unknown>)?.svelte as string) ||
+                ((subpathExport as Record<string, unknown>)?.import as string) ||
+                ((subpathExport as Record<string, unknown>)?.default as string)
+          if (subpathStr) {
+            const subpathResolved = await tryResolvePath(nodeModulesPath, subpathStr)
+            if (subpathResolved) {
+              const svelteReExports = await hasSvelteReExports(subpathResolved)
+              if (svelteReExports) {
+                return {
+                  resolvedPath: subpathResolved,
+                  isSvelteOnly: true,
+                  hasSvelteReExports: true,
+                }
+              }
+            }
+          }
+        }
+
+        // No Svelte re-exports found anywhere, return false
+        return { resolvedPath: null, isSvelteOnly: false }
       }
 
       const fallbackCandidates = [

@@ -45,11 +45,14 @@ const JS_SVELTE_REEXPORT_RE =
 
 const JS_REEXPORT_RE = /(export\s+\*\s+from\s+['"])([^'"]+\.js)(['"])/g
 
-const inProgress = new Set<string>()
+const tmpFileCache = new Map<string, string>()
+
+const compiling = new Map<string, Promise<string>>()
 
 export const compileSvelteOnlyExport = async (
   sveltePath: string,
   sourceDir: string,
+  exportNames?: string[],
 ): Promise<string> => {
   if (!sveltePath.endsWith('.js') && !sveltePath.endsWith('.mjs')) {
     if (!(await fs.exists(sveltePath))) {
@@ -64,68 +67,131 @@ export const compileSvelteOnlyExport = async (
   const hash = crypto.createHash('sha256').update(content).digest('hex')
   const cacheKey = `${sveltePath}:${hash}`
 
-  const cached = compileCache.get(cacheKey)
-  if (cached) {
-    const cachedAny = cached as unknown as { tmpFile?: string }
-    if (cachedAny.tmpFile) {
-      return cachedAny.tmpFile
+  const cachedTmpFile = tmpFileCache.get(sveltePath)
+  if (cachedTmpFile && compileCache.get(cacheKey)) {
+    return cachedTmpFile
+  }
+
+  const existing = compiling.get(cacheKey)
+  if (existing) {
+    return existing
+  }
+
+  const promise = (async () => {
+    try {
+      if (sveltePath.endsWith('.js') || sveltePath.endsWith('.mjs')) {
+        const processedCode = await handleJsWithSvelteReexports(
+          content,
+          sveltePath,
+          sourceDir,
+          undefined,
+          exportNames,
+        )
+        const tempFile = await writeTempFile(sveltePath, processedCode)
+        compileCache.set(cacheKey, { js: { code: content }, css: null } as Parameters<
+          typeof compileCache.set
+        >[1])
+        tmpFileCache.set(sveltePath, tempFile)
+        return tempFile
+      }
+
+      const { tmpFile } = await compileSvelteWithWrite(sveltePath)
+      compileCache.set(cacheKey, { js: { code: content }, css: null } as Parameters<
+        typeof compileCache.set
+      >[1])
+      tmpFileCache.set(sveltePath, tmpFile)
+      return tmpFile
+    } finally {
+      compiling.delete(cacheKey)
     }
-  }
-
-  if (sveltePath.endsWith('.js') || sveltePath.endsWith('.mjs')) {
-    const processedCode = await handleJsWithSvelteReexports(content, sveltePath, sourceDir)
-    const tempFile = await writeTempFile(sveltePath, processedCode)
-    compileCache.set(cacheKey, { js: { code: content }, css: null } as Parameters<
-      typeof compileCache.set
-    >[1])
-    return tempFile
-  }
-
-  const { tmpFile } = await compileSvelteWithWrite(sveltePath)
-
-  compileCache.set(cacheKey, { js: { code: content }, css: null } as Parameters<
-    typeof compileCache.set
-  >[1])
-
-  return tmpFile
+  })()
+  compiling.set(cacheKey, promise)
+  return promise
 }
 
 const handleJsWithSvelteReexports = async (
   code: string,
   jsFilePath: string,
   _sourceDir: string,
+  visited?: Set<string>,
+  exportNames?: string[],
 ): Promise<string> => {
-  if (inProgress.has(jsFilePath)) {
+  visited ??= new Set()
+  if (visited.has(jsFilePath)) {
     return code
   }
-  inProgress.add(jsFilePath)
+  visited.add(jsFilePath)
 
-  try {
-    const jsDir = path.dirname(jsFilePath) as string
-    const replacements: Array<{ original: string; replacement: string }> = []
+  const jsDir = path.dirname(jsFilePath) as string
+  const replacements: Array<{ original: string | RegExp; replacement: string }> = []
 
-    const matches = [...code.matchAll(JS_SVELTE_REEXPORT_RE)]
-    for (const match of matches) {
-      const prefix = match[1]
-      const sveltePath = match[2]
-      const suffix = match[3]
-      if (!sveltePath) continue
+  const matches = [...code.matchAll(JS_SVELTE_REEXPORT_RE)]
+  const svelteCompilePromises: Array<{
+    match: RegExpMatchArray
+    absoluteSveltePath: string
+  }> = []
 
-      const absoluteSveltePath = path.resolve(jsDir, sveltePath)
-      const compiledPath = await compileSvelteOnlyExport(absoluteSveltePath, jsDir)
-      const compiledUrl = pathToFileURL(compiledPath).href
-      replacements.push({
-        original: match[0],
-        replacement: `${prefix}${compiledUrl}${suffix}`,
-      })
+  const skippedSvelteReexports: string[] = []
+
+  for (const match of matches) {
+    const sveltePath = match[2]
+    if (!sveltePath) continue
+
+    // If we have specific export names, check if this Svelte file provides any of them
+    let shouldCompile = true
+    if (exportNames && exportNames.length > 0) {
+      const destructureMatch = /\{\s*([^}]+)\s*\}/.exec(match[0])
+      if (destructureMatch?.[1]) {
+        const names = destructureMatch[1]
+          .split(',')
+          .map(n => {
+            const trimmed = n.trim()
+            if (!trimmed) return ''
+            const asParts = trimmed.split(' as ')
+            return asParts.length > 1 && asParts[1] ? asParts[1] : trimmed
+          })
+          .filter(Boolean)
+        const hasMatch = names.some(n => exportNames.includes(n))
+        if (!hasMatch) shouldCompile = false
+      }
     }
 
-    const jsReexports = [...code.matchAll(JS_REEXPORT_RE)]
-    for (const match of jsReexports) {
+    if (!shouldCompile) {
+      skippedSvelteReexports.push(match[0])
+      continue
+    }
+
+    const absoluteSveltePath = path.resolve(jsDir, sveltePath)
+    svelteCompilePromises.push({ match, absoluteSveltePath })
+  }
+
+  // Remove skipped Svelte re-exports by replacing them with empty strings
+  // Also remove the semicolon and trailing newline that follows the statement
+  for (const skipped of skippedSvelteReexports) {
+    const escaped = skipped.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const removalRe = new RegExp(escaped + ';?\\s*\\n?', 'g')
+    replacements.push({ original: removalRe, replacement: '' })
+  }
+
+  const svelteResults = await Promise.all(
+    svelteCompilePromises.map(async ({ match, absoluteSveltePath }) => {
+      const compiledPath = await compileSvelteOnlyExport(absoluteSveltePath, jsDir, exportNames)
+      const compiledUrl = pathToFileURL(compiledPath).href
+      return {
+        original: match[0],
+        replacement: `${match[1]}${compiledUrl}${match[3]}`,
+      }
+    }),
+  )
+  replacements.push(...svelteResults)
+
+  const jsReexports = [...code.matchAll(JS_REEXPORT_RE)]
+  const jsReexportResults = await Promise.all(
+    jsReexports.map(async match => {
       const prefix = match[1]
       const reexportPath = match[2]
       const suffix = match[3]
-      if (!reexportPath) continue
+      if (!reexportPath) return null
 
       const absolutePath = path.resolve(jsDir, reexportPath)
       if (
@@ -136,44 +202,177 @@ const handleJsWithSvelteReexports = async (
         const processedReexport = await handleJsWithSvelteReexports(
           reexportContent,
           absolutePath,
-          jsDir,
+          path.dirname(absolutePath),
+          visited,
+          exportNames,
         )
         const tempFile = await writeTempFile(absolutePath, processedReexport)
         const tempUrl = pathToFileURL(tempFile).href
-        replacements.push({
+        return {
           original: match[0],
           replacement: `${prefix}${tempUrl}${suffix}`,
-        })
+        }
       }
-    }
+      return null
+    }),
+  )
+  const jsReexportResultsClean = jsReexportResults.filter(
+    (r): r is { original: string; replacement: string } => r !== null,
+  )
+  replacements.push(...jsReexportResultsClean)
 
-    let result = code
-    for (const { original, replacement } of replacements) {
-      result = result.replace(original, replacement)
-    }
+  const namedJsReexports = [...code.matchAll(RE_EXPORT_NAMED_RE)]
+  const namedJsReexportResults = await Promise.all(
+    namedJsReexports.map(async match => {
+      const prefix = match[1]
+      const reexportPath = match[2]
+      const suffix = match[3]
+      if (!reexportPath) return null
 
-    return result
-  } finally {
-    inProgress.delete(jsFilePath)
+      const absolutePath = path.resolve(jsDir, reexportPath)
+      if (
+        (await fs.exists(absolutePath)) &&
+        (absolutePath.endsWith('.js') || absolutePath.endsWith('.mjs'))
+      ) {
+        const reexportContent = await fs.readFile(absolutePath, 'utf-8')
+        const processedReexport = await handleJsWithSvelteReexports(
+          reexportContent,
+          absolutePath,
+          path.dirname(absolutePath),
+          visited,
+          exportNames,
+        )
+        const tempFile = await writeTempFile(absolutePath, processedReexport)
+        const tempUrl = pathToFileURL(tempFile).href
+        return {
+          original: match[0],
+          replacement: `${prefix}${tempUrl}${suffix}`,
+        }
+      }
+      return null
+    }),
+  )
+  const namedJsReexportResultsClean = namedJsReexportResults.filter(
+    (r): r is { original: string; replacement: string } => r !== null,
+  )
+  replacements.push(...namedJsReexportResultsClean)
+
+  let result = code
+  for (const { original, replacement } of replacements) {
+    result = result.replace(original, replacement)
   }
+
+  return result
 }
 
-const extractNamedExports = (code: string): string[] => {
+const extractNamedExportsRecursive = async (
+  filePath: string,
+  visited?: Set<string>,
+): Promise<string[]> => {
+  if (visited?.has(filePath)) return []
+  visited ??= new Set()
+  visited.add(filePath)
+
+  const content = await fs.readFile(filePath, 'utf-8')
   const exports: string[] = []
 
+  // Pattern 1: export { X } from './y.js'
+  // Pattern 2: export { X } from './y.svelte' (extracts alias, doesn't recurse)
+  for (const match of content.matchAll(RE_EXPORT_NAMED_RE)) {
+    const reexportPath = match[2]
+    if (!reexportPath) continue
+    const resolved = path.resolve(path.dirname(filePath), reexportPath)
+    if (resolved.endsWith('.svelte')) {
+      // Extract alias from "export { default as FixedButton } from './FixedButton.svelte'"
+      const destructureMatch = /\{\s*([^}]+)\s*\}/.exec(match[0])
+      if (destructureMatch?.[1]) {
+        const names = destructureMatch[1]
+          .split(',')
+          .map(n => {
+            const trimmed = n.trim()
+            if (!trimmed) return ''
+            const asParts = trimmed.split(' as ')
+            return asParts.length > 1 && asParts[1] ? asParts[1] : trimmed
+          })
+          .filter(Boolean)
+        exports.push(...names)
+      }
+    } else {
+      const nested = await extractNamedExportsRecursive(resolved, visited)
+      exports.push(...nested)
+    }
+  }
+
+  // Pattern 3: export * from './y.js'
+  // Pattern 4: export * from './y.svelte' (uses file stem as name)
+  for (const match of content.matchAll(RE_EXPORT_ALL_RE)) {
+    const reexportPath = match[2]
+    if (!reexportPath) continue
+    const resolved = path.resolve(path.dirname(filePath), reexportPath)
+    if (resolved.endsWith('.svelte')) {
+      const svelteDefaultName = path.basename(resolved, '.svelte')
+      exports.push(svelteDefaultName)
+    } else {
+      const nested = await extractNamedExportsRecursive(resolved, visited)
+      exports.push(...nested)
+    }
+  }
+
+  // Pattern 5: export * as X from './y.js'
+  const namespaceReexportRe = /(export\s+\*\s+as\s+(\w+)\s+from\s+['"`])([^'"`\s]+)(['"`])/g
+  for (const match of content.matchAll(namespaceReexportRe)) {
+    const alias = match[2]
+    if (alias) exports.push(alias)
+  }
+
+  // Pattern 6: export * as X from './y.svelte'
+  const svelteNamespaceReexportRe =
+    /(export\s+\*\s+as\s+(\w+)\s+from\s+['"])([^'"]*\.svelte)(['"])/g
+  for (const match of content.matchAll(svelteNamespaceReexportRe)) {
+    const alias = match[2]
+    if (alias) exports.push(alias)
+  }
+
+  // Pattern 7: export { default as X } from './y.svelte' (multiple matches via matchAll)
+  for (const match of content.matchAll(JS_SVELTE_REEXPORT_RE)) {
+    const match1 = match[1]
+    if (match1) {
+      const aliasInMatch = /default\s+as\s+(\w+)/.exec(match1)
+      if (aliasInMatch?.[1]) exports.push(aliasInMatch[1])
+    }
+  }
+
+  // Pattern 8: export default from './y.svelte' (no braces, valid ESM)
+  const defaultNoBracesRe = /(?:^|\n)export\s+default\s+from\s+['"`][^'"`\s]+\.svelte['"`]/g
+  for (const match of content.matchAll(defaultNoBracesRe)) {
+    const pathMatch = /from\s+['"`][^'"`\s]+\.svelte['"`]/.exec(match[0])
+    if (pathMatch) {
+      const sveltePath = pathMatch[0].replace(/from\s+['"`]|['"`]/g, '')
+      if (sveltePath.endsWith('.svelte')) {
+        const svelteDefaultName = path.basename(sveltePath, '.svelte')
+        exports.push(svelteDefaultName)
+      }
+    }
+  }
+
+  // ... existing destructureMatch, namedMatch, defaultMatch logic ...
   const defaultMatch = /export\s+default\s+(?:function\s+(\w+)|class\s+(\w+)|const\s+(\w+))/g
-  let match
-  while ((match = defaultMatch.exec(code)) !== null) {
+  let match = defaultMatch.exec(content)
+  while (match !== null) {
     exports.push(match[1] || match[2] || match[3] || '')
+    match = defaultMatch.exec(content)
   }
 
   const namedMatch = /export\s+(?:const|let|var|function|class)\s+(\w+)/g
-  while ((match = namedMatch.exec(code)) !== null) {
+  match = namedMatch.exec(content)
+  while (match !== null) {
     if (match[1]) exports.push(match[1])
+    match = namedMatch.exec(content)
   }
 
   const destructureMatch = /export\s+\{\s*([^}]+)\s*\}/g
-  while ((match = destructureMatch.exec(code)) !== null) {
+  match = destructureMatch.exec(content)
+  while (match !== null) {
     const match1 = match[1]
     if (match1) {
       const names = match1.split(',').map(n => {
@@ -183,15 +382,152 @@ const extractNamedExports = (code: string): string[] => {
       })
       exports.push(...names)
     }
+    match = destructureMatch.exec(content)
   }
 
   return [...new Set(exports)]
+}
+
+const findSvelteFileForExport = async (
+  filePath: string,
+  exportName: string,
+  visited?: Set<string>,
+): Promise<string | null> => {
+  if (visited?.has(filePath)) return null
+  visited ??= new Set()
+  visited.add(filePath)
+
+  const content = await fs.readFile(filePath, 'utf-8')
+  const fileDir = path.dirname(filePath)
+
+  // Pattern: export { X } from './y.svelte'
+  // Pattern: export { default as X } from './y.svelte'
+  for (const match of content.matchAll(RE_EXPORT_NAMED_RE)) {
+    const reexportPath = match[2]
+    if (!reexportPath) continue
+    if (!reexportPath.endsWith('.svelte')) continue
+
+    const resolved = path.resolve(fileDir, reexportPath)
+    const destructureMatch = /\{\s*([^}]+)\s*\}/.exec(match[0])
+    if (destructureMatch?.[1]) {
+      const names = destructureMatch[1]
+        .split(',')
+        .map(n => {
+          const trimmed = n.trim()
+          if (!trimmed) return ''
+          const asParts = trimmed.split(' as ')
+          return asParts.length > 1 && asParts[1] ? asParts[1] : trimmed
+        })
+        .filter(Boolean)
+      if (names.includes(exportName)) {
+        return resolved
+      }
+    }
+  }
+
+  // Pattern: export * from './y.svelte' - uses file stem as export name
+  for (const match of content.matchAll(RE_EXPORT_ALL_RE)) {
+    const reexportPath = match[2]
+    if (!reexportPath) continue
+    if (!reexportPath.endsWith('.svelte')) continue
+
+    const resolved = path.resolve(fileDir, reexportPath)
+    const svelteExportName = path.basename(resolved, '.svelte')
+    if (svelteExportName === exportName) {
+      return resolved
+    }
+  }
+
+  // Pattern: export * as X from './y.js' or './y.svelte'
+  const namespaceReexportRe = /(export\s+\*\s+as\s+(\w+)\s+from\s+['"`])([^'"`\s]+)(['"`])/g
+  for (const match of content.matchAll(namespaceReexportRe)) {
+    const alias = match[2]
+    const reexportPath = match[3]
+    if (alias === exportName && reexportPath) {
+      const resolved = path.resolve(fileDir, reexportPath)
+      if (resolved.endsWith('.svelte')) {
+        return resolved
+      }
+      return findSvelteFileForExport(resolved, exportName, visited)
+    }
+  }
+
+  // Pattern: export * as X from './y.svelte'
+  const svelteNamespaceReexportRe =
+    /(export\s+\*\s+as\s+(\w+)\s+from\s+['"])([^'"]*\.svelte)(['"])/g
+  for (const match of content.matchAll(svelteNamespaceReexportRe)) {
+    const alias = match[2]
+    const reexportPath = match[3]
+    if (alias === exportName && reexportPath) {
+      const resolved = path.resolve(fileDir, reexportPath)
+      return resolved
+    }
+  }
+
+  // Pattern: export default from './y.svelte' (no braces)
+  const defaultNoBracesRe = /(?:^|\n)export\s+default\s+from\s+['"`][^'"`\s]+\.svelte['"`]/g
+  for (const match of content.matchAll(defaultNoBracesRe)) {
+    const pathMatch = /from\s+['"`][^'"`\s]+\.svelte['"`]/.exec(match[0])
+    if (pathMatch) {
+      const sveltePath = pathMatch[0].replace(/from\s+['"`]|['"`]/g, '')
+      if (sveltePath.endsWith('.svelte')) {
+        const resolved = path.resolve(fileDir, sveltePath)
+        const svelteExportName = path.basename(resolved, '.svelte')
+        if (svelteExportName === exportName) {
+          return resolved
+        }
+      }
+    }
+  }
+
+  // If we have export * from './y.js', trace into that file
+  for (const match of content.matchAll(RE_EXPORT_ALL_RE)) {
+    const reexportPath = match[2]
+    if (!reexportPath) continue
+    if (reexportPath.endsWith('.svelte')) continue
+
+    const resolved = path.resolve(fileDir, reexportPath)
+    const found = await findSvelteFileForExport(resolved, exportName, visited)
+    if (found) return found
+  }
+
+  // If we have export { X } from './y.js', trace into that file
+  for (const match of content.matchAll(RE_EXPORT_NAMED_RE)) {
+    const reexportPath = match[2]
+    if (!reexportPath) continue
+    if (reexportPath.endsWith('.svelte')) continue
+
+    const resolved = path.resolve(fileDir, reexportPath)
+    const found = await findSvelteFileForExport(resolved, exportName, visited)
+    if (found) return found
+  }
+
+  return null
 }
 
 const isSkipPattern = (spec: string): boolean => {
   return (
     spec.startsWith('./') || spec.startsWith('../') || spec.startsWith('$') || spec.startsWith('/')
   )
+}
+
+const extractNamedImportsFromCode = (code: string, spec: string): string[] => {
+  const namedImports: string[] = []
+  const importRe = new RegExp(
+    `import\\s+\\{([^}]+)\\}\\s+from\\s+['"\`]${spec.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"\`]`,
+    'g',
+  )
+  for (const match of code.matchAll(importRe)) {
+    if (match[1]) {
+      const names = match[1].split(',').map(n => {
+        const trimmed = n.trim()
+        const asParts = trimmed.split(' as ')
+        return asParts.length > 1 && asParts[1] ? asParts[1] : trimmed
+      })
+      namedImports.push(...names.filter(Boolean))
+    }
+  }
+  return namedImports
 }
 
 interface ImportReplacement {
@@ -241,14 +577,48 @@ export const resolveSvelteOnlyExports = async (
       let exportStarCode: string | null = null
 
       if (resolved.isSvelteOnly && resolved.resolvedPath) {
-        compiledPath = await compileSvelteOnlyExport(resolved.resolvedPath, sourceDir)
+        const namedImports = extractNamedImportsFromCode(code, spec)
 
-        const compiledCode = await fs.readFile(compiledPath, 'utf-8')
-        const exports = extractNamedExports(compiledCode)
-        if (exports.length > 0) {
-          exportStarCode = `export { ${exports.join(', ')} } from '${pathToFileURL(compiledPath).href}'`
+        if (namedImports.length > 0) {
+          const svelteFiles = await Promise.all(
+            namedImports.map(async name => {
+              const sveltePath = await findSvelteFileForExport(resolved.resolvedPath!, name)
+              return sveltePath ? { name, sveltePath } : null
+            }),
+          )
+          const validSvelteFiles = svelteFiles.filter(
+            (f): f is { name: string; sveltePath: string } => f !== null,
+          )
+
+          if (validSvelteFiles.length > 0) {
+            const compiledSvelteFiles = await Promise.all(
+              validSvelteFiles.map(async ({ name, sveltePath }) => {
+                const compiled = await compileSvelteOnlyExport(sveltePath, sourceDir)
+                return { name, compiledPath: compiled }
+              }),
+            )
+
+            const barrelContent = compiledSvelteFiles
+              .map(({ name, compiledPath: cp }) => {
+                const url = pathToFileURL(cp).href
+                return `export { ${name} } from '${url}'`
+              })
+              .join('\n')
+
+            const barrelPath = resolved.resolvedPath.replace(/\.js$/, '.svelte-only-barrel.js')
+            const barrelTmpFile = await writeTempFile(barrelPath, barrelContent)
+            compiledPath = barrelTmpFile
+            exportStarCode = `export { ${compiledSvelteFiles.map(f => f.name).join(', ')} } from '${pathToFileURL(barrelTmpFile).href}'`
+          }
         } else {
-          exportStarCode = `export * from '${pathToFileURL(compiledPath).href}'`
+          compiledPath = await compileSvelteOnlyExport(resolved.resolvedPath, sourceDir)
+
+          const exports = await extractNamedExportsRecursive(resolved.resolvedPath)
+          if (exports.length > 0) {
+            exportStarCode = `export { ${exports.join(', ')} } from '${pathToFileURL(compiledPath).href}'`
+          } else {
+            exportStarCode = `export * from '${pathToFileURL(compiledPath).href}'`
+          }
         }
       }
 
