@@ -14,6 +14,22 @@ import { getTempFilePath } from './getTempFilePath.js'
 import { compileBarrel } from './compileBarrel.js'
 import { resolvePackageExport } from './resolvePackageExport.js'
 import { compileSvelteOnlyExport } from './resolveSvelteOnlyExports.js'
+const extractNamedImportsFromCode = (code, spec) => {
+  const namedImports = []
+  const escapedSpec = spec.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const importRe = new RegExp(`import\\s+\\{([^}]+)\\}\\s+from\\s+['"\`]${escapedSpec}['"\`]`, 'g')
+  for (const match of code.matchAll(importRe)) {
+    if (match[1]) {
+      const names = match[1].split(',').map(n => {
+        const trimmed = n.trim()
+        const asParts = trimmed.split(' as ')
+        return asParts.length > 1 && asParts[1] ? asParts[1] : trimmed
+      })
+      namedImports.push(...names.filter(Boolean))
+    }
+  }
+  return namedImports
+}
 export const resolveAndCompileImport = async (
   importPath,
   sourceDir,
@@ -36,7 +52,13 @@ export const resolveAndCompileImport = async (
     }
     const resolved = await resolvePackageExport(importPath, sourceDir)
     if (resolved.isSvelteOnly && resolved.resolvedPath) {
-      const compiledPath = await compileSvelteOnlyExport(resolved.resolvedPath, sourceDir)
+      const sourceCode = await fs.readFile(sourceFilePath, 'utf-8')
+      const namedImports = extractNamedImportsFromCode(sourceCode, importPath)
+      const compiledPath = await compileSvelteOnlyExport(
+        resolved.resolvedPath,
+        sourceDir,
+        namedImports.length > 0 ? namedImports : undefined,
+      )
       const sourceTmpFile = getTempFilePath(sourceFilePath)
       const fromDir = path.dirname(sourceTmpFile)
       const relativePath = computeRelativePath(fromDir, compiledPath)
@@ -47,7 +69,13 @@ export const resolveAndCompileImport = async (
   if (importType === 'bare') {
     const resolved = await resolvePackageExport(importPath, sourceDir)
     if (resolved.isSvelteOnly && resolved.resolvedPath) {
-      const compiledPath = await compileSvelteOnlyExport(resolved.resolvedPath, sourceDir)
+      const sourceCode = await fs.readFile(sourceFilePath, 'utf-8')
+      const namedImports = extractNamedImportsFromCode(sourceCode, importPath)
+      const compiledPath = await compileSvelteOnlyExport(
+        resolved.resolvedPath,
+        sourceDir,
+        namedImports.length > 0 ? namedImports : undefined,
+      )
       const sourceTmpFile = getTempFilePath(sourceFilePath)
       const fromDir = path.dirname(sourceTmpFile)
       const relativePath = computeRelativePath(fromDir, compiledPath)
