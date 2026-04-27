@@ -1,20 +1,14 @@
-import { html } from '../../../../../src/lib/svelte/index.js'
+import { html, tick } from '../../../../../src/lib/svelte/index.js'
+import type { TestCase } from '../../../../../src/types.js'
+import type { CounterWithPropsComponent } from '../../../../../src/lib/svelte/testFixtures/components/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/CounterWithProps.svelte'
-
-type TestCase = {
-  component: string
-  props?: Record<string, unknown>
-  fn: (ctx: { target: unknown; component?: unknown }) => unknown
-  expect?: unknown
-  info?: string
-}
 
 export default [
   {
     component,
     props: { initial: 10, step: 5 },
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('10')
     },
     info: 'renders with initial value',
@@ -22,8 +16,8 @@ export default [
   {
     component,
     props: { initial: 10, step: 5 },
-    fn: async ({ component: instance }: { target: unknown; component?: unknown }) => {
-      return (instance as { count: number }).count
+    fn: async ({ component: instance }) => {
+      return instance!.count
     },
     expect: 10,
     info: 'returns count from component',
@@ -31,11 +25,11 @@ export default [
   {
     component,
     props: { initial: 10, step: 5 },
-    fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
-      const incButton = (target as HTMLElement).querySelector<HTMLButtonElement>('.inc')!
+    fn: async ({ target, component: instance }) => {
+      const incButton = target.querySelector<HTMLButtonElement>('.inc')!
       incButton.click()
-      await new Promise(r => setTimeout(r, 10))
-      return (instance as { count: number }).count
+      await tick()
+      return instance!.count
     },
     expect: 15,
     info: 'increment increases count by step',
@@ -43,11 +37,11 @@ export default [
   {
     component,
     props: { initial: 10, step: 5 },
-    fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
-      const decButton = (target as HTMLElement).querySelector<HTMLButtonElement>('.dec')!
+    fn: async ({ target, component: instance }) => {
+      const decButton = target.querySelector<HTMLButtonElement>('.dec')!
       decButton.click()
-      await new Promise(r => setTimeout(r, 10))
-      return (instance as { count: number }).count
+      await tick()
+      return instance!.count
     },
     expect: 5,
     info: 'decrement decreases count by step',
@@ -55,18 +49,18 @@ export default [
   {
     component,
     props: { initial: 0, step: 10 },
-    fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
-      const incButton = (target as HTMLElement).querySelector<HTMLButtonElement>('.inc')!
+    fn: async ({ target, component: instance }) => {
+      const incButton = target.querySelector<HTMLButtonElement>('.inc')!
       incButton.click()
-      await new Promise(r => setTimeout(r, 10))
-      return (instance as { count: number }).count
+      await tick()
+      return instance!.count
     },
     expect: 10,
     info: 'increment with step 10 adds 10',
   },
   {
     component,
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('+1') && html(target).includes('-1')
     },
     info: 'uses default step of 1',
@@ -74,7 +68,7 @@ export default [
   {
     component,
     props: { step: 3 },
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('+3') && html(target).includes('-3')
     },
     info: 'uses custom step value in button labels',
@@ -82,20 +76,20 @@ export default [
   {
     component,
     props: { initial: 5 },
-    fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
-      return (instance as { count: number }).count === 5 && html(target).includes('5')
+    fn: async ({ target, component: instance }) => {
+      return instance!.count === 5 && html(target).includes('5')
     },
     info: 'uses custom initial value',
   },
   {
     component,
-    fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target, component: instance }) => {
       return (
         html(target).includes('+1') &&
         html(target).includes('-1') &&
-        (instance as { count: number }).count === 0
+        instance!.count === 0
       )
     },
     info: 'uses default initial of 0 when not provided',
   },
-] satisfies TestCase[]
+] satisfies TestCase<CounterWithPropsComponent>[]

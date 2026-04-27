@@ -1,4 +1,6 @@
 import { mount, html } from '../../../../../src/lib/svelte/index.js'
+import type { TestCase } from '../../../../../src/types.js'
+import type { TabsComponent } from '../../../../../src/lib/svelte/testFixtures/components/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Tabs.svelte'
 const tabs = [
@@ -6,38 +8,25 @@ const tabs = [
   { id: 'b', label: 'Tab B', content: 'Content B' },
 ]
 
-type TestCase = {
-  component?: string
-  props?: Record<string, unknown>
-  fn: (ctx: { target: unknown; component?: unknown }) => unknown
-  expect?: unknown
-  info?: string
-}
-
-type TestCtx = {
-  target: unknown
-  component?: unknown
-}
-
 export default [
   {
     component,
     props: { tabs },
-    fn: ({ target }: TestCtx) => html(target).includes('class="tab active"'),
+    fn: ({ target }) => html(target).includes('class="tab active"'),
     expect: true,
     info: 'renders tabs with first tab active',
   },
   {
     component,
     props: { tabs },
-    fn: ({ target }: TestCtx) => html(target).includes('Tab B'),
+    fn: ({ target }) => html(target).includes('Tab B'),
     expect: true,
     info: 'renders tabs with Tab B',
   },
   {
     component,
     props: { tabs },
-    fn: async ({ component: instance }: TestCtx) => (instance as { activeTab: string }).activeTab,
+    fn: ({ component: instance }) => instance!.activeTab,
     expect: 'a',
     info: 'returns activeTab from component',
   },
@@ -84,7 +73,7 @@ export default [
   {
     component,
     props: { tabs: [] },
-    fn: ({ target }: TestCtx) => html(target).includes('class="tabs"'),
+    fn: ({ target }) => html(target).includes('class="tabs"'),
     expect: true,
     info: 'renders tabs container with empty tabs',
   },
@@ -101,4 +90,4 @@ export default [
     expect: 'Prop keys must be strings, got symbol',
     info: 'throws when prop key is a symbol',
   },
-] satisfies TestCase[]
+] satisfies TestCase<TabsComponent>[]

@@ -1,21 +1,8 @@
 import { html } from '../../../../../src/lib/svelte/index.js'
+import type { TestCase } from '../../../../../src/types.js'
+import type { ButtonComponent } from '../../../../../src/lib/svelte/testFixtures/components/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Button.svelte'
-
-type TestTarget = {
-  querySelector: (
-    selector: string,
-  ) => Element & { disabled: boolean; onclick: (() => void) | null; click: () => void }
-  querySelectorAll: (selector: string) => (Element & { click: () => void })[]
-}
-
-export type TestCase = {
-  component: string
-  props?: Record<string, unknown>
-  fn: (ctx: { target: TestTarget }) => boolean | Promise<boolean>
-  expect?: boolean | ((result: boolean[]) => boolean)
-  info?: string
-}
 
 export default [
   {
@@ -27,13 +14,13 @@ export default [
   {
     component,
     props: { disabled: true },
-    fn: ({ target }) => (target as TestTarget).querySelector('button').disabled,
+    fn: ({ target, component: instance }) => instance!.disabled,
     info: 'button disabled property is true',
   },
   {
     component,
     props: { disabled: false },
-    fn: ({ target }) => !(target as TestTarget).querySelector('button').disabled,
+    fn: ({ target, component: instance }) => !instance!.disabled,
     info: 'button disabled property is false when explicitly set',
   },
   {
@@ -53,9 +40,10 @@ export default [
   {
     component,
     props: { onclick: () => {} },
-    fn: async ({ target }) => {
+    fn: async ({ target, component: instance }) => {
       let clicked = false
-      const button = (target as TestTarget).querySelector('button')
+      instance!.disabled = false
+      const button = target.querySelector('button')!
       button.onclick = () => {
         clicked = true
       }
@@ -67,13 +55,13 @@ export default [
   {
     component,
     props: { disabled: true, onclick: () => {} },
-    fn: async ({ target }) => {
-      const button = (target as TestTarget).querySelector('button')
+    fn: async ({ target, component: instance }) => {
+      const button = target.querySelector('button')
       let clicked = false
-      button.onclick = () => {
+      button!.onclick = () => {
         clicked = true
       }
-      button.click()
+      button!.click()
       return !clicked
     },
     info: 'disabled button does not trigger onclick',
@@ -94,9 +82,9 @@ export default [
   {
     component,
     props: { disabled: false, variant: 'primary' },
-    fn: ({ target }) =>
+    fn: ({ target, component: instance }) =>
       html(target).includes('btn primary') &&
-      !(target as TestTarget).querySelector('button').disabled,
+      !instance!.disabled,
     info: 'button is enabled with explicit false and variant',
   },
   {
@@ -109,8 +97,8 @@ export default [
   {
     component,
     props: { disabled: undefined, variant: undefined },
-    fn: ({ target }) =>
-      html(target).includes('btn') && !(target as TestTarget).querySelector('button').disabled,
+    fn: ({ target, component: instance }) =>
+      html(target).includes('btn') && !instance!.disabled,
     info: 'handles undefined props with defaults',
   },
-] satisfies TestCase[]
+] satisfies TestCase<ButtonComponent>[]

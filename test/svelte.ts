@@ -1,5 +1,6 @@
 import { mount, html, click, trigger, scroll, props } from '../src/svelte.js'
 import { flushSync } from 'svelte'
+import type { TestCase } from '../src/types.js'
 
 export default [
   {
@@ -46,7 +47,7 @@ export default [
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
-      const button = (target as HTMLElement).querySelector('button')
+      const button = target.querySelector('button')
       button?.addEventListener('click', () => {
         called = true
       })
@@ -64,7 +65,7 @@ export default [
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
-      const div = (target as HTMLElement).querySelector('.count')
+      const div = target.querySelector('.count')
       if (div) {
         scroll(div, 0, 100)
       }
@@ -82,7 +83,7 @@ export default [
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
-      const button = (target as HTMLElement).querySelector('button')
+      const button = target.querySelector('button')
       button?.addEventListener('click', () => {
         clicked = true
       })
@@ -100,7 +101,7 @@ export default [
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/Counter.svelte',
       )
-      const button = (target as HTMLElement).querySelector('button')!
+      const button = target.querySelector('button')!
       const result = props(button)
       await unmount()
       return result
@@ -108,7 +109,6 @@ export default [
     expect: {},
     info: 'props returns element attributes',
   },
-  // SvelteKit wrapper provides correct $app/environment values (dev mode)
   {
     component: './src/lib/svelte/testFixtures/components/SvelteKit.svelte',
     fn: async ({ target }) => {
@@ -122,9 +122,7 @@ export default [
   {
     component: 'src/lib/svelte/testFixtures/components/SvelteKit.svelte',
     fn: async ({ target }) => {
-      // Initial state: showEnv = true
       const initial = html(target)
-      // Click button to toggle
       click(target, 'button')
       await flushSync()
       const afterToggle = html(target)
@@ -137,4 +135,4 @@ export default [
     },
     info: 'SvelteKit component state updates correctly with toggle',
   },
-]
+] satisfies TestCase[]

@@ -1,20 +1,14 @@
 import { html, trigger } from '../../../../../src/lib/svelte/index.js'
+import type { TestCase } from '../../../../../src/types.js'
+import type { InputComponent } from '../../../../../src/lib/svelte/testFixtures/components/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Input.svelte'
-
-type TestCase = {
-  component: string
-  props?: Record<string, unknown>
-  fn: (ctx: { target: unknown; component?: unknown }) => unknown
-  expect?: unknown
-  info?: string
-}
 
 export default [
   {
     component,
     props: { placeholder: 'Enter text' },
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('Enter text')
     },
     expect: true,
@@ -22,7 +16,7 @@ export default [
   },
   {
     component,
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('Type here...')
     },
     expect: true,
@@ -31,30 +25,30 @@ export default [
   {
     component,
     props: { value: 'test' },
-    fn: async ({ component: instance }: { target: unknown; component?: unknown }) => {
-      return (instance as { inputValue: string }).inputValue
+    fn: async ({ component: instance }) => {
+      return instance!.inputValue
     },
     expect: 'test',
     info: 'returns inputValue from component',
   },
   {
     component,
-    fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
-      const input = (target as HTMLElement).querySelector<HTMLInputElement>('input')!
-      trigger(input as unknown, 'input')
+    fn: async ({ target, component: instance }) => {
+      const input = target.querySelector<HTMLInputElement>('input')!
+      trigger(input, 'input')
       await new Promise(r => setTimeout(r, 10))
-      return (instance as { inputValue: string }).inputValue
+      return instance!.inputValue
     },
     expect: '',
     info: 'input updates inputValue on input',
   },
   {
     component,
-    fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
-      const input = (target as HTMLElement).querySelector<HTMLInputElement>('input')!
-      trigger(input as unknown, 'input')
+    fn: async ({ target, component: instance }) => {
+      const input = target.querySelector<HTMLInputElement>('input')!
+      trigger(input, 'input')
       await new Promise(r => setTimeout(r, 10))
-      return (instance as { changed: boolean }).changed
+      return instance!.changed
     },
     expect: true,
     info: 'changed becomes true after input',
@@ -62,7 +56,7 @@ export default [
   {
     component,
     props: { value: '' },
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('Length: 0')
     },
     expect: true,
@@ -71,7 +65,7 @@ export default [
   {
     component,
     props: { value: 'hello' },
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('Length: 5')
     },
     expect: true,
@@ -79,7 +73,7 @@ export default [
   },
   {
     component,
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('unchanged')
     },
     expect: true,
@@ -88,7 +82,7 @@ export default [
   {
     component,
     props: { value: 'typed' },
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('changed')
     },
     expect: true,
@@ -96,17 +90,14 @@ export default [
   },
   {
     component,
-    fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
-      const input = (target as HTMLElement).querySelector<HTMLInputElement>('input')!
+    fn: async ({ target, component: instance }) => {
+      const input = target.querySelector<HTMLInputElement>('input')!
       input.value = 'new value'
-      trigger(input as unknown, 'input')
+      trigger(input, 'input')
       await new Promise(r => setTimeout(r, 10))
-      return (
-        (instance as { inputValue: string }).inputValue === 'new value' &&
-        (instance as { changed: boolean }).changed
-      )
+      return instance!.inputValue === 'new value' && instance!.changed
     },
     expect: true,
     info: 'input updates both value and changed state together',
   },
-] satisfies TestCase[]
+] satisfies TestCase<InputComponent>[]

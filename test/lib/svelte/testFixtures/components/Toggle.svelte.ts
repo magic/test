@@ -1,25 +1,14 @@
 import { mount, html } from '../../../../../src/lib/svelte/index.js'
+import type { TestCase } from '../../../../../src/types.js'
+import type { ToggleComponent } from '../../../../../src/lib/svelte/testFixtures/components/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Toggle.svelte'
-
-type TestCase = {
-  component?: string
-  props?: Record<string, unknown>
-  fn: (ctx: { target: unknown; component?: unknown }) => unknown
-  expect?: unknown
-  info?: string
-}
-
-type TestCtx = {
-  target: unknown
-  component?: unknown
-}
 
 export default [
   {
     component,
     props: { label: 'Enable', initial: false },
-    fn: async ({ target }: TestCtx) => {
+    fn: async ({ target }) => {
       const result = html(target)
       return result.includes('Enable') && result.includes('OFF')
     },
@@ -29,15 +18,17 @@ export default [
   {
     component,
     props: { label: 'Enable', initial: true },
-    fn: async ({ component: instance }: TestCtx) => (instance as { on: boolean }).on,
+    fn: async ({ component: instance }) => {
+      return instance!.on
+    },
     expect: true,
     info: 'returns on state from component',
   },
   {
     component,
     props: { label: 'Enable', initial: true },
-    fn: async ({ target }: TestCtx) => {
-      const input = (target as HTMLElement).querySelector<HTMLInputElement>('input')!
+    fn: async ({ target }) => {
+      const input = target.querySelector<HTMLInputElement>('input')!
       return input.checked
     },
     expect: true,
@@ -57,4 +48,4 @@ export default [
     expect: 'Props must be an object, got string',
     info: 'throws when props is a string',
   },
-] satisfies TestCase[]
+] satisfies TestCase<ToggleComponent>[]

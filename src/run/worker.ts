@@ -5,7 +5,13 @@ import is from '@magic/types'
 import { cleanError, cleanFunctionString, getTestKey } from '../lib/index.js'
 import { restoreFromSnapshot } from './isolation.js'
 import { getViteDefine } from '../lib/svelte/viteConfig/index.js'
-import type { WrappedTest, CleanupFunction, TestResult, EvaluateResult } from '../types.js'
+import type {
+  WrappedTest,
+  CleanupFunction,
+  TestResult,
+  EvaluateResult,
+  TestContext,
+} from '../types.js'
 
 import '../bin/lib/registerLoader.js'
 
@@ -137,7 +143,7 @@ const runTestFn = async (test: WrappedTest, _key: string): Promise<RunFnResult> 
     let res
     try {
       if (is.function(fn)) {
-        res = await fn()
+        res = await fn({} as TestContext)
       } else if (is.promise(fn)) {
         res = await fn
       } else {

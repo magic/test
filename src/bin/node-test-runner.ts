@@ -20,6 +20,7 @@ import type {
   CleanupFunction,
   SuiteHookWithArg,
   ComponentProps,
+  TestContext,
 } from '../types.js'
 
 /**
@@ -229,10 +230,12 @@ const convertTest = async (
         componentProps = (testObj.component[1] as ComponentProps) || {}
       }
 
-      const { target, component, unmount } = await mount(componentFile, { props: componentProps })
+      const { target, component, unmount, css } = await mount(componentFile, {
+        props: componentProps,
+      })
       try {
         if (is.function(fn)) {
-          result = await fn({ target, component, unmount })
+          result = await fn({ target, component, unmount, css })
         }
       } finally {
         await unmount()
@@ -240,7 +243,7 @@ const convertTest = async (
     } else if (is.promise(fn)) {
       result = await fn
     } else if (is.function(fn)) {
-      result = await fn()
+      result = await fn({} as TestContext)
     } else {
       result = fn
     }

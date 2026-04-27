@@ -1,21 +1,15 @@
 import { mount, html } from '../../../../../src/lib/svelte/index.js'
 import { tryCatch } from '../../../../../src/index.js'
+import type { TestCase } from '../../../../../src/types.js'
+import type { DerivedComponent } from '../../../../../src/lib/svelte/testFixtures/components/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Derived.svelte'
-
-type TestCase = {
-  component?: string
-  props?: Record<string, unknown>
-  fn: (ctx: { target: unknown; component?: unknown }) => unknown
-  expect?: unknown
-  info?: string
-}
 
 export default [
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       const result = html(target)
       return result.includes('Count: 3') && result.includes('Double: 6')
     },
@@ -25,8 +19,8 @@ export default [
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: async ({ component: instance }: { target: unknown; component?: unknown }) => {
-      return (instance as { isEmpty: boolean }).isEmpty
+    fn: async ({ component: instance }) => {
+      return instance!.isEmpty
     },
     expect: false,
     info: 'isEmpty is false when items exist',
@@ -34,8 +28,8 @@ export default [
   {
     component,
     props: { items: [] },
-    fn: async ({ component: instance }: { target: unknown; component?: unknown }) => {
-      return (instance as { isEmpty: boolean }).isEmpty
+    fn: async ({ component: instance }) => {
+      return instance!.isEmpty
     },
     expect: true,
     info: 'isEmpty is true when no items',
@@ -53,11 +47,11 @@ export default [
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
-      const addButton = (target as HTMLElement).querySelector<HTMLButtonElement>('.add')!
+    fn: async ({ target, component: instance }) => {
+      const addButton = target.querySelector<HTMLButtonElement>('.add')!
       addButton.click()
       await new Promise(r => setTimeout(r, 10))
-      return (instance as { count: number }).count
+      return instance!.count
     },
     expect: 4,
     info: 'add button increments count',
@@ -65,11 +59,11 @@ export default [
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
-      const removeButton = (target as HTMLElement).querySelector<HTMLButtonElement>('.remove')!
+    fn: async ({ target, component: instance }) => {
+      const removeButton = target.querySelector<HTMLButtonElement>('.remove')!
       removeButton.click()
       await new Promise(r => setTimeout(r, 10))
-      return (instance as { count: number }).count
+      return instance!.count
     },
     expect: 2,
     info: 'remove button decrements count',
@@ -77,8 +71,8 @@ export default [
   {
     component,
     props: { items: [1, 2, 3, 4, 5, 6] },
-    fn: async ({ component: instance }: { target: unknown; component?: unknown }) => {
-      return (instance as { isLarge: boolean }).isLarge
+    fn: async ({ component: instance }) => {
+      return instance!.isLarge
     },
     expect: true,
     info: 'isLarge is true when count > 5',
@@ -86,8 +80,8 @@ export default [
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: async ({ component: instance }: { target: unknown; component?: unknown }) => {
-      return (instance as { isLarge: boolean }).isLarge
+    fn: async ({ component: instance }) => {
+      return instance!.isLarge
     },
     expect: false,
     info: 'isLarge is false when count <= 5',
@@ -95,7 +89,7 @@ export default [
   {
     component,
     props: { items: [1, 2] },
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('Double: 4')
     },
     expect: true,
@@ -104,7 +98,7 @@ export default [
   {
     component,
     props: { items: [] },
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('Double: 0')
     },
     expect: true,
@@ -113,7 +107,7 @@ export default [
   {
     component,
     props: { items: [] },
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('Count: 0')
     },
     expect: true,
@@ -122,7 +116,7 @@ export default [
   {
     component,
     props: { items: [] },
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('empty')
     },
     expect: true,
@@ -131,7 +125,7 @@ export default [
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('has items')
     },
     expect: true,
@@ -140,7 +134,7 @@ export default [
   {
     component,
     props: { items: [1, 2, 3, 4, 5, 6] },
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('large')
     },
     expect: true,
@@ -149,7 +143,7 @@ export default [
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: async ({ target }: { target: unknown; component?: unknown }) => {
+    fn: async ({ target }) => {
       return html(target).includes('small')
     },
     expect: true,
@@ -158,13 +152,13 @@ export default [
   {
     component,
     props: { items: [] },
-    fn: async ({ target, component: instance }: { target: unknown; component?: unknown }) => {
-      const removeButton = (target as HTMLElement).querySelector<HTMLButtonElement>('.remove')!
+    fn: async ({ target, component: instance }) => {
+      const removeButton = target.querySelector<HTMLButtonElement>('.remove')!
       removeButton.click()
       await new Promise(r => setTimeout(r, 10))
-      return (instance as { count: number }).count
+      return instance!.count
     },
     expect: 0,
     info: 'remove button does not go below 0 when count is 0',
   },
-] satisfies TestCase[]
+] satisfies TestCase<DerivedComponent>[]

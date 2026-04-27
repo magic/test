@@ -6,6 +6,7 @@ import log from '@magic/log'
 import is from '@magic/types'
 
 import { compileSvelteWithWrite } from './compile/index.js'
+import type { CssObject } from './compile/types.js'
 import { initDOM, getDocument, getWindow } from '../../lib/dom/index.js'
 import type { ComponentProps } from '../../types.js'
 import { createContext, runWithContext } from './shims/$app/state.js'
@@ -74,10 +75,10 @@ export const tick = async () => {
 }
 
 interface MountResult {
-  target: unknown
-  component: SvelteComponent
+  target: HTMLElement
+  component: Record<string, unknown>
   unmount: () => Promise<void>
-  css: unknown
+  css: CssObject | null
 }
 
 export const mount = async (
