@@ -1,16 +1,16 @@
-// import is from '@magic/types'
+import is from '@magic/types'
 import { mock } from '../../src/index.js'
 import { tryCatch } from '../../src/lib/tryCatch.js'
 
 export default [
-  // {
-  //   fn: () => {
-  //     const spy = mock.fn()
-  //     return spy
-  //   },
-  //   expect: is.function,
-  //   info: 'mock.fn returns a function that tracks calls',
-  // },
+  {
+    fn: () => {
+      const spy = mock.fn()
+      return is.function(spy)
+    },
+    expect: true,
+    info: 'mock.fn returns a function that tracks calls',
+  },
   {
     fn: () => {
       const spy = mock.fn()
