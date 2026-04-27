@@ -1,0 +1,48 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "./.tmp/test-dist",
+    "rootDir": ".",
+    "declaration": true,
+    "declarationDir": "./.tmp/test-dist",
+    "allowJs": true,
+    "checkJs": true,
+    "maxNodeModuleJsDepth": 2,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "verbatimModuleSyntax": false,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "rewriteRelativeImportExtensions": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@magic/test": ["./dist/index.js"],
+      "@magic/test/*": ["./dist/*"]
+    },
+    "types": ["@types/node"]
+  },
+  "include": ["src/**/*", "test/**/*"],
+
+  "exclude": ["node_modules", "dist/**/*", "coverage", ".tmp"],
+
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  },
+
+  "typeRoots": ["./node_modules/@types"]
+}

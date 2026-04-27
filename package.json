@@ -33,6 +33,7 @@
     "format": "f -w --exclude ./docs/",
     "format:check": "f --exclude ./docs/",
     "tsc": "tsc --noEmit",
+    "tsc:test": "tsc -p tsconfig.test.json --noEmit",
     "check": "tsc --noEmit",
     "lint": "eslint"
   },
