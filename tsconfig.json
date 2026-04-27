@@ -30,6 +30,7 @@
     "rewriteRelativeImportExtensions": true,
     "skipLibCheck": true,
     "paths": {
+      "$app/*": ["./src/lib/svelte/shims/$app/*"],
       "@magic/test": ["./dist/index.js"],
       "@magic/test/*": ["./dist/*"]
     },
