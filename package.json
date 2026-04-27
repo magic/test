@@ -9,6 +9,10 @@
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./svelte": "./dist/svelte.js"
+  },
   "bin": {
     "t": "dist/bin/t.js",
     "magic-test": "dist/bin/t.js",
@@ -77,6 +81,9 @@
     "typescript": "6.0.3",
     "typescript-eslint": "8.59.0",
     "vite": "8.0.10"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
   },
   "contributors": [
     {
