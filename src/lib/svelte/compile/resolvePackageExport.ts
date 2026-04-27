@@ -143,7 +143,7 @@ export const resolvePackageExport = async (
         return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
       }
       if (is.object(subExport) && subExport !== null) {
-        const conditions:Record<string, string> = subExport 
+        const conditions: Record<string, string> = subExport
         const hasImport = 'import' in conditions || 'node' in conditions || 'module' in conditions
         if (hasImport) {
           return { resolvedPath: null, isSvelteOnly: false }
