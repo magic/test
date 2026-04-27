@@ -93,7 +93,7 @@ const prepareTest = (
  */
 const executeTest = async (
   fn: ((...args: unknown[]) => unknown) | Promise<unknown> | unknown,
-  key: string,
+  _key: string,
   componentFile?: string,
   componentProps?: Record<string, unknown>,
 ): Promise<unknown> => {
@@ -234,7 +234,7 @@ export const runTest = async (
       let result
       let exp
       let expString
-      let pass = false
+      let pass
 
       const results: { res: unknown; pass: boolean; exp?: unknown; expString?: unknown }[] = []
       for (let i = 0; i < runs; i++) {

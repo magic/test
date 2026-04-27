@@ -124,7 +124,7 @@ export const resolvePackageExport = async (
       './dist/index.js',
       'index.js',
       'src/index.js',
-    ].filter(Boolean) as string[]
+    ].filter(a => !is.undef(a) && is.str(a))
 
     const resolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
     return { resolvedPath: resolved, isSvelteOnly: false }
@@ -136,19 +136,19 @@ export const resolvePackageExport = async (
   }
 
   if (subpath && is.object(exports) && !Array.isArray(exports)) {
-    const subExport = (exports as Record<string, unknown>)[`./${subpath}`]
+    const subExport = exports[`./${subpath}` as keyof typeof exports]
     if (subExport) {
       if (is.string(subExport)) {
         const resolved = await tryResolvePath(nodeModulesPath, subExport)
         return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
       }
       if (is.object(subExport) && subExport !== null) {
-        const conditions = subExport as Record<string, unknown>
+        const conditions:Record<string, string> = subExport 
         const hasImport = 'import' in conditions || 'node' in conditions || 'module' in conditions
         if (hasImport) {
           return { resolvedPath: null, isSvelteOnly: false }
         }
-        const sveltePath = conditions.svelte as string | undefined
+        const sveltePath = conditions.svelte
         if (sveltePath) {
           const resolved = await tryResolvePath(nodeModulesPath, sveltePath)
           return { resolvedPath: resolved, isSvelteOnly: true }
@@ -248,12 +248,11 @@ export const resolvePackageExport = async (
           : []
         for (const subpathKey of subpathKeys) {
           const subpathExport = pkgExports?.[subpathKey]
-          const subpathStr =
-            is.string(subpathExport)
-              ? subpathExport
-              : ((subpathExport as Record<string, unknown>)?.svelte as string) ||
-                ((subpathExport as Record<string, unknown>)?.import as string) ||
-                ((subpathExport as Record<string, unknown>)?.default as string)
+          const subpathStr = is.string(subpathExport)
+            ? subpathExport
+            : ((subpathExport as Record<string, unknown>)?.svelte as string) ||
+              ((subpathExport as Record<string, unknown>)?.import as string) ||
+              ((subpathExport as Record<string, unknown>)?.default as string)
           if (subpathStr) {
             const subpathResolved = await tryResolvePath(nodeModulesPath, subpathStr)
             if (subpathResolved) {

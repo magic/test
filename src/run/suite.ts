@@ -150,8 +150,6 @@ const runTestArray = async (
   testFileUrl: string,
   useWorkers: boolean,
   hasBeforeAll: boolean,
-  beforeAll?: () => unknown | Promise<unknown>,
-  afterAll?: () => unknown | Promise<unknown>,
   suiteSnapshot?: Snapshot,
 ): Promise<(TestResult | Suite)[]> => {
   if (needsIsolation && useWorkers) {
@@ -308,8 +306,6 @@ const runTestObject = async (
       testFileUrl,
       useWorkers,
       hasBeforeAll,
-      testsObj.beforeAll,
-      testsObj.afterAll,
       suiteSnapshot,
     )
 
@@ -445,8 +441,6 @@ export const runSuite = async (
           testFileUrl,
           useWorkers,
           hasBeforeAll,
-          undefined,
-          undefined,
           suiteSnapshot,
         )
       } else if (is.objectNative(tests)) {

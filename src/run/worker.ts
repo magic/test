@@ -55,7 +55,7 @@ const makeSafe = (value: unknown): unknown => {
       is.string(value) ||
       is.number(value) ||
       is.boolean(value) ||
-      is.bigint(value) ||
+      value instanceof BigInt ||
       is.symbol(value)
     ) {
       return value
@@ -126,7 +126,6 @@ const runTestFn = async (test: WrappedTest, key: string): Promise<RunFnResult> =
   const { fn, before, after, expect, runs = 1 } = test
 
   let afterCleanupError = null
-  let afterError = null
 
   const isolatedResult = await isolation.executeIsolated(key, async () => {
     let afterCleanup
@@ -241,7 +240,7 @@ const runTestFn = async (test: WrappedTest, key: string): Promise<RunFnResult> =
     exp: isolatedResult.exp,
     expString: isolatedResult.expString,
     afterCleanupError: isolatedResult.afterCleanupError || afterCleanupError,
-    afterError: isolatedResult.afterError || afterError,
+    afterError: isolatedResult.afterError,
   }
 }
 
