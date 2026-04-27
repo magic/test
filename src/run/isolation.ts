@@ -324,7 +324,7 @@ export class Isolation {
         try {
           const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
           if (desc && desc.configurable !== false) {
-            delete (globalThis as Record<string | symbol, unknown>)[prop]
+            delete globalThis[prop as keyof typeof globalThis]
           }
         } catch {
           // ignore
@@ -333,9 +333,13 @@ export class Isolation {
     }
 
     for (const keyStr in snapshot.props) {
-      if (!Object.prototype.hasOwnProperty.call(snapshot.props, keyStr)) continue
+      if (!Object.prototype.hasOwnProperty.call(snapshot.props, keyStr)) {
+        continue
+      }
       const stored = snapshot.props[keyStr]
-      if (!stored) continue
+      if (!stored) {
+        continue
+      }
       const prop = this._reviveKeyFromString(keyStr)
       try {
         const desc: PropertyDescriptor = {
@@ -434,8 +438,6 @@ export class Isolation {
     testParent: string
     testName: string
     suiteSnapshot?: Snapshot
-    beforeAll?: string
-    afterAll?: string
   }): Promise<TestResult> {
     return new Promise((resolve, reject) => {
       const worker = new Worker(new URL('./worker.js', import.meta.url), {
@@ -446,8 +448,6 @@ export class Isolation {
           testParent: options.testParent,
           testName: options.testName,
           suiteSnapshot: options.suiteSnapshot,
-          beforeAll: options.beforeAll,
-          afterAll: options.afterAll,
         },
       })
 
@@ -488,8 +488,6 @@ export class Isolation {
     testParent: string
     testNames: string[]
     suiteSnapshot?: Snapshot
-    beforeAll?: string
-    afterAll?: string
   }): Promise<TestResult[]> {
     return new Promise((resolve, reject) => {
       const worker = new Worker(new URL('./worker.js', import.meta.url), {
@@ -501,8 +499,6 @@ export class Isolation {
           testNames: options.testNames,
           suiteSnapshot: options.suiteSnapshot,
           batchMode: true,
-          beforeAll: options.beforeAll,
-          afterAll: options.afterAll,
         },
       })
 

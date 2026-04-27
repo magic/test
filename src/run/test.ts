@@ -116,14 +116,12 @@ const executeTest = async (
   }
 
   if (is.function(fn) || is.promise(fn)) {
-    return await isolation.executeIsolated(key, async () => {
-      if (is.function(fn)) {
-        return await fn()
-      }
-      if (is.promise(fn)) {
-        return await fn
-      }
-    })
+    if (is.function(fn)) {
+      return await fn()
+    }
+    if (is.promise(fn)) {
+      return await fn
+    }
   }
 
   return fn
@@ -214,87 +212,107 @@ export const runTest = async (
     const msg = cleanFunctionString(fn)
     const key = test.key || getTestKey(pkg, parent, name)
 
-    let afterCleanup
-    if (is.function(before)) {
-      try {
-        const result = await before(test)
-        if (is.function(result)) {
-          afterCleanup = result as () => void | Promise<void>
+    const isolatedResult = await isolation.executeIsolated(key, async () => {
+      let afterCleanup
+
+      if (is.function(before)) {
+        try {
+          const result = await before(test)
+          if (is.function(result)) {
+            afterCleanup = result as () => void | Promise<void>
+          }
+        } catch (e) {
+          log.error(ERRORS.E_TEST_BEFORE!, {
+            testKey: key,
+            testName: name,
+            parent,
+            error: cleanError(is.error(e) ? e : new Error(String(e))),
+          })
         }
-      } catch (e) {
-        log.error(ERRORS.E_TEST_BEFORE!, {
-          testKey: key,
-          testName: name,
-          parent,
-          error: cleanError(is.error(e) ? e : new Error(String(e))),
-        })
-      }
-    }
-
-    let result
-    let exp
-    let expString
-    let pass = false
-
-    const results: { res: unknown; pass: boolean; exp?: unknown; expString?: unknown }[] = []
-    for (let i = 0; i < runs; i++) {
-      let res
-      try {
-        const testPromise = executeTest(
-          fn,
-          key,
-          componentFile,
-          componentProps as Record<string, unknown> | undefined,
-        )
-        res = await withTimeout(testPromise, timeoutMs, key)
-      } catch (e) {
-        log.error(ERRORS.E_TEST_FN!, {
-          testKey: key,
-          testName: name,
-          parent,
-          component: componentFile,
-          error: cleanError(is.error(e) ? e : new Error(String(e))),
-        })
-        results.push({ res, pass: false })
-        continue
       }
 
-      try {
-        const evalResult = await evaluateResult(res, expect)
-        const runPass = evalResult.pass
+      let result
+      let exp
+      let expString
+      let pass = false
 
-        results.push({ res, pass: runPass, exp: evalResult.exp, expString: evalResult.expString })
-
-        if (!runPass) {
-          pass = false
-          result = res
-          exp = evalResult.exp
-          expString = evalResult.expString
+      const results: { res: unknown; pass: boolean; exp?: unknown; expString?: unknown }[] = []
+      for (let i = 0; i < runs; i++) {
+        let res
+        try {
+          const testPromise = executeTest(
+            fn,
+            key,
+            componentFile,
+            componentProps as Record<string, unknown> | undefined,
+          )
+          res = await withTimeout(testPromise, timeoutMs, key)
+        } catch (e) {
+          log.error(ERRORS.E_TEST_FN!, {
+            testKey: key,
+            testName: name,
+            parent,
+            component: componentFile,
+            error: cleanError(is.error(e) ? e : new Error(String(e))),
+          })
+          results.push({ res, pass: false })
+          continue
         }
-      } catch (e) {
-        log.error(ERRORS.E_TEST_EXPECT!, {
-          testKey: key,
-          testName: name,
-          parent,
-          error: cleanError(is.error(e) ? e : new Error(String(e))),
-        })
-        results.push({ res, pass: false })
-      }
-    }
 
-    pass = results.every(r => r.pass)
-    if (pass && results.length > 0) {
-      result = runs > 1 ? results.map(r => r.res) : results[0]!.res
-      const lastExp = results[results.length - 1]
-      if (lastExp) {
-        exp = lastExp.exp
-        expString = lastExp.expString
-      }
-    }
+        try {
+          const evalResult = await evaluateResult(res, expect)
+          const runPass = evalResult.pass
 
-    if (is.function(afterCleanup)) {
+          results.push({ res, pass: runPass, exp: evalResult.exp, expString: evalResult.expString })
+
+          if (!runPass) {
+            pass = false
+            result = res
+            exp = evalResult.exp
+            expString = evalResult.expString
+          }
+        } catch (e) {
+          log.error(ERRORS.E_TEST_EXPECT!, {
+            testKey: key,
+            testName: name,
+            parent,
+            error: cleanError(is.error(e) ? e : new Error(String(e))),
+          })
+          results.push({ res, pass: false })
+        }
+      }
+
+      pass = results.every(r => r.pass)
+      if (pass && results.length > 0) {
+        result = runs > 1 ? results.map(r => r.res) : results[0]!.res
+        const lastExp = results[results.length - 1]
+        if (lastExp) {
+          exp = lastExp.exp
+          expString = lastExp.expString
+        }
+      }
+
+      let afterError = null
+      if (is.function(test.after)) {
+        try {
+          await test.after()
+        } catch (e) {
+          afterError = cleanError(is.error(e) ? e : new Error(String(e)))
+          log.error(ERRORS.E_TEST_AFTER!, {
+            testKey: key,
+            testName: name,
+            parent,
+            error: afterError,
+          })
+        }
+      }
+
+      return { result, pass, exp, expString, afterCleanup, afterError }
+    })
+
+    if (is.function(isolatedResult.afterCleanup)) {
       try {
-        await afterCleanup()
+        await isolatedResult.afterCleanup()
       } catch (e) {
         log.error(ERRORS.E_TEST_AFTER!, {
           testKey: key,
@@ -305,20 +323,7 @@ export const runTest = async (
       }
     }
 
-    if (is.function(test.after)) {
-      try {
-        await test.after()
-      } catch (e) {
-        log.error(ERRORS.E_TEST_AFTER!, {
-          testKey: key,
-          testName: name,
-          parent,
-          error: cleanError(is.error(e) ? e : new Error(String(e))),
-        })
-      }
-    }
-
-    if (!pass) {
+    if (!isolatedResult.pass) {
       let testName = name
       if (parent && parent !== name) {
         testName = `${parent}.${name}`
@@ -330,18 +335,17 @@ export const runTest = async (
     }
 
     const testResult: TestResult = {
-      result,
+      result: isolatedResult.result,
       msg,
-      pass,
+      pass: isolatedResult.pass,
       parent: parent || '',
       name,
-      expect: exp,
-      expString,
+      expect: isolatedResult.exp,
+      expString: isolatedResult.expString,
       key,
       info,
     }
 
-    // Collect result for final aggregation (main thread only)
     rawResults?.push(testResult)
 
     return testResult

@@ -184,8 +184,6 @@ const runTestArray = async (
           testParent: parent,
           testNames: testsWithoutHooks.map(t => t.test.name),
           suiteSnapshot,
-          beforeAll: beforeAll?.toString(),
-          afterAll: afterAll?.toString(),
         })
         allResults.push(...processWorkerResults(batchResults, rawResults))
       } catch (err) {
@@ -217,8 +215,6 @@ const runTestArray = async (
             testParent: test.parent,
             testName: test.name,
             suiteSnapshot,
-            beforeAll: beforeAll?.toString(),
-            afterAll: afterAll?.toString(),
           })
           .then(
             result => {
