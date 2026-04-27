@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import {
   createStaticPage,
   browser,
@@ -10,96 +11,96 @@ export default [
   {
     fn: () => {
       const page = createStaticPage()
-      return page.url.hostname === 'localhost'
+      return page.url.hostname
     },
-    expect: true,
+    expect: 'localhost',
     info: 'createStaticPage has default localhost URL',
   },
   {
     fn: () => {
       const page = createStaticPage({ url: 'http://example.com' })
-      return page.url.hostname === 'example.com'
+      return page.url.hostname
     },
-    expect: true,
+    expect: 'example.com',
     info: 'createStaticPage accepts custom URL',
   },
   {
     fn: () => {
       const page = createStaticPage({ params: { id: '123' } })
-      return page.params.id === '123'
+      return page.params.id
     },
-    expect: true,
+    expect: '123',
     info: 'createStaticPage accepts params',
   },
   {
     fn: () => {
       const page = createStaticPage({ state: { count: 1 } })
-      return page.state.count === 1
+      return page.state.count
     },
-    expect: true,
+    expect: 1,
     info: 'createStaticPage accepts state',
   },
   {
-    fn: () => typeof browser === 'boolean',
-    expect: true,
+    fn: () => browser,
+    expect: is.bool,
     info: 'browser is a boolean',
   },
   {
-    fn: () => typeof dev === 'boolean',
-    expect: true,
+    fn: () => dev,
+    expect: is.bool,
     info: 'dev is a boolean',
   },
   {
-    fn: () => typeof prod === 'boolean',
-    expect: true,
+    fn: () => prod,
+    expect: is.bool,
     info: 'prod is a boolean',
   },
   {
-    fn: () => platform === 'node',
-    expect: true,
+    fn: () => platform,
+    expect: 'node',
     info: 'platform is node',
   },
   {
     fn: () => {
-      const page = createStaticPage() as any
+      const page = createStaticPage()
       // Access a property that falls through to state[prop]
       // The proxy returns state[prop] for unknown props
-      const result = page.unknownProp
-      return result === undefined
+      // @ts-expect-error unknownProp is not defined on page
+      return page.unknownProp
     },
-    expect: true,
+    expect: is.undef,
     info: 'get handler returns state for unknown prop',
   },
   {
     fn: () => {
-      const page = createStaticPage() as any
-      page.url = 'http://changed.com'
-      return page.url.hostname === 'changed.com'
+      const page = createStaticPage()
+      page.url = new URL('http://changed.com')
+      return page.url.hostname
     },
-    expect: true,
+    expect: 'changed.com',
     info: 'set handler updates url with string',
   },
   {
     fn: () => {
-      const page = createStaticPage({ params: { a: 1 } }) as any
+      const page = createStaticPage({ params: { a: 1 } })
       page.params = { b: 2 }
-      return page.params.b === 2
+      return page.params.b
     },
-    expect: true,
+    expect: 2,
     info: 'set handler updates params',
   },
   {
     fn: () => {
-      const page = createStaticPage({ state: { x: 1 } }) as any
+      const page = createStaticPage({ state: { x: 1 } })
       page.state = { y: 2 }
-      return page.state.y === 2
+      return page.state.y
     },
-    expect: true,
+    expect: 2,
     info: 'set handler updates state',
   },
   // {
   //   fn: () => {
-  //     const page = createStaticPage() as any
+  //     const page = createStaticPage()
   //     // Invalid set should still succeed (returns true)
   //     const result = page.url = 123
   //     return result === true

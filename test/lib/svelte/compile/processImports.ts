@@ -1,4 +1,4 @@
-import is from '@magic/types'
+// import is from '@magic/types'
 
 export default [
   {

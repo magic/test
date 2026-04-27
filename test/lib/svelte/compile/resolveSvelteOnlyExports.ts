@@ -1,5 +1,3 @@
-import { is } from '../../../../src/index.js'
-
 export default [
   {
     fn: () => {

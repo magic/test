@@ -1,18 +1,15 @@
+import is from '@magic/types'
 import { cleanTempFiles, cleanupDone } from '../../../../src/lib/svelte/compile/cleanTempFiles.js'
 
 export default [
   {
-    fn: async () => {
-      return typeof cleanTempFiles === 'function'
-    },
-    expect: true,
+    fn: async () => cleanTempFiles,
+    expect: is.function,
     info: 'cleanTempFiles is a function',
   },
   {
-    fn: async () => {
-      return typeof cleanupDone === 'boolean'
-    },
-    expect: true,
+    fn: async () => cleanupDone,
+    expect: is.boolean,
     info: 'cleanupDone is a boolean export',
   },
 ]

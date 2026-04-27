@@ -29,11 +29,9 @@ export default {
       info: 'returns [] when no config file exists',
     },
     {
-      before:async () => {
+      fn: async () => {
         await aliasCache.clear()
         await configCache.clear()
-      },
-      fn: async () => {
         // No config file
         const result = await loadViteAliases(TEST_ROOT)
         return result

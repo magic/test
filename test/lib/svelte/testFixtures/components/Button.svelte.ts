@@ -14,13 +14,13 @@ export default [
   {
     component,
     props: { disabled: true },
-    fn: ({ target, component: instance }) => instance!.disabled,
+    fn: ({ component: instance }) => instance!.disabled,
     info: 'button disabled property is true',
   },
   {
     component,
     props: { disabled: false },
-    fn: ({ target, component: instance }) => !instance!.disabled,
+    fn: ({ component: instance }) => !instance!.disabled,
     info: 'button disabled property is false when explicitly set',
   },
   {
@@ -55,7 +55,7 @@ export default [
   {
     component,
     props: { disabled: true, onclick: () => {} },
-    fn: async ({ target, component: instance }) => {
+    fn: async ({ target }) => {
       const button = target.querySelector('button')
       let clicked = false
       button!.onclick = () => {

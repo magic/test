@@ -1,0 +1,45 @@
+import is from '@magic/types'
+import { initGlobals } from '../../../../src/lib/dom/globals.js'
+
+export default {
+  beforeAll: initGlobals,
+  tests: [
+    {
+      fn: () => new Image(),
+      expect: is.object,
+      info: 'Image is callable with new',
+    },
+    {
+      fn: () => {
+        const img = new Image()
+        return img.src
+      },
+      expect: '',
+      info: 'Image.src is empty string by default',
+    },
+    {
+      fn: () => {
+        const img = new Image()
+        return img.alt
+      },
+      expect: '',
+      info: 'Image.alt is empty string by default',
+    },
+    {
+      fn: () => {
+        const img = new Image()
+        return img.complete
+      },
+      expect: false,
+      info: 'Image.complete is false by default',
+    },
+    {
+      fn: () => {
+        const img = new Image()
+        return img.onload
+      },
+      expect: null,
+      info: 'Image.onload is null by default',
+    },
+  ],
+}

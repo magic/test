@@ -1,3 +1,6 @@
+import is from '@magic/types'
+import { tryCatch } from '../src/lib/tryCatch.js'
+
 const getShardForTest = (testPath: string, totalShards: number): number => {
   let hash = 2166136261
   for (let i = 0; i < testPath.length; i++) {
@@ -19,7 +22,7 @@ export default [
     info: '1 shard always returns 0',
   },
   {
-    fn: () => {
+    fn: tryCatch(() => {
       const testPaths = [
         '/test/file1.js',
         '/test/file2.js',
@@ -45,27 +48,25 @@ export default [
         }
       }
       return true
-    },
+    }),
     expect: true,
     info: 'All shards are in valid range 0-2',
   },
   {
-    fn: () => getShardForTest('/test/a.js', 10) < 10,
-    expect: true,
+    fn: () => getShardForTest('/test/a.js', 10),
+    expect: is.gteq(10),
     info: 'Shard ID always less than total shards',
   },
   {
-    fn: () => getShardForTest('/test/a.js', 100) >= 0,
-    expect: true,
+    fn: () => getShardForTest('/test/a.js', 100),
+    expect: is.gte(100),
     info: 'Shard ID always non-negative',
   },
   {
-    fn: () => {
-      const path1 = '/test/verylongpath/with/nested/directories/and/a/long/filename.js'
-      const path2 = '/test/verylongpath/with/nested/directories/and/a/long/filename.js'
-      return getShardForTest(path1, 5) === getShardForTest(path2, 5)
-    },
-    expect: true,
+    fn: () =>
+      getShardForTest('/test/verylongpath/with/nested/directories/and/a/long/filename.js', 5),
+    expect: () =>
+      getShardForTest('/test/verylongpath/with/nested/directories/and/a/long/filename.js', 5),
     info: 'Long paths are deterministic',
   },
   {
@@ -83,9 +84,9 @@ export default [
         '/test/file10.js',
       ]
       const uniqueShards = new Set(testPaths.map(p => getShardForTest(p, 3)))
-      return uniqueShards.size > 1
+      return uniqueShards.size
     },
-    expect: true,
+    expect: 3,
     info: 'Multiple unique shards used',
   },
 ]
