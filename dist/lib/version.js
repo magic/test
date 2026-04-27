@@ -59,5 +59,18 @@ export const test = (lib = {}, spec = {}, parent = '') => {
       return undefined
     })
     .filter(a => !!a)
+    .concat(
+      Object.keys(spec)
+        .map(key => {
+          if (!(key in lib)) {
+            return {
+              fn: false,
+              info: `Lib missing export: ${key}`,
+            }
+          }
+          return undefined
+        })
+        .filter(a => !!a),
+    )
 }
 export const version = (lib, spec, parent = '') => test(lib, spec, parent).flat(Infinity)

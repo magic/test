@@ -2,6 +2,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import crypto from 'node:crypto'
 import fs from '@magic/fs'
+// import is from '@magic/types'
 import { compileSvelteWithWrite } from './compileSvelteWithWrite.js'
 import { resolvePackageExport } from './resolvePackageExport.js'
 import { cache as compileCache } from './cache.js'
@@ -11,7 +12,7 @@ const RE_EXPORT_NAMED_RE = /(export\s+\{[^}]+\}\s+from\s+['"`])([^'"`\s]+)(['"`]
 const RE_EXPORT_ALL_RE = /(export\s+\*\s+from\s+['"`])([^'"`\s]+)(['"`])/g
 const DYNAMIC_IMPORT_RE = /(import\s*\(['"`])([^'"`\s]+)(['"`]\s*\))/g
 const SIDE_EFFECT_RE = /(?:^|\n)(import\s+['"`])([^'"`\s]+)(['"])/g
-const TYPE_IMPORT_RE = /import\s+type\s+.*?from\s+['"`][^'"`\s]+['"`]/g
+// const TYPE_IMPORT_RE = /import\s+type\s+.*?from\s+['"`][^'"`\s]+['"`]/g
 const pendingWrites = new Map()
 const writeTempFile = async (filePath, code) => {
   const relPath = path.relative(process.cwd(), filePath)

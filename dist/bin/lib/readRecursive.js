@@ -41,7 +41,7 @@ const isImportResult = obj => {
 const CONCURRENCY_LIMIT = 50
 const importFile = async filePath => {
   try {
-    let code = await fs.readFile(filePath, 'utf-8')
+    const code = await fs.readFile(filePath, 'utf-8')
     const transformedCode = await resolveSvelteOnlyExports(code, path.dirname(filePath))
     let importPath
     if (transformedCode !== code) {
