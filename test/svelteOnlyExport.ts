@@ -1,9 +1,7 @@
-import { is } from '../src/index.js'
-
 export default [
   {
     fn: async () => {
-      const { mount } = await import('../src/index.js')
+      const { mount } = await import('../src/svelte.js')
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/FixedButtonImporter.svelte',
       )

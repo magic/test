@@ -1,4 +1,4 @@
-import { mount, html, tick } from '../src/index.js'
+import { mount, html, tick } from '../src/svelte.js'
 import { flushSync as flushSyncSvelte } from 'svelte'
 import { reset as resetPage } from '../src/lib/svelte/shims/$app/state.js'
 

@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { fs } from '@magic/fs'
-import { mount } from '../src/index.js'
+import { mount } from '../src/svelte.js'
 import { resolveAlias } from '../src/lib/svelte/viteConfig/index.js'
 import { configCache, aliasCache } from '../src/lib/svelte/viteConfig/cache.js'
 import { findProjectRoot } from '../src/lib/svelte/viteConfig/findProjectRoot.js'
