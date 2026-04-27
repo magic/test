@@ -75,12 +75,12 @@ export const resolvePackageExport = async (
 
   let nodeModulesPath: string
   let resolvedFilePath: string
-  let importMetaResolved = false
+  // let importMetaResolved = false
   try {
     const resolved = import.meta.resolve(pkgName.name, pathToFileURL(sourceDir + '/'))
     resolvedFilePath = fileURLToPath(resolved)
     nodeModulesPath = path.dirname(resolvedFilePath)
-    importMetaResolved = true
+    // importMetaResolved = true
   } catch {
     nodeModulesPath = path.join(process.cwd(), 'node_modules', pkgName.name)
   }

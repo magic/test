@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url'
 import crypto from 'node:crypto'
 
 import fs from '@magic/fs'
-import is from '@magic/types'
+// import is from '@magic/types'
 
 import { compileSvelteWithWrite } from './compileSvelteWithWrite.js'
 import { resolvePackageExport, type PackageExportResolve } from './resolvePackageExport.js'
@@ -20,7 +20,7 @@ const DYNAMIC_IMPORT_RE = /(import\s*\(['"`])([^'"`\s]+)(['"`]\s*\))/g
 
 const SIDE_EFFECT_RE = /(?:^|\n)(import\s+['"`])([^'"`\s]+)(['"])/g
 
-const TYPE_IMPORT_RE = /import\s+type\s+.*?from\s+['"`][^'"`\s]+['"`]/g
+// const TYPE_IMPORT_RE = /import\s+type\s+.*?from\s+['"`][^'"`\s]+['"`]/g
 
 const pendingWrites = new Map<string, Promise<void>>()
 
