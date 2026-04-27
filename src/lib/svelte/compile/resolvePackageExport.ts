@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import fs from '@magic/fs'
@@ -129,19 +130,19 @@ export const resolvePackageExport = async (
     return { resolvedPath: resolved, isSvelteOnly: false }
   }
 
-  if (typeof exports === 'string') {
+  if (is.string(exports)) {
     const resolved = await tryResolvePath(nodeModulesPath, exports)
     return { resolvedPath: resolved, isSvelteOnly: false }
   }
 
-  if (subpath && typeof exports === 'object' && !Array.isArray(exports)) {
+  if (subpath && is.object(exports) && !Array.isArray(exports)) {
     const subExport = (exports as Record<string, unknown>)[`./${subpath}`]
     if (subExport) {
-      if (typeof subExport === 'string') {
+      if (is.string(subExport)) {
         const resolved = await tryResolvePath(nodeModulesPath, subExport)
         return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
       }
-      if (typeof subExport === 'object' && subExport !== null) {
+      if (is.object(subExport) && subExport !== null) {
         const conditions = subExport as Record<string, unknown>
         const hasImport = 'import' in conditions || 'node' in conditions || 'module' in conditions
         if (hasImport) {
@@ -160,18 +161,18 @@ export const resolvePackageExport = async (
     return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
   }
 
-  if (typeof exports === 'object' && exports !== null && !Array.isArray(exports)) {
+  if (is.object(exports) && exports !== null && !Array.isArray(exports)) {
     const rootExport = (exports as Record<string, unknown>)['.']
     if (!rootExport) {
       return { resolvedPath: null, isSvelteOnly: false }
     }
 
-    if (typeof rootExport === 'string') {
+    if (is.string(rootExport)) {
       const resolved = await tryResolvePath(nodeModulesPath, rootExport)
       return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
     }
 
-    if (typeof rootExport === 'object' && rootExport !== null) {
+    if (is.object(rootExport) && rootExport !== null) {
       const conditions = rootExport as Record<string, unknown>
       const hasNonSvelteCondition = ['import', 'node', 'module', 'require', 'default'].some(
         c => c in conditions && c !== 'svelte' && c !== 'types',
@@ -248,7 +249,7 @@ export const resolvePackageExport = async (
         for (const subpathKey of subpathKeys) {
           const subpathExport = pkgExports?.[subpathKey]
           const subpathStr =
-            typeof subpathExport === 'string'
+            is.string(subpathExport)
               ? subpathExport
               : ((subpathExport as Record<string, unknown>)?.svelte as string) ||
                 ((subpathExport as Record<string, unknown>)?.import as string) ||
