@@ -1,4 +1,15 @@
-export type TestExpect = ((...args: unknown[]) => unknown) | Promise<unknown> | unknown
+import type { SvelteComponent } from 'svelte'
+export type TestContext = {
+  target: HTMLElement
+  component: Record<string, unknown>
+  unmount: () => Promise<void>
+  css: {
+    code: string
+    map?: unknown
+    hasGlobal?: boolean
+  } | null
+}
+export type TestExpect = ((arg: TestContext) => unknown) | Promise<unknown> | unknown
 export interface Test {
   /** Additional information about the test. */
   info?: string
@@ -6,9 +17,10 @@ export interface Test {
   key?: string
   /**
    * The test function, a promise, or a direct value to evaluate.
+   * When using component mount, fn receives { target, component, unmount, css }
    */
   fn?:
-    | ((...args: unknown[]) => unknown)
+    | ((arg: TestContext) => unknown)
     | Promise<unknown>
     | string
     | boolean
@@ -293,4 +305,11 @@ export type ViteConfig = {
     alias: AliasEntry[]
   }
   define?: Record<string, unknown>
+}
+export type TestCase<T extends SvelteComponent = SvelteComponent> = {
+  component?: string
+  props?: Record<string, unknown>
+  fn: (ctx: { target: HTMLElement; component?: T }) => unknown
+  expect?: unknown
+  info?: string
 }

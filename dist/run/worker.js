@@ -131,7 +131,7 @@ const runTestFn = async (test, _key) => {
     let res
     try {
       if (is.function(fn)) {
-        res = await fn()
+        res = await fn({})
       } else if (is.promise(fn)) {
         res = await fn
       } else {

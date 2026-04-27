@@ -83,8 +83,7 @@ export default [
     component,
     props: { disabled: false, variant: 'primary' },
     fn: ({ target, component: instance }) =>
-      html(target).includes('btn primary') &&
-      !instance!.disabled,
+      html(target).includes('btn primary') && !instance!.disabled,
     info: 'button is enabled with explicit false and variant',
   },
   {
@@ -97,8 +96,7 @@ export default [
   {
     component,
     props: { disabled: undefined, variant: undefined },
-    fn: ({ target, component: instance }) =>
-      html(target).includes('btn') && !instance!.disabled,
+    fn: ({ target, component: instance }) => html(target).includes('btn') && !instance!.disabled,
     info: 'handles undefined props with defaults',
   },
 ] satisfies TestCase<ButtonComponent>[]

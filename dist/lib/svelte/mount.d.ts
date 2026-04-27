@@ -1,5 +1,5 @@
+import type { CssObject } from './compile/types.js'
 import type { ComponentProps } from '../../types.js'
-import type { SvelteComponent } from 'svelte'
 /**
  * Create a raw snippet for passing as children prop
  */
@@ -9,10 +9,10 @@ export declare const createSnippet: (renderFn: string | (() => string)) => unkno
  */
 export declare const tick: () => Promise<void>
 interface MountResult {
-  target: unknown
-  component: SvelteComponent
+  target: HTMLElement
+  component: Record<string, unknown>
   unmount: () => Promise<void>
-  css: unknown
+  css: CssObject | null
 }
 export declare const mount: (
   filePath: string,

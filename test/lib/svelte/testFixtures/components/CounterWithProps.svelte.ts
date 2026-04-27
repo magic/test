@@ -84,11 +84,7 @@ export default [
   {
     component,
     fn: async ({ target, component: instance }) => {
-      return (
-        html(target).includes('+1') &&
-        html(target).includes('-1') &&
-        instance!.count === 0
-      )
+      return html(target).includes('+1') && html(target).includes('-1') && instance!.count === 0
     },
     info: 'uses default initial of 0 when not provided',
   },

@@ -191,10 +191,12 @@ const convertTest = async (testObj, filePath, index) => {
         componentFile = testObj.component[0]
         componentProps = testObj.component[1] || {}
       }
-      const { target, component, unmount } = await mount(componentFile, { props: componentProps })
+      const { target, component, unmount, css } = await mount(componentFile, {
+        props: componentProps,
+      })
       try {
         if (is.function(fn)) {
-          result = await fn({ target, component, unmount })
+          result = await fn({ target, component, unmount, css })
         }
       } finally {
         await unmount()
@@ -202,7 +204,7 @@ const convertTest = async (testObj, filePath, index) => {
     } else if (is.promise(fn)) {
       result = await fn
     } else if (is.function(fn)) {
-      result = await fn()
+      result = await fn({})
     } else {
       result = fn
     }
