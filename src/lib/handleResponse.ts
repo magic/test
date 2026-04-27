@@ -1,3 +1,5 @@
+import is from '@magic/types'
+
 /**
  * Error types for handleResponse
  */
@@ -44,10 +46,10 @@ type ResponseError = JsonParseError | HttpStatusError | SizeLimitError | Network
 
 const isResponseError = (error: unknown): error is ResponseError => {
   return (
-    error instanceof JsonParseError ||
-    error instanceof HttpStatusError ||
-    error instanceof SizeLimitError ||
-    error instanceof NetworkError
+    is.instance(error, JsonParseError) ||
+    is.instance(error, HttpStatusError) ||
+    is.instance(error, SizeLimitError) ||
+    is.instance(error, NetworkError)
   )
 }
 
@@ -72,8 +74,7 @@ export const handleResponse = (
   maxSize?: number,
 ): void => {
   const { statusCode } = res
-  const contentType =
-    typeof res.headers['content-type'] === 'string' ? res.headers['content-type'] : undefined
+  const contentType = is.str(res.headers['content-type']) ? res.headers['content-type'] : undefined
 
   let err
 

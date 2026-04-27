@@ -10,7 +10,7 @@ type PageProxy = {
  * Create a static page object that mimics $app/state page
  */
 export const createStaticPage = (
-  initialData: { url?: string; params?: object; state?: object } = {},
+  initialData: { url?: URL | string; params?: object; state?: object } = {},
 ) => {
   const state = {
     url: new URL(initialData.url || 'http://localhost'),

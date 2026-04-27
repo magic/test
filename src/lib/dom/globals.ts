@@ -30,116 +30,84 @@ export const initGlobals = (): { window: HappyWindow; document: HappyDocument } 
   window = new HappyWindow({ url: 'http://localhost/' })
   document = window!.document as unknown as HappyDocument
 
-  define(globalThis as Record<string | symbol, unknown>, 'document', document)
-  define(globalThis as Record<string | symbol, unknown>, 'window', window)
-  define(globalThis as Record<string | symbol, unknown>, 'self', window)
-  define(globalThis as Record<string | symbol, unknown>, 'navigator', window!.navigator)
-  define(globalThis as Record<string | symbol, unknown>, 'location', window!.location)
-  define(globalThis as Record<string | symbol, unknown>, 'history', window!.history)
+  define(globalThis, 'document', document)
+  define(globalThis, 'window', window)
+  define(globalThis, 'self', window)
+  define(globalThis, 'navigator', window!.navigator)
+  define(globalThis, 'location', window!.location)
+  define(globalThis, 'history', window!.history)
 
-  define(globalThis as Record<string | symbol, unknown>, 'Node', window!.Node)
-  define(globalThis as Record<string | symbol, unknown>, 'Element', window!.Element)
-  define(globalThis as Record<string | symbol, unknown>, 'HTMLElement', window!.HTMLElement)
-  define(globalThis as Record<string | symbol, unknown>, 'SVGElement', window!.SVGElement)
-  define(globalThis as Record<string | symbol, unknown>, 'Document', window!.Document)
-  define(
-    globalThis as Record<string | symbol, unknown>,
-    'DocumentFragment',
-    window!.DocumentFragment,
-  )
-  define(globalThis as Record<string | symbol, unknown>, 'Comment', window!.Comment)
-  define(globalThis as Record<string | symbol, unknown>, 'Text', window!.Text)
+  define(globalThis, 'Node', window!.Node)
+  define(globalThis, 'Element', window!.Element)
+  define(globalThis, 'HTMLElement', window!.HTMLElement)
+  define(globalThis, 'SVGElement', window!.SVGElement)
+  define(globalThis, 'Document', window!.Document)
+  define(globalThis, 'DocumentFragment', window!.DocumentFragment)
+  define(globalThis, 'Comment', window!.Comment)
+  define(globalThis, 'Text', window!.Text)
 
-  define(globalThis as Record<string | symbol, unknown>, 'Event', window!.Event)
-  define(globalThis as Record<string | symbol, unknown>, 'CustomEvent', window!.CustomEvent)
-  define(globalThis as Record<string | symbol, unknown>, 'MouseEvent', window!.MouseEvent)
-  define(globalThis as Record<string | symbol, unknown>, 'KeyboardEvent', window!.KeyboardEvent)
-  define(globalThis as Record<string | symbol, unknown>, 'InputEvent', window!.InputEvent)
-  define(globalThis as Record<string | symbol, unknown>, 'TouchEvent', window!.TouchEvent)
-  define(globalThis as Record<string | symbol, unknown>, 'PointerEvent', window!.PointerEvent)
+  define(globalThis, 'Event', window!.Event)
+  define(globalThis, 'CustomEvent', window!.CustomEvent)
+  define(globalThis, 'MouseEvent', window!.MouseEvent)
+  define(globalThis, 'KeyboardEvent', window!.KeyboardEvent)
+  define(globalThis, 'InputEvent', window!.InputEvent)
+  define(globalThis, 'TouchEvent', window!.TouchEvent)
+  define(globalThis, 'PointerEvent', window!.PointerEvent)
 
-  define(globalThis as Record<string | symbol, unknown>, 'FormData', window!.FormData)
-  define(globalThis as Record<string | symbol, unknown>, 'File', window!.File)
-  define(globalThis as Record<string | symbol, unknown>, 'FileList', window!.FileList)
-  define(globalThis as Record<string | symbol, unknown>, 'Blob', window!.Blob)
-  define(globalThis as Record<string | symbol, unknown>, 'URL', window!.URL)
-  define(globalThis as Record<string | symbol, unknown>, 'URLSearchParams', window!.URLSearchParams)
+  define(globalThis, 'FormData', window!.FormData)
+  define(globalThis, 'File', window!.File)
+  define(globalThis, 'FileList', window!.FileList)
+  define(globalThis, 'Blob', window!.Blob)
+  define(globalThis, 'URL', window!.URL)
+  define(globalThis, 'URLSearchParams', window!.URLSearchParams)
 
-  define(
-    globalThis as Record<string | symbol, unknown>,
-    'MutationObserver',
-    window!.MutationObserver,
-  )
-  define(
-    globalThis as Record<string | symbol, unknown>,
-    'IntersectionObserver',
-    window!.IntersectionObserver,
-  )
-  define(globalThis as Record<string | symbol, unknown>, 'ResizeObserver', window!.ResizeObserver)
-  define(
-    globalThis as Record<string | symbol, unknown>,
-    'PerformanceObserver',
-    window!.PerformanceObserver,
-  )
+  define(globalThis, 'MutationObserver', window!.MutationObserver)
+  define(globalThis, 'IntersectionObserver', window!.IntersectionObserver)
+  define(globalThis, 'ResizeObserver', window!.ResizeObserver)
+  define(globalThis, 'PerformanceObserver', window!.PerformanceObserver)
 
-  define(globalThis as Record<string | symbol, unknown>, 'FileReader', window!.FileReader)
+  define(globalThis, 'FileReader', window!.FileReader)
 
   const PolyfilledImage = createImagePolyfill(window!)
-  define(globalThis as Record<string | symbol, unknown>, 'Image', PolyfilledImage)
-  define(
-    globalThis as Record<string | symbol, unknown>,
-    'HTMLImageElement',
-    window!.HTMLImageElement,
-  )
+  define(globalThis, 'Image', PolyfilledImage)
+  define(globalThis, 'HTMLImageElement', window.HTMLImageElement)
 
-  createCanvasPolyfill(window)
-  define(
-    globalThis as Record<string | symbol, unknown>,
-    'HTMLCanvasElement',
-    window!.HTMLCanvasElement,
-  )
+  createCanvasPolyfill()
+  define(globalThis, 'HTMLCanvasElement', window.HTMLCanvasElement)
 
-  define(globalThis as Record<string | symbol, unknown>, 'TextEncoder', window!.TextEncoder)
-  define(globalThis as Record<string | symbol, unknown>, 'TextDecoder', window!.TextDecoder)
-  define(globalThis as Record<string | symbol, unknown>, 'atob', window!.atob)
-  define(globalThis as Record<string | symbol, unknown>, 'btoa', window!.btoa)
+  define(globalThis, 'TextEncoder', window!.TextEncoder)
+  define(globalThis, 'TextDecoder', window!.TextDecoder)
+  define(globalThis, 'atob', window!.atob)
+  define(globalThis, 'btoa', window!.btoa)
 
-  define(globalThis as Record<string | symbol, unknown>, 'Storage', window!.Storage)
-  define(globalThis as Record<string | symbol, unknown>, 'sessionStorage', window!.sessionStorage)
-  define(globalThis as Record<string | symbol, unknown>, 'localStorage', window!.localStorage)
+  define(globalThis, 'Storage', window!.Storage)
+  define(globalThis, 'sessionStorage', window!.sessionStorage)
+  define(globalThis, 'localStorage', window!.localStorage)
 
-  define(globalThis as Record<string | symbol, unknown>, 'Headers', window!.Headers)
-  define(globalThis as Record<string | symbol, unknown>, 'Request', window!.Request)
-  define(globalThis as Record<string | symbol, unknown>, 'Response', window!.Response)
-  define(globalThis as Record<string | symbol, unknown>, 'AbortController', window!.AbortController)
-  define(globalThis as Record<string | symbol, unknown>, 'AbortSignal', window!.AbortSignal)
+  define(globalThis, 'Headers', window!.Headers)
+  define(globalThis, 'Request', window!.Request)
+  define(globalThis, 'Response', window!.Response)
+  define(globalThis, 'AbortController', window!.AbortController)
+  define(globalThis, 'AbortSignal', window!.AbortSignal)
 
-  define(globalThis as Record<string | symbol, unknown>, 'ReadableStream', window!.ReadableStream)
-  define(globalThis as Record<string | symbol, unknown>, 'WritableStream', window!.WritableStream)
-  define(globalThis as Record<string | symbol, unknown>, 'TransformStream', window!.TransformStream)
+  define(globalThis, 'ReadableStream', window!.ReadableStream)
+  define(globalThis, 'WritableStream', window!.WritableStream)
+  define(globalThis, 'TransformStream', window!.TransformStream)
 
-  define(globalThis as Record<string | symbol, unknown>, 'XMLHttpRequest', window!.XMLHttpRequest)
-  define(globalThis as Record<string | symbol, unknown>, 'DOMParser', window!.DOMParser)
-  define(globalThis as Record<string | symbol, unknown>, 'XMLSerializer', window!.XMLSerializer)
+  define(globalThis, 'XMLHttpRequest', window!.XMLHttpRequest)
+  define(globalThis, 'DOMParser', window!.DOMParser)
+  define(globalThis, 'XMLSerializer', window!.XMLSerializer)
 
-  define(globalThis as Record<string | symbol, unknown>, 'WebSocket', window!.WebSocket)
+  define(globalThis, 'WebSocket', window!.WebSocket)
 
-  define(
-    globalThis as Record<string | symbol, unknown>,
-    'CustomElementRegistry',
-    window!.CustomElementRegistry,
-  )
+  define(globalThis, 'CustomElementRegistry', window!.CustomElementRegistry)
 
-  define(globalThis as Record<string | symbol, unknown>, 'MessagePort', window!.MessagePort)
+  define(globalThis, 'MessagePort', window!.MessagePort)
 
-  define(globalThis as Record<string | symbol, unknown>, 'MediaStream', window!.MediaStream)
-  define(
-    globalThis as Record<string | symbol, unknown>,
-    'MediaStreamTrack',
-    window!.MediaStreamTrack,
-  )
+  define(globalThis, 'MediaStream', window!.MediaStream)
+  define(globalThis, 'MediaStreamTrack', window!.MediaStreamTrack)
 
-  define(globalThis as Record<string | symbol, unknown>, 'Audio', window!.Audio)
+  define(globalThis, 'Audio', window!.Audio)
 
   const winRecord = window!
   for (const [key, value] of Object.entries(winRecord)) {
@@ -150,30 +118,22 @@ export const initGlobals = (): { window: HappyWindow; document: HappyDocument } 
 
   for (const [key, value] of Object.entries(winRecord)) {
     if (key.startsWith('SVG') && is.fn(value)) {
-      define(globalThis as Record<string | symbol, unknown>, key, value)
+      define(globalThis, key, value)
     }
   }
 
-  define(globalThis as Record<string | symbol, unknown>, 'globalThis', globalThis)
+  define(globalThis, 'globalThis', globalThis)
 
-  define(globalThis as Record<string | symbol, unknown>, 'setTimeout', window!.setTimeout)
-  define(globalThis as Record<string | symbol, unknown>, 'clearTimeout', window!.clearTimeout)
-  define(globalThis as Record<string | symbol, unknown>, 'setInterval', window!.setInterval)
-  define(globalThis as Record<string | symbol, unknown>, 'clearInterval', window!.clearInterval)
+  define(globalThis, 'setTimeout', window!.setTimeout)
+  define(globalThis, 'clearTimeout', window!.clearTimeout)
+  define(globalThis, 'setInterval', window!.setInterval)
+  define(globalThis, 'clearInterval', window!.clearInterval)
 
-  define(
-    globalThis as Record<string | symbol, unknown>,
-    'requestAnimationFrame',
-    window!.requestAnimationFrame,
-  )
-  define(
-    globalThis as Record<string | symbol, unknown>,
-    'cancelAnimationFrame',
-    window!.cancelAnimationFrame,
-  )
+  define(globalThis, 'requestAnimationFrame', window!.requestAnimationFrame)
+  define(globalThis, 'cancelAnimationFrame', window!.cancelAnimationFrame)
 
-  define(globalThis as Record<string | symbol, unknown>, 'fetch', window!.fetch)
-  define(globalThis as Record<string | symbol, unknown>, 'queueMicrotask', window!.queueMicrotask)
+  define(globalThis, 'fetch', window!.fetch)
+  define(globalThis, 'queueMicrotask', window!.queueMicrotask)
 
   return {
     window,
