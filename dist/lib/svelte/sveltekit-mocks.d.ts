@@ -7,7 +7,7 @@ type PageProxy = {
  * Create a static page object that mimics $app/state page
  */
 export declare const createStaticPage: (initialData?: {
-  url?: string
+  url?: URL | string
   params?: object
   state?: object
 }) => PageProxy

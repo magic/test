@@ -122,8 +122,6 @@ const runTestArray = async (
   testFileUrl,
   useWorkers,
   hasBeforeAll,
-  beforeAll,
-  afterAll,
   suiteSnapshot,
 ) => {
   if (needsIsolation && useWorkers) {
@@ -153,8 +151,6 @@ const runTestArray = async (
           testParent: parent,
           testNames: testsWithoutHooks.map(t => t.test.name),
           suiteSnapshot,
-          beforeAll: beforeAll?.toString(),
-          afterAll: afterAll?.toString(),
         })
         allResults.push(...processWorkerResults(batchResults, rawResults))
       } catch (err) {
@@ -184,8 +180,6 @@ const runTestArray = async (
             testParent: test.parent,
             testName: test.name,
             suiteSnapshot,
-            beforeAll: beforeAll?.toString(),
-            afterAll: afterAll?.toString(),
           })
           .then(
             result => {
@@ -261,8 +255,6 @@ const runTestObject = async (testsObj, name, parent, pkg, store, rawResults = []
       testFileUrl,
       useWorkers,
       hasBeforeAll,
-      testsObj.beforeAll,
-      testsObj.afterAll,
       suiteSnapshot,
     )
     // Run afterAll cleanup
@@ -376,8 +368,6 @@ export const runSuite = async props => {
           testFileUrl,
           useWorkers,
           hasBeforeAll,
-          undefined,
-          undefined,
           suiteSnapshot,
         )
       } else if (is.objectNative(tests)) {

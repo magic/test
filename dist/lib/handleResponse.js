@@ -1,3 +1,4 @@
+import is from '@magic/types'
 /**
  * Error types for handleResponse
  */
@@ -38,10 +39,10 @@ class NetworkError extends Error {
 }
 const isResponseError = error => {
   return (
-    error instanceof JsonParseError ||
-    error instanceof HttpStatusError ||
-    error instanceof SizeLimitError ||
-    error instanceof NetworkError
+    is.instance(error, JsonParseError) ||
+    is.instance(error, HttpStatusError) ||
+    is.instance(error, SizeLimitError) ||
+    is.instance(error, NetworkError)
   )
 }
 export { JsonParseError, HttpStatusError, SizeLimitError, NetworkError, isResponseError }
@@ -52,8 +53,7 @@ export { JsonParseError, HttpStatusError, SizeLimitError, NetworkError, isRespon
  */
 export const handleResponse = (res, resolve, reject, url, maxSize) => {
   const { statusCode } = res
-  const contentType =
-    typeof res.headers['content-type'] === 'string' ? res.headers['content-type'] : undefined
+  const contentType = is.str(res.headers['content-type']) ? res.headers['content-type'] : undefined
   let err
   if (!statusCode || statusCode < 200 || statusCode >= 300) {
     err = `Request failed: ${statusCode ?? 'unknown'}`

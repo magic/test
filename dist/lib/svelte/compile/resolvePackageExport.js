@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import fs from '@magic/fs'
@@ -96,22 +97,22 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
       './dist/index.js',
       'index.js',
       'src/index.js',
-    ].filter(Boolean)
+    ].filter(a => !is.undef(a) && is.str(a))
     const resolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
     return { resolvedPath: resolved, isSvelteOnly: false }
   }
-  if (typeof exports === 'string') {
+  if (is.string(exports)) {
     const resolved = await tryResolvePath(nodeModulesPath, exports)
     return { resolvedPath: resolved, isSvelteOnly: false }
   }
-  if (subpath && typeof exports === 'object' && !Array.isArray(exports)) {
+  if (subpath && is.object(exports) && !Array.isArray(exports)) {
     const subExport = exports[`./${subpath}`]
     if (subExport) {
-      if (typeof subExport === 'string') {
+      if (is.string(subExport)) {
         const resolved = await tryResolvePath(nodeModulesPath, subExport)
         return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
       }
-      if (typeof subExport === 'object' && subExport !== null) {
+      if (is.object(subExport) && subExport !== null) {
         const conditions = subExport
         const hasImport = 'import' in conditions || 'node' in conditions || 'module' in conditions
         if (hasImport) {
@@ -128,16 +129,16 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
     const resolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
     return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
   }
-  if (typeof exports === 'object' && exports !== null && !Array.isArray(exports)) {
+  if (is.object(exports) && exports !== null && !Array.isArray(exports)) {
     const rootExport = exports['.']
     if (!rootExport) {
       return { resolvedPath: null, isSvelteOnly: false }
     }
-    if (typeof rootExport === 'string') {
+    if (is.string(rootExport)) {
       const resolved = await tryResolvePath(nodeModulesPath, rootExport)
       return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
     }
-    if (typeof rootExport === 'object' && rootExport !== null) {
+    if (is.object(rootExport) && rootExport !== null) {
       const conditions = rootExport
       const hasNonSvelteCondition = ['import', 'node', 'module', 'require', 'default'].some(
         c => c in conditions && c !== 'svelte' && c !== 'types',
@@ -206,10 +207,9 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
           : []
         for (const subpathKey of subpathKeys) {
           const subpathExport = pkgExports?.[subpathKey]
-          const subpathStr =
-            typeof subpathExport === 'string'
-              ? subpathExport
-              : subpathExport?.svelte || subpathExport?.import || subpathExport?.default
+          const subpathStr = is.string(subpathExport)
+            ? subpathExport
+            : subpathExport?.svelte || subpathExport?.import || subpathExport?.default
           if (subpathStr) {
             const subpathResolved = await tryResolvePath(nodeModulesPath, subpathStr)
             if (subpathResolved) {

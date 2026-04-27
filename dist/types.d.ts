@@ -1,4 +1,3 @@
-import type { SvelteComponent } from 'svelte'
 export type TestContext = {
   target: HTMLElement
   component: Record<string, unknown>
@@ -306,10 +305,30 @@ export type ViteConfig = {
   }
   define?: Record<string, unknown>
 }
-export type TestCase<T extends SvelteComponent = SvelteComponent> = {
-  component?: string
-  props?: Record<string, unknown>
-  fn: (ctx: { target: HTMLElement; component?: T }) => unknown
+type UnwrapResult<T> = T extends () => Promise<infer R> ? R : T extends () => infer R ? R : T
+interface BaseTestCase {
   expect?: unknown
   info?: string
+  runs?: number
+  timeout?: number
+  before?: TestBeforeHook
+  after?: TestAfterHook
 }
+export type TestCase =
+  | (BaseTestCase & {
+      fn: (ctx: TestContext) => unknown
+      component?: string | [string, Record<string, unknown>]
+      props?: Record<string, unknown>
+    })
+  | (BaseTestCase & {
+      fn: () => unknown
+      expect?: (t: UnwrapResult<() => unknown>) => unknown
+      component?: string | [string, Record<string, unknown>]
+      props?: Record<string, unknown>
+    })
+  | (BaseTestCase & {
+      fn?: unknown
+      component?: string | [string, Record<string, unknown>]
+      props?: Record<string, unknown>
+    })
+export {}

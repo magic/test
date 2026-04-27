@@ -20,7 +20,7 @@ var __rewriteRelativeImportExtension =
 import { parentPort, workerData } from 'node:worker_threads'
 import is from '@magic/types'
 import { cleanError, cleanFunctionString, getTestKey } from '../lib/index.js'
-import { restoreFromSnapshot } from './isolation.js'
+import { restoreFromSnapshot, isolation } from './isolation.js'
 import { getViteDefine } from '../lib/svelte/viteConfig/index.js'
 import '../bin/lib/registerLoader.js'
 /**
@@ -36,11 +36,11 @@ const hasTestProperties = obj => {
 const makeSafe = value => {
   try {
     // Quick path: primitives are safe
-    if (value === null || typeof value !== 'object') {
+    if (value === null || !is.object(value)) {
       return value
     }
     // Functions cannot be cloned
-    if (typeof value === 'function') {
+    if (is.function(value)) {
       return value.toString()
     }
     // Attempt a structured clone to verify cloneability
@@ -50,11 +50,11 @@ const makeSafe = value => {
     // Fallback: convert to a string representation (or keep undefined/null)
     if (value === undefined || value === null) return value
     if (
-      typeof value === 'string' ||
-      typeof value === 'number' ||
-      typeof value === 'boolean' ||
-      typeof value === 'bigint' ||
-      typeof value === 'symbol'
+      is.string(value) ||
+      is.number(value) ||
+      is.boolean(value) ||
+      value instanceof BigInt ||
+      is.symbol(value)
     ) {
       return value
     }
@@ -113,89 +113,112 @@ const importFile = async filePath => {
     throw error
   }
 }
-const runTestFn = async (test, _key) => {
+const runTestFn = async (test, key) => {
   const { fn, before, after, expect, runs = 1 } = test
-  let afterCleanup
-  if (is.function(before)) {
-    const result = await before(test)
-    if (is.function(result)) {
-      afterCleanup = result
-    }
-  }
-  let result
-  let exp
-  let expString
-  let pass
-  const results = []
-  for (let i = 0; i < runs; i++) {
-    let res
-    try {
-      if (is.function(fn)) {
-        res = await fn({})
-      } else if (is.promise(fn)) {
-        res = await fn
-      } else {
-        res = fn
-      }
-    } catch {
-      results.push({ res: undefined, pass: false })
-      continue
-    }
-    try {
-      const evalResult = await evaluateResult(res, expect)
-      const runPass = evalResult.pass
-      results.push({ res, pass: runPass, exp: evalResult.exp, expString: evalResult.expString })
-      if (!runPass) {
-        pass = false
-        result = res
-        exp = evalResult.exp
-        expString = evalResult.expString
-      }
-    } catch {
-      results.push({ res, pass: false })
-    }
-    try {
-      const evalResult = await evaluateResult(res, expect)
-      results.push({
-        res,
-        pass: evalResult.pass,
-        exp: evalResult.exp,
-        expString: evalResult.expString,
-      })
-      if (!evalResult.pass) {
-        pass = false
-        result = res
-        exp = evalResult.exp
-        expString = evalResult.expString
-      }
-    } catch {
-      results.push({ res, pass: false })
-    }
-  }
-  pass = results.every(r => r.pass)
-  if (pass) {
-    result = runs > 1 ? results.map(r => r.res) : results[0]?.res
-    const lastExp = results[results.length - 1]
-    exp = lastExp?.exp
-    expString = lastExp?.expString
-  }
   let afterCleanupError = null
-  let afterError = null
-  if (is.function(afterCleanup)) {
+  const isolatedResult = await isolation.executeIsolated(key, async () => {
+    let afterCleanup
+    let innerAfterCleanupError = null
+    let innerAfterError = null
+    if (is.function(before)) {
+      try {
+        const result = await before(test)
+        if (is.function(result)) {
+          afterCleanup = result
+        }
+      } catch (e) {
+        innerAfterCleanupError = cleanError(is.error(e) ? e : new Error(String(e)))
+      }
+    }
+    let result
+    let exp
+    let expString
+    let pass
+    const results = []
+    for (let i = 0; i < runs; i++) {
+      let res
+      try {
+        if (is.function(fn)) {
+          res = await fn({})
+        } else if (is.promise(fn)) {
+          res = await fn
+        } else {
+          res = fn
+        }
+      } catch {
+        results.push({ res: undefined, pass: false })
+        continue
+      }
+      try {
+        const evalResult = await evaluateResult(res, expect)
+        const runPass = evalResult.pass
+        results.push({ res, pass: runPass, exp: evalResult.exp, expString: evalResult.expString })
+        if (!runPass) {
+          pass = false
+          result = res
+          exp = evalResult.exp
+          expString = evalResult.expString
+        }
+      } catch {
+        results.push({ res, pass: false })
+      }
+      try {
+        const evalResult = await evaluateResult(res, expect)
+        results.push({
+          res,
+          pass: evalResult.pass,
+          exp: evalResult.exp,
+          expString: evalResult.expString,
+        })
+        if (!evalResult.pass) {
+          pass = false
+          result = res
+          exp = evalResult.exp
+          expString = evalResult.expString
+        }
+      } catch {
+        results.push({ res, pass: false })
+      }
+    }
+    pass = results.every(r => r.pass)
+    if (pass) {
+      result = runs > 1 ? results.map(r => r.res) : results[0]?.res
+      const lastExp = results[results.length - 1]
+      exp = lastExp?.exp
+      expString = lastExp?.expString
+    }
+    if (is.function(after)) {
+      try {
+        await after()
+      } catch (e) {
+        innerAfterError = cleanError(is.error(e) ? e : new Error(String(e)))
+      }
+    }
+    return {
+      result,
+      pass,
+      exp,
+      expString,
+      afterCleanup,
+      afterCleanupError: innerAfterCleanupError,
+      afterError: innerAfterError,
+    }
+  })
+  if (isolatedResult.afterCleanup) {
     try {
-      await afterCleanup()
+      await isolatedResult.afterCleanup()
     } catch (e) {
       afterCleanupError = cleanError(is.error(e) ? e : new Error(String(e)))
     }
   }
-  if (is.function(after)) {
-    try {
-      await after()
-    } catch (e) {
-      afterError = cleanError(is.error(e) ? e : new Error(String(e)))
-    }
+  return {
+    result: isolatedResult.result,
+    pass: isolatedResult.pass,
+    exp: isolatedResult.exp,
+    expString: isolatedResult.expString,
+    afterCleanupError: isolatedResult.afterCleanupError || afterCleanupError,
+    afterError: isolatedResult.afterError,
   }
-  return { result, pass, exp, expString, afterCleanupError, afterError }
 }
 const runSingleTest = async (test, testKey, testPkg, testParent, testName) => {
   const { fn, info } = test
@@ -289,38 +312,29 @@ const main = async () => {
   }
 }
 const runSingleMode = async () => {
-  const {
-    testFileUrl,
-    testIndex,
-    testPkg,
-    testParent,
-    testName,
-    suiteSnapshot,
-    beforeAll,
-    afterAll,
-  } = workerData
+  const { testFileUrl, testIndex, testPkg, testParent, testName, suiteSnapshot } = workerData
   try {
     if (suiteSnapshot) {
       restoreFromSnapshot(suiteSnapshot)
     }
-    // Run beforeAll if provided
+    const tests = await importFile(testFileUrl)
     let afterAllCleanup
-    if (beforeAll) {
-      const beforeAllFn = new Function(beforeAll)()
-      const result = await beforeAllFn()
-      if (typeof result === 'function') {
+    if (is.objectNative(tests) && is.function(tests.beforeAll)) {
+      const result = await tests.beforeAll()
+      if (is.function(result)) {
         afterAllCleanup = result
       }
     }
-    const tests = await importFile(testFileUrl)
-    const result = await runSingleTestFromFile(tests, testIndex, testPkg, testParent, testName)
-    // Run afterAll if provided (or cleanup from beforeAll)
-    if (afterAllCleanup) {
-      await afterAllCleanup()
-    }
-    if (afterAll) {
-      const afterAllFn = new Function(afterAll)()
-      await afterAllFn()
+    let result
+    try {
+      result = await runSingleTestFromFile(tests, testIndex, testPkg, testParent, testName)
+    } finally {
+      if (afterAllCleanup) {
+        await afterAllCleanup()
+      }
+      if (is.objectNative(tests) && is.function(tests.afterAll)) {
+        await tests.afterAll()
+      }
     }
     const payload = {
       ...result,
@@ -345,47 +359,37 @@ const runSingleMode = async () => {
   }
 }
 const runBatchMode = async () => {
-  const {
-    testFileUrl,
-    testIndices,
-    testPkg,
-    testParent,
-    testNames,
-    suiteSnapshot,
-    beforeAll,
-    afterAll,
-  } = workerData
+  const { testFileUrl, testIndices, testPkg, testParent, testNames, suiteSnapshot } = workerData
   try {
     if (suiteSnapshot) {
       restoreFromSnapshot(suiteSnapshot)
     }
-    // Run beforeAll if provided
+    const tests = await importFile(testFileUrl)
     let afterAllCleanup
-    if (beforeAll) {
-      const beforeAllFn = new Function(beforeAll)()
-      const result = await beforeAllFn()
-      if (typeof result === 'function') {
+    if (is.objectNative(tests) && is.function(tests.beforeAll)) {
+      const result = await tests.beforeAll()
+      if (is.function(result)) {
         afterAllCleanup = result
       }
     }
-    const tests = await importFile(testFileUrl)
     const results = []
-    for (let i = 0; i < testIndices.length; i++) {
-      const testIndex = testIndices[i]
-      const testName = testNames[i]
-      const result = await runSingleTestFromFile(tests, testIndex, testPkg, testParent, testName)
-      results.push({
-        ...result,
-        result: makeSafe(result.result),
-      })
-    }
-    // Run afterAll if provided (or cleanup from beforeAll)
-    if (afterAllCleanup) {
-      await afterAllCleanup()
-    }
-    if (afterAll) {
-      const afterAllFn = new Function(afterAll)()
-      await afterAllFn()
+    try {
+      for (let i = 0; i < testIndices.length; i++) {
+        const testIndex = testIndices[i]
+        const testName = testNames[i]
+        const result = await runSingleTestFromFile(tests, testIndex, testPkg, testParent, testName)
+        results.push({
+          ...result,
+          result: makeSafe(result.result),
+        })
+      }
+    } finally {
+      if (afterAllCleanup) {
+        await afterAllCleanup()
+      }
+      if (is.objectNative(tests) && is.function(tests.afterAll)) {
+        await tests.afterAll()
+      }
     }
     if (parentPort) parentPort.postMessage(results)
   } catch (e) {
