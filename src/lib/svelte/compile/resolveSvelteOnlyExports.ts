@@ -88,17 +88,13 @@ export const compileSvelteOnlyExport = async (
           exportNames,
         )
         const tempFile = await writeTempFile(sveltePath, processedCode)
-        compileCache.set(cacheKey, { js: { code: content }, css: null } as Parameters<
-          typeof compileCache.set
-        >[1])
+        compileCache.set(cacheKey, { js: { code: content }, css: null, mtime: Date.now() })
         tmpFileCache.set(sveltePath, tempFile)
         return tempFile
       }
 
       const { tmpFile } = await compileSvelteWithWrite(sveltePath)
-      compileCache.set(cacheKey, { js: { code: content }, css: null } as Parameters<
-        typeof compileCache.set
-      >[1])
+      compileCache.set(cacheKey, { js: { code: content }, css: null, mtime: Date.now() })
       tmpFileCache.set(sveltePath, tmpFile)
       return tmpFile
     } finally {
@@ -122,7 +118,7 @@ const handleJsWithSvelteReexports = async (
   }
   visited.add(jsFilePath)
 
-  const jsDir = path.dirname(jsFilePath) as string
+  const jsDir = path.dirname(jsFilePath)
   const replacements: Array<{ original: string | RegExp; replacement: string }> = []
 
   const matches = [...code.matchAll(JS_SVELTE_REEXPORT_RE)]

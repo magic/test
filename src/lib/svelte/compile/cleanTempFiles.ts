@@ -24,17 +24,21 @@ export const cleanTempFiles = async (): Promise<void> => {
     const now = Date.now()
     const MAX_AGE = 24 * 60 * 60 * 1000
 
+    const deletePromises = []
+
     for (const file of files) {
       const filePath = path.join(tmpDir, file)
       try {
         const stat = await fs.stat(filePath)
         if (now - stat.mtimeMs > MAX_AGE) {
-          fs.rmrf(filePath)
+          deletePromises.push(fs.rmrf(filePath))
         }
       } catch {
         // Ignore errors for individual files
       }
     }
+
+    await Promise.all(deletePromises)
   } catch {
     // Ignore cleanup errors
   }

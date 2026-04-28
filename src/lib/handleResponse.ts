@@ -3,7 +3,7 @@ import is from '@magic/types'
 /**
  * Error types for handleResponse
  */
-class JsonParseError extends Error {
+export class JsonParseError extends Error {
   responseStatusCode = 0
   responseCause?: unknown
   constructor(message: string, cause?: unknown) {
@@ -12,7 +12,7 @@ class JsonParseError extends Error {
   }
 }
 
-class HttpStatusError extends Error {
+export class HttpStatusError extends Error {
   responseStatusCode: number
   responseUrl?: string
   responseBody?: string
@@ -24,7 +24,7 @@ class HttpStatusError extends Error {
   }
 }
 
-class SizeLimitError extends Error {
+export class SizeLimitError extends Error {
   responseStatusCode = 413
   responseUrl?: string
   constructor(message: string, url?: string) {
@@ -33,7 +33,7 @@ class SizeLimitError extends Error {
   }
 }
 
-class NetworkError extends Error {
+export class NetworkError extends Error {
   responseStatusCode = 0
   responseCause?: unknown
   constructor(message: string, cause?: unknown) {
@@ -42,9 +42,9 @@ class NetworkError extends Error {
   }
 }
 
-type ResponseError = JsonParseError | HttpStatusError | SizeLimitError | NetworkError
+export type ResponseError = JsonParseError | HttpStatusError | SizeLimitError | NetworkError
 
-const isResponseError = (error: unknown): error is ResponseError => {
+export const isResponseError = (error: unknown): error is ResponseError => {
   return (
     is.instance(error, JsonParseError) ||
     is.instance(error, HttpStatusError) ||
@@ -52,8 +52,6 @@ const isResponseError = (error: unknown): error is ResponseError => {
     is.instance(error, NetworkError)
   )
 }
-
-export { JsonParseError, HttpStatusError, SizeLimitError, NetworkError, isResponseError }
 
 /**
  * Handles an HTTP response, collecting data and resolving or rejecting a promise.

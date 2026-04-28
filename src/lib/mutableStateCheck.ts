@@ -13,13 +13,19 @@ const getImportNames = (content: string): string[] => {
   let match
 
   while ((match = namedImport.exec(content))) {
-    if (match[1]) match[1].split(',').forEach(n => names.push(n.trim()))
+    if (match[1]) {
+      match[1].split(',').forEach(n => names.push(n.trim()))
+    }
   }
   while ((match = defaultImport.exec(content))) {
-    if (match[1]) names.push(match[1])
+    if (match[1]) {
+      names.push(match[1])
+    }
   }
   while ((match = namespaceImport.exec(content))) {
-    if (match[1]) names.push(match[1])
+    if (match[1]) {
+      names.push(match[1])
+    }
   }
 
   return names
@@ -91,7 +97,9 @@ export const testImportsMutableModuleState = async (
     }
     if (is.objectNative(testObj)) {
       return Object.values(testObj as Record<string, unknown>).some(t => {
-        if (is.objectNative(t) && t.tests) return checkTestsInObject(t.tests)
+        if (is.objectNative(t) && t.tests) {
+          return checkTestsInObject(t.tests)
+        }
         if (is.objectNative(t))
           return checkTest(
             t as {
@@ -111,8 +119,12 @@ export const testImportsMutableModuleState = async (
     after?: (...args: unknown[]) => unknown
     tests?: unknown
   }): boolean => {
-    if (checkHook(test?.before)) return true
-    if (checkHook(test?.after)) return true
+    if (checkHook(test?.before)) {
+      return true
+    }
+    if (checkHook(test?.after)) {
+      return true
+    }
     if (test?.tests) return checkTestsInObject(test.tests)
     return false
   }
@@ -123,8 +135,12 @@ export const testImportsMutableModuleState = async (
     tests?: unknown
   }
 
-  if (checkHook(testsObj.beforeAll)) return true
-  if (checkHook(testsObj.afterAll)) return true
+  if (checkHook(testsObj.beforeAll)) {
+    return true
+  }
+  if (checkHook(testsObj.afterAll)) {
+    return true
+  }
 
   if (is.array(tests)) {
     return tests.some(t =>
@@ -211,13 +227,21 @@ export const testUsesFixedPorts = (tests: unknown): boolean => {
     before?: (...args: unknown[]) => unknown
     after?: (...args: unknown[]) => unknown
   }): boolean => {
-    if (checkHook(test?.before)) return true
-    if (checkHook(test?.after)) return true
+    if (checkHook(test?.before)) {
+      return true
+    }
+    if (checkHook(test?.after)) {
+      return true
+    }
     return false
   }
 
-  if (checkHook(testsObj.beforeAll)) return true
-  if (checkHook(testsObj.afterAll)) return true
+  if (checkHook(testsObj.beforeAll)) {
+    return true
+  }
+  if (checkHook(testsObj.afterAll)) {
+    return true
+  }
 
   if (is.array(tests)) {
     return tests.some(t =>
@@ -276,14 +300,24 @@ export const testUsesSharedFiles = (tests: unknown): boolean => {
     fn?: (...args: unknown[]) => unknown
     after?: (...args: unknown[]) => unknown
   }): boolean => {
-    if (checkHook(test?.before)) return true
-    if (checkHook(test?.fn)) return true
-    if (checkHook(test?.after)) return true
+    if (checkHook(test?.before)) {
+      return true
+    }
+    if (checkHook(test?.fn)) {
+      return true
+    }
+    if (checkHook(test?.after)) {
+      return true
+    }
     return false
   }
 
-  if (checkHook(testsObj.beforeAll)) return true
-  if (checkHook(testsObj.afterAll)) return true
+  if (checkHook(testsObj.beforeAll)) {
+    return true
+  }
+  if (checkHook(testsObj.afterAll)) {
+    return true
+  }
 
   if (is.array(tests)) {
     return tests.some(t =>
@@ -299,7 +333,7 @@ export const testUsesSharedFiles = (tests: unknown): boolean => {
 
   if (is.objectNative(tests)) {
     if (testsObj.tests) {
-      return Object.values(testsObj.tests as Record<string, unknown>).some(t =>
+      return Object.values(testsObj.tests).some(t =>
         checkTest(
           t as {
             before?: (...args: unknown[]) => unknown
