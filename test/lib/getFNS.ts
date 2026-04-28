@@ -1,5 +1,6 @@
 import is from '@magic/types'
 import { getFNS } from '../../src/lib/getFNS.js'
+import type { TestCase } from '../../src/types.js'
 
 export default [
   {
@@ -22,4 +23,4 @@ export default [
     expect: is.array,
     info: 'returns array when FN contains spaces',
   },
-]
+] satisfies TestCase[]

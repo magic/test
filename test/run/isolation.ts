@@ -1,4 +1,5 @@
 import { isolation } from '../../src/run/isolation.js'
+import type { TestCase } from '../../src/types.js'
 
 export default [
   {
@@ -176,4 +177,4 @@ export default [
     },
     expect: true,
   },
-]
+] satisfies TestCase[]

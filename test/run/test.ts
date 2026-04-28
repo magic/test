@@ -1,5 +1,6 @@
 import { runTest } from '../../src/run/test.js'
 import { createStore } from '../../src/lib/store.js'
+import type { TestCase } from '../../src/types.js'
 
 export default [
   {
@@ -174,4 +175,4 @@ export default [
     },
     expect: true,
   },
-]
+] satisfies TestCase[]

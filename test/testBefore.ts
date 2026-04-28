@@ -1,5 +1,7 @@
 const key = `before-${new Date().getTime() + Math.random() * 1000}` as const
 
+import type { TestCase } from '../src/types.js'
+
 export default [
   {
     before: () => {
@@ -26,6 +28,7 @@ export default [
   {
     before: () => {
       ;(globalThis as Record<string, unknown>)[key] = 'cleanup_test'
+
       return () => delete (globalThis as Record<string, unknown>)[key]
     },
     fn: () => {
@@ -38,6 +41,5 @@ export default [
   {
     fn: () => (globalThis as Record<string, unknown>)[key],
     expect: undefined,
-    info: 'globalThis[key] is undefined when not set by before',
   },
-]
+] satisfies TestCase[]

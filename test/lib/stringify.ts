@@ -1,4 +1,5 @@
 import { stringify } from '../../src/lib/stringify.js'
+import type { TestCase } from '../../src/types.js'
 
 const longString = 'a'.repeat(100)
 
@@ -51,4 +52,4 @@ export default [
     expect: 100,
     info: 'strings do not truncate when errorLength is 0',
   },
-]
+] satisfies TestCase[]

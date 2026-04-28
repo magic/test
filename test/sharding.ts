@@ -1,5 +1,6 @@
 import is from '@magic/types'
 import { tryCatch } from '../src/lib/tryCatch.js'
+import type { TestCase } from '../src/types.js'
 
 const getShardForTest = (testPath: string, totalShards: number): number => {
   let hash = 2166136261
@@ -89,4 +90,4 @@ export default [
     expect: 3,
     info: 'Multiple unique shards used',
   },
-]
+] satisfies TestCase[]

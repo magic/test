@@ -1,6 +1,7 @@
 import is from '@magic/types'
 import log from '@magic/log'
 import { vals } from '../../src/index.js'
+import type { TestCase } from '../../src/types.js'
 
 type IsFn = (item: unknown) => boolean
 
@@ -69,4 +70,4 @@ export default [
     info: 'Number of test functions is equal to lib functions',
   },
   ...equalities,
-]
+] satisfies TestCase[]

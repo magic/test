@@ -1,4 +1,5 @@
 import { suiteNeedsIsolation } from '../../src/lib/suiteNeedsIsolation.js'
+import type { TestCase } from '../../src/types.js'
 
 export default [
   {
@@ -29,4 +30,4 @@ export default [
     expect: false,
     info: 'returns false for null input',
   },
-]
+] satisfies TestCase[]

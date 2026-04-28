@@ -1,4 +1,5 @@
 import { is, tryCatch, promise } from '../src/index.js'
+import type { TestObject } from '../src/types.js'
 
 const cbFn = (e: Error | null, a: unknown, cb: (e: Error | null, a: unknown) => void) => cb(e, a)
 
@@ -88,4 +89,4 @@ export default {
   ],
   suiteFn: { fn: () => true, expect: true },
   suiteEmpty_ExpectingErrorInLog: null,
-}
+} satisfies TestObject

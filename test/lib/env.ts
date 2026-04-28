@@ -1,4 +1,5 @@
 import { env } from '../../src/index.js'
+import type { TestCase } from '../../src/types.js'
 
 export default [
   {
@@ -47,6 +48,5 @@ export default [
       return result
     },
     expect: 0,
-    info: 'getErrorLength returns 0 when env is 0 (no limit)',
   },
-]
+] satisfies TestCase[]

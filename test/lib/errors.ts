@@ -1,5 +1,6 @@
 import is from '@magic/types'
 import { ERRORS, ERROR_MESSAGES, createError } from '../../src/lib/index.js'
+import type { TestCase } from '../../src/types.js'
 
 export default [
   {
@@ -88,4 +89,4 @@ export default [
     expect: is.error,
     info: 'createError returns Error instance',
   },
-]
+] satisfies TestCase[]

@@ -1,6 +1,7 @@
 import { mount, html, tick } from '../src/svelte.js'
 import { flushSync as flushSyncSvelte } from 'svelte'
 import { reset as resetPage } from '../src/lib/svelte/shims/$app/state.js'
+import type { TestCase } from '../src/types.js'
 
 export default [
   // $app/environment
@@ -311,4 +312,4 @@ export default [
       '<div class="forms3"><span class="enhance-destroy">has-destroy</span> <span class="applyaction-promise">is-promise</span></div>',
     info: '$app/forms applyAction returns promise and enhance returns destroy',
   },
-]
+] satisfies TestCase[]

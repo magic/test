@@ -9,6 +9,7 @@ import {
   testUsesFixedPorts,
   testUsesSharedFiles,
 } from '../../src/lib/mutableStateCheck.js'
+import type { TestCase } from '../../src/types.js'
 
 export default [
   {
@@ -237,4 +238,4 @@ export default [
     expect: false,
     info: 'detects fs imports for shared files check',
   },
-]
+] satisfies TestCase[]

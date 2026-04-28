@@ -1,5 +1,6 @@
 import is from '@magic/types'
 import { tryCatch, curry } from '../../src/index.js'
+import type { TestCase } from '../../src/types.js'
 
 const fn = (v: unknown) => v
 
@@ -31,4 +32,4 @@ export default [
   { fn: () => (curryAny(add, 1) as (b: number) => (c: number) => number)(2)(3), expect: 6 },
   { fn: () => (curryAny(add, 1) as (b: number) => (c: number) => number)(2)(-3), expect: 0 },
   { fn: tryCatch(curryAny, add, 1, 2, 3, 4), expect: is.error },
-]
+] satisfies TestCase[]

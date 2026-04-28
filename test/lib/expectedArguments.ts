@@ -1,5 +1,6 @@
 import { is } from '../../src/index.js'
 import { expectedArguments } from '../../src/lib/expectedArguments.js'
+import type { TestCase } from '../../src/types.js'
 
 export default [
   { fn: () => expectedArguments(() => {}), expect: is.array },
@@ -73,4 +74,4 @@ export default [
     expect: is.len.eq(2),
     info: 'extracts arguments with various default values',
   },
-]
+] satisfies TestCase[]

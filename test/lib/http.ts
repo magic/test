@@ -1,5 +1,6 @@
 import http from 'node:http'
 import { http as httpModule } from '../../src/lib/http.js'
+import type { TestObject } from '../../src/types.js'
 
 interface TestGlobals {
   httpTestPort?: number
@@ -215,4 +216,4 @@ export default {
       info: 'http.post accepts rejectUnauthorized option',
     },
   ],
-}
+} satisfies TestObject

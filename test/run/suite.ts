@@ -1,6 +1,7 @@
 import log from '@magic/log'
 import { runSuite } from '../../src/run/suite.js'
 import { createStore } from '../../src/lib/store.js'
+import type { TestCase } from '../../src/types.js'
 
 export default [
   {
@@ -224,4 +225,4 @@ export default [
     },
     expect: true,
   },
-]
+] satisfies TestCase[]

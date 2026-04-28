@@ -1,5 +1,6 @@
 import is from '@magic/types'
 import { createStore } from '../../src/lib/store.js'
+import type { TestCase } from '../../src/types.js'
 
 const store = createStore()
 
@@ -47,4 +48,4 @@ export default [
     expect: true,
     info: 'store.reset clears all state',
   },
-]
+] satisfies TestCase[]

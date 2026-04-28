@@ -1,5 +1,6 @@
 import is from '@magic/types'
 import { handleResponse } from '../../src/lib/handleResponse.js'
+import type { TestCase } from '../../src/types.js'
 
 interface MockResponse {
   statusCode: number
@@ -136,4 +137,4 @@ export default [
     expect: is.error,
     info: 'rejects 500 status code',
   },
-]
+] satisfies TestCase[]

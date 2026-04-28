@@ -1,5 +1,6 @@
 import { is } from '../../src/index.js'
 import { cleanError } from '../../src/lib/cleanError.js'
+import type { TestCase } from '../../src/types.js'
 
 type CleanErrorResult = string[] | Error
 
@@ -28,4 +29,4 @@ export default [
     expect: (t: CleanErrorResult) => Array.isArray(t) && t[0] === 'testing',
     info: 'cleaned Error without multiline stack gets returned with correct first stack item',
   },
-]
+] satisfies TestCase[]
