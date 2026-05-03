@@ -19,6 +19,7 @@ import {
 } from '../lib/index.ts'
 import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
+import { getWorkerPool } from '../lib/workerPool.js'
 import type {
   Suite,
   TestCollection,
@@ -201,27 +202,30 @@ const runTestArray = async (
 
     // Rules 2 & 3: tests with hooks → individual workers
     if (testsWithHooks.length > 0) {
-      const individualPromises = testsWithHooks.map(({ test, index }) => {
-        if (test.component) {
-          return runTest(test, store, rawResults).then(r => ({ result: r, index }))
-        }
-        return isolation
-          .executeInWorker({
-            testFileUrl,
-            testIndex: index,
-            testPkg: test.pkg,
-            testParent: test.parent,
-            testName: test.name,
-            suiteSnapshot,
-          })
-          .then(
-            result => {
-              rawResults.push(result as TestResult)
-              return { result: result as TestResult, index }
-            },
-            err => ({ result: handleWorkerError(test, err, rawResults), index }),
-          )
-      })
+      const pool = getWorkerPool()
+      const individualPromises = testsWithHooks.map(({ test, index }) =>
+        pool(() => {
+          if (test.component) {
+            return runTest(test, store, rawResults).then(r => ({ result: r, index }))
+          }
+          return isolation
+            .executeInWorker({
+              testFileUrl,
+              testIndex: index,
+              testPkg: test.pkg,
+              testParent: test.parent,
+              testName: test.name,
+              suiteSnapshot,
+            })
+            .then(
+              result => {
+                rawResults.push(result as TestResult)
+                return { result: result as TestResult, index }
+              },
+              err => ({ result: handleWorkerError(test, err, rawResults), index }),
+            )
+        }),
+      )
 
       const individualResults = await Promise.all(individualPromises)
       const resultsMap = new Map<number, TestResult>(

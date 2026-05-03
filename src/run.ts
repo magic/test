@@ -91,6 +91,7 @@ export const resetAbort = () => {
 type RunOptions = {
   shards?: number
   shardId?: number
+  workers?: number
 }
 
 /**
@@ -124,12 +125,15 @@ export const run = async (
   tests: TestSuites | (() => TestSuites),
   options: RunOptions = {},
 ): Promise<Error | void> => {
-  const { shards = 1, shardId = 0 } = options
+  const { shards = 1, shardId = 0, workers } = options
 
   // Set environment variables for sharding (used by unit.js and t.js)
   if (shards > 1) {
     process.env.MAGIC_TEST_SHARDING_SHARDS = String(shards)
     process.env.MAGIC_TEST_SHARDING_ID = String(shardId)
+  }
+  if (workers !== undefined) {
+    process.env.MAGIC_TEST_WORKERS = String(workers)
   }
 
   resetAbort()

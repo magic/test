@@ -15,9 +15,11 @@ import type { CustomError } from '@magic/error'
 const getShardConfig = () => {
   const rawShards = process.env.MAGIC_TEST_SHARDING_SHARDS
   const rawShardId = process.env.MAGIC_TEST_SHARDING_ID
+  const rawWorkers = process.env.MAGIC_TEST_WORKERS
 
   const shards = Math.max(1, parseInt(rawShards || '1', 10)) || 1
   const shardId = Math.max(0, parseInt(rawShardId || '0', 10)) || 0
+  const workers = rawWorkers ? Math.max(1, parseInt(rawWorkers, 10)) : undefined
 
   if (rawShards && isNaN(parseInt(rawShards, 10))) {
     log.warn(`Invalid MAGIC_TEST_SHARDING_SHARDS: ${rawShards}, using default: 1`)
@@ -26,7 +28,7 @@ const getShardConfig = () => {
     log.warn(`Invalid MAGIC_TEST_SHARDING_ID: ${rawShardId}, using default: 0`)
   }
 
-  return { shards, shardId }
+  return { shards, shardId, workers }
 }
 
 const init = async () => {
@@ -39,10 +41,10 @@ const init = async () => {
     return
   }
 
-  const { shards, shardId } = getShardConfig()
+  const { shards, shardId, workers } = getShardConfig()
 
   try {
-    await run(tests, { shards, shardId })
+    await run(tests, { shards, shardId, workers })
   } catch (e: unknown) {
     const err = e as CustomError
     err.code = 'E_MAGIC_TEST'
