@@ -60,6 +60,7 @@ incredibly fast.
   - [mock](#lib-mock)
   - [DOM Environment](#lib-dom)
   - [svelte (experimental!)](#lib-svelte)
+- [svelte kit mocks](#lib-sveltekit-mocks)
 - [Native Node.js Test Runner](#native-runner)
   - [Usage](#native-usage)
   - [Using in External Libraries](#native-external)
@@ -358,7 +359,7 @@ const fnWithCallback = (err, arg, cb) => cb(err, arg)
 export default [
   {
     fn: promise(cb => fnWithCallback(null, true, cb)),
-    expect: true
+    expect: true,
     info: 'handle callback functions as promises',
   },
   {
@@ -653,7 +654,7 @@ export default [
   },
   {
     fn: env.getErrorLength,
-    expect: 70, // default, can be overridden by MAGIC_TEST_ERROR_LENGTH
+    expect: undefined, // default, can be overridden by MAGIC_TEST_ERROR_LENGTH
     info: 'get error length limit',
   },
 ]
@@ -889,6 +890,14 @@ export default [
 - `getReturns()` - Get all return values
 - `getErrors()` - Get all thrown errors
 
+**mock.log:**
+
+- `mock.log.log()` - Logs if not NODE_ENV=production
+- `mock.log.warn()` - Logs if not NODE_ENV=production
+- `mock.log.error()` - Always logs
+- `mock.log.time()` - Logs timing if not NODE_ENV=production
+- `mock.log.timeEnd()` - Logs timing end if not NODE_ENV=production
+
 ##### <a name="lib-dom"></a>DOM Environment
 
 @magic/test automatically initializes a DOM environment when imported, making browser APIs available in Node.js.
@@ -1000,6 +1009,7 @@ This works automatically for all `$state` and `$derived` runes in your component
 | `click(target, selector?)`             | Clicks an element (optionally filtered by CSS selector)                                    |
 | `trigger(target, eventType, options?)` | Dispatches a custom event on an element                                                    |
 | `scroll(target, x, y)`                 | Scrolls an element to x/y coordinates                                                      |
+| `createSnippet(parent, snippetFn)`     | Creates a snippet and mounts it to a parent element                                        |
 
 **Test Properties:**
 
@@ -1104,6 +1114,56 @@ export default [
     },
     expect: true,
     info: 'compiles Svelte source to module',
+  },
+]
+```
+
+**ensureSvelte:**
+
+Lazy-loads the Svelte package. Throws if Svelte is not installed:
+
+```javascript
+import { ensureSvelte } from '@magic/test'
+
+export default [
+  {
+    fn: async () => {
+      const svelte = await ensureSvelte()
+      return svelte.version
+    },
+    expect: '5.0.0',
+    info: 'loads svelte package',
+  },
+]
+```
+
+#### <a name="lib-sveltekit-mocks"></a>SvelteKit Mocks
+
+Mocks SvelteKit's `$app` modules:
+
+```javascript
+import { browser, dev, prod, createStaticPage } from '@magic/test'
+
+export default [
+  {
+    fn: () => browser, // true if in browser environment
+    expect: false,
+    info: 'not in browser by default',
+  },
+  {
+    fn: () => dev, // true if in dev mode
+    expect: process.env.NODE_ENV === 'development',
+    info: 'dev reflects NODE_ENV',
+  },
+  {
+    fn: () => prod, // true if in production mode
+    expect: false,
+    info: 'not in prod by default',
+  },
+  {
+    fn: createStaticPage,
+    expect: t => typeof t.html === 'string' && typeof t.render === 'function',
+    info: 'createStaticPage returns html string and render function',
   },
 ]
 ```
@@ -1298,14 +1358,16 @@ and keeps your bash free of clutter
 
 **CLI Flags:**
 
-| Flag         | Aliases                  | Description                                  |
-| ------------ | ------------------------ | -------------------------------------------- |
-| `-p`         | `--production`, `--prod` | Run tests without coverage (faster)          |
-| `-l`         | `--verbose`, `--loud`    | Show detailed output including passing tests |
-| `-i`         | `--include`              | Files to include in coverage                 |
-| `-e`         | `--exclude`              | Files to exclude from coverage               |
-| `--shard-id` |                          | Shard ID (0-indexed) to run                  |
-| `--help`     |                          | Show help text                               |
+| Flag         | Aliases                  | Description                                                   |
+| ------------ | ------------------------ | ------------------------------------------------------------- |
+| `-p`         | `--production`, `--prod` | Run tests without coverage (faster)                           |
+| `-l`         | `--verbose`, `--loud`    | Show detailed output including passing tests                  |
+| `-i`         | `--include`              | Files to include in coverage                                  |
+| `-e`         | `--exclude`              | Files to exclude from coverage                                |
+| `--shards`   |                          | Total number of shards (use with `--shard-id`)                |
+| `--shard-id` |                          | Shard ID (0-indexed, use with `--shards`)                     |
+| `--workers`  | `-w`                     | Max parallel workers (default: auto, env: MAGIC_TEST_WORKERS) |
+| `--help`     |                          | Show help text                                                |
 
 **Note:** `--shards` and `--shard-id` must be used together. `--shard-id` is 0-indexed (0 to N-1).
 
@@ -1413,6 +1475,18 @@ t -p
 # Split tests across multiple processes
 t --shards 4 --shard-id 0
 ```
+
+**Control worker concurrency:**
+
+```bash
+# Use fewer workers (keeps CPU threads free for other tasks)
+t -w 2
+
+# Or via environment variable
+MAGIC_TEST_WORKERS=2 t -p
+```
+
+By default, @magic/test auto-detects CPU count and spawns `max(1, CPUs - 2)` workers to keep 2 threads free for the system.
 
 **Run tests in parallel with native runner:**
 
@@ -1666,18 +1740,18 @@ export default {
 | `ERRORS.E_IMPORT`            | Failed to import a test file                 |
 | `ERRORS.E_MAGIC_TEST`        | General test execution error                 |
 
-Example usage:
+**createError:**
 
 ```javascript
-import { ERRORS, errorify } from '@magic/test'
+import { createError, ERRORS } from '@magic/test'
 
-try {
-  // run tests
-} catch (e) {
-  if (e.code === ERRORS.E_TEST_NO_FN) {
-    console.error('Test is missing fn property:', e.message)
-  }
-}
+export default [
+  {
+    fn: () => createError(ERRORS.E_TEST_NO_FN, 'Missing fn property'),
+    expect: e => e.code === 'E_TEST_NO_FN' && e.message === 'Missing fn property',
+    info: 'createError creates errors with code and message',
+  },
+]
 ```
 
 ### Changelog
