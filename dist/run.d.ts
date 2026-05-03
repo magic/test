@@ -15,6 +15,7 @@ export declare const resetAbort: () => void
 type RunOptions = {
   shards?: number
   shardId?: number
+  workers?: number
 }
 /**
  * @typedef {Object} RunOptions

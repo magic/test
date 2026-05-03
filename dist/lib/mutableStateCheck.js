@@ -6,13 +6,19 @@ const getImportNames = content => {
   const names = []
   let match
   while ((match = namedImport.exec(content))) {
-    if (match[1]) match[1].split(',').forEach(n => names.push(n.trim()))
+    if (match[1]) {
+      match[1].split(',').forEach(n => names.push(n.trim()))
+    }
   }
   while ((match = defaultImport.exec(content))) {
-    if (match[1]) names.push(match[1])
+    if (match[1]) {
+      names.push(match[1])
+    }
   }
   while ((match = namespaceImport.exec(content))) {
-    if (match[1]) names.push(match[1])
+    if (match[1]) {
+      names.push(match[1])
+    }
   }
   return names
 }
@@ -62,7 +68,9 @@ export const testImportsMutableModuleState = async (tests, testFilePath) => {
     }
     if (is.objectNative(testObj)) {
       return Object.values(testObj).some(t => {
-        if (is.objectNative(t) && t.tests) return checkTestsInObject(t.tests)
+        if (is.objectNative(t) && t.tests) {
+          return checkTestsInObject(t.tests)
+        }
         if (is.objectNative(t)) return checkTest(t)
         return false
       })
@@ -70,14 +78,22 @@ export const testImportsMutableModuleState = async (tests, testFilePath) => {
     return false
   }
   const checkTest = test => {
-    if (checkHook(test?.before)) return true
-    if (checkHook(test?.after)) return true
+    if (checkHook(test?.before)) {
+      return true
+    }
+    if (checkHook(test?.after)) {
+      return true
+    }
     if (test?.tests) return checkTestsInObject(test.tests)
     return false
   }
   const testsObj = tests
-  if (checkHook(testsObj.beforeAll)) return true
-  if (checkHook(testsObj.afterAll)) return true
+  if (checkHook(testsObj.beforeAll)) {
+    return true
+  }
+  if (checkHook(testsObj.afterAll)) {
+    return true
+  }
   if (is.array(tests)) {
     return tests.some(t => checkTest(t))
   }
@@ -133,12 +149,20 @@ export const testUsesFixedPorts = tests => {
     return false
   }
   const checkTest = test => {
-    if (checkHook(test?.before)) return true
-    if (checkHook(test?.after)) return true
+    if (checkHook(test?.before)) {
+      return true
+    }
+    if (checkHook(test?.after)) {
+      return true
+    }
     return false
   }
-  if (checkHook(testsObj.beforeAll)) return true
-  if (checkHook(testsObj.afterAll)) return true
+  if (checkHook(testsObj.beforeAll)) {
+    return true
+  }
+  if (checkHook(testsObj.afterAll)) {
+    return true
+  }
   if (is.array(tests)) {
     return tests.some(t => checkTest(t))
   }
@@ -166,13 +190,23 @@ export const testUsesSharedFiles = tests => {
     return false
   }
   const checkTest = test => {
-    if (checkHook(test?.before)) return true
-    if (checkHook(test?.fn)) return true
-    if (checkHook(test?.after)) return true
+    if (checkHook(test?.before)) {
+      return true
+    }
+    if (checkHook(test?.fn)) {
+      return true
+    }
+    if (checkHook(test?.after)) {
+      return true
+    }
     return false
   }
-  if (checkHook(testsObj.beforeAll)) return true
-  if (checkHook(testsObj.afterAll)) return true
+  if (checkHook(testsObj.beforeAll)) {
+    return true
+  }
+  if (checkHook(testsObj.afterAll)) {
+    return true
+  }
   if (is.array(tests)) {
     return tests.some(t => checkTest(t))
   }

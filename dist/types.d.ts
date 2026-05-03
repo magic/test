@@ -191,7 +191,12 @@ export interface TestItem {
 export type JsonSafe = string | number | boolean | null | undefined | object
 export type JsonSafeArg = JsonSafe | (() => unknown)
 export type InputValue = JsonSafeArg | JsonSafeArg[]
-export type TestObject = Record<string, unknown> & TestsWithHooks
+export interface TestObject {
+  beforeAll?: SuiteHook
+  afterAll?: CleanupFunction
+  fn?: () => unknown | Promise<unknown>
+  tests?: TestCollection
+}
 /**
  * A collection of tests, either an array or an object with hooks.
  */
@@ -199,7 +204,7 @@ export type TestCollection = WrappedTest[] | TestObject
 /**
  * Simple cleanup function returned by before hooks.
  */
-export type CleanupFunction = () => void | Promise<void>
+export type CleanupFunction = () => unknown | Promise<unknown>
 /**
  * Suite-level hook (beforeAll/afterAll/beforeEach/afterEach).
  * No params. beforeAll can return cleanup function.

@@ -1,30 +1,29 @@
 /**
  * Error types for handleResponse
  */
-declare class JsonParseError extends Error {
+export declare class JsonParseError extends Error {
   responseStatusCode: number
   responseCause?: unknown
   constructor(message: string, cause?: unknown)
 }
-declare class HttpStatusError extends Error {
+export declare class HttpStatusError extends Error {
   responseStatusCode: number
   responseUrl?: string
   responseBody?: string
   constructor(message: string, statusCode: number, url?: string, body?: string)
 }
-declare class SizeLimitError extends Error {
+export declare class SizeLimitError extends Error {
   responseStatusCode: number
   responseUrl?: string
   constructor(message: string, url?: string)
 }
-declare class NetworkError extends Error {
+export declare class NetworkError extends Error {
   responseStatusCode: number
   responseCause?: unknown
   constructor(message: string, cause?: unknown)
 }
-type ResponseError = JsonParseError | HttpStatusError | SizeLimitError | NetworkError
-declare const isResponseError: (error: unknown) => error is ResponseError
-export { JsonParseError, HttpStatusError, SizeLimitError, NetworkError, isResponseError }
+export type ResponseError = JsonParseError | HttpStatusError | SizeLimitError | NetworkError
+export declare const isResponseError: (error: unknown) => error is ResponseError
 /**
  * Handles an HTTP response, collecting data and resolving or rejecting a promise.
  * Automatically parses JSON responses based on content-type header.

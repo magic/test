@@ -2,7 +2,7 @@ import is from '@magic/types'
 /**
  * Error types for handleResponse
  */
-class JsonParseError extends Error {
+export class JsonParseError extends Error {
   responseStatusCode = 0
   responseCause
   constructor(message, cause) {
@@ -10,7 +10,7 @@ class JsonParseError extends Error {
     this.responseCause = cause
   }
 }
-class HttpStatusError extends Error {
+export class HttpStatusError extends Error {
   responseStatusCode
   responseUrl
   responseBody
@@ -21,7 +21,7 @@ class HttpStatusError extends Error {
     this.responseBody = body
   }
 }
-class SizeLimitError extends Error {
+export class SizeLimitError extends Error {
   responseStatusCode = 413
   responseUrl
   constructor(message, url) {
@@ -29,7 +29,7 @@ class SizeLimitError extends Error {
     this.responseUrl = url
   }
 }
-class NetworkError extends Error {
+export class NetworkError extends Error {
   responseStatusCode = 0
   responseCause
   constructor(message, cause) {
@@ -37,7 +37,7 @@ class NetworkError extends Error {
     this.responseCause = cause
   }
 }
-const isResponseError = error => {
+export const isResponseError = error => {
   return (
     is.instance(error, JsonParseError) ||
     is.instance(error, HttpStatusError) ||
@@ -45,7 +45,6 @@ const isResponseError = error => {
     is.instance(error, NetworkError)
   )
 }
-export { JsonParseError, HttpStatusError, SizeLimitError, NetworkError, isResponseError }
 /**
  * Handles an HTTP response, collecting data and resolving or rejecting a promise.
  * Automatically parses JSON responses based on content-type header.

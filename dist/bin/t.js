@@ -15,6 +15,7 @@ const res = cli({
     ['--shard-id'],
     ['--error-length'],
     ['--timeout', '--to', '-t'],
+    ['--workers', '--w', '-w'],
   ],
   env: [[['--production', '--prod', '--p', '-p'], 'NODE_ENV', 'production']],
   help: {
@@ -28,6 +29,7 @@ const res = cli({
       '--shard-id': 'shard id (0-indexed)',
       '--error-length': 'max length for error strings (default 70, 0 = no limit)',
       '--timeout': 'test timeout in ms (default: 10000)',
+      '--workers': 'max parallel workers (default: auto, env: MAGIC_TEST_WORKERS)',
     },
     header: `
 simple unit testing. runs all tests found in {cwd}/test/
@@ -63,10 +65,7 @@ const run = async () => {
   let argv = []
   const includeArgs = res.args.include || ['src']
   const excludeArgs = res.args.exclude || []
-  const shards = res.args.shards
-  const shardId = res.args.shardId
-  const errorLength = res.args.errorLength
-  const timeout = res.args.timeout
+  const { shards, shardId, errorLength, timeout, workers } = res.args
   const include = is.array(includeArgs) ? includeArgs : [includeArgs]
   const exclude = is.array(excludeArgs) ? excludeArgs : [excludeArgs]
   if (!isProd) {
@@ -89,6 +88,9 @@ const run = async () => {
   }
   if (timeout !== undefined) {
     process.env.MAGIC_TEST_TIMEOUT = String(timeout)
+  }
+  if (workers !== undefined) {
+    process.env.MAGIC_TEST_WORKERS = String(workers)
   }
   argv.push(binFile)
   if (process.argv.length > 2) {
