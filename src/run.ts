@@ -171,7 +171,7 @@ export const run = async (
   ]
 
   // Collect beforeAll functions and their cleanup handlers
-  const beforeAllCleanup: (() => void | Promise<void>)[] = []
+  const beforeAllCleanup: CleanupFunction[] = []
   for (const file of beforeAllFiles) {
     const beforeAll = testsObj[file]
     if (is.fn(beforeAll)) {
