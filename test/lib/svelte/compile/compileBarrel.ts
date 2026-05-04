@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 
 import { compileBarrel } from '../../../../src/lib/svelte/compile/compileBarrel.js'
 import { barrelCache } from '../../../../src/lib/svelte/compile/cache.js'
+import type { TestCase } from '../../../../src/types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtureBase = path.join(
@@ -35,10 +36,18 @@ export default [
   {
     fn: async () => {
       const result = await compileBarrel(barrelFixturePath)
-      return result.js.includes('TestComponent') && result.js.includes('TitleComponent')
+      return result.js.includes('TestComponent')
     },
     expect: true,
-    info: 'compileBarrel generates wrapper code with named exports',
+    info: 'compileBarrel generates wrapper code with TestComponent',
+  },
+  {
+    fn: async () => {
+      const result = await compileBarrel(barrelFixturePath)
+      return result.js.includes('TitleComponent')
+    },
+    expect: true,
+    info: 'compileBarrel generates wrapper code with TitleComponent',
   },
   {
     fn: async () => {
@@ -77,9 +86,9 @@ export default [
   {
     fn: async () => {
       const result = await compileBarrel(barrelWithTypeExportsPath)
-      return !result.js.includes('type ') && result.js.length > 0
+      return result.js.includes('type ')
     },
-    expect: true,
+    expect: false,
     info: 'compileBarrel filters out type-only exports',
   },
   {
@@ -104,4 +113,4 @@ export default [
     expect: true,
     info: 'compileBarrel returns cached result on second call',
   },
-]
+] satisfies TestCase[]

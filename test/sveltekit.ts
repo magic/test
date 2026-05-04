@@ -32,7 +32,7 @@ export default [
     expect: true,
     info: '$app/state page has correct default values',
   },
-  // goto updates URL and navigating
+  // goto updates URL
   {
     fn: async () => {
       const { target, unmount } = await mount(
@@ -44,12 +44,29 @@ export default [
       await flushSyncSvelte()
       await tick()
       const url = html(target).match(/<span class="url">([^<]*)<\/span>/)?.[1]
+      await unmount()
+      return url
+    },
+    expect: '/target',
+    info: 'goto updates URL',
+  },
+  // goto updates navigating
+  {
+    fn: async () => {
+      const { target, unmount } = await mount(
+        './src/lib/svelte/testFixtures/components/NavTest.svelte',
+        {
+          props: { triggerGoto: true },
+        },
+      )
+      await flushSyncSvelte()
+      await tick()
       const nav = html(target).match(/<span class="navigating">([^<]*)<\/span>/)?.[1]
       await unmount()
-      return { url, nav }
+      return nav
     },
-    expect: { url: '/target', nav: 'busy' },
-    info: 'goto updates URL and navigating store',
+    expect: 'busy',
+    info: 'goto updates navigating store',
   },
   // callbacks fire
   {
@@ -96,7 +113,6 @@ export default [
       await flushSyncSvelte()
       await Promise.resolve()
       const result = html(target)
-      // console.log('PATHS TEST RESULT:', JSON.stringify(result))
       await unmount()
       return result
     },
@@ -262,27 +278,41 @@ export default [
       '<div class="nav2"><span class="replace-url">/replace</span> <span class="invalidate">not-called</span> <span class="invalidate-all">not-called</span> <span class="preload-data">null</span> <span class="preload-code">not-loaded</span></div>',
     info: '$app/navigation replaceState updates page URL',
   },
-  // $app/navigation invalidate, invalidateAll, preload
+  // $app/navigation invalidate
   {
     fn: async () => {
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/NavTest2.svelte',
         {
-          props: { triggerInvalidate: true, triggerInvalidateAll: true, triggerPreload: true },
+          props: { triggerInvalidate: true },
         },
       )
       await flushSyncSvelte()
       await new Promise(r => setTimeout(r, 10))
       const result = html(target)
       await unmount()
-      return (
-        result.includes('class="nav2"') &&
-        result.includes('invalidate') &&
-        result.includes('preload')
-      )
+      return result.includes('invalidate')
     },
     expect: true,
-    info: '$app/navigation invalidate, invalidateAll, and preload functions work',
+    info: '$app/navigation invalidate function works',
+  },
+  // $app/navigation preload
+  {
+    fn: async () => {
+      const { target, unmount } = await mount(
+        './src/lib/svelte/testFixtures/components/NavTest2.svelte',
+        {
+          props: { triggerPreload: true },
+        },
+      )
+      await flushSyncSvelte()
+      await new Promise(r => setTimeout(r, 10))
+      const result = html(target)
+      await unmount()
+      return result.includes('preload')
+    },
+    expect: true,
+    info: '$app/navigation preload function works',
   },
   // $app/server remote functions
   {

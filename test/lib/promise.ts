@@ -20,18 +20,24 @@ export default [
     info: 'can handle return values',
   },
   {
-    fn: promise(r =>
-      fnWithCb(new Error('err'), 'arg', r as (err: Error | null, arg: unknown) => void),
-    ),
-    expect: ([e]: [Error]) => is.err(e),
-    info: 'can handle returned errors',
+    fn: async () => {
+      const result = await promise(r =>
+        fnWithCb(new Error('err'), 'arg', r as (err: Error | null, arg: unknown) => void),
+      )()
+      return (result as [Error, unknown])[0]
+    },
+    expect: is.err,
+    info: 'can handle returned errors - error part',
   },
   {
-    fn: promise(r =>
-      fnWithCb(new Error('err'), 'arg', r as (err: Error | null, arg: unknown) => void),
-    ),
-    expect: ([, b]: [unknown, unknown]) => b === 'arg',
-    info: 'if errors returns argument after error',
+    fn: async () => {
+      const result = await promise(r =>
+        fnWithCb(new Error('err'), 'arg', r as (err: Error | null, arg: unknown) => void),
+      )()
+      return (result as [unknown, unknown])[1]
+    },
+    expect: 'arg',
+    info: 'can handle returned errors - arg part',
   },
   {
     fn: promise(r =>

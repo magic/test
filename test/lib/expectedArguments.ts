@@ -6,7 +6,7 @@ export default [
   { fn: () => expectedArguments(() => {}), expect: is.array },
   { fn: () => expectedArguments(() => {}), expect: is.empty },
   { fn: () => expectedArguments((_a: unknown) => {}), expect: is.array },
-  { fn: () => expectedArguments((_a: unknown) => {}), expect: is.length.eq(1) },
+  { fn: () => expectedArguments((_a: unknown) => {}), expect: is.len.eq(1) },
   { fn: () => expectedArguments((_a: unknown, _b: unknown) => {}), expect: is.len.eq(2) },
   {
     fn: () => expectedArguments((_a: unknown, _b: unknown, _c: unknown) => {}),
@@ -39,20 +39,40 @@ export default [
       const args = expectedArguments(function ({ a, b }: { a: unknown; b: unknown }) {
         const _c = (a as number) + (b as number)
       })
-      return args.length > 1 && args[0]?.includes('{ a')
+      return args.length
+    },
+    expect: 2,
+    info: 'extracts destructured object argument - length',
+  },
+  {
+    fn: () => {
+      const args = expectedArguments(function ({ a, b }: { a: unknown; b: unknown }) {
+        const _c = (a as number) + (b as number)
+      })
+      return args[0]?.includes('{ a')
     },
     expect: true,
-    info: 'extracts destructured object argument',
+    info: 'extracts destructured object argument - includes',
   },
   {
     fn: () => {
       const args = expectedArguments(function ([a, b]: [unknown, unknown]) {
         const _c = (a as number) + (b as number)
       })
-      return args.length > 1 && args[0]?.includes('[a')
+      return args.length
+    },
+    expect: 2,
+    info: 'extracts destructured array argument - length',
+  },
+  {
+    fn: () => {
+      const args = expectedArguments(function ([a, b]: [unknown, unknown]) {
+        const _c = (a as number) + (b as number)
+      })
+      return args[0]?.includes('[a')
     },
     expect: true,
-    info: 'extracts destructured array argument',
+    info: 'extracts destructured array argument - includes',
   },
   {
     fn: () => expectedArguments(42),

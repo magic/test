@@ -122,17 +122,20 @@ export default [
   {
     component: 'src/lib/svelte/testFixtures/components/SvelteKit.svelte',
     fn: async ({ target }) => {
-      const initial = html(target)
+      return html(target)
+    },
+    expect:
+      '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----> <button>Toggle</button>',
+    info: 'SvelteKit component initial state',
+  },
+  {
+    component: 'src/lib/svelte/testFixtures/components/SvelteKit.svelte',
+    fn: async ({ target }) => {
       click(target, 'button')
       await flushSync()
-      const afterToggle = html(target)
-      return { initial, afterToggle }
+      return html(target)
     },
-    expect: {
-      initial:
-        '<!----><div class="env-info"><p>browser: true</p> <p>dev: true</p> <p>prod: false</p></div><!----> <button>Toggle</button>',
-      afterToggle: '<!----><!----> <button>Toggle</button>',
-    },
-    info: 'SvelteKit component state updates correctly with toggle',
+    expect: '<!----><!----> <button>Toggle</button>',
+    info: 'SvelteKit component state after toggle',
   },
 ] satisfies TestCase[]
