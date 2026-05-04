@@ -42,9 +42,9 @@ export const compileSvelte = async filePath => {
     }
     const stats = await fs.stat(filePath)
     const jsCodeFinal = jsCodeString
-    const cacheEntry = { js: { code: jsCodeFinal }, css: css ?? null, mtime: stats.mtime.getTime() }
+    const cacheEntry = { js: jsCodeFinal, css: css ?? null, mtime: stats.mtime.getTime() }
     cache.set(filePath, cacheEntry)
-    return { js: { code: jsCodeFinal }, css: css ?? null }
+    return { js: jsCodeFinal, css: css ?? null }
   } finally {
     release()
   }

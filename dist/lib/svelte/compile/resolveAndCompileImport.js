@@ -43,12 +43,12 @@ export const resolveAndCompileImport = async (
       const sourceTmpFile = getTempFilePath(sourceFilePath)
       const fromDir = path.dirname(sourceTmpFile)
       const relativePath = computeRelativePath(fromDir, svelteClient)
-      return { filePath: importPath, js: { code: '' }, url: relativePath }
+      return { filePath: importPath, js: '', url: relativePath }
     }
   }
   if (importType === 'scoped') {
     if (importPath.startsWith('@magic/')) {
-      return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
+      return { filePath: importPath, js: '', url: null, skipProcessing: true }
     }
     const resolved = await resolvePackageExport(importPath, sourceDir)
     if (resolved.isSvelteOnly && resolved.resolvedPath) {
@@ -62,9 +62,9 @@ export const resolveAndCompileImport = async (
       const sourceTmpFile = getTempFilePath(sourceFilePath)
       const fromDir = path.dirname(sourceTmpFile)
       const relativePath = computeRelativePath(fromDir, compiledPath)
-      return { filePath: importPath, js: { code: '' }, url: relativePath }
+      return { filePath: importPath, js: '', url: relativePath }
     }
-    return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
+    return { filePath: importPath, js: '', url: null, skipProcessing: true }
   }
   if (importType === 'bare') {
     const resolved = await resolvePackageExport(importPath, sourceDir)
@@ -79,9 +79,9 @@ export const resolveAndCompileImport = async (
       const sourceTmpFile = getTempFilePath(sourceFilePath)
       const fromDir = path.dirname(sourceTmpFile)
       const relativePath = computeRelativePath(fromDir, compiledPath)
-      return { filePath: importPath, js: { code: '' }, url: relativePath }
+      return { filePath: importPath, js: '', url: relativePath }
     }
-    return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
+    return { filePath: importPath, js: '', url: null, skipProcessing: true }
   }
   let resolvedPath
   if (importType === 'vite-alias') {
@@ -109,7 +109,7 @@ export const resolveAndCompileImport = async (
         const shimName = importPath.slice(5)
         resolvedPath = path.join(rootDir, 'src/lib/svelte/shims/$app', shimName)
       } else {
-        return { filePath: importPath, js: { code: '' }, url: null, skipProcessing: true }
+        return { filePath: importPath, js: '', url: null, skipProcessing: true }
       }
     }
   } else {
@@ -185,7 +185,7 @@ export const resolveAndCompileImport = async (
     const sourceTmpFile = getTempFilePath(sourceFilePath)
     const fromDir = path.dirname(sourceTmpFile)
     const relativePath = computeRelativePath(fromDir, resolvedPath)
-    return { filePath: resolvedPath, js: { code: '' }, url: relativePath }
+    return { filePath: resolvedPath, js: '', url: relativePath }
   }
   const relPath = path.relative(process.cwd(), resolvedPath)
   const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
@@ -199,23 +199,23 @@ export const resolveAndCompileImport = async (
         const sourceTmpFile = getTempFilePath(sourceFilePath)
         const fromDir = path.dirname(sourceTmpFile)
         const relativePath = computeRelativePath(fromDir, cached.absPath)
-        return { filePath: resolvedPath, js: { code: cached.code }, url: relativePath }
+        return { filePath: resolvedPath, js: cached.js, url: relativePath }
       }
     }
     const { js } = await compileSvelte(resolvedPath)
-    const processed = await processImports(js.code, resolvedPath, importChain)
+    const processed = await processImports(js, resolvedPath, importChain)
     await fs.mkdirp(path.dirname(tmpFile))
-    await fs.writeFile(tmpFile, processed.code)
+    await fs.writeFile(tmpFile, processed)
     const stats = await fs.stat(resolvedPath)
     importCache.set(resolvedPath, {
-      code: processed.code,
+      js: processed,
       absPath: tmpFileAbs,
       mtime: stats.mtime.getTime(),
     })
     const sourceTmpFile = getTempFilePath(sourceFilePath)
     const fromDir = path.dirname(sourceTmpFile)
     const relativePath = computeRelativePath(fromDir, tmpFileAbs)
-    return { filePath: resolvedPath, js: { code: processed.code }, url: relativePath }
+    return { filePath: resolvedPath, js: processed, url: relativePath }
   } finally {
     release()
   }

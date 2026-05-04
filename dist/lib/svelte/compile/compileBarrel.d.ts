@@ -3,8 +3,6 @@ export declare const compileBarrel: (
   importChain?: string[],
 ) => Promise<{
   filePath: string
-  js: {
-    code: string
-  }
+  js: string
   wrapperAbsPath: string
 }>

@@ -40,5 +40,5 @@ export const processImports = async (code, sourceFilePath, importChain = []) => 
       throw e
     }
   }
-  return { code: processedCode }
+  return processedCode
 }
