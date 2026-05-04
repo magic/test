@@ -4,9 +4,9 @@ import type { CssObject } from './types.js'
 
 export const compileSvelteWithImports = async (
   filePath: string,
-): Promise<{ js: { code: string }; css: CssObject | null }> => {
+): Promise<{ js: string; css: CssObject | null }> => {
   const { js, css } = await compileSvelte(filePath)
-  const processed = await processImports(js.code, filePath)
+  const code = await processImports(js, filePath)
 
-  return { js: { code: processed.code }, css }
+  return { js: code, css }
 }

@@ -11,9 +11,12 @@ import { cleanTempFiles } from './cleanTempFiles.js'
 import { acquireLock } from './acquireLock.js'
 import type { CssObject } from './types.js'
 
-export const compileSvelte = async (
-  filePath: string,
-): Promise<{ js: { code: string }; css: CssObject | null }> => {
+export interface CompileSvelteReturn {
+  js: string
+  css: CssObject | null
+}
+
+export const compileSvelte = async (filePath: string): Promise<CompileSvelteReturn> => {
   await cleanTempFiles()
 
   const relPath = path.relative(process.cwd(), filePath)
@@ -64,10 +67,10 @@ export const compileSvelte = async (
     const stats = await fs.stat(filePath)
     const jsCodeFinal = jsCodeString
 
-    const cacheEntry = { js: { code: jsCodeFinal }, css: css ?? null, mtime: stats.mtime.getTime() }
+    const cacheEntry = { js: jsCodeFinal, css: css ?? null, mtime: stats.mtime.getTime() }
     cache.set(filePath, cacheEntry)
 
-    return { js: { code: jsCodeFinal }, css: css ?? null }
+    return { js: jsCodeFinal, css: css ?? null }
   } finally {
     release()
   }

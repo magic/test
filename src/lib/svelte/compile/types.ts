@@ -7,13 +7,13 @@ export interface CssObject {
 }
 
 export interface CompileCacheEntry {
-  js: { code: string }
+  js: string
   css: CssObject | null
   mtime: number
 }
 
 export interface ImportCacheEntry {
-  code: string
+  js: string
   absPath: string
   mtime: number
 }
@@ -24,5 +24,5 @@ export interface BarrelCacheEntry {
 }
 
 export type ResolveAndCompileResult =
-  | { filePath: string; js: { code: string }; url: string | null; skipProcessing: true }
-  | { filePath: string; js: { code: string }; url: string }
+  | { filePath: string; js: string; url: string | null; skipProcessing: true }
+  | { filePath: string; js: string; url: string }

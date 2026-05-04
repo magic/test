@@ -35,7 +35,7 @@ export default [
   {
     fn: async () => {
       const result = await compileBarrel(barrelFixturePath)
-      return result.js.code.includes('TestComponent') && result.js.code.includes('TitleComponent')
+      return result.js.includes('TestComponent') && result.js.includes('TitleComponent')
     },
     expect: true,
     info: 'compileBarrel generates wrapper code with named exports',
@@ -69,7 +69,7 @@ export default [
   {
     fn: async () => {
       const result = await compileBarrel(barrelWithDefaultPath)
-      return result.js.code.includes('export { default }')
+      return result.js.includes('export { default }')
     },
     expect: true,
     info: 'compileBarrel handles default exports correctly',
@@ -77,7 +77,7 @@ export default [
   {
     fn: async () => {
       const result = await compileBarrel(barrelWithTypeExportsPath)
-      return !result.js.code.includes('type ') && result.js.code.length > 0
+      return !result.js.includes('type ') && result.js.length > 0
     },
     expect: true,
     info: 'compileBarrel filters out type-only exports',

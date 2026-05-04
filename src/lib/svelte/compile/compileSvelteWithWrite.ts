@@ -5,15 +5,17 @@ import fs from '@magic/fs'
 
 import { TMP_DIR } from './constants.js'
 import type { CssObject } from './types.js'
-import { compileSvelteWithImports } from './compileSvelteWithImports.js'
 import { transformForNode } from './transformForNode.js'
+import { compileSvelte } from './compileSvelte.ts'
+import { processImports } from './processImports.ts'
 
 export const compileSvelteWithWrite = async (
   filePath: string,
-): Promise<{ js: { code: string }; css: CssObject | null; tmpFile: string; importUrl: string }> => {
-  const { js, css } = await compileSvelteWithImports(filePath)
+): Promise<{ js: string; css: CssObject | null; tmpFile: string; importUrl: string }> => {
+  const { js, css } = await compileSvelte(filePath)
+  const code = await processImports(js, filePath)
 
-  const transformedCode = transformForNode(js.code, filePath)
+  const transformedCode = transformForNode(code, filePath)
 
   const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
   const relPath = path.relative(process.cwd(), resolvedPath)
@@ -24,5 +26,5 @@ export const compileSvelteWithWrite = async (
   await fs.mkdirp(path.dirname(tmpFileAbs))
   await fs.writeFile(tmpFileAbs, transformedCode)
 
-  return { js: { code: transformedCode }, css, tmpFile, importUrl }
+  return { js: transformedCode, css, tmpFile, importUrl }
 }

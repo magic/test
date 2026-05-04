@@ -10,7 +10,7 @@ export const processImports = async (
   code: string,
   sourceFilePath: string,
   importChain: string[] = [],
-): Promise<{ code: string }> => {
+): Promise<string> => {
   let processedCode = code
   const sourceDir = path.dirname(sourceFilePath)
   const imports: { imported: string; path: string; full: string }[] = []
@@ -52,5 +52,5 @@ export const processImports = async (
     }
   }
 
-  return { code: processedCode }
+  return processedCode
 }

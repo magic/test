@@ -88,13 +88,13 @@ export const compileSvelteOnlyExport = async (
           exportNames,
         )
         const tempFile = await writeTempFile(sveltePath, processedCode)
-        compileCache.set(cacheKey, { js: { code: content }, css: null, mtime: Date.now() })
+        compileCache.set(cacheKey, { js: content, css: null, mtime: Date.now() })
         tmpFileCache.set(sveltePath, tempFile)
         return tempFile
       }
 
       const { tmpFile } = await compileSvelteWithWrite(sveltePath)
-      compileCache.set(cacheKey, { js: { code: content }, css: null, mtime: Date.now() })
+      compileCache.set(cacheKey, { js: content, css: null, mtime: Date.now() })
       tmpFileCache.set(sveltePath, tmpFile)
       return tmpFile
     } finally {

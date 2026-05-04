@@ -12,10 +12,10 @@ import { computeRelativePath } from './computeRelativePath.js'
 export const compileBarrel = async (
   filePath: string,
   importChain: string[] = [],
-): Promise<{ filePath: string; js: { code: string }; wrapperAbsPath: string }> => {
+): Promise<{ filePath: string; js: string; wrapperAbsPath: string }> => {
   const cached = barrelCache.get(filePath)
   if (cached) {
-    return { filePath, js: { code: '' }, wrapperAbsPath: cached.wrapperAbsPath }
+    return { filePath, js: '', wrapperAbsPath: cached.wrapperAbsPath }
   }
 
   if (importChain.includes(filePath)) {
@@ -42,13 +42,13 @@ export const compileBarrel = async (
 
     for (const { name, path: sveltePath } of exports) {
       const { js } = await compileSvelte(sveltePath)
-      const processed = await processImports(js.code, sveltePath, currentChain)
+      const processed = await processImports(js, sveltePath, currentChain)
 
       const relPath = path.relative(process.cwd(), sveltePath)
       const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
 
       await fs.mkdirp(path.dirname(tmpFile))
-      await fs.writeFile(tmpFile, processed.code)
+      await fs.writeFile(tmpFile, processed)
 
       compiledExports.push({ name, absPath: path.join(process.cwd(), tmpFile) })
     }
@@ -78,7 +78,7 @@ export const compileBarrel = async (
 
     barrelCache.set(filePath, { exports, wrapperAbsPath })
 
-    return { filePath, js: { code: wrapperCode }, wrapperAbsPath }
+    return { filePath, js: wrapperCode, wrapperAbsPath }
   } finally {
     processingBarrels.delete(filePath)
   }
