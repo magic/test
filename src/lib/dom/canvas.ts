@@ -1,84 +1,92 @@
-import {
-  Canvas,
-  // Image,
-  createCanvas,
-  // loadImage,
-} from 'canvas'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Canvas, Image, createCanvas, loadImage } from 'canvas'
+import is from '@magic/types'
 
-// import is from '@magic/types'
+let origGetContext: ((type: string, ...args: unknown[]) => unknown) | null = null
 
-export const createCanvasPolyfill = (): Canvas => {
-  return createCanvas(300, 150)
-  // const originalGetContext = HTMLCanvasElement.prototype.getContext
+export const createCanvasPolyfill = (): void => {
+  const HTMLCanvasElement = globalThis.HTMLCanvasElement as unknown as {
+    prototype: {
+      getContext: (type: string, ...args: unknown[]) => unknown
+      width: number
+      height: number
+    }
+  }
 
-  // HTMLCanvasElement.prototype.getContext = function (
-  //   this: { width: number; height: number },
-  //   type: string,
-  //   ...args: unknown[]
-  // ): RenderingContext | null {
-  //   if (type === '2d') {
-  //     const canvas = createCanvas(this.width || 300, this.height || 150)
-  //     const ctx = canvas.getContext('2d')!
+  if (origGetContext) return
 
-  //     const originalDrawImage = ctx.drawImage
-  //     const drawImageWithUnknownArgs = originalDrawImage as (
-  //       this: RenderingContext,
-  //       img: unknown,
-  //       ...args: unknown[]
-  //     ) => void
+  origGetContext = HTMLCanvasElement.prototype.getContext as any
 
-  //     ctx.drawImage = function (
-  //       this: RenderingContext,
-  //       img: Canvas | Image,
-  //       ...drawArgs: unknown[]
-  //     ): void {
-  //       if (
-  //         img &&
-  //         is.number(img.width) &&
-  //         is.number(img.height) &&
-  //         (img as { width: number }).width > 0 &&
-  //         (img as { height: number }).height > 0 &&
-  //         is.instance(img, Image) &&
-  //         is.string(img.src) &&
-  //         img.src.startsWith('data:image')
-  //       ) {
-  //         try {
-  //           const nodeImg = loadImage((img as { src: string }).src)
-  //           return drawImageWithUnknownArgs.call(this, nodeImg, ...drawArgs)
-  //         } catch {
-  //           // Fall through to original
-  //         }
-  //       }
+  HTMLCanvasElement.prototype.getContext = function (
+    this: { width: number; height: number; _nodeCanvas?: Canvas },
+    type: string,
+    ...args: unknown[]
+  ): unknown {
+    if (type !== '2d') {
+      return origGetContext!.call(this, type, ...args)
+    }
 
-  //       return drawImageWithUnknownArgs.call(this, img, ...drawArgs)
-  //     }
+    if (!(this as { _nodeCanvas?: Canvas })._nodeCanvas) {
+      ;(this as { _nodeCanvas?: Canvas })._nodeCanvas = createCanvas(
+        this.width || 300,
+        this.height || 150,
+      )
+    }
 
-  //     const ctxWithToDataURL = ctx
-  //     return ctxWithToDataURL
-  //   }
+    const nodeCanvas = (this as { _nodeCanvas?: Canvas })._nodeCanvas!
+    const ctx: any = nodeCanvas.getContext('2d')
 
-  //   if (type === 'webgl' || type === 'webgl2') {
-  //     return originalGetContext.call(
-  //       this,
-  //       type,
-  //       ...args,
-  //     )
-  //   }
+    const originalDrawImage = ctx.drawImage.bind(ctx)
+    const originalToDataURL = ctx.toDataURL?.bind(ctx)
 
-  //   return originalGetContext.call(
-  //     this,
-  //     type,
-  //     ...args,
-  //   )
-  // }
+    const drawImageFn = (
+      img:
+        | Canvas
+        | Image
+        | { _nodeCanvasImage?: unknown; width: number; height: number; src?: string },
+      ...drawArgs: unknown[]
+    ): void => {
+      if (is.instance(img, Image) || (img as { _nodeCanvasImage?: unknown })._nodeCanvasImage) {
+        const nodeImg = (img as { _nodeCanvasImage?: unknown })._nodeCanvasImage || img
+        return originalDrawImage(
+          nodeImg as Canvas | Image,
+          ...(drawArgs as [Canvas | Image, ...unknown[]]),
+        )
+      }
 
-  // HTMLCanvasElement.prototype.toDataURL = function (
-  //   this: { width: number; height: number },
-  //   mimeType = 'image/png',
-  //   quality?: number,
-  // ): string {
-  //   const canvas = createCanvas(this.width || 300, this.height || 150)
-  //   const ctx = canvas.getContext('2d')
-  //   return ctx.toDataURL(mimeType, quality)
-  // }
+      if (is.instance(img, Canvas)) {
+        return originalDrawImage(
+          img as Canvas | Image,
+          ...(drawArgs as [Canvas | Image, ...unknown[]]),
+        )
+      }
+
+      const imgSrc = (img as { src?: string }).src
+      if (is.string(imgSrc) && imgSrc.startsWith('data:image')) {
+        loadImage(imgSrc)
+          .then((loadedImg: unknown) => {
+            originalDrawImage(
+              loadedImg as Canvas | Image,
+              ...(drawArgs as [Canvas | Image, ...unknown[]]),
+            )
+          })
+          .catch(() => {})
+        return
+      }
+
+      return originalDrawImage(
+        img as Canvas | Image,
+        ...(drawArgs as [Canvas | Image, ...unknown[]]),
+      )
+    }
+
+    const toDataURLFn = (mimeType = 'image/png', quality?: number): string => {
+      return originalToDataURL?.(mimeType, quality) || ''
+    }
+
+    ctx.drawImage = drawImageFn as any
+    ctx.toDataURL = toDataURLFn as any
+
+    return ctx
+  }
 }

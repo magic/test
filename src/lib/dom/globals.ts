@@ -72,8 +72,8 @@ export const initGlobals = (): { window: HappyWindow; document: HappyDocument } 
   define(globalThis, 'Image', PolyfilledImage)
   define(globalThis, 'HTMLImageElement', window.HTMLImageElement)
 
-  createCanvasPolyfill()
   define(globalThis, 'HTMLCanvasElement', window.HTMLCanvasElement)
+  createCanvasPolyfill()
 
   define(globalThis, 'TextEncoder', window!.TextEncoder)
   define(globalThis, 'TextDecoder', window!.TextDecoder)
