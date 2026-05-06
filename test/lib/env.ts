@@ -8,6 +8,11 @@ export default [
     info: 'env.isNodeProd equals NODE_ENV',
   },
   {
+    fn: env.isNodeDev,
+    expect: process.env.NODE_ENV === 'development',
+    info: 'env.isNodeDev equals NODE_ENV',
+  },
+  {
     fn: env.isProd,
     expect: process.argv.includes('-p'),
     info: 'isProd is equal to process.argv args',

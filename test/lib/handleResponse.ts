@@ -143,4 +143,61 @@ export default [
     expect: is.error,
     info: 'rejects 500 status code',
   },
+  {
+    fn: async () => {
+      let error: unknown
+      const { res, wait } = createMockResponse(200, 'text/plain', 'test body')
+      let capturedReject: (e: unknown) => void
+      const promise = new Promise((_, reject) => {
+        capturedReject = reject
+      })
+      handleResponse(
+        res,
+        (v: unknown) => v,
+        (e: unknown) => capturedReject?.(e),
+        undefined,
+        5,
+      )
+      await wait
+      try {
+        await promise
+        return false
+      } catch (e) {
+        error = e
+        return true
+      }
+    },
+    expect: (r: boolean) => r === true,
+    info: 'rejects when response exceeds maxSize',
+  },
+  {
+    fn: async () => {
+      let result: unknown
+      const { res, wait } = createMockResponse(200, 'application/json', '{"ok":true}')
+      handleResponse(
+        res,
+        (v: unknown) => (result = v),
+        (e: unknown) => e,
+      )
+      await wait
+      return result
+    },
+    expect: { ok: true },
+    info: 'handles 200 with JSON content type',
+  },
+  {
+    fn: async () => {
+      let result: unknown
+      const { res, wait } = createMockResponse(200, '', '{"ignored":true}')
+      handleResponse(
+        res,
+        (v: unknown) => (result = v),
+        (e: unknown) => e,
+      )
+      await wait
+      return result
+    },
+    expect: '{"ignored":true}',
+    info: 'non-JSON content type returns raw string',
+  },
 ] satisfies TestCase[]

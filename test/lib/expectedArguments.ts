@@ -94,4 +94,35 @@ export default [
     expect: is.len.eq(2),
     info: 'extracts arguments with various default values',
   },
+  {
+    fn: () => expectedArguments((_a, _b) => _a + _b),
+    expect: is.len.eq(2),
+    info: 'arrow function without parens around single arg',
+  },
+  {
+    fn: () => {
+      const args = expectedArguments((_a: string) => {
+        return 'hello'
+      })
+      return args.length
+    },
+    expect: 1,
+    info: 'arrow function with block body returns 1 arg',
+  },
+  {
+    fn: () => {
+      const args = expectedArguments(async (_a: unknown, _b: unknown) => {})
+      return args.length
+    },
+    expect: 2,
+    info: 'async arrow function extracts args',
+  },
+  {
+    fn: () => {
+      const args = expectedArguments((_a: unknown, _b: unknown, ..._rest: unknown[]) => {})
+      return args[2] === '..._rest'
+    },
+    expect: true,
+    info: 'spread argument includes ... in name',
+  },
 ] satisfies TestCase[]

@@ -39,4 +39,34 @@ export default [
     expect: (t: CleanErrorResult) => t[0] === 'testing',
     info: 'cleaned Error without multiline stack first element is testing',
   },
+  {
+    fn: cleanError({ stack: '' }),
+    expect: { stack: '' },
+    info: 'cleaned Error with empty stack string returns input object unchanged',
+  },
+  {
+    fn: cleanError({ stack: 'only one line' }),
+    expect: ['only one line'],
+    info: 'cleaned Error with single-line stack returns single element array',
+  },
+  {
+    fn: cleanError({ stack: 'line1\n  line2' }),
+    expect: ['line1', '  line2'],
+    info: 'cleaned Error splits stack, only removes exactly 4 leading spaces',
+  },
+  {
+    fn: cleanError({ stack: 'line1\n    ' }),
+    expect: ['line1', ''],
+    info: 'cleaned Error with only spaces after newline returns empty file part',
+  },
+  {
+    fn: cleanError({ stack: null }),
+    expect: { stack: null },
+    info: 'null stack returns input object (null is falsy but object exists)',
+  },
+  {
+    fn: cleanError({ stack: undefined }),
+    expect: { stack: undefined },
+    info: 'undefined stack returns input object',
+  },
 ] satisfies TestCase[]
