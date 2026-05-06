@@ -81,6 +81,15 @@ export interface Test {
    * Nested tests or child suites.
    */
   tests?: TestCollection
+
+  /** The test name. */
+  name?: string
+
+  /** The package this test belongs to. */
+  pkg?: string
+
+  /** The parent suite/group name. */
+  parent?: string
 }
 
 /**
