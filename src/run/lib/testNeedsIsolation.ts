@@ -1,0 +1,19 @@
+import type { WrappedTest } from '../../types.ts'
+
+import { GLOBAL_MODIFICATION_RE } from '../../constants.ts'
+
+export const testNeedsIsolation = (test: WrappedTest): boolean => {
+  if (test.component) {
+    return true
+  }
+  if (test.before || test.after) {
+    return true
+  }
+  if (test.fn) {
+    const fnStr = test.fn.toString()
+    if (GLOBAL_MODIFICATION_RE.test(fnStr)) {
+      return true
+    }
+  }
+  return false
+}

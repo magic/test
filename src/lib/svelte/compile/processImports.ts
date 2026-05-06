@@ -3,7 +3,7 @@ import path from 'node:path'
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { SVELTE_IMPORT_REGEX } from './constants.js'
+import { SVELTE_IMPORT_REGEX } from '../../../constants.js'
 import { resolveAndCompileImport } from './resolveAndCompileImport.js'
 
 export const processImports = async (

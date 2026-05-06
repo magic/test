@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url'
 
 import fs from '@magic/fs'
 
-import { TMP_DIR } from './constants.js'
+import { TMP_DIR } from '../../../constants.js'
 import type { CssObject } from './types.js'
 import { transformForNode } from './transformForNode.js'
 import { compileSvelte } from './compileSvelte.ts'

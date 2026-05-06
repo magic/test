@@ -3,7 +3,7 @@ import path from 'node:path'
 import fs from '@magic/fs'
 
 import { barrelCache, processingBarrels } from './cache.js'
-import { TMP_DIR } from './constants.js'
+import { TMP_DIR } from '../../../constants.js'
 import { getSvelteExports } from './getSvelteExports.js'
 import { processImports } from './processImports.js'
 import { compileSvelte } from './compileSvelte.js'

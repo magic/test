@@ -7,7 +7,7 @@ import fs from '@magic/fs'
 import { resolveAlias, resolveViteAlias } from '../viteConfig/index.js'
 
 import { importCache } from './cache.js'
-import { TMP_DIR } from './constants.js'
+import { TMP_DIR } from '../../../constants.js'
 import { acquireLock } from './acquireLock.js'
 import { isSvelteFile } from './isSvelteFile.js'
 import { getSvelteExports } from './getSvelteExports.js'

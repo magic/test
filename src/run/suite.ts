@@ -8,8 +8,6 @@ import is from '@magic/types'
 import { runTest } from './test.js'
 import {
   getFNS,
-  getTestKey,
-  cleanError,
   ERRORS,
   suiteNeedsIsolation,
   suiteModifiesGlobals,
@@ -22,41 +20,21 @@ import { isolation } from './isolation.js'
 import { getWorkerPool } from '../lib/workerPool.js'
 import type {
   Suite,
-  TestCollection,
   WrappedTest,
-  CleanupResult,
   Snapshot,
   TestResult,
   SuiteInput,
   TestObject,
+  Test,
 } from '../types.ts'
 
-const GLOBAL_MODIFICATION_RE = /(?:globalThis|window|global|self|process\.env)/
-
-const testNeedsIsolation = (test: WrappedTest): boolean => {
-  if (test.component) {
-    return true
-  }
-  if (test.before || test.after) {
-    return true
-  }
-  if (test.fn) {
-    const fnStr = test.fn.toString()
-    if (GLOBAL_MODIFICATION_RE.test(fnStr)) {
-      return true
-    }
-  }
-  return false
-}
-
-const suiteHasBeforeAllOrAfterAll = (tests: TestCollection): boolean => {
-  if (is.object(tests) && !is.arr(tests)) {
-    const hasBefore = 'beforeAll' in tests && is.fn(tests.beforeAll)
-    const hasAfter = 'afterAll' in tests && is.fn(tests.afterAll)
-    return hasBefore || hasAfter
-  }
-  return false
-}
+import {
+  handleSuiteHooks,
+  handleWorkerError,
+  processWorkerResults,
+  suiteHasBeforeAllOrAfterAll,
+  testNeedsIsolation,
+} from './lib/index.ts'
 
 /**
  * Type guard to check if an Error has a `code` property.
@@ -76,78 +54,10 @@ const defaultSuite = {
 }
 
 /**
- * Handle suite-level beforeAll and afterAll hooks
- */
-const handleSuiteHooks = async (tests: TestCollection): Promise<CleanupResult> => {
-  let afterAllCleanup: () => unknown = () => {}
-
-  if (
-    tests &&
-    is.object(tests) &&
-    !is.arr(tests) &&
-    'beforeAll' in tests &&
-    is.function(tests.beforeAll)
-  ) {
-    if (is.fn(tests.beforeAll)) {
-      const beforeResult = await tests.beforeAll()
-      if (is.function(beforeResult)) {
-        afterAllCleanup = beforeResult as () => unknown
-      }
-    }
-  }
-
-  return { afterAllCleanup }
-}
-
-const createFailResult = (testToRun: WrappedTest): TestResult => {
-  return {
-    result: undefined,
-    msg: '',
-    pass: false,
-    parent: testToRun.parent || '',
-    name: testToRun.name,
-    expect: undefined,
-    expString: undefined,
-    key: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
-    info: testToRun.info || '',
-    pkg: testToRun.pkg,
-  }
-}
-
-const processWorkerResults = (results: TestResult[], rawResults: TestResult[]): TestResult[] => {
-  for (const r of results) {
-    rawResults.push(r)
-    if (r.afterCleanupError) {
-      log.warn('afterCleanup error in', r.name, r.afterCleanupError)
-    }
-    if (r.afterError) {
-      log.warn('after error in', r.name, r.afterError)
-    }
-  }
-  return results
-}
-
-const handleWorkerError = (
-  testToRun: WrappedTest,
-  error: unknown,
-  rawResults: TestResult[],
-): TestResult => {
-  log.error(ERRORS.E_TEST_FN!, {
-    testKey: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
-    testName: testToRun.name,
-    parent: testToRun.parent,
-    error: cleanError(error),
-  })
-  const failResult = createFailResult(testToRun)
-  rawResults.push(failResult)
-  return failResult
-}
-
-/**
  * Run an array of tests
  */
 const runTestArray = async (
-  tests: WrappedTest[],
+  tests: Test[],
   needsIsolation: boolean,
   name: string,
   parent: string,
@@ -165,17 +75,17 @@ const runTestArray = async (
     const testsWithoutHooks: { test: WrappedTest; index: number }[] = []
 
     tests.forEach((t, i) => {
-      const testToRun = {
+      const test = {
         ...t,
-        name: t.name || name,
-        parent: t.parent || parent,
-        pkg: t.pkg || pkg,
+        name,
+        parent,
+        pkg,
       }
 
-      if (testNeedsIsolation(t)) {
-        testsWithHooks.push({ test: testToRun, index: i })
+      if (testNeedsIsolation(test)) {
+        testsWithHooks.push({ test: test, index: i })
       } else {
-        testsWithoutHooks.push({ test: testToRun, index: i })
+        testsWithoutHooks.push({ test: test, index: i })
       }
     })
 
@@ -250,13 +160,13 @@ const runTestArray = async (
 
   // No isolation needed: run in parallel without isolation
   const promises = tests.map(t => {
-    const testToRun = {
+    const test = {
       ...t,
-      name: t.name || name,
-      parent: t.parent || parent,
-      pkg: t.pkg || pkg,
+      name,
+      parent,
+      pkg,
     }
-    return runTest(testToRun, store, rawResults)
+    return runTest(test, store, rawResults)
   })
   const resolved = await Promise.all(promises)
   return resolved.filter(r => !!r)
@@ -348,7 +258,7 @@ const runTestObject = async (
       parent: name,
       name: suiteName,
       key: `${name}.${suiteName}`,
-      tests: nestedTests,
+      tests: nestedTests as WrappedTest[],
       pkg,
       store,
       rawResults,
