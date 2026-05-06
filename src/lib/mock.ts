@@ -47,25 +47,25 @@ export const fn = (implementation?: (...args: unknown[]) => unknown): MockFn => 
   mockFn._returnValue = undefined
   mockFn._throwError = null
 
-  mockFn.mockReturnValue = function (value: unknown): MockFn {
+  mockFn.mockReturnValue = (value: unknown): MockFn => {
     mockFn._returnValue = value
     mockFn._throwError = null
     return mockFn
   }
 
-  mockFn.mockThrow = function (error: Error): MockFn {
+  mockFn.mockThrow = (error: Error): MockFn => {
     mockFn._throwError = error
     mockFn._returnValue = undefined
     return mockFn
   }
 
-  mockFn.getCalls = function (): unknown[][] {
+  mockFn.getCalls = (): unknown[][] => {
     return mockFn.calls
   }
-  mockFn.getReturns = function (): unknown[] {
+  mockFn.getReturns = (): unknown[] => {
     return mockFn.returns
   }
-  mockFn.getErrors = function (): Array<Error | null> {
+  mockFn.getErrors = (): Array<Error | null> => {
     return mockFn.errors
   }
 

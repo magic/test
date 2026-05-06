@@ -4,11 +4,11 @@ import { pathToFileURL } from 'node:url'
 import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.js'
 import is from '@magic/types'
 
-export async function resolve(
+export const resolve = async (
   specifier: string,
   context: { parentURL?: string },
   nextResolve: (specifier: string, context?: object) => Promise<{ url: string }>,
-): Promise<{ url: string; shortCircuit?: boolean }> {
+): Promise<{ url: string; shortCircuit?: boolean }> => {
   // console.error('[resolve] called:', specifier.slice(0, 40))
   try {
     // Handle .js -> .ts conversion for imports without compiled JS
@@ -104,11 +104,11 @@ export async function resolve(
   return nextResolve(specifier, context)
 }
 
-export async function load(
+export const load = async (
   url: string,
   context: { format?: string },
   nextLoad: (url: string, context?: object) => Promise<{ format?: string; source?: string }>,
-): Promise<{ format?: string; source?: string; shortCircuit?: boolean }> {
+): Promise<{ format?: string; source?: string; shortCircuit?: boolean }> => {
   // Handle .js -> .ts conversion for magic/test source files
   if (url.includes('/magic/util/test/src/') && url.endsWith('.js')) {
     const tsUrl = url.replace(/\.js$/, '.ts')
