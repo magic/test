@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { TMP_DIR } from './constants.js'
+import { TMP_DIR } from '../../../constants.js'
 export const getTempFilePath = sourceFilePath => {
   const cwd = process.cwd()
   const rel = path.relative(cwd, sourceFilePath)

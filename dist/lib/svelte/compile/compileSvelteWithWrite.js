@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import fs from '@magic/fs'
-import { TMP_DIR } from './constants.js'
+import { TMP_DIR } from '../../../constants.js'
 import { transformForNode } from './transformForNode.js'
 import { compileSvelte } from './compileSvelte.js'
 import { processImports } from './processImports.js'

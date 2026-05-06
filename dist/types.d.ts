@@ -206,12 +206,21 @@ export interface TestObject {
   beforeAll?: SuiteHook
   afterAll?: CleanupFunction
   fn?: () => unknown | Promise<unknown>
-  tests?: WrappedTest[]
+  tests?: TestCollection
+  [key: string]: unknown
 }
 /**
  * A collection of tests, either an array or an object with hooks.
  */
-export type TestCollection = WrappedTest[] | Test[] | TestObject
+export interface TestCollectionObject {
+  beforeAll?: SuiteHook
+  afterAll?: CleanupFunction
+  fn?: () => unknown | Promise<unknown>
+  tests?: TestCollection
+  nested?: TestCollection
+  [key: string]: unknown
+}
+export type TestCollection = Test[] | TestCollectionObject
 /**
  * Simple cleanup function returned by before hooks.
  */

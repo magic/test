@@ -3,7 +3,7 @@ import { compile, preprocess } from 'svelte/compiler'
 import fs from '@magic/fs'
 import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.js'
 import { cache } from './cache.js'
-import { TMP_DIR } from './constants.js'
+import { TMP_DIR } from '../../../constants.js'
 import { cleanTempFiles } from './cleanTempFiles.js'
 import { acquireLock } from './acquireLock.js'
 export const compileSvelte = async filePath => {

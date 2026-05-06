@@ -3,137 +3,13 @@ import log from '@magic/log'
 import { cleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/index.js'
 import { isolation } from './isolation.js'
 import { runSuite } from './suite.js'
-const DEFAULT_TEST_TIMEOUT = 10000
-/**
- * Get timeout for a test, checking per-test option first, then env var
- */
-const getTestTimeout = testTimeout => {
-  // Per-test override: { timeout: 30000 }
-  if (testTimeout !== undefined) {
-    return testTimeout > 0 ? testTimeout : DEFAULT_TEST_TIMEOUT
-  }
-  // Environment variable: MAGIC_TEST_TIMEOUT=30000
-  const envTimeout = process.env.MAGIC_TEST_TIMEOUT
-  if (envTimeout) {
-    const parsed = parseInt(envTimeout, 10)
-    return isNaN(parsed) ? DEFAULT_TEST_TIMEOUT : parsed
-  }
-  return DEFAULT_TEST_TIMEOUT
-}
-/**
- * Wrap a promise with a timeout
- */
-function withTimeout(promise, timeoutMs, testKey) {
-  if (!timeoutMs || timeoutMs <= 0) {
-    return promise
-  }
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      reject(new Error(`Test timed out after ${timeoutMs}ms: ${testKey}`))
-    }, timeoutMs)
-    promise
-      .then(result => {
-        clearTimeout(timer)
-        resolve(result)
-      })
-      .catch(err => {
-        clearTimeout(timer)
-        reject(err)
-      })
-  })
-}
-/**
- * Prepare test by setting defaults and extracting component props
- */
-const prepareTest = test => {
-  if (!is.ownProp(test, 'expect')) {
-    if (is.ownProp(test, 'is')) {
-      test.expect = test.is
-    } else {
-      test.expect = true
-    }
-  }
-  const { component: componentProp, props: explicitProps } = test
-  if (!componentProp) {
-    return {}
-  }
-  if (is.string(componentProp)) {
-    return {
-      componentFile: componentProp,
-      componentProps: explicitProps || {},
-    }
-  }
-  if (is.array(componentProp)) {
-    return {
-      componentFile: componentProp[0],
-      componentProps: componentProp[1] || {},
-    }
-  }
-  throw new Error('component must be a string or [string, props]')
-}
-/**
- * Execute a single test function with proper isolation
- */
-const executeTest = async (fn, _key, componentFile, componentProps) => {
-  if (componentFile) {
-    const { mount } = await import('../lib/svelte/mount.js')
-    const {
-      target,
-      component: instance,
-      unmount,
-    } = await mount(componentFile, { props: componentProps })
-    try {
-      if (is.function(fn)) {
-        return await fn({ target, component: instance, unmount })
-      }
-    } finally {
-      await unmount()
-      target.remove()
-    }
-  }
-  if (is.function(fn) || is.promise(fn)) {
-    if (is.function(fn)) {
-      return await fn()
-    }
-    if (is.promise(fn)) {
-      return await fn
-    }
-  }
-  return fn
-}
-/**
- * Evaluate test result against expected value
- */
-const evaluateResult = async (res, expect) => {
-  let exp
-  let expString
-  let pass = false
-  if (is.function(expect)) {
-    const combinedRes = [res]
-    if (combinedRes.length > 1) {
-      res = combinedRes
-    }
-    exp = await expect(res)
-    expString = cleanFunctionString(expect)
-    if (res !== true) {
-      pass = exp === res || exp === true
-    }
-  } else if (is.promise(expect)) {
-    exp = await expect
-    expString = expect
-  } else {
-    exp = expect
-    expString = expect
-  }
-  if (!pass) {
-    if (is.undefined(exp)) {
-      pass = exp === res
-    } else if (is.sameType(exp, res)) {
-      pass = is.deep.equal(exp, res)
-    }
-  }
-  return { pass, exp, expString }
-}
+import {
+  evaluateTestResult,
+  executeTest,
+  getTestTimeout,
+  prepareTest,
+  withTimeout,
+} from './lib/index.js'
 /**
  * Run a test or delegate to a suite.
  *
@@ -210,7 +86,7 @@ export const runTest = async (test, store, rawResults) => {
           continue
         }
         try {
-          const evalResult = await evaluateResult(res, expect)
+          const evalResult = await evaluateTestResult(res, expect)
           const runPass = evalResult.pass
           results.push({ res, pass: runPass, exp: evalResult.exp, expString: evalResult.expString })
           if (!runPass) {
