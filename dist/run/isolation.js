@@ -63,7 +63,7 @@ const skipProps = [
   'lib',
   'renderToString',
   'compile',
-  // DOM globals (from happy-dom, set by dom.js)
+  // DOM globals (from happy-dom, set by dom.ts)
   'document',
   'navigator',
   'location',

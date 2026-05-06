@@ -1,5 +1,5 @@
-import type { CssObject } from './compile/types.js'
-import type { ComponentProps } from '../../types.js'
+import type { CssObject } from './compile/types.ts'
+import type { ComponentProps } from '../../types.ts'
 /**
  * Create a raw snippet for passing as children prop
  */

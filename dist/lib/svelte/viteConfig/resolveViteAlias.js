@@ -10,7 +10,7 @@ import { loadViteAliases } from './loadViteAliases.js'
 import { parseTsConfig } from './parseTsConfig.js'
 /**
  * Resolve Vite/SvelteKit aliases ($lib, $app, $env, etc.)
- * This is called from compile.js for non-relative imports
+ * This is called from compile.ts for non-relative imports
  */
 export const resolveViteAlias = async (importPath, sourceFilePath) => {
   const importType = classifyImport(importPath)

@@ -1,4 +1,4 @@
-import type { TestResult } from '../../types.js'
+import type { TestResult } from '../../types.ts'
 /**
  * Type guard to check if a value is a TestResult.
  */

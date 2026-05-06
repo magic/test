@@ -1,4 +1,4 @@
-import type { TestCollection, TestObject } from '../types.js'
+import type { TestCollection, TestObject } from '../types.ts'
 interface HasTestHooks {
   before?: {
     toString(): string

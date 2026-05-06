@@ -1,2 +1,2 @@
-import type { TestSuites } from '../../types.js'
+import type { TestSuites } from '../../types.ts'
 export declare const readRecursive: (dir?: string) => Promise<TestSuites>

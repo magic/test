@@ -1,4 +1,4 @@
-import type { WrappedTest, TestResult } from '../../types.js'
+import type { WrappedTest, TestResult } from '../../types.ts'
 export declare const runSingleTestInWorker: (
   test: WrappedTest,
   testKey: string,

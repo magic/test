@@ -1,4 +1,4 @@
-import type { State } from '../types.js'
+import type { State } from '../types.ts'
 export declare class Store {
   state: State
   /**

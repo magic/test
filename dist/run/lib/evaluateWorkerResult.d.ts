@@ -1,4 +1,4 @@
-import type { EvaluateResult } from '../../types.js'
+import type { EvaluateResult } from '../../types.ts'
 export declare const evaluateWorkerResult: (
   res: unknown,
   expect: unknown,

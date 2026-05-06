@@ -1,4 +1,4 @@
-import type { ResolveAndCompileResult } from './types.js'
+import type { ResolveAndCompileResult } from './types.ts'
 export declare const resolveAndCompileImport: (
   importPath: string,
   sourceDir: string,

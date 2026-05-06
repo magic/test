@@ -1,4 +1,4 @@
-import type { TestSuites } from './types.js'
+import type { TestSuites } from './types.ts'
 /**
  * @typedef {Record<string, unknown>} TestSuitesRecord
  */

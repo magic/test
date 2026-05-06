@@ -1,4 +1,4 @@
-import type { WrappedTest } from '../../types.js'
+import type { WrappedTest } from '../../types.ts'
 type RunFnResult = {
   result: unknown
   pass: boolean

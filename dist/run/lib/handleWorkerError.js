@@ -1,8 +1,8 @@
 import log from '@magic/log'
 import { getTestKey, cleanError, ERRORS } from '../../lib/index.js'
 import { createFailResult } from './index.js'
-export const handleWorkerError = (testToRun, error, rawResults) => {
-  log.error(ERRORS.E_TEST_FN, {
+export const handleWorkerError = (testToRun, error, rawResults, logger = log.error) => {
+  logger(ERRORS.E_TEST_FN, {
     testKey: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
     testName: testToRun.name,
     parent: testToRun.parent,

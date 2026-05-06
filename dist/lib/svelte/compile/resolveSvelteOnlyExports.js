@@ -31,7 +31,7 @@ const writeTempFile = async (filePath, code) => {
 }
 const JS_SVELTE_REEXPORT_RE =
   /(export\s+(?:\{[^}]*\}|\*\s+as\s+\w+|default(?:\s+as\s+\w+)?)\s+from\s+['"])([^'"]*\.svelte)(['"])/g
-const JS_REEXPORT_RE = /(export\s+\*\s+from\s+['"])([^'"]+\.js)(['"])/g
+const JS_REEXPORT_RE = /(export\s+\*\s+from\s+['"])([^'"]+\.ts)(['"])/g
 const tmpFileCache = new Map()
 const compiling = new Map()
 export const compileSvelteOnlyExport = async (sveltePath, sourceDir, exportNames) => {
@@ -225,7 +225,7 @@ const extractNamedExportsRecursive = async (filePath, visited) => {
   visited.add(filePath)
   const content = await fs.readFile(filePath, 'utf-8')
   const exports = []
-  // Pattern 1: export { X } from './y.js'
+  // Pattern 1: export { X } from './y.ts'
   // Pattern 2: export { X } from './y.svelte' (extracts alias, doesn't recurse)
   for (const match of content.matchAll(RE_EXPORT_NAMED_RE)) {
     const reexportPath = match[2]
@@ -255,7 +255,7 @@ const extractNamedExportsRecursive = async (filePath, visited) => {
       exports.push(...nested)
     }
   }
-  // Pattern 3: export * from './y.js'
+  // Pattern 3: export * from './y.ts'
   // Pattern 4: export * from './y.svelte' (uses file stem as name)
   for (const match of content.matchAll(RE_EXPORT_ALL_RE)) {
     const reexportPath = match[2]
@@ -271,7 +271,7 @@ const extractNamedExportsRecursive = async (filePath, visited) => {
       exports.push(...nested)
     }
   }
-  // Pattern 5: export * as X from './y.js'
+  // Pattern 5: export * as X from './y.ts'
   const namespaceReexportRe = /(export\s+\*\s+as\s+(\w+)\s+from\s+['"`])([^'"`\s]+)(['"`])/g
   for (const match of content.matchAll(namespaceReexportRe)) {
     const alias = match[2]
@@ -393,7 +393,7 @@ const findSvelteFileForExport = async (filePath, exportName, visited) => {
       return resolved
     }
   }
-  // Pattern: export * as X from './y.js' or './y.svelte'
+  // Pattern: export * as X from './y.ts' or './y.svelte'
   const namespaceReexportRe = /(export\s+\*\s+as\s+(\w+)\s+from\s+['"`])([^'"`\s]+)(['"`])/g
   for (const match of content.matchAll(namespaceReexportRe)) {
     const alias = match[2]
@@ -432,7 +432,7 @@ const findSvelteFileForExport = async (filePath, exportName, visited) => {
       }
     }
   }
-  // If we have export * from './y.js', trace into that file
+  // If we have export * from './y.ts', trace into that file
   for (const match of content.matchAll(RE_EXPORT_ALL_RE)) {
     const reexportPath = match[2]
     if (!reexportPath) {
@@ -447,7 +447,7 @@ const findSvelteFileForExport = async (filePath, exportName, visited) => {
       return found
     }
   }
-  // If we have export { X } from './y.js', trace into that file
+  // If we have export { X } from './y.ts', trace into that file
   for (const match of content.matchAll(RE_EXPORT_NAMED_RE)) {
     const reexportPath = match[2]
     if (!reexportPath) {

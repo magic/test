@@ -1,4 +1,4 @@
-import type { InputValue, JsonSafe } from '../types.js'
+import type { InputValue, JsonSafe } from '../types.ts'
 /**
  * Recursively stringifies parts of an input value to make it JSON-safe.
  * Useful for cleaning data before logging or serialization.

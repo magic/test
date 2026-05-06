@@ -1,4 +1,4 @@
-import { LRUCache } from '../LRUCache.js'
+import { LRUCache } from '../LRUCache.ts'
 export interface PackageExportResolve {
   resolvedPath: string | null
   isSvelteOnly: boolean
