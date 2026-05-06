@@ -1,11 +1,14 @@
 import is from '@magic/types'
+import type { TestCollection, TestObject } from '../types.js'
 
 const GLOBAL_MODIFICATION_RE = /(?:globalThis|window|global|self|process\.env)/
 
-export const testModifiesGlobals = (test: {
-  before?: (...args: unknown[]) => unknown
-  after?: (...args: unknown[]) => unknown
-}): boolean => {
+interface HasTestHooks {
+  before?: { toString(): string }
+  after?: { toString(): string }
+}
+
+export const testModifiesGlobals = (test: HasTestHooks): boolean => {
   if (is.function(test.before)) {
     const beforeStr = test.before.toString()
     if (GLOBAL_MODIFICATION_RE.test(beforeStr)) {
@@ -23,77 +26,48 @@ export const testModifiesGlobals = (test: {
   return false
 }
 
-export const suiteModifiesGlobals = (tests: unknown): boolean => {
-  const t = tests as {
-    beforeAll?: (...args: unknown[]) => unknown
-    afterAll?: (...args: unknown[]) => unknown
-    before?: (...args: unknown[]) => unknown
-    after?: (...args: unknown[]) => unknown
-    tests?: unknown
-  }
-
-  if (t.beforeAll) {
-    const beforeAllStr = t.beforeAll.toString()
-    if (GLOBAL_MODIFICATION_RE.test(beforeAllStr)) {
-      return true
-    }
-  }
-
-  if (t.afterAll) {
-    const afterAllStr = t.afterAll.toString()
-    if (GLOBAL_MODIFICATION_RE.test(afterAllStr)) {
-      return true
-    }
-  }
-
+export const suiteModifiesGlobals = (tests: TestCollection | TestObject): boolean => {
   if (is.array(tests)) {
-    return tests.some(test =>
-      testModifiesGlobals(
-        test as {
-          before?: (...args: unknown[]) => unknown
-          after?: (...args: unknown[]) => unknown
-        },
-      ),
-    )
-  }
-
-  if (is.objectNative(tests)) {
-    return Object.values(tests as Record<string, unknown>).some(test => {
-      if (
-        is.objectNative(test) &&
-        testModifiesGlobals(
-          test as {
-            before?: (...args: unknown[]) => unknown
-            after?: (...args: unknown[]) => unknown
-          },
-        )
-      ) {
+    return tests.some(test => testModifiesGlobals(test))
+  } else {
+    if (tests.beforeAll) {
+      const beforeAllStr = tests.beforeAll.toString()
+      if (GLOBAL_MODIFICATION_RE.test(beforeAllStr)) {
         return true
       }
-      if (is.objectNative(test) && test.tests) {
-        return suiteModifiesGlobals(test.tests)
+    }
+    if (tests.afterAll) {
+      const afterAllStr = tests.afterAll.toString()
+      if (GLOBAL_MODIFICATION_RE.test(afterAllStr)) {
+        return true
       }
-      return false
-    })
+    }
+    if (tests.tests) {
+      return suiteModifiesGlobals(tests.tests)
+    }
   }
 
   return false
 }
 
-export const suiteBeforeAllModifiesGlobals = (tests: unknown): boolean => {
-  const t = tests
-  if (is.objectNative(t) && is.function(t.beforeAll)) {
-    const beforeAllStr = t.beforeAll.toString()
-    return GLOBAL_MODIFICATION_RE.test(beforeAllStr)
+export const suiteBeforeAllModifiesGlobals = (tests: TestCollection | TestObject): boolean => {
+  if (is.objectNative(tests)) {
+    const t = tests as TestObject
+    if (is.function(t.beforeAll)) {
+      const beforeAllStr = t.beforeAll.toString()
+      return GLOBAL_MODIFICATION_RE.test(beforeAllStr)
+    }
   }
   return false
 }
 
-export const suiteAfterAllModifiesGlobals = (tests: unknown): boolean => {
-  const t = tests
-  if (is.objectNative(t) && is.function(t.afterAll)) {
-    const afterAllStr = t.afterAll.toString()
-    return GLOBAL_MODIFICATION_RE.test(afterAllStr)
+export const suiteAfterAllModifiesGlobals = (tests: TestCollection | TestObject): boolean => {
+  if (is.objectNative(tests)) {
+    const t = tests as TestObject
+    if (is.function(t.afterAll)) {
+      const afterAllStr = t.afterAll.toString()
+      return GLOBAL_MODIFICATION_RE.test(afterAllStr)
+    }
   }
   return false
 }
