@@ -1,7 +1,7 @@
 /**
  * MockFn interface
  */
-interface MockFn {
+export interface MockFn {
   (...args: unknown[]): unknown
   callCount: number
   calls: unknown[][]
@@ -37,4 +37,3 @@ export declare const log: {
   time: (..._: unknown[]) => boolean
   timeEnd: (..._: unknown[]) => boolean
 }
-export {}

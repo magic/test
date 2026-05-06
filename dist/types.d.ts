@@ -1,3 +1,4 @@
+import { Store } from './lib/store.ts'
 export type TestContext = {
   target: HTMLElement
   component: Record<string, unknown>
@@ -8,7 +9,16 @@ export type TestContext = {
     hasGlobal?: boolean
   } | null
 }
-export type TestExpect = ((arg: TestContext) => unknown) | Promise<unknown> | unknown
+type FnReturnType<F> = F extends () => Promise<infer R>
+  ? R
+  : F extends () => infer R
+    ? R
+    : F extends (arg: TestContext) => Promise<infer R>
+      ? R
+      : F extends (arg: TestContext) => infer R
+        ? R
+        : unknown
+export type TestExpect<T = unknown> = ((result: T) => boolean | Promise<boolean>) | T
 export interface Test {
   /** Additional information about the test. */
   info?: string
@@ -29,11 +39,11 @@ export interface Test {
   /**
    * The expected value, or a function/promise that produces it.
    */
-  expect?: TestExpect
+  expect?: TestExpect<FnReturnType<Test['fn']>> | FnReturnType<Test['fn']>
   /**
    * Alias for `expect`.
    */
-  is?: TestExpect
+  is?: TestExpect<FnReturnType<Test['fn']>> | FnReturnType<Test['fn']>
   /** Number of times to run the test. */
   runs?: number
   /** Timeout in milliseconds for the test */
@@ -150,7 +160,8 @@ export interface SuiteInput {
   pkg?: string
   key?: string
   tests: TestCollection
-  store?: IStore
+  store?: Store
+  rawResults?: TestResult[]
 }
 /**
  * State interface for store
@@ -195,12 +206,12 @@ export interface TestObject {
   beforeAll?: SuiteHook
   afterAll?: CleanupFunction
   fn?: () => unknown | Promise<unknown>
-  tests?: TestCollection
+  tests?: WrappedTest[]
 }
 /**
  * A collection of tests, either an array or an object with hooks.
  */
-export type TestCollection = WrappedTest[] | TestObject
+export type TestCollection = WrappedTest[] | Test[] | TestObject
 /**
  * Simple cleanup function returned by before hooks.
  */
@@ -209,7 +220,7 @@ export type CleanupFunction = () => unknown | Promise<unknown>
  * Suite-level hook (beforeAll/afterAll/beforeEach/afterEach).
  * No params. beforeAll can return cleanup function.
  */
-export type SuiteHook = () => void | Promise<void | CleanupFunction>
+export type SuiteHook = () => unknown | Promise<unknown | CleanupFunction>
 /**
  * Suite-level hook that accepts optional test suites parameter.
  * Used when running in test runner context.
@@ -290,16 +301,6 @@ export interface CleanupResult {
   beforeAllCleanup?: CleanupFunction
   afterAllCleanup?: CleanupFunction
 }
-/**
- * Store class interface for test state management.
- */
-export interface IStore {
-  state: State
-  set(val: Partial<State>): void
-  get<K extends keyof State>(key: K, def?: State[K]): State[K] | undefined
-  get(key: string, def?: unknown): unknown
-  reset(): void
-}
 export type AliasEntry = {
   find: string | RegExp
   replacement: string
@@ -312,22 +313,24 @@ export type ViteConfig = {
 }
 type UnwrapResult<T> = T extends () => Promise<infer R> ? R : T extends () => infer R ? R : T
 interface BaseTestCase {
-  expect?: unknown
+  name?: string
   info?: string
   runs?: number
   timeout?: number
   before?: TestBeforeHook
   after?: TestAfterHook
 }
+type ExpectFn<R> = (result: R) => R | boolean | Promise<R | boolean>
 export type TestCase =
   | (BaseTestCase & {
       fn: (ctx: TestContext) => unknown
       component?: string | [string, Record<string, unknown>]
       props?: Record<string, unknown>
+      expect?: ExpectFn<unknown> | unknown
     })
   | (BaseTestCase & {
       fn: () => unknown
-      expect?: (t: UnwrapResult<() => unknown>) => unknown
+      expect?: ExpectFn<UnwrapResult<() => unknown>> | UnwrapResult<() => unknown>
       component?: string | [string, Record<string, unknown>]
       props?: Record<string, unknown>
     })

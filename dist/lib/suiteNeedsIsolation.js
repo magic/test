@@ -6,16 +6,18 @@ export const suiteNeedsIsolation = tests => {
   if (is.array(tests)) {
     return tests.some(test => is.function(test.before) || is.function(test.after))
   } else if (is.objectNative(tests)) {
-    const testObj = tests
-    return Object.values(testObj).some(test => {
-      if (is.objectNative(test) && (is.function(test.before) || is.function(test.after))) {
-        return true
-      }
-      if (is.objectNative(test) && test.tests) {
-        return suiteNeedsIsolation(test.tests)
-      }
+    if (!is.objectNative(tests)) {
       return false
-    })
+    }
+    if (is.function(tests.before) || is.function(tests.after)) {
+      return true
+    }
+    if (tests.tests && is.objectNative(tests.tests)) {
+      return suiteNeedsIsolation(tests.tests)
+    }
+    if (tests.nested && is.objectNative(tests.nested)) {
+      return suiteNeedsIsolation(tests.nested)
+    }
   }
   return false
 }

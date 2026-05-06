@@ -344,9 +344,8 @@ export const runSuite = async props => {
       if (needsIsolation) {
         if (modifiesGlobals || usesModuleMutation || usesFixedPorts || usesSharedFiles) {
           useWorkers = true
-          if (hasBeforeAll) {
-            const testObj = tests
-            const beforeAllFn = testObj.beforeAll
+          if (is.objectNative(tests) && hasBeforeAll) {
+            const beforeAllFn = tests.beforeAll
             const beforeAllModifiesGlobal =
               beforeAllFn && /globalThis|^global\b/.test(beforeAllFn.toString())
             if (beforeAllModifiesGlobal) {

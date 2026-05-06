@@ -1,2 +1,1 @@
-import { Canvas } from 'canvas'
-export declare const createCanvasPolyfill: () => Canvas
+export declare const createCanvasPolyfill: () => void
