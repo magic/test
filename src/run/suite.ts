@@ -73,7 +73,7 @@ const defaultSuite = {
  * Handle suite-level beforeAll and afterAll hooks
  */
 const handleSuiteHooks = async (tests: TestCollection): Promise<CleanupResult> => {
-  let afterAllCleanup = () => {}
+  let afterAllCleanup: () => unknown = () => {}
 
   if (
     tests &&
@@ -85,7 +85,7 @@ const handleSuiteHooks = async (tests: TestCollection): Promise<CleanupResult> =
     if (is.fn(tests.beforeAll)) {
       const beforeResult = await tests.beforeAll()
       if (is.function(beforeResult)) {
-        afterAllCleanup = beforeResult
+        afterAllCleanup = beforeResult as () => unknown
       }
     }
   }
@@ -269,7 +269,7 @@ const runTestObject = async (
     const fns = getFNS()
     if (!fns.includes(name)) return []
 
-    const test = { ...testsObj, name, parent, pkg }
+    const test: WrappedTest = { ...testsObj, name, parent, pkg }
     const result = await runTest(test, store, rawResults)
     return result ? [result] : []
   }
@@ -277,7 +277,7 @@ const runTestObject = async (
   // Check if this is a test object with a tests array (e.g., { beforeAll, tests: [...] })
   // In this case, we need to run the hooks and then run the tests directly
   if (is.arr(testsObj.tests)) {
-    const testArray = testsObj.tests as WrappedTest[]
+    const testArray = testsObj.tests
     const needsIsolation = suiteNeedsIsolation(testArray)
     const hasBeforeAll = suiteHasBeforeAllOrAfterAll(testsObj)
     const modifiesGlobals = suiteModifiesGlobals(testsObj)
@@ -338,7 +338,7 @@ const runTestObject = async (
       parent: name,
       name: suiteName,
       key: `${name}.${suiteName}`,
-      tests: nestedTests as TestCollection,
+      tests: nestedTests,
       pkg,
       store,
       rawResults,
@@ -351,9 +351,7 @@ const runTestObject = async (
 /**
  * Run a suite of tests (recursively).
  */
-export const runSuite = async (
-  props: SuiteInput & { store: Store; rawResults?: TestResult[] },
-): Promise<Suite | undefined> => {
+export const runSuite = async (props: SuiteInput): Promise<Suite | undefined> => {
   const store = props.store ?? new Store()
   const rawResults = props.rawResults ?? []
 
@@ -416,9 +414,8 @@ export const runSuite = async (
       if (needsIsolation) {
         if (modifiesGlobals || usesModuleMutation || usesFixedPorts || usesSharedFiles) {
           useWorkers = true
-          if (hasBeforeAll) {
-            const testObj = tests as TestObject
-            const beforeAllFn = testObj.beforeAll
+          if (is.objectNative(tests) && hasBeforeAll) {
+            const beforeAllFn = tests.beforeAll
             const beforeAllModifiesGlobal =
               beforeAllFn && /globalThis|^global\b/.test(beforeAllFn.toString())
             if (beforeAllModifiesGlobal) {
@@ -435,7 +432,7 @@ export const runSuite = async (
 
       if (is.array(tests)) {
         results = await runTestArray(
-          tests,
+          tests as WrappedTest[],
           needsIsolation,
           name,
           parent,
