@@ -50,7 +50,6 @@ export default [
   {
     fn: () =>
       testModifiesGlobals({
-         
         before: () => {
           const g = globalThis as Record<string, unknown>
           g.window = { document: {} }
