@@ -431,8 +431,10 @@ const run = async () => {
         it(testObj.name, async () => {
           let testAfter
 
-          if (testObj.before && is.function(testObj.before)) {
-            const result = await testObj.before(testObj)
+          if (testObj.before && (is.function(testObj.before) || is.promise(testObj.before))) {
+            const result = is.function(testObj.before)
+              ? await testObj.before(testObj)
+              : await testObj.before
             if (is.function(result)) {
               testAfter = result as CleanupFunction
             }

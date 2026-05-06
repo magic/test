@@ -25,9 +25,9 @@ export const runTestFnInWorker = async (test: WrappedTest, key: string): Promise
     let innerAfterCleanupError = null
     let innerAfterError = null
 
-    if (is.function(before)) {
+    if (is.function(before) || is.promise(before)) {
       try {
-        const result = await before(test)
+        const result = is.function(before) ? await before(test) : await before
         if (is.function(result)) {
           afterCleanup = result as CleanupFunction
         }
@@ -64,24 +64,6 @@ export const runTestFnInWorker = async (test: WrappedTest, key: string): Promise
         results.push({ res, pass: runPass, exp: evalResult.exp, expString: evalResult.expString })
 
         if (!runPass) {
-          pass = false
-          result = res
-          exp = evalResult.exp
-          expString = evalResult.expString
-        }
-      } catch {
-        results.push({ res, pass: false })
-      }
-
-      try {
-        const evalResult = await evaluateWorkerResult(res, expect)
-        results.push({
-          res,
-          pass: evalResult.pass,
-          exp: evalResult.exp,
-          expString: evalResult.expString,
-        })
-        if (!evalResult.pass) {
           pass = false
           result = res
           exp = evalResult.exp
