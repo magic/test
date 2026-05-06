@@ -7,8 +7,9 @@ export const handleWorkerError = (
   testToRun: WrappedTest,
   error: unknown,
   rawResults: TestResult[],
+  logger: (error: string | Error, ...msg: unknown[]) => boolean = log.error,
 ): TestResult => {
-  log.error(ERRORS.E_TEST_FN!, {
+  logger(ERRORS.E_TEST_FN!, {
     testKey: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
     testName: testToRun.name,
     parent: testToRun.parent,
