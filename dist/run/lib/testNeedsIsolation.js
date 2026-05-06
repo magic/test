@@ -1,4 +1,4 @@
-import { GLOBAL_MODIFICATION_RE } from '../../constants.js'
+import { testModifiesGlobals } from '../../lib/globalCheck.js'
 export const testNeedsIsolation = test => {
   if (test.component) {
     return true
@@ -6,11 +6,8 @@ export const testNeedsIsolation = test => {
   if (test.before || test.after) {
     return true
   }
-  if (test.fn) {
-    const fnStr = test.fn.toString()
-    if (GLOBAL_MODIFICATION_RE.test(fnStr)) {
-      return true
-    }
+  if (testModifiesGlobals(test)) {
+    return true
   }
   return false
 }

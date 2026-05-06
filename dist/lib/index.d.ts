@@ -13,12 +13,7 @@ export { cleanFunctionString } from './cleanFunctionString.ts'
 export * as mock from './mock.ts'
 export { getFNS } from './getFNS.ts'
 export { suiteNeedsIsolation } from './suiteNeedsIsolation.ts'
-export {
-  testModifiesGlobals,
-  suiteModifiesGlobals,
-  suiteBeforeAllModifiesGlobals,
-  suiteAfterAllModifiesGlobals,
-} from './globalCheck.ts'
+export { testModifiesGlobals, suiteModifiesGlobals } from './globalCheck.ts'
 export {
   testImportsMutableModuleState,
   testUsesFixedPorts,

@@ -13,12 +13,7 @@ export { cleanFunctionString } from './cleanFunctionString.js'
 export * as mock from './mock.js'
 export { getFNS } from './getFNS.js'
 export { suiteNeedsIsolation } from './suiteNeedsIsolation.js'
-export {
-  testModifiesGlobals,
-  suiteModifiesGlobals,
-  suiteBeforeAllModifiesGlobals,
-  suiteAfterAllModifiesGlobals,
-} from './globalCheck.js'
+export { testModifiesGlobals, suiteModifiesGlobals } from './globalCheck.js'
 export {
   testImportsMutableModuleState,
   testUsesFixedPorts,

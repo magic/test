@@ -1,14 +1,4 @@
-import type { TestCollection, TestObject } from '../types.ts'
-interface HasTestHooks {
-  before?: {
-    toString(): string
-  }
-  after?: {
-    toString(): string
-  }
-}
-export declare const testModifiesGlobals: (test: HasTestHooks) => boolean
+import type { Test, TestCollection, TestObject } from '../types.ts'
+export declare const functionModifiesGlobals: (fn: unknown) => boolean
+export declare const testModifiesGlobals: (test: Test) => boolean
 export declare const suiteModifiesGlobals: (tests: TestCollection | TestObject) => boolean
-export declare const suiteBeforeAllModifiesGlobals: (tests: TestCollection | TestObject) => boolean
-export declare const suiteAfterAllModifiesGlobals: (tests: TestCollection | TestObject) => boolean
-export {}

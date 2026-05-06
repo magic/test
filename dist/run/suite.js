@@ -172,13 +172,15 @@ const runTestObject = async (testsObj, name, parent, pkg, store, rawResults = []
     // Determine if workers needed
     let useWorkers = false
     let suiteSnapshot
-    if (needsIsolation && modifiesGlobals) {
+    if (modifiesGlobals) {
       useWorkers = true
-      const beforeAllModifiesGlobal = /globalThis|^global\b/.test(
-        testsObj.beforeAll?.toString() || '',
-      )
-      if (beforeAllModifiesGlobal) {
-        suiteSnapshot = isolation.buildSnapshot()
+      if (needsIsolation && testsObj.beforeAll) {
+        const beforeAllModifiesGlobal = /globalThis|^global\b/.test(
+          testsObj.beforeAll?.toString() || '',
+        )
+        if (beforeAllModifiesGlobal) {
+          suiteSnapshot = isolation.buildSnapshot()
+        }
       }
     }
     const results = await runTestArray(
@@ -274,20 +276,18 @@ export const runSuite = async props => {
       // Tests with hooks but no global modification run in main thread for better performance
       let useWorkers = false
       let suiteSnapshot
-      if (needsIsolation) {
-        if (modifiesGlobals || usesModuleMutation || usesFixedPorts || usesSharedFiles) {
-          useWorkers = true
-          if (is.objectNative(tests) && hasBeforeAll) {
-            const beforeAllFn = tests.beforeAll
-            const beforeAllModifiesGlobal =
-              beforeAllFn && /globalThis|^global\b/.test(beforeAllFn.toString())
-            if (beforeAllModifiesGlobal) {
-              suiteSnapshot = isolation.buildSnapshot()
-              try {
-                structuredClone(suiteSnapshot)
-              } catch {
-                // Snapshot not cloneable, workers still work without snapshot
-              }
+      if (modifiesGlobals || usesModuleMutation || usesFixedPorts || usesSharedFiles) {
+        useWorkers = true
+        if (is.objectNative(tests) && hasBeforeAll) {
+          const beforeAllFn = tests.beforeAll
+          const beforeAllModifiesGlobal =
+            beforeAllFn && /globalThis|^global\b/.test(beforeAllFn.toString())
+          if (beforeAllModifiesGlobal) {
+            suiteSnapshot = isolation.buildSnapshot()
+            try {
+              structuredClone(suiteSnapshot)
+            } catch {
+              // Snapshot not cloneable, workers still work without snapshot
             }
           }
         }
