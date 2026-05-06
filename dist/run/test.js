@@ -49,9 +49,9 @@ export const runTest = async (test, store, rawResults) => {
     const key = test.key || getTestKey(pkg, parent, name)
     const isolatedResult = await isolation.executeIsolated(key, async () => {
       let afterCleanup
-      if (is.function(before)) {
+      if (is.function(before) || is.promise(before)) {
         try {
-          const result = await before(test)
+          const result = is.function(before) ? await before(test) : await before
           if (is.function(result)) {
             afterCleanup = result
           }
