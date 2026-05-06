@@ -1,3 +1,5 @@
+import { Store } from './lib/store.ts'
+
 export type TestContext = {
   target: HTMLElement
   component: Record<string, unknown>
@@ -196,7 +198,8 @@ export interface SuiteInput {
   pkg?: string
   key?: string
   tests: TestCollection
-  store?: IStore
+  store?: Store
+  rawResults?: TestResult[]
 }
 
 /**
@@ -368,17 +371,6 @@ export interface Snapshot {
 export interface CleanupResult {
   beforeAllCleanup?: CleanupFunction
   afterAllCleanup?: CleanupFunction
-}
-
-/**
- * Store class interface for test state management.
- */
-export interface IStore {
-  state: State
-  set(val: Partial<State>): void
-  get<K extends keyof State>(key: K, def?: State[K]): State[K] | undefined
-  get(key: string, def?: unknown): unknown
-  reset(): void
 }
 
 export type AliasEntry = {
