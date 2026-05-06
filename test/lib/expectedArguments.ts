@@ -95,7 +95,7 @@ export default [
     info: 'extracts arguments with various default values',
   },
   {
-    fn: () => expectedArguments((_a, _b) => _a + _b),
+    fn: () => expectedArguments((a: number, b: number) => a + b),
     expect: is.len.eq(2),
     info: 'arrow function without parens around single arg',
   },

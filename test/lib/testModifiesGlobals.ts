@@ -50,7 +50,7 @@ export default [
   {
     fn: () =>
       testModifiesGlobals({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         before: () => {
           const g = globalThis as Record<string, unknown>
           g.window = { document: {} }

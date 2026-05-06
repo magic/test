@@ -145,7 +145,6 @@ export default [
   },
   {
     fn: async () => {
-      let error: unknown
       const { res, wait } = createMockResponse(200, 'text/plain', 'test body')
       let capturedReject: (e: unknown) => void
       const promise = new Promise((_, reject) => {
@@ -162,8 +161,7 @@ export default [
       try {
         await promise
         return false
-      } catch (e) {
-        error = e
+      } catch {
         return true
       }
     },
