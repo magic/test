@@ -61,7 +61,9 @@ const AFTER_ALL_FILES = [
 
 const scanDir = async (dir: string): Promise<void> => {
   const exists = await fs.exists(dir)
-  if (!exists) return
+  if (!exists) {
+    return
+  }
 
   const entries = await fs.readdir(dir, { withFileTypes: true })
 
@@ -148,9 +150,15 @@ const processHookFiles = async () => {
 await processHookFiles()
 
 const getTestName = (testObj: WrappedTest, filePath: string, index: number): string => {
-  if (testObj.info) return String(testObj.info)
-  if (testObj.name) return String(testObj.name)
-  if (testObj.fn && is.function(testObj.fn) && testObj.fn.name) return String(testObj.fn.name)
+  if (testObj.info) {
+    return String(testObj.info)
+  }
+  if (testObj.name) {
+    return String(testObj.name)
+  }
+  if (testObj.fn && is.function(testObj.fn) && testObj.fn.name) {
+    return String(testObj.fn.name)
+  }
 
   const baseName = path.basename(filePath, path.extname(filePath))
   return `${baseName} ${index + 1}`
@@ -266,7 +274,9 @@ const convertTest = async (
 }
 
 const convertSuite = async (tests: unknown, filePath: string): Promise<TestItem[]> => {
-  if (!tests) return []
+  if (!tests) {
+    return []
+  }
 
   if (is.function(tests)) {
     const result = await tests({})
@@ -329,11 +339,15 @@ const convertSuite = async (tests: unknown, filePath: string): Promise<TestItem[
 const processFile = async (filePath: string): Promise<RunnerSuite[]> => {
   const mod = await extractExport(filePath)
 
-  if (!mod) return []
+  if (!mod) {
+    return []
+  }
 
   const fileName = path.basename(filePath)
 
-  if (mod === undefined || mod === null) return []
+  if (mod === undefined || mod === null) {
+    return []
+  }
 
   const suites: RunnerSuite[] = []
 

@@ -24,7 +24,9 @@ let svelteTick: (() => Promise<void>) | undefined
 let svelteInitialized = false
 
 const initSvelte = async () => {
-  if (svelteInitialized) return
+  if (svelteInitialized) {
+    return
+  }
 
   initDOM()
 
@@ -70,7 +72,9 @@ export const createSnippet = (renderFn: string | (() => string)) => {
  */
 export const tick = async () => {
   await initSvelte()
-  if (!svelteTick) throw new Error('Svelte not initialized')
+  if (!svelteTick) {
+    throw new Error('Svelte not initialized')
+  }
   await svelteTick()
 }
 
@@ -237,7 +241,9 @@ export const mount = async (
     }
 
     const unmount = async () => {
-      if (!svelteUnmount) throw new Error('Svelte not initialized')
+      if (!svelteUnmount) {
+        throw new Error('Svelte not initialized')
+      }
       await runWithContext(ctx, async () => {
         await svelteUnmount!(component, { outro: true })
       })

@@ -50,7 +50,9 @@ const makeSafe = (value: unknown): unknown => {
     return value
   } catch {
     // Fallback: convert to a string representation (or keep undefined/null)
-    if (value === undefined || value === null) return value
+    if (value === undefined || value === null) {
+      return value
+    }
     if (
       is.string(value) ||
       is.number(value) ||
@@ -394,9 +396,11 @@ const runSingleMode = async () => {
       ...result,
       result: makeSafe(result.result),
     }
-    if (parentPort) parentPort.postMessage(payload)
+    if (parentPort) {
+      parentPort.postMessage(payload)
+    }
   } catch (e) {
-    if (parentPort)
+    if (parentPort) {
       parentPort.postMessage({
         result: undefined,
         msg: '',
@@ -410,6 +414,7 @@ const runSingleMode = async () => {
         pkg: testPkg,
         error: cleanError(is.error(e) ? e : new Error(String(e))),
       })
+    }
   }
 }
 
@@ -452,7 +457,9 @@ const runBatchMode = async () => {
       }
     }
 
-    if (parentPort) parentPort.postMessage(results)
+    if (parentPort) {
+      parentPort.postMessage(results)
+    }
   } catch (e) {
     if (parentPort) {
       const results: TestResult[] = testNames.map((testName: string) => ({

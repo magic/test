@@ -34,9 +34,15 @@ const createMockResponse = (
     resume: () => {},
   }
   setTimeout(() => {
-    if (dataCallback) dataCallback(data)
-    if (endCallback) endCallback()
-    if (resolveWait) resolveWait()
+    if (dataCallback) {
+      dataCallback(data)
+    }
+    if (endCallback) {
+      endCallback()
+    }
+    if (resolveWait) {
+      resolveWait()
+    }
   }, 0)
   return { res, wait }
 }

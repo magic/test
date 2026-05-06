@@ -11,7 +11,9 @@ interface IdentifierNode extends ASTNode {
 
 const walk = (node: unknown, handlers: { enter: (n: ASTNode) => void }): void => {
   const visit = (n: unknown): void => {
-    if (!n || !is.object(n)) return
+    if (!n || !is.object(n)) {
+      return
+    }
 
     const astNode = n as ASTNode
     if (astNode.type) {
@@ -47,11 +49,15 @@ const extractRuneVariables = (source: string): { state: string[]; derived: strin
           for (const decl of decls) {
             const d = decl as ASTNode
             const id = d.id as ASTNode
-            if (id.type !== 'Identifier') continue
+            if (id.type !== 'Identifier') {
+              continue
+            }
 
             const name = (id as IdentifierNode).name
             const init = d.init as ASTNode | null
-            if (!init) continue
+            if (!init) {
+              continue
+            }
             const initType = init.type
 
             if (initType === 'CallExpression') {

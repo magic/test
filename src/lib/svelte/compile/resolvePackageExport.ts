@@ -19,11 +19,15 @@ const isSkipPattern = (spec: string): boolean => {
 const getPackageName = (spec: string): { name: string; subpath: string } | null => {
   const parts = spec.split('/')
   if (spec.startsWith('@')) {
-    if (parts.length < 2) return null
+    if (parts.length < 2) {
+      return null
+    }
     return { name: parts.slice(0, 2).join('/'), subpath: parts.slice(2).join('/') }
   }
   const name = parts[0]
-  if (!name) return null
+  if (!name) {
+    return null
+  }
   return { name, subpath: parts.slice(1).join('/') }
 }
 

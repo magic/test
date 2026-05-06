@@ -9,10 +9,14 @@ export const imageCache = new Map<string, unknown>()
 export const parsePngDimensions = (dataUrl: string): { width: number; height: number } => {
   try {
     const base64 = dataUrl.split(',')[1]
-    if (!base64) return { width: 1, height: 1 }
+    if (!base64) {
+      return { width: 1, height: 1 }
+    }
 
     const binary = atob(base64.slice(0, 100))
-    if (binary.length < 24) return { width: 1, height: 1 }
+    if (binary.length < 24) {
+      return { width: 1, height: 1 }
+    }
 
     const width =
       (binary.charCodeAt(16) << 24) |
@@ -64,14 +68,18 @@ export const createImagePolyfill = (win: Window): new () => ImageInstance => {
 
   Object.defineProperty(PolyfilledImage.prototype, 'src', {
     get(): string {
-      if (srcDesc?.get) return srcDesc.get.call(this) as string
+      if (srcDesc?.get) {
+        return srcDesc.get.call(this) as string
+      }
       return ''
     },
     set(value: string): void {
       if (value && value.startsWith('data:image')) {
         const { width, height } = parsePngDimensions(value)
 
-        if (srcDesc?.set) srcDesc.set.call(this, value)
+        if (srcDesc?.set) {
+          srcDesc.set.call(this, value)
+        }
 
         Object.defineProperty(this, 'width', {
           value: width,
@@ -115,7 +123,9 @@ export const createImagePolyfill = (win: Window): new () => ImageInstance => {
             }
           })
       } else {
-        if (srcDesc?.set) srcDesc.set.call(this, value)
+        if (srcDesc?.set) {
+          srcDesc.set.call(this, value)
+        }
       }
     },
     configurable: true,

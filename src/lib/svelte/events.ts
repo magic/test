@@ -59,7 +59,9 @@ export const contextMenu = (target: Element | Document, selector?: string): void
 }
 
 export const trigger = (target: unknown, eventType: string, options: EventInit = {}): void => {
-  if (!target) return
+  if (!target) {
+    return
+  }
   const event = new Event(eventType, { bubbles: true, ...options })
   ;(target as Element).dispatchEvent(event)
 }

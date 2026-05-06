@@ -13,6 +13,11 @@ export default tseslint.config(
     },
   },
   {
+    rules: {
+      curly: ['error'],
+    },
+  },
+  {
     ignores: ['node_modules', 'dist', 'coverage', '*.config.js', 'docs', 'docsrc'],
   },
   {

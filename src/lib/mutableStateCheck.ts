@@ -85,11 +85,15 @@ export const testImportsMutableModuleState = async (
     }
   }
 
-  if (!content) return false
+  if (!content) {
+    return false
+  }
 
   const importNames = getImportNames(content)
 
-  if (!importNames.length) return false
+  if (!importNames.length) {
+    return false
+  }
 
   const checkHook = (hook: { toString(): string }): boolean => {
     return mutatesImportedState(hook.toString(), importNames)
@@ -117,7 +121,9 @@ export const testImportsMutableModuleState = async (
     if (test.after && is.function(test.after)) {
       return true
     }
-    if (test.tests) return checkTestsInObject(test.tests)
+    if (test.tests) {
+      return checkTestsInObject(test.tests)
+    }
     return false
   }
 
@@ -220,16 +226,26 @@ export const testUsesFixedPorts = (tests: TestCollection | TestObject | WrappedT
 const checkTestsInObject = (testObj: unknown): boolean => {
   if (is.array(testObj)) {
     return (testObj as TestWithHooks[]).some(t => {
-      if (t.before && is.function(t.before)) return true
-      if (t.after && is.function(t.after)) return true
+      if (t.before && is.function(t.before)) {
+        return true
+      }
+      if (t.after && is.function(t.after)) {
+        return true
+      }
       return false
     })
   }
   if (is.objectNative(testObj)) {
     return Object.values(testObj as Record<string, TestWithHooks>).some(t => {
-      if (t.tests) return checkTestsInObject(t.tests)
-      if (t.before && is.function(t.before)) return true
-      if (t.after && is.function(t.after)) return true
+      if (t.tests) {
+        return checkTestsInObject(t.tests)
+      }
+      if (t.before && is.function(t.before)) {
+        return true
+      }
+      if (t.after && is.function(t.after)) {
+        return true
+      }
       return false
     })
   }
@@ -280,18 +296,32 @@ export const testUsesSharedFiles = (
 const checkTestsInObjectShared = (testObj: unknown): boolean => {
   if (is.array(testObj)) {
     return (testObj as TestWithHooks[]).some(t => {
-      if (t.before && is.function(t.before)) return true
-      if (t.fn && is.function(t.fn)) return true
-      if (t.after && is.function(t.after)) return true
+      if (t.before && is.function(t.before)) {
+        return true
+      }
+      if (t.fn && is.function(t.fn)) {
+        return true
+      }
+      if (t.after && is.function(t.after)) {
+        return true
+      }
       return false
     })
   }
   if (is.objectNative(testObj)) {
     return Object.values(testObj as Record<string, TestWithHooks>).some(t => {
-      if (t.tests) return checkTestsInObjectShared(t.tests)
-      if (t.before && is.function(t.before)) return true
-      if (t.fn && is.function(t.fn)) return true
-      if (t.after && is.function(t.after)) return true
+      if (t.tests) {
+        return checkTestsInObjectShared(t.tests)
+      }
+      if (t.before && is.function(t.before)) {
+        return true
+      }
+      if (t.fn && is.function(t.fn)) {
+        return true
+      }
+      if (t.after && is.function(t.after)) {
+        return true
+      }
       return false
     })
   }

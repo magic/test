@@ -13,7 +13,9 @@ export const createCanvasPolyfill = (): void => {
     }
   }
 
-  if (origGetContext) return
+  if (origGetContext) {
+    return
+  }
 
   origGetContext = HTMLCanvasElement.prototype.getContext as any
 

@@ -87,7 +87,9 @@ export const handleResponse = (
     const chunks: string[] = []
     res.setEncoding?.('utf8')
     res.on?.('data', chunk => {
-      if (chunk) chunks.push(String(chunk))
+      if (chunk) {
+        chunks.push(String(chunk))
+      }
     })
     res.on?.('end', () => {
       let errorMessage = err
@@ -108,7 +110,9 @@ export const handleResponse = (
   let responseSize = 0
   res.setEncoding?.('utf8')
   res.on?.('data', chunk => {
-    if (!chunk) return
+    if (!chunk) {
+      return
+    }
     const chunkStr = String(chunk)
     if (maxSize && responseSize + chunkStr.length > maxSize) {
       res.destroy?.()

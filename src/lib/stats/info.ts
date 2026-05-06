@@ -41,11 +41,15 @@ export const info = (suites: unknown[], store: Store): boolean => {
     }
 
     tests.forEach(test => {
-      if (!isTestResult(test)) return
+      if (!isTestResult(test)) {
+        return
+      }
 
       const { pass, result, expString, key, msg, info } = test as TestResult
 
-      if (key !== name) return
+      if (key !== name) {
+        return
+      }
 
       if (pass) {
         if (env.isVerbose()) {
@@ -69,7 +73,9 @@ export const info = (suites: unknown[], store: Store): boolean => {
   })
 
   suites.forEach(suite => {
-    if (!suite) return
+    if (!suite) {
+      return
+    }
     const { name } = suite as { name: string }
     const { pass, all } = results[name] || { pass: 0, all: 0 }
     const passPercent = all > 0 ? (pass / all) * 100 : 0
