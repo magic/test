@@ -1,8 +1,10 @@
 import is from '@magic/types'
 import type { TestCollection } from '../types.ts'
 
+import { suiteModifiesGlobals } from './globalCheck.js'
+
 /**
- * Check if any test in the suite needs isolation (has before/after hooks)
+ * Check if any test in the suite needs isolation (has before/after hooks OR modifies globals)
  */
 export const suiteNeedsIsolation = (tests: TestCollection): boolean => {
   if (is.array(tests)) {
@@ -23,5 +25,18 @@ export const suiteNeedsIsolation = (tests: TestCollection): boolean => {
     }
   }
 
+  return false
+}
+
+export const suiteBeforeAllModifiesGlobalState = (tests: TestCollection): boolean => {
+  if (is.objectNative(tests)) {
+    const t = tests
+    if (is.function(t.beforeAll) && suiteModifiesGlobals(t)) {
+      return true
+    }
+    if (t.tests && is.objectNative(t.tests)) {
+      return suiteBeforeAllModifiesGlobalState(t.tests)
+    }
+  }
   return false
 }

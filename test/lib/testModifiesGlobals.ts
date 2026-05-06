@@ -1,9 +1,4 @@
-import {
-  testModifiesGlobals,
-  suiteModifiesGlobals,
-  suiteBeforeAllModifiesGlobals,
-  suiteAfterAllModifiesGlobals,
-} from '../../src/lib/globalCheck.js'
+import { testModifiesGlobals, suiteModifiesGlobals } from '../../src/lib/globalCheck.js'
 import {
   testImportsMutableModuleState,
   testUsesFixedPorts,
@@ -56,7 +51,10 @@ export default [
     fn: () =>
       testModifiesGlobals({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        before: () => ((globalThis as any).window = { document: {} }),
+        before: () => {
+          const g = globalThis as Record<string, unknown>
+          g.window = { document: {} }
+        },
       }),
     expect: true,
     info: 'detects window.x = value',
@@ -106,7 +104,7 @@ export default [
   {
     fn: () =>
       testModifiesGlobals({
-        before: () => true,
+        before: () => undefined,
       }),
     expect: false,
     info: 'returns false when no global modification',
@@ -159,34 +157,6 @@ export default [
     fn: () => suiteModifiesGlobals({ tests: [] }),
     expect: false,
     info: 'suiteModifiesGlobals returns false for clean suite',
-  },
-  {
-    fn: () =>
-      suiteBeforeAllModifiesGlobals({
-        beforeAll: () => {
-          ;(globalThis as Record<string, unknown>).beforeAll = 'test'
-        },
-      }),
-    expect: true,
-    info: 'detects global modification in beforeAll',
-  },
-  {
-    fn: () =>
-      suiteBeforeAllModifiesGlobals({
-        beforeAll: () => {},
-      }),
-    expect: false,
-    info: 'ignores non-global modification in beforeAll',
-  },
-  {
-    fn: () =>
-      suiteAfterAllModifiesGlobals({
-        afterAll: () => {
-          ;(globalThis as Record<string, unknown>).afterAll = 'test'
-        },
-      }),
-    expect: true,
-    info: 'detects global modification in afterAll',
   },
   {
     fn: () =>

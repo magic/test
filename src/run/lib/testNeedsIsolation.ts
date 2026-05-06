@@ -1,6 +1,6 @@
 import type { WrappedTest } from '../../types.ts'
 
-import { GLOBAL_MODIFICATION_RE } from '../../constants.ts'
+import { testModifiesGlobals } from '../../lib/globalCheck.js'
 
 export const testNeedsIsolation = (test: WrappedTest): boolean => {
   if (test.component) {
@@ -9,11 +9,8 @@ export const testNeedsIsolation = (test: WrappedTest): boolean => {
   if (test.before || test.after) {
     return true
   }
-  if (test.fn) {
-    const fnStr = test.fn.toString()
-    if (GLOBAL_MODIFICATION_RE.test(fnStr)) {
-      return true
-    }
+  if (testModifiesGlobals(test)) {
+    return true
   }
   return false
 }
