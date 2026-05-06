@@ -2273,6 +2273,15 @@ update dependencies
 
 - advanced worker isolation, executing minimum number of needed workers for tests. lots of internal changes to achieve this.
 
-##### 0.3.8 - unreleased
+##### 0.3.8
+
+- add `--workers` flag to control max parallel workers (default: auto-detect CPU count)
+- canvas polyfill works properly in happy-dom environment
+- svelte: resolve svelte-only package exports
+- svelte: fix import chain handling for components
+- version: check if Lib is missing exports
+- worker isolation: beforeAll and afterAll run in workers directly
+
+##### 0.3.9 - unreleased
 
 ...
