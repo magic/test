@@ -1,7 +1,6 @@
 import { mount, html } from '../../../../../src/lib/svelte/index.js'
 import { tryCatch } from '../../../../../src/index.js'
-import type { TestCase } from '../../../../../src/types.js'
-import type { DerivedComponent } from '../../../../../src/lib/svelte/testFixtures/components/types.js'
+import type { TestContext, TestCase } from '../../../../../src/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Derived.svelte'
 
@@ -9,7 +8,7 @@ export default [
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: async ({ target }) => {
+    fn: async ({ target }: TestContext) => {
       const result = html(target)
       return result.includes('Count: 3') && result.includes('Double: 6')
     },
@@ -19,8 +18,8 @@ export default [
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: async ({ component: instance }) => {
-      return instance!.isEmpty
+    fn: async ({ component: instance }: TestContext) => {
+      return instance['isEmpty'] as boolean
     },
     expect: false,
     info: 'isEmpty is false when items exist',
@@ -28,17 +27,18 @@ export default [
   {
     component,
     props: { items: [] },
-    fn: async ({ component: instance }) => {
-      return instance!.isEmpty
+    fn: async ({ component: instance }: TestContext) => {
+      return instance['isEmpty'] as boolean
     },
     expect: true,
     info: 'isEmpty is true when no items',
   },
   {
     fn: async () => {
-      const result = await (
-        await tryCatch(mount as (...args: unknown[]) => unknown, component, { props: null })
-      )()
+      const tryCatchFn = tryCatch(mount as (...args: unknown[]) => unknown, component, {
+        props: null,
+      } as Record<string, unknown>)
+      const result = await tryCatchFn()
       return result
     },
     expect: (t: unknown) => (t as Error).message === 'Props must be an object, got object',
@@ -47,11 +47,11 @@ export default [
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: async ({ target, component: instance }) => {
-      const addButton = target.querySelector<HTMLButtonElement>('.add')!
-      addButton.click()
+    fn: async ({ target, component: instance }: TestContext) => {
+      const addButton = target.querySelector('.add') as HTMLButtonElement | null
+      addButton?.click()
       await new Promise(r => setTimeout(r, 10))
-      return instance!.count
+      return instance['count'] as number
     },
     expect: 4,
     info: 'add button increments count',
@@ -59,11 +59,11 @@ export default [
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: async ({ target, component: instance }) => {
-      const removeButton = target.querySelector<HTMLButtonElement>('.remove')!
-      removeButton.click()
+    fn: async ({ target, component: instance }: TestContext) => {
+      const removeButton = target.querySelector('.remove') as HTMLButtonElement | null
+      removeButton?.click()
       await new Promise(r => setTimeout(r, 10))
-      return instance!.count
+      return instance['count'] as number
     },
     expect: 2,
     info: 'remove button decrements count',
@@ -71,8 +71,8 @@ export default [
   {
     component,
     props: { items: [1, 2, 3, 4, 5, 6] },
-    fn: async ({ component: instance }) => {
-      return instance!.isLarge
+    fn: async ({ component: instance }: TestContext) => {
+      return instance['isLarge'] as boolean
     },
     expect: true,
     info: 'isLarge is true when count > 5',
@@ -80,8 +80,8 @@ export default [
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: async ({ component: instance }) => {
-      return instance!.isLarge
+    fn: async ({ component: instance }: TestContext) => {
+      return instance['isLarge'] as boolean
     },
     expect: false,
     info: 'isLarge is false when count <= 5',
@@ -89,7 +89,7 @@ export default [
   {
     component,
     props: { items: [1, 2] },
-    fn: async ({ target }) => {
+    fn: async ({ target }: TestContext) => {
       return html(target).includes('Double: 4')
     },
     expect: true,
@@ -98,7 +98,7 @@ export default [
   {
     component,
     props: { items: [] },
-    fn: async ({ target }) => {
+    fn: async ({ target }: TestContext) => {
       return html(target).includes('Double: 0')
     },
     expect: true,
@@ -107,7 +107,7 @@ export default [
   {
     component,
     props: { items: [] },
-    fn: async ({ target }) => {
+    fn: async ({ target }: TestContext) => {
       return html(target).includes('Count: 0')
     },
     expect: true,
@@ -116,7 +116,7 @@ export default [
   {
     component,
     props: { items: [] },
-    fn: async ({ target }) => {
+    fn: async ({ target }: TestContext) => {
       return html(target).includes('empty')
     },
     expect: true,
@@ -125,7 +125,7 @@ export default [
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: async ({ target }) => {
+    fn: async ({ target }: TestContext) => {
       return html(target).includes('has items')
     },
     expect: true,
@@ -134,7 +134,7 @@ export default [
   {
     component,
     props: { items: [1, 2, 3, 4, 5, 6] },
-    fn: async ({ target }) => {
+    fn: async ({ target }: TestContext) => {
       return html(target).includes('large')
     },
     expect: true,
@@ -143,7 +143,7 @@ export default [
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: async ({ target }) => {
+    fn: async ({ target }: TestContext) => {
       return html(target).includes('small')
     },
     expect: true,
@@ -152,13 +152,13 @@ export default [
   {
     component,
     props: { items: [] },
-    fn: async ({ target, component: instance }) => {
-      const removeButton = target.querySelector<HTMLButtonElement>('.remove')!
-      removeButton.click()
+    fn: async ({ target, component: instance }: TestContext) => {
+      const removeButton = target.querySelector('.remove') as HTMLButtonElement | null
+      removeButton?.click()
       await new Promise(r => setTimeout(r, 10))
-      return instance!.count
+      return instance['count'] as number
     },
     expect: 0,
     info: 'remove button does not go below 0 when count is 0',
   },
-] satisfies TestCase<DerivedComponent>[]
+] satisfies TestCase[]

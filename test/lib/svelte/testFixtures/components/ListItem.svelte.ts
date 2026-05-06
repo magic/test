@@ -1,5 +1,5 @@
 import { html } from '../../../../../src/lib/svelte/index.js'
-import type { TestCase } from '../../../../../src/types.js'
+import type { TestContext, TestCase } from '../../../../../src/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/ListItem.svelte'
 
@@ -7,21 +7,21 @@ export default [
   {
     component,
     props: { item: { text: 'Test Item' } },
-    fn: ({ target }) => html(target).includes('class="list-item"'),
+    fn: ({ target }: TestContext) => html(target).includes('class="list-item"'),
     expect: true,
     info: 'renders list item with class',
   },
   {
     component,
     props: { item: { text: 'Test Item' } },
-    fn: ({ target }) => html(target).includes('Test Item'),
+    fn: ({ target }: TestContext) => html(target).includes('Test Item'),
     expect: true,
     info: 'renders item text',
   },
   {
     component,
     props: { item: { text: 'Test Item' } },
-    fn: ({ target }) => {
+    fn: ({ target }: TestContext) => {
       const text = target.querySelector('.item-text')
       return text && text.textContent === 'Test Item'
     },
@@ -31,21 +31,21 @@ export default [
   {
     component,
     props: { item: { text: 'With Remove' } },
-    fn: ({ target }) => html(target).includes('remove-btn'),
+    fn: ({ target }: TestContext) => html(target).includes('remove-btn'),
     expect: false,
     info: 'does not render remove button when onRemove not provided',
   },
   {
     component,
     props: { item: { text: 'With Remove' }, onRemove: () => {} },
-    fn: ({ target }) => html(target).includes('remove-btn'),
+    fn: ({ target }: TestContext) => html(target).includes('remove-btn'),
     expect: true,
     info: 'renders remove button when onRemove is provided',
   },
   {
     component,
     props: { item: { text: 'Click Test' }, onRemove: () => {} },
-    fn: async ({ target }) => {
+    fn: async ({ target }: TestContext) => {
       const btn = target.querySelector('.remove-btn')
       return btn !== null
     },
@@ -55,7 +55,7 @@ export default [
   {
     component,
     props: { item: { text: '' } },
-    fn: ({ target }) => {
+    fn: ({ target }: TestContext) => {
       const text = target.querySelector('.item-text')
       return text && text.textContent === ''
     },
@@ -65,7 +65,7 @@ export default [
   {
     component,
     props: { item: { text: 'Long Text Here' } },
-    fn: ({ target }) => html(target).includes('Long Text Here'),
+    fn: ({ target }: TestContext) => html(target).includes('Long Text Here'),
     expect: true,
     info: 'renders long item text',
   },

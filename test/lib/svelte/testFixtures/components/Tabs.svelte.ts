@@ -1,6 +1,5 @@
 import { mount, html } from '../../../../../src/lib/svelte/index.js'
-import type { TestCase } from '../../../../../src/types.js'
-import type { TabsComponent } from '../../../../../src/lib/svelte/testFixtures/components/types.js'
+import type { TestContext, TestCase } from '../../../../../src/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Tabs.svelte'
 const tabs = [
@@ -12,30 +11,29 @@ export default [
   {
     component,
     props: { tabs },
-    fn: ({ target }) => html(target).includes('class="tab active"'),
+    fn: ({ target }: TestContext) => html(target).includes('class="tab active"'),
     expect: true,
     info: 'renders tabs with first tab active',
   },
   {
     component,
     props: { tabs },
-    fn: ({ target }) => html(target).includes('Tab B'),
+    fn: ({ target }: TestContext) => html(target).includes('Tab B'),
     expect: true,
     info: 'renders tabs with Tab B',
   },
   {
     component,
     props: { tabs },
-    fn: ({ component: instance }) => instance!.activeTab,
+    fn: ({ component: instance }: TestContext) => instance['activeTab'],
     expect: 'a',
     info: 'returns activeTab from component',
   },
   {
     fn: async () => {
       try {
-        await mount(component, { props: 'invalid' } as unknown as {
-          props?: Record<string, unknown>
-        })
+        // @ts-expect-error testing invalid props type
+        await mount(component, { props: 'invalid' })
         return 'no error'
       } catch (e) {
         return (e as Error).message
@@ -47,7 +45,8 @@ export default [
   {
     fn: async () => {
       try {
-        await mount(component, { props: null } as unknown as { props?: Record<string, unknown> })
+        // @ts-expect-error testing null props
+        await mount(component, { props: null })
         return 'no error'
       } catch (e) {
         return (e as Error).message
@@ -59,9 +58,8 @@ export default [
   {
     fn: async () => {
       try {
-        await mount(component, { props: [1, 2, 3] } as unknown as {
-          props?: Record<string, unknown>
-        })
+        // @ts-expect-error testing array props
+        await mount(component, { props: [1, 2, 3] })
         return 'no error'
       } catch (e) {
         return (e as Error).message
@@ -73,7 +71,7 @@ export default [
   {
     component,
     props: { tabs: [] },
-    fn: ({ target }) => html(target).includes('class="tabs"'),
+    fn: ({ target }: TestContext) => html(target).includes('class="tabs"'),
     expect: true,
     info: 'renders tabs container with empty tabs',
   },
@@ -81,7 +79,7 @@ export default [
     fn: async () => {
       try {
         const sym = Symbol('test')
-        await mount(component, { props: { [sym]: 'value' } } as { props?: Record<string, unknown> })
+        await mount(component, { props: { [sym]: 'value' } })
         return 'no error'
       } catch (e) {
         return (e as Error).message
@@ -90,4 +88,4 @@ export default [
     expect: 'Prop keys must be strings, got symbol',
     info: 'throws when prop key is a symbol',
   },
-] satisfies TestCase<TabsComponent>[]
+] satisfies TestCase[]

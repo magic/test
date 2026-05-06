@@ -2,7 +2,7 @@ import { is } from '../../src/index.js'
 import { cleanError } from '../../src/lib/cleanError.js'
 import type { TestCase } from '../../src/types.js'
 
-type CleanErrorResult = string[] | Error
+type CleanErrorResult = string[]
 
 export default [
   { fn: cleanError, expect: undefined, info: 'empty argument returns argument' },

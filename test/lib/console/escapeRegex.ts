@@ -1,4 +1,5 @@
 import { escapeRegex } from '../../../src/lib/svelte/viteConfig/escapeRegex.js'
+import type { Test } from '../../../src/types.js'
 
 export default [
   {
@@ -21,4 +22,4 @@ export default [
     expect: true,
     info: 'empty string',
   },
-]
+] satisfies Test[]

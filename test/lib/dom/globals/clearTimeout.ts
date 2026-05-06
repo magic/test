@@ -33,6 +33,7 @@ export default {
     },
     {
       fn: () => {
+        // @ts-expect-error testing null id
         return globalThis.clearTimeout(null)
       },
       expect: undefined,

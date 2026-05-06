@@ -26,6 +26,7 @@ export default {
     },
     {
       fn: () => {
+        // @ts-expect-error testing undefined id
         return globalThis.cancelAnimationFrame(undefined)
       },
       expect: undefined,
@@ -33,6 +34,7 @@ export default {
     },
     {
       fn: () => {
+        // @ts-expect-error testing null id
         return globalThis.cancelAnimationFrame(null)
       },
       expect: undefined,

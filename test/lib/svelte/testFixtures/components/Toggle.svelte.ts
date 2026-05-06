@@ -1,6 +1,5 @@
 import { mount, html } from '../../../../../src/lib/svelte/index.js'
-import type { TestCase } from '../../../../../src/types.js'
-import type { ToggleComponent } from '../../../../../src/lib/svelte/testFixtures/components/types.js'
+import type { TestContext, TestCase } from '../../../../../src/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Toggle.svelte'
 
@@ -8,7 +7,7 @@ export default [
   {
     component,
     props: { label: 'Enable', initial: false },
-    fn: async ({ target }) => {
+    fn: async ({ target }: TestContext) => {
       const result = html(target)
       return result.includes('Enable') && result.includes('OFF')
     },
@@ -18,8 +17,8 @@ export default [
   {
     component,
     props: { label: 'Enable', initial: true },
-    fn: async ({ component: instance }) => {
-      return instance!.on
+    fn: async ({ component: instance }: TestContext) => {
+      return instance['on']
     },
     expect: true,
     info: 'returns on state from component',
@@ -27,9 +26,9 @@ export default [
   {
     component,
     props: { label: 'Enable', initial: true },
-    fn: async ({ target }) => {
-      const input = target.querySelector<HTMLInputElement>('input')!
-      return input.checked
+    fn: async ({ target }: TestContext) => {
+      const input = target.querySelector('input') as HTMLInputElement | null
+      return input?.checked ?? false
     },
     expect: true,
     info: 'input checked property reflects initial state',
@@ -37,9 +36,8 @@ export default [
   {
     fn: async () => {
       try {
-        await mount(component, { props: 'invalid' } as unknown as {
-          props?: Record<string, unknown>
-        })
+        // @ts-expect-error testing invalid props type
+        await mount(component, { props: 'invalid' })
         return 'no error'
       } catch (e) {
         return (e as Error).message
@@ -48,4 +46,4 @@ export default [
     expect: 'Props must be an object, got string',
     info: 'throws when props is a string',
   },
-] satisfies TestCase<ToggleComponent>[]
+] satisfies TestCase[]

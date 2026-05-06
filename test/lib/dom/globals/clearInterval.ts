@@ -33,6 +33,7 @@ export default {
     },
     {
       fn: () => {
+        // @ts-expect-error null is not a valid argument in the type system
         return globalThis.clearInterval(null)
       },
       expect: undefined,

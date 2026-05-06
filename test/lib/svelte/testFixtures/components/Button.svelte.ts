@@ -1,6 +1,5 @@
 import { html } from '../../../../../src/lib/svelte/index.js'
 import type { TestCase } from '../../../../../src/types.js'
-import type { ButtonComponent } from '../../../../../src/lib/svelte/testFixtures/components/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Button.svelte'
 
@@ -14,13 +13,13 @@ export default [
   {
     component,
     props: { disabled: true },
-    fn: ({ component: instance }) => instance!.disabled,
+    fn: ({ component: instance }) => instance['disabled'],
     info: 'button disabled property is true',
   },
   {
     component,
     props: { disabled: false },
-    fn: ({ component: instance }) => !instance!.disabled,
+    fn: ({ component: instance }) => !instance['disabled'],
     info: 'button disabled property is false when explicitly set',
   },
   {
@@ -42,7 +41,7 @@ export default [
     props: { onclick: () => {} },
     fn: async ({ target, component: instance }) => {
       let clicked = false
-      instance!.disabled = false
+      instance['disabled'] = false
       const button = target.querySelector('button')!
       button.onclick = () => {
         clicked = true
@@ -83,7 +82,7 @@ export default [
     component,
     props: { disabled: false, variant: 'primary' },
     fn: ({ target, component: instance }) =>
-      html(target).includes('btn primary') && !instance!.disabled,
+      html(target).includes('btn primary') && !instance['disabled'],
     info: 'button is enabled with explicit false and variant',
   },
   {
@@ -96,7 +95,7 @@ export default [
   {
     component,
     props: { disabled: undefined, variant: undefined },
-    fn: ({ target, component: instance }) => html(target).includes('btn') && !instance!.disabled,
+    fn: ({ target, component: instance }) => html(target).includes('btn') && !instance['disabled'],
     info: 'handles undefined props with defaults',
   },
-] satisfies TestCase<ButtonComponent>[]
+] satisfies TestCase[]
