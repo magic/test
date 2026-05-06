@@ -2,7 +2,7 @@ import { env } from './env.js'
 /**
  * MockFn interface
  */
-interface MockFn {
+export interface MockFn {
   (...args: unknown[]): unknown
   callCount: number
   calls: unknown[][]
