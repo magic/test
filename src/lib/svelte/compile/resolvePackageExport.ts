@@ -2,7 +2,7 @@ import is from '@magic/types'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import fs from '@magic/fs'
-import { packageExportCache } from './packageExportCache.js'
+import { packageExportCache } from './packageExportCache.ts'
 
 export interface PackageExportResolve {
   resolvedPath: string | null

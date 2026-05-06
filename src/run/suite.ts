@@ -5,7 +5,7 @@ import error from '@magic/error'
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { runTest } from './test.js'
+import { runTest } from './test.ts'
 import {
   getFNS,
   ERRORS,
@@ -15,9 +15,9 @@ import {
   testUsesFixedPorts,
   testUsesSharedFiles,
 } from '../lib/index.ts'
-import { Store } from '../lib/store.js'
-import { isolation } from './isolation.js'
-import { getWorkerPool } from '../lib/workerPool.js'
+import { Store } from '../lib/store.ts'
+import { isolation } from './isolation.ts'
+import { getWorkerPool } from '../lib/workerPool.ts'
 import type {
   Suite,
   WrappedTest,

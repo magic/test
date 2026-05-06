@@ -1,18 +1,18 @@
 import is from '@magic/types'
 import log from '@magic/log'
 
-import { cleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/index.js'
-import { Store } from '../lib/store.js'
-import { isolation } from './isolation.js'
-import { runSuite } from './suite.js'
+import { cleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/index.ts'
+import { Store } from '../lib/store.ts'
+import { isolation } from './isolation.ts'
+import { runSuite } from './suite.ts'
 import {
   evaluateTestResult,
   executeTest,
   getTestTimeout,
   prepareTest,
   withTimeout,
-} from './lib/index.js'
-import type { WrappedTest, TestResult, Suite } from '../types.js'
+} from './lib/index.ts'
+import type { WrappedTest, TestResult, Suite } from '../types.ts'
 
 /**
  * Run a test or delegate to a suite.

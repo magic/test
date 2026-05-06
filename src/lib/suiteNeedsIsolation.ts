@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import type { TestCollection } from '../types.js'
+import type { TestCollection } from '../types.ts'
 
 /**
  * Check if any test in the suite needs isolation (has before/after hooks)

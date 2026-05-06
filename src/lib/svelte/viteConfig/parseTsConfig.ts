@@ -2,10 +2,10 @@ import fs from '@magic/fs'
 import is from '@magic/types'
 import path from 'node:path'
 
-import { stripJsonComments } from './stripJsonComments.js'
-import { escapeRegex } from './escapeRegex.js'
+import { stripJsonComments } from './stripJsonComments.ts'
+import { escapeRegex } from './escapeRegex.ts'
 
-import { aliasCache, type AliasEntry } from './cache.js'
+import { aliasCache, type AliasEntry } from './cache.ts'
 
 interface TSConfig {
   compilerOptions?: {

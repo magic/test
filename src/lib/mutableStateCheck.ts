@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import type { TestCollection, TestObject, WrappedTest } from '../types.js'
+import type { TestCollection, TestObject, WrappedTest } from '../types.ts'
 
 interface FsModule {
   readFile?: (path: string, encoding?: string) => Promise<string | undefined>

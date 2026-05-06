@@ -2,9 +2,9 @@ import { parentPort, workerData } from 'node:worker_threads'
 
 import is from '@magic/types'
 
-import { cleanError, getTestKey } from '../lib/index.js'
-import { restoreFromSnapshot } from './isolation.js'
-import type { TestResult } from '../types.js'
+import { cleanError, getTestKey } from '../lib/index.ts'
+import { restoreFromSnapshot } from './isolation.ts'
+import type { TestResult } from '../types.ts'
 
 import { runSingleTestFromFileInWorker, importFileInWorker, makeSafeClone } from './lib/index.ts'
 

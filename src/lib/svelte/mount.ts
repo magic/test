@@ -5,12 +5,12 @@ import fs from '@magic/fs'
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { compileSvelteWithWrite } from './compile/index.js'
-import type { CssObject } from './compile/types.js'
-import { initDOM, getDocument, getWindow } from '../../lib/dom/index.js'
-import type { ComponentProps } from '../../types.js'
-import { createContext, runWithContext } from './shims/$app/state.js'
-import { detectSvelteKitImports, needsSvelteKitContext } from './detect-sveltekit-imports.js'
+import { compileSvelteWithWrite } from './compile/index.ts'
+import type { CssObject } from './compile/types.ts'
+import { initDOM, getDocument, getWindow } from '../../lib/dom/index.ts'
+import type { ComponentProps } from '../../types.ts'
+import { createContext, runWithContext } from './shims/$app/state.ts'
+import { detectSvelteKitImports, needsSvelteKitContext } from './detect-sveltekit-imports.ts'
 import type { SvelteComponent } from 'svelte'
 
 let svelteMount: (component: unknown, options: unknown) => SvelteComponent

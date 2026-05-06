@@ -1,7 +1,7 @@
 import is from '@magic/types'
 
-import { cleanFunctionString } from '../../lib/index.js'
-import type { EvaluateResult } from '../../types.js'
+import { cleanFunctionString } from '../../lib/index.ts'
+import type { EvaluateResult } from '../../types.ts'
 
 export const evaluateWorkerResult = async (
   res: unknown,

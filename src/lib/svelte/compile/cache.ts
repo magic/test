@@ -1,5 +1,5 @@
-import { LRUCache } from '../LRUCache.js'
-import type { CompileCacheEntry, ImportCacheEntry, BarrelCacheEntry } from './types.js'
+import { LRUCache } from '../LRUCache.ts'
+import type { CompileCacheEntry, ImportCacheEntry, BarrelCacheEntry } from './types.ts'
 
 export const cache = new LRUCache<CompileCacheEntry>(100)
 

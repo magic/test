@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import type { TestCollection, TestObject } from '../types.js'
+import type { TestCollection, TestObject } from '../types.ts'
 
 const GLOBAL_MODIFICATION_RE = /(?:globalThis|window|global|self|process\.env)/
 

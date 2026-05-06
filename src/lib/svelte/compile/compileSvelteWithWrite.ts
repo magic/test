@@ -3,9 +3,9 @@ import { pathToFileURL } from 'node:url'
 
 import fs from '@magic/fs'
 
-import { TMP_DIR } from '../../../constants.js'
-import type { CssObject } from './types.js'
-import { transformForNode } from './transformForNode.js'
+import { TMP_DIR } from '../../../constants.ts'
+import type { CssObject } from './types.ts'
+import { transformForNode } from './transformForNode.ts'
 import { compileSvelte } from './compileSvelte.ts'
 import { processImports } from './processImports.ts'
 

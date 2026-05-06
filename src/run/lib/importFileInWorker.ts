@@ -1,6 +1,6 @@
 import is from '@magic/types'
 
-import { getViteDefine } from '../../lib/svelte/viteConfig/index.js'
+import { getViteDefine } from '../../lib/svelte/viteConfig/index.ts'
 
 export const importFileInWorker = async (filePath: string): Promise<unknown> => {
   try {

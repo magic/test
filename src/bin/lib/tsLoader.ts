@@ -1,7 +1,7 @@
 import fs from '@magic/fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.js'
+import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.ts'
 import is from '@magic/types'
 
 export const resolve = async (

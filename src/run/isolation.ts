@@ -2,7 +2,7 @@ import { Worker } from 'node:worker_threads'
 
 import is from '@magic/types'
 
-import type { Snapshot, PropertyDescriptorRecord, TestResult } from '../types.js'
+import type { Snapshot, PropertyDescriptorRecord, TestResult } from '../types.ts'
 
 const skipProps = [
   // Node/CommonJS built-ins
@@ -67,7 +67,7 @@ const skipProps = [
   'lib',
   'renderToString',
   'compile',
-  // DOM globals (from happy-dom, set by dom.js)
+  // DOM globals (from happy-dom, set by dom.ts)
   'document',
   'navigator',
   'location',

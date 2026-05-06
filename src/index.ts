@@ -6,15 +6,15 @@ export { default as deep } from '@magic/deep'
 export { default as fs } from '@magic/fs'
 export { default as error } from '@magic/error'
 
-export { run } from './run.js'
+export { run } from './run.ts'
 
-import { initDOM } from './lib/dom/index.js'
+import { initDOM } from './lib/dom/index.ts'
 
-export { curry, env, http, mock, promise, vals, version, tryCatch } from './lib/index.js'
+export { curry, env, http, mock, promise, vals, version, tryCatch } from './lib/index.ts'
 
-export { initDOM, getDocument, getWindow } from './lib/dom/index.js'
+export { initDOM, getDocument, getWindow } from './lib/dom/index.ts'
 
-export * from './types.js'
+export * from './types.ts'
 
 // Auto-initialize DOM for all tests - makes HTMLInputElement, etc. available globally
 // This enables instanceof checks to work in plain JS unit tests

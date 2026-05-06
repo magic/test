@@ -1,6 +1,6 @@
-import { Store } from '../store.js'
+import { Store } from '../store.ts'
 
-import type { TestResults } from '../../types.js'
+import type { TestResults } from '../../types.ts'
 
 /**
  * Record a test result in the store, updating statistics for the test,

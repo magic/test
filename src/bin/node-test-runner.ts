@@ -11,7 +11,7 @@ import(path.join(__dirname, 'lib/registerLoader.js'))
 import { describe, before, after, it } from 'node:test'
 import fs from '@magic/fs'
 import is from '@magic/types'
-import { maybeInjectMagic } from './lib/index.js'
+import { maybeInjectMagic } from './lib/index.ts'
 
 import type {
   WrappedTest,
@@ -21,7 +21,7 @@ import type {
   SuiteHookWithArg,
   ComponentProps,
   TestContext,
-} from '../types.js'
+} from '../types.ts'
 
 /**
  * Internal suite type for node-test-runner

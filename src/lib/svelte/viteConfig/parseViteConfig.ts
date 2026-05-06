@@ -2,8 +2,8 @@ import fs from '@magic/fs'
 import is from '@magic/types'
 import path from 'node:path'
 
-import { configCache } from './cache.js'
-import type { AliasEntry, ViteConfig } from '../../../types.js'
+import { configCache } from './cache.ts'
+import type { AliasEntry, ViteConfig } from '../../../types.ts'
 
 export const parseViteConfig = async (configPath: string): Promise<ViteConfig> => {
   const cached = configCache.get(configPath)

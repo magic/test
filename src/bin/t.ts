@@ -7,7 +7,7 @@ import fs from '@magic/fs'
 import is from '@magic/types'
 import log from '@magic/log'
 
-import { abort } from '../run.js'
+import { abort } from '../run.ts'
 
 const cwd = process.cwd()
 const res = cli({

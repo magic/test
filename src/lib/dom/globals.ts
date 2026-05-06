@@ -1,8 +1,8 @@
 import is from '@magic/types'
 import { Document as HappyDocument, Window as HappyWindow } from 'happy-dom'
 
-import { createImagePolyfill } from './image.js'
-import { createCanvasPolyfill } from './canvas.js'
+import { createImagePolyfill } from './image.ts'
+import { createCanvasPolyfill } from './canvas.ts'
 
 let window: HappyWindow | null = null
 let document: HappyDocument | null = null

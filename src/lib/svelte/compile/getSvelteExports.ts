@@ -1,7 +1,7 @@
 import path from 'node:path'
 import fs from '@magic/fs'
 
-import { barrelCache } from './cache.js'
+import { barrelCache } from './cache.ts'
 
 export const getSvelteExports = async (
   filePath: string,

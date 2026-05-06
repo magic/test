@@ -6,9 +6,9 @@ import './lib/registerLoader.js'
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { run, abort } from '../run.js'
+import { run, abort } from '../run.ts'
 
-import { maybeInjectMagic, readRecursive } from './lib/index.js'
+import { maybeInjectMagic, readRecursive } from './lib/index.ts'
 
 import type { CustomError } from '@magic/error'
 

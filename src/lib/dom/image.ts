@@ -2,7 +2,7 @@ import type { Window } from 'happy-dom'
 
 import { loadImage } from 'canvas'
 
-import type { ImageInstance, ImageConstructor } from './types.js'
+import type { ImageInstance, ImageConstructor } from './types.ts'
 
 export const imageCache = new Map<string, unknown>()
 

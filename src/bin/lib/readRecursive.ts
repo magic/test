@@ -3,13 +3,13 @@ import { pathToFileURL } from 'node:url'
 
 import fs from '@magic/fs'
 import is from '@magic/types'
-import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js'
-import { getViteDefine } from '../../lib/svelte/viteConfig/index.js'
+import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.ts'
+import { getViteDefine } from '../../lib/svelte/viteConfig/index.ts'
 import {
   resolveSvelteOnlyExports,
   writeTempFile,
-} from '../../lib/svelte/compile/resolveSvelteOnlyExports.js'
-import type { TestSuites, TestCollection } from '../../types.js'
+} from '../../lib/svelte/compile/resolveSvelteOnlyExports.ts'
+import type { TestSuites, TestCollection } from '../../types.ts'
 
 interface ImportResult {
   type: 'file' | 'directory' | 'error' | 'skip'

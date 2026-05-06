@@ -1,1 +1,1 @@
-export { Button } from './fixtures.js'
+export { Button } from './fixtures.ts'

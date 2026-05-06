@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { expectedArguments } from './expectedArguments.js'
+import { expectedArguments } from './expectedArguments.ts'
 
 const invalidArgsMsg = 'curry expects a function as first or last argument'
 const tooManyArgsMsg = 'too many arguments passed to curried function'

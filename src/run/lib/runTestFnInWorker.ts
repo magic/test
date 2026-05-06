@@ -1,8 +1,8 @@
 import is from '@magic/types'
 
-import { cleanError } from '../../lib/index.js'
-import { isolation } from '../isolation.js'
-import type { WrappedTest, CleanupFunction, TestContext } from '../../types.js'
+import { cleanError } from '../../lib/index.ts'
+import { isolation } from '../isolation.ts'
+import type { WrappedTest, CleanupFunction, TestContext } from '../../types.ts'
 
 import { evaluateWorkerResult } from './evaluateWorkerResult.ts'
 

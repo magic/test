@@ -1,5 +1,5 @@
 import log from '@magic/log'
-import { toMinimalFixed } from './toMinimalFixed.js'
+import { toMinimalFixed } from './toMinimalFixed.ts'
 
 /**
  * Returns a colored percentage string.
