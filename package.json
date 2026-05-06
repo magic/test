@@ -35,7 +35,8 @@
     "tsc": "tsc --noEmit",
     "tsc:test": "tsc -p tsconfig.test.json --noEmit",
     "check": "tsc --noEmit",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check": "npm run tsc && npm run tsc:test && npm run lint"
   },
   "engines": {
     "node": ">=22.18.0"
