@@ -1,7 +1,14 @@
-export declare const testModifiesGlobals: (test: {
-  before?: (...args: unknown[]) => unknown
-  after?: (...args: unknown[]) => unknown
-}) => boolean
-export declare const suiteModifiesGlobals: (tests: unknown) => boolean
-export declare const suiteBeforeAllModifiesGlobals: (tests: unknown) => boolean
-export declare const suiteAfterAllModifiesGlobals: (tests: unknown) => boolean
+import type { TestCollection, TestObject } from '../types.js'
+interface HasTestHooks {
+  before?: {
+    toString(): string
+  }
+  after?: {
+    toString(): string
+  }
+}
+export declare const testModifiesGlobals: (test: HasTestHooks) => boolean
+export declare const suiteModifiesGlobals: (tests: TestCollection | TestObject) => boolean
+export declare const suiteBeforeAllModifiesGlobals: (tests: TestCollection | TestObject) => boolean
+export declare const suiteAfterAllModifiesGlobals: (tests: TestCollection | TestObject) => boolean
+export {}

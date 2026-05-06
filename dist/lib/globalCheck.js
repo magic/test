@@ -16,48 +16,44 @@ export const testModifiesGlobals = test => {
   return false
 }
 export const suiteModifiesGlobals = tests => {
-  const t = tests
-  if (t.beforeAll) {
-    const beforeAllStr = t.beforeAll.toString()
-    if (GLOBAL_MODIFICATION_RE.test(beforeAllStr)) {
-      return true
-    }
-  }
-  if (t.afterAll) {
-    const afterAllStr = t.afterAll.toString()
-    if (GLOBAL_MODIFICATION_RE.test(afterAllStr)) {
-      return true
-    }
-  }
   if (is.array(tests)) {
     return tests.some(test => testModifiesGlobals(test))
-  }
-  if (is.objectNative(tests)) {
-    return Object.values(tests).some(test => {
-      if (is.objectNative(test) && testModifiesGlobals(test)) {
+  } else {
+    if (tests.beforeAll) {
+      const beforeAllStr = tests.beforeAll.toString()
+      if (GLOBAL_MODIFICATION_RE.test(beforeAllStr)) {
         return true
       }
-      if (is.objectNative(test) && test.tests) {
-        return suiteModifiesGlobals(test.tests)
+    }
+    if (tests.afterAll) {
+      const afterAllStr = tests.afterAll.toString()
+      if (GLOBAL_MODIFICATION_RE.test(afterAllStr)) {
+        return true
       }
-      return false
-    })
+    }
+    if (tests.tests) {
+      return suiteModifiesGlobals(tests.tests)
+    }
   }
   return false
 }
 export const suiteBeforeAllModifiesGlobals = tests => {
-  const t = tests
-  if (is.objectNative(t) && is.function(t.beforeAll)) {
-    const beforeAllStr = t.beforeAll.toString()
-    return GLOBAL_MODIFICATION_RE.test(beforeAllStr)
+  if (is.objectNative(tests)) {
+    const t = tests
+    if (is.function(t.beforeAll)) {
+      const beforeAllStr = t.beforeAll.toString()
+      return GLOBAL_MODIFICATION_RE.test(beforeAllStr)
+    }
   }
   return false
 }
 export const suiteAfterAllModifiesGlobals = tests => {
-  const t = tests
-  if (is.objectNative(t) && is.function(t.afterAll)) {
-    const afterAllStr = t.afterAll.toString()
-    return GLOBAL_MODIFICATION_RE.test(afterAllStr)
+  if (is.objectNative(tests)) {
+    const t = tests
+    if (is.function(t.afterAll)) {
+      const afterAllStr = t.afterAll.toString()
+      return GLOBAL_MODIFICATION_RE.test(afterAllStr)
+    }
   }
   return false
 }

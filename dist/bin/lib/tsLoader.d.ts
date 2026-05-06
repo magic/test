@@ -1,4 +1,4 @@
-export declare function resolve(
+export declare const resolve: (
   specifier: string,
   context: {
     parentURL?: string
@@ -9,11 +9,11 @@ export declare function resolve(
   ) => Promise<{
     url: string
   }>,
-): Promise<{
+) => Promise<{
   url: string
   shortCircuit?: boolean
 }>
-export declare function load(
+export declare const load: (
   url: string,
   context: {
     format?: string
@@ -25,7 +25,7 @@ export declare function load(
     format?: string
     source?: string
   }>,
-): Promise<{
+) => Promise<{
   format?: string
   source?: string
   shortCircuit?: boolean

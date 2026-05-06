@@ -22,7 +22,9 @@ try {
       const kitMatch = content.match(/defineConfig\s*\(\s*\{[\s\S]*?kit\s*:\s*\{([\s\S]*?)\}/)
       if (kitMatch) {
         const kitBlock = kitMatch[1]
-        if (!kitBlock) continue
+        if (!kitBlock) {
+          continue
+        }
         const parseBase = () => {
           const m = kitBlock?.match(/base\s*:\s*['"]([^'"]+)['"]/)
           return m ? m[1] : ''
@@ -33,8 +35,12 @@ try {
         }
         const parsedBase = parseBase()
         const parsedAssets = parseAssets()
-        if (parsedBase) base = parsedBase
-        if (parsedAssets) assets = parsedAssets
+        if (parsedBase) {
+          base = parsedBase
+        }
+        if (parsedAssets) {
+          assets = parsedAssets
+        }
         break
       }
     }
@@ -58,7 +64,9 @@ export function resolve(...args) {
   }
   // Route ID + params
   const [routeId, params] = args
-  if (!params || !is.object(params)) return base + routeId
+  if (!params || !is.object(params)) {
+    return base + routeId
+  }
   // Support both :param and [param] syntax
   const resolved = routeId
     .replace(/:([^/]+)/g, (_, key) => {
@@ -93,7 +101,9 @@ export function match(url) {
         const paramNames = colonNames.concat(bracketNames)
         paramNames.forEach((name, idx) => {
           const val = m[idx + 1]
-          if (val) params[name] = decodeURIComponent(val)
+          if (val) {
+            params[name] = decodeURIComponent(val)
+          }
         })
         return Promise.resolve({ id, params })
       }

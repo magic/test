@@ -203,7 +203,9 @@ export class Isolation {
     const allKeys = [...Object.getOwnPropertyNames(value), ...Object.getOwnPropertySymbols(value)]
     for (const key of allKeys) {
       const desc = Object.getOwnPropertyDescriptor(value, key)
-      if (!desc) continue
+      if (!desc) {
+        continue
+      }
       if (desc.get || desc.set) {
         Object.defineProperty(copy, key, {
           configurable: !!desc.configurable,
@@ -213,7 +215,9 @@ export class Isolation {
         })
       } else {
         // Skip function-valued data properties; they cannot be transferred to workers
-        if (is.function(desc.value)) continue
+        if (is.function(desc.value)) {
+          continue
+        }
         Object.defineProperty(copy, key, {
           configurable: !!desc.configurable,
           enumerable: !!desc.enumerable,
@@ -234,14 +238,24 @@ export class Isolation {
       ...Object.getOwnPropertySymbols(globalThis),
     ]
     for (const key of allKeys) {
-      if (!this.shouldCaptureProperty(key)) continue
+      if (!this.shouldCaptureProperty(key)) {
+        continue
+      }
       const desc = Object.getOwnPropertyDescriptor(globalThis, key)
-      if (!desc) continue
-      if (desc.configurable === false) continue
+      if (!desc) {
+        continue
+      }
+      if (desc.configurable === false) {
+        continue
+      }
       // Skip function-valued data properties (cannot be cloned)
-      if ('value' in desc && is.function(desc.value)) continue
+      if ('value' in desc && is.function(desc.value)) {
+        continue
+      }
       // Skip accessor properties (get/set are functions and cannot be cloned)
-      if (desc.get || desc.set) continue
+      if (desc.get || desc.set) {
+        continue
+      }
       const stored = {
         configurable: !!desc.configurable,
         enumerable: !!desc.enumerable,
@@ -276,14 +290,18 @@ export class Isolation {
   }
   restoreSnapshotFromMap(snapshotMap, key) {
     const snapshot = snapshotMap.get(key)
-    if (!snapshot) return
+    if (!snapshot) {
+      return
+    }
     const currentNames = [
       ...Object.getOwnPropertyNames(globalThis),
       ...Object.getOwnPropertySymbols(globalThis),
     ]
     const snapshotNames = new Set(Object.keys(snapshot.props))
     for (const prop of currentNames) {
-      if (!this.shouldCaptureProperty(prop)) continue
+      if (!this.shouldCaptureProperty(prop)) {
+        continue
+      }
       if (!snapshotNames.has(String(prop))) {
         try {
           const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
@@ -313,8 +331,12 @@ export class Isolation {
           desc.writable = !!stored.writable
           desc.value = stored.value
         } else {
-          if (stored.get) desc.get = stored.get
-          if (stored.set) desc.set = stored.set
+          if (stored.get) {
+            desc.get = stored.get
+          }
+          if (stored.set) {
+            desc.set = stored.set
+          }
         }
         Object.defineProperty(globalThis, prop, desc)
       } catch {
@@ -347,7 +369,9 @@ export class Isolation {
     if (keyStr.startsWith('Symbol(')) {
       const syms = Object.getOwnPropertySymbols(globalThis)
       for (const s of syms) {
-        if (String(s) === keyStr) return s
+        if (String(s) === keyStr) {
+          return s
+        }
       }
       return keyStr
     }
@@ -358,12 +382,22 @@ export class Isolation {
    */
   shouldCaptureProperty(prop) {
     const name = is.symbol(prop) ? String(prop) : prop
-    if (skipProps.includes(name)) return false
+    if (skipProps.includes(name)) {
+      return false
+    }
     const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
-    if (!desc) return false
-    if (desc.configurable === false) return false
-    if ('value' in desc && is.function(desc.value)) return false
-    if (desc.get || desc.set) return false
+    if (!desc) {
+      return false
+    }
+    if (desc.configurable === false) {
+      return false
+    }
+    if ('value' in desc && is.function(desc.value)) {
+      return false
+    }
+    if (desc.get || desc.set) {
+      return false
+    }
     return true
   }
   async executeSuiteIsolated(suiteKey, fn) {
@@ -402,19 +436,25 @@ export class Isolation {
         worker.terminate()
       }
       worker.on('message', result => {
-        if (settled) return
+        if (settled) {
+          return
+        }
         settled = true
         cleanup()
         resolve(result)
       })
       worker.on('error', err => {
-        if (settled) return
+        if (settled) {
+          return
+        }
         settled = true
         cleanup()
         reject(err)
       })
       worker.on('exit', code => {
-        if (settled) return
+        if (settled) {
+          return
+        }
         if (code !== 0) {
           settled = true
           cleanup()
@@ -444,19 +484,25 @@ export class Isolation {
         worker.terminate()
       }
       worker.on('message', result => {
-        if (settled) return
+        if (settled) {
+          return
+        }
         settled = true
         cleanup()
         resolve(result)
       })
       worker.on('error', err => {
-        if (settled) return
+        if (settled) {
+          return
+        }
         settled = true
         cleanup()
         reject(err)
       })
       worker.on('exit', code => {
-        if (settled) return
+        if (settled) {
+          return
+        }
         if (code !== 0) {
           settled = true
           cleanup()
@@ -472,14 +518,18 @@ export class Isolation {
  * Standalone version for use in worker threads.
  */
 export const restoreFromSnapshot = snapshot => {
-  if (!snapshot) return
+  if (!snapshot) {
+    return
+  }
   const currentNames = [
     ...Object.getOwnPropertyNames(globalThis),
     ...Object.getOwnPropertySymbols(globalThis),
   ]
   const snapshotNames = new Set(Object.keys(snapshot.props))
   for (const prop of currentNames) {
-    if (!isolation.shouldCaptureProperty(prop)) continue
+    if (!isolation.shouldCaptureProperty(prop)) {
+      continue
+    }
     if (!snapshotNames.has(String(prop))) {
       try {
         const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
@@ -492,9 +542,13 @@ export const restoreFromSnapshot = snapshot => {
     }
   }
   for (const keyStr in snapshot.props) {
-    if (!Object.prototype.hasOwnProperty.call(snapshot.props, keyStr)) continue
+    if (!Object.prototype.hasOwnProperty.call(snapshot.props, keyStr)) {
+      continue
+    }
     const stored = snapshot.props[keyStr]
-    if (!stored) continue
+    if (!stored) {
+      continue
+    }
     const prop = isolation._reviveKeyFromString(keyStr)
     try {
       const desc = {
@@ -505,8 +559,12 @@ export const restoreFromSnapshot = snapshot => {
         desc.writable = !!stored.writable
         desc.value = stored.value
       } else {
-        if (stored.get) desc.get = stored.get
-        if (stored.set) desc.set = stored.set
+        if (stored.get) {
+          desc.get = stored.get
+        }
+        if (stored.set) {
+          desc.set = stored.set
+        }
       }
       Object.defineProperty(globalThis, prop, desc)
     } catch {

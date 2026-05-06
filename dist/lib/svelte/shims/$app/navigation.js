@@ -110,7 +110,9 @@ export function beforeNavigate(cb) {
   ctx.callbacks.before.push(cb)
   return () => {
     const idx = ctx.callbacks.before.indexOf(cb)
-    if (idx !== -1) ctx.callbacks.before.splice(idx, 1)
+    if (idx !== -1) {
+      ctx.callbacks.before.splice(idx, 1)
+    }
   }
 }
 export function afterNavigate(cb) {
@@ -118,7 +120,9 @@ export function afterNavigate(cb) {
   ctx.callbacks.after.push(cb)
   return () => {
     const idx = ctx.callbacks.after.indexOf(cb)
-    if (idx !== -1) ctx.callbacks.after.splice(idx, 1)
+    if (idx !== -1) {
+      ctx.callbacks.after.splice(idx, 1)
+    }
   }
 }
 export function onNavigate(cb) {

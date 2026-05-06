@@ -3,7 +3,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.js'
 import is from '@magic/types'
-export async function resolve(specifier, context, nextResolve) {
+export const resolve = async (specifier, context, nextResolve) => {
   // console.error('[resolve] called:', specifier.slice(0, 40))
   try {
     // Handle .js -> .ts conversion for imports without compiled JS
@@ -90,7 +90,7 @@ export async function resolve(specifier, context, nextResolve) {
   // Always pass through to nextResolve to avoid shortCircuit error
   return nextResolve(specifier, context)
 }
-export async function load(url, context, nextLoad) {
+export const load = async (url, context, nextLoad) => {
   // Handle .js -> .ts conversion for magic/test source files
   if (url.includes('/magic/util/test/src/') && url.endsWith('.js')) {
     const tsUrl = url.replace(/\.js$/, '.ts')

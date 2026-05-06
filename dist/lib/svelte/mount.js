@@ -32,7 +32,9 @@ let svelteCreateRawSnippet = null
 let svelteTick
 let svelteInitialized = false
 const initSvelte = async () => {
-  if (svelteInitialized) return
+  if (svelteInitialized) {
+    return
+  }
   initDOM()
   let svelte
   // Use require to load svelte/src/index-client.js directly
@@ -70,7 +72,9 @@ export const createSnippet = renderFn => {
  */
 export const tick = async () => {
   await initSvelte()
-  if (!svelteTick) throw new Error('Svelte not initialized')
+  if (!svelteTick) {
+    throw new Error('Svelte not initialized')
+  }
   await svelteTick()
 }
 export const mount = async (filePath, options = {}) => {
@@ -200,7 +204,9 @@ export const mount = async (filePath, options = {}) => {
       component = component.__inner
     }
     const unmount = async () => {
-      if (!svelteUnmount) throw new Error('Svelte not initialized')
+      if (!svelteUnmount) {
+        throw new Error('Svelte not initialized')
+      }
       await runWithContext(ctx, async () => {
         await svelteUnmount(component, { outro: true })
       })

@@ -14,22 +14,30 @@ const aggregateResults = (rawResults, store) => {
     __PACKAGE_ROOT__: { all: 0, pass: 0 },
   }
   for (const r of rawResults) {
-    if (!r) continue
+    if (!r) {
+      continue
+    }
     const testKey = r.key || ''
-    if (!testKey) continue
+    if (!testKey) {
+      continue
+    }
     // Test-level entry
     if (!results[testKey]) {
       results[testKey] = { all: 0, pass: 0 }
     }
     results[testKey].all++
-    if (r.pass) results[testKey].pass++
+    if (r.pass) {
+      results[testKey].pass++
+    }
     // Parent-level (suite)
     if (r.parent && r.parent !== testKey) {
       if (!results[r.parent]) {
         results[r.parent] = { all: 0, pass: 0 }
       }
       results[r.parent].all++
-      if (r.pass) results[r.parent].pass++
+      if (r.pass) {
+        results[r.parent].pass++
+      }
     }
     // Package-level
     if (r.pkg && r.pkg !== r.parent && r.pkg !== testKey) {
@@ -37,11 +45,15 @@ const aggregateResults = (rawResults, store) => {
         results[r.pkg] = { all: 0, pass: 0 }
       }
       results[r.pkg].all++
-      if (r.pass) results[r.pkg].pass++
+      if (r.pass) {
+        results[r.pkg].pass++
+      }
     }
     // Package root
     results.__PACKAGE_ROOT__.all++
-    if (r.pass) results.__PACKAGE_ROOT__.pass++
+    if (r.pass) {
+      results.__PACKAGE_ROOT__.pass++
+    }
   }
   store.set({ results })
 }

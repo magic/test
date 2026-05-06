@@ -47,7 +47,9 @@ export const parseTsConfig = async rootDir => {
     const resolvedBaseUrl = path.isAbsolute(baseUrl) ? baseUrl : path.resolve(rootDir, baseUrl)
     const aliases = Object.entries(paths).map(([pattern, targets]) => {
       const target = targets[0]
-      if (!target) return null
+      if (!target) {
+        return null
+      }
       const hasWildcard = pattern.endsWith('*') && !pattern.startsWith('^')
       const hasTargetWildcard = target.endsWith('*')
       let find

@@ -3,7 +3,9 @@ import is from '@magic/types'
 import { getViteDefine } from './viteConfig/index.js'
 const walk = (node, handlers) => {
   const visit = n => {
-    if (!n || !is.object(n)) return
+    if (!n || !is.object(n)) {
+      return
+    }
     const astNode = n
     if (astNode.type) {
       handlers.enter(astNode)
@@ -32,10 +34,14 @@ const extractRuneVariables = source => {
           for (const decl of decls) {
             const d = decl
             const id = d.id
-            if (id.type !== 'Identifier') continue
+            if (id.type !== 'Identifier') {
+              continue
+            }
             const name = id.name
             const init = d.init
-            if (!init) continue
+            if (!init) {
+              continue
+            }
             const initType = init.type
             if (initType === 'CallExpression') {
               const callee = init.callee

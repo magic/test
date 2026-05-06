@@ -3,9 +3,13 @@ export const imageCache = new Map()
 export const parsePngDimensions = dataUrl => {
   try {
     const base64 = dataUrl.split(',')[1]
-    if (!base64) return { width: 1, height: 1 }
+    if (!base64) {
+      return { width: 1, height: 1 }
+    }
     const binary = atob(base64.slice(0, 100))
-    if (binary.length < 24) return { width: 1, height: 1 }
+    if (binary.length < 24) {
+      return { width: 1, height: 1 }
+    }
     const width =
       (binary.charCodeAt(16) << 24) |
       (binary.charCodeAt(17) << 16) |
@@ -50,13 +54,17 @@ export const createImagePolyfill = win => {
   }
   Object.defineProperty(PolyfilledImage.prototype, 'src', {
     get() {
-      if (srcDesc?.get) return srcDesc.get.call(this)
+      if (srcDesc?.get) {
+        return srcDesc.get.call(this)
+      }
       return ''
     },
     set(value) {
       if (value && value.startsWith('data:image')) {
         const { width, height } = parsePngDimensions(value)
-        if (srcDesc?.set) srcDesc.set.call(this, value)
+        if (srcDesc?.set) {
+          srcDesc.set.call(this, value)
+        }
         Object.defineProperty(this, 'width', {
           value: width,
           writable: true,
@@ -97,7 +105,9 @@ export const createImagePolyfill = win => {
             }
           })
       } else {
-        if (srcDesc?.set) srcDesc.set.call(this, value)
+        if (srcDesc?.set) {
+          srcDesc.set.call(this, value)
+        }
       }
     },
     configurable: true,

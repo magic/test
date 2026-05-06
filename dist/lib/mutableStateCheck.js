@@ -53,14 +53,15 @@ export const testImportsMutableModuleState = async (tests, testFilePath) => {
       return false
     }
   }
-  if (!content) return false
-  const importNames = getImportNames(content)
-  if (!importNames.length) return false
-  const checkHook = hook => {
-    if (is.function(hook)) {
-      return mutatesImportedState(hook.toString(), importNames)
-    }
+  if (!content) {
     return false
+  }
+  const importNames = getImportNames(content)
+  if (!importNames.length) {
+    return false
+  }
+  const checkHook = hook => {
+    return mutatesImportedState(hook.toString(), importNames)
   }
   const checkTestsInObject = testObj => {
     if (is.array(testObj)) {
@@ -68,34 +69,35 @@ export const testImportsMutableModuleState = async (tests, testFilePath) => {
     }
     if (is.objectNative(testObj)) {
       return Object.values(testObj).some(t => {
-        if (is.objectNative(t) && t.tests) {
+        if (t.tests) {
           return checkTestsInObject(t.tests)
         }
-        if (is.objectNative(t)) return checkTest(t)
-        return false
+        return checkTest(t)
       })
     }
     return false
   }
   const checkTest = test => {
-    if (checkHook(test?.before)) {
+    if (test.before && is.function(test.before)) {
       return true
     }
-    if (checkHook(test?.after)) {
+    if (test.after && is.function(test.after)) {
       return true
     }
-    if (test?.tests) return checkTestsInObject(test.tests)
+    if (test.tests) {
+      return checkTestsInObject(test.tests)
+    }
     return false
   }
   const testsObj = tests
-  if (checkHook(testsObj.beforeAll)) {
+  if (testsObj.beforeAll && checkHook(testsObj.beforeAll)) {
     return true
   }
-  if (checkHook(testsObj.afterAll)) {
+  if (testsObj.afterAll && checkHook(testsObj.afterAll)) {
     return true
   }
   if (is.array(tests)) {
-    return tests.some(t => checkTest(t))
+    return tests.some(t => is.function(t.before) || is.function(t.after))
   }
   if (is.objectNative(tests) && testsObj.tests) {
     return checkTestsInObject(testsObj.tests)
@@ -142,35 +144,51 @@ const getFilePaths = code => {
 export const testUsesFixedPorts = tests => {
   const testsObj = tests
   const checkHook = hook => {
-    if (is.function(hook)) {
-      const ports = getPortPatterns(hook.toString())
-      return ports.some(p => p !== '.listen(0')
-    }
-    return false
+    const ports = getPortPatterns(hook.toString())
+    return ports.some(p => p !== '.listen(0')
   }
-  const checkTest = test => {
-    if (checkHook(test?.before)) {
-      return true
-    }
-    if (checkHook(test?.after)) {
-      return true
-    }
-    return false
-  }
-  if (checkHook(testsObj.beforeAll)) {
+  if (testsObj.beforeAll && checkHook(testsObj.beforeAll)) {
     return true
   }
-  if (checkHook(testsObj.afterAll)) {
+  if (testsObj.afterAll && checkHook(testsObj.afterAll)) {
     return true
   }
   if (is.array(tests)) {
-    return tests.some(t => checkTest(t))
+    return tests.some(t => is.function(t.before) || is.function(t.after))
   }
   if (is.objectNative(tests)) {
     if (testsObj.tests) {
-      return Object.values(testsObj.tests).some(t => checkTest(t))
+      return checkTestsInObject(testsObj.tests)
     }
-    return checkTest(tests)
+    return is.function(tests.before) || is.function(tests.after)
+  }
+  return false
+}
+const checkTestsInObject = testObj => {
+  if (is.array(testObj)) {
+    return testObj.some(t => {
+      if (t.before && is.function(t.before)) {
+        return true
+      }
+      if (t.after && is.function(t.after)) {
+        return true
+      }
+      return false
+    })
+  }
+  if (is.objectNative(testObj)) {
+    return Object.values(testObj).some(t => {
+      if (t.tests) {
+        return checkTestsInObject(t.tests)
+      }
+      if (t.before && is.function(t.before)) {
+        return true
+      }
+      if (t.after && is.function(t.after)) {
+        return true
+      }
+      return false
+    })
   }
   return false
 }
@@ -178,43 +196,63 @@ export const testUsesSharedFiles = tests => {
   const allFiles = new Set()
   const testsObj = tests
   const checkHook = hook => {
-    if (is.function(hook)) {
-      const files = getFilePaths(hook.toString())
-      for (const file of files) {
-        if (allFiles.has(file)) {
-          return true
-        }
-        allFiles.add(file)
+    const files = getFilePaths(hook.toString())
+    for (const file of files) {
+      if (allFiles.has(file)) {
+        return true
       }
+      allFiles.add(file)
     }
     return false
   }
-  const checkTest = test => {
-    if (checkHook(test?.before)) {
-      return true
-    }
-    if (checkHook(test?.fn)) {
-      return true
-    }
-    if (checkHook(test?.after)) {
-      return true
-    }
-    return false
-  }
-  if (checkHook(testsObj.beforeAll)) {
+  if (testsObj.beforeAll && checkHook(testsObj.beforeAll)) {
     return true
   }
-  if (checkHook(testsObj.afterAll)) {
+  if (testsObj.afterAll && checkHook(testsObj.afterAll)) {
     return true
   }
   if (is.array(tests)) {
-    return tests.some(t => checkTest(t))
+    return tests.some(t => is.function(t.before) || is.function(t.fn) || is.function(t.after))
   }
   if (is.objectNative(tests)) {
     if (testsObj.tests) {
-      return Object.values(testsObj.tests).some(t => checkTest(t))
+      return checkTestsInObjectShared(testsObj.tests)
     }
-    return checkTest(tests)
+    return is.function(tests.before) || is.function(tests.fn) || is.function(tests.after)
+  }
+  return false
+}
+const checkTestsInObjectShared = testObj => {
+  if (is.array(testObj)) {
+    return testObj.some(t => {
+      if (t.before && is.function(t.before)) {
+        return true
+      }
+      if (t.fn && is.function(t.fn)) {
+        return true
+      }
+      if (t.after && is.function(t.after)) {
+        return true
+      }
+      return false
+    })
+  }
+  if (is.objectNative(testObj)) {
+    return Object.values(testObj).some(t => {
+      if (t.tests) {
+        return checkTestsInObjectShared(t.tests)
+      }
+      if (t.before && is.function(t.before)) {
+        return true
+      }
+      if (t.fn && is.function(t.fn)) {
+        return true
+      }
+      if (t.after && is.function(t.after)) {
+        return true
+      }
+      return false
+    })
   }
   return false
 }

@@ -19,12 +19,16 @@ function getViteConfig() {
         const kitMatch = content.match(/defineConfig\s*\(\s*\{[\s\S]*?kit\s*:\s*\{([\s\S]*?)\}/)
         if (kitMatch) {
           const kitBlock = kitMatch[1]
-          if (!kitBlock) continue
+          if (!kitBlock) {
+            continue
+          }
           const parseValStr = key => {
             const m = kitBlock?.match(new RegExp(`${key}\\s*:\\s*([^,\\}\\n]+)`))
             if (m && m[1]) {
               const val = m[1].trim()
-              if (val.startsWith("'") || val.startsWith('"')) return val.slice(1, -1)
+              if (val.startsWith("'") || val.startsWith('"')) {
+                return val.slice(1, -1)
+              }
               return val
             }
             return undefined
@@ -33,8 +37,12 @@ function getViteConfig() {
             const m = kitBlock?.match(new RegExp(`${key}\\s*:\\s*([^,\\}\\n]+)`))
             if (m && m[1]) {
               const val = m[1].trim()
-              if (val === 'true') return true
-              if (val === 'false') return false
+              if (val === 'true') {
+                return true
+              }
+              if (val === 'false') {
+                return false
+              }
             }
             return undefined
           }

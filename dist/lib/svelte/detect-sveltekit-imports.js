@@ -1,7 +1,7 @@
 /**
  * Detect if a compiled Svelte component uses $app/* imports.
  */
-export async function detectSvelteKitImports(compiledCode) {
+export const detectSvelteKitImports = async compiledCode => {
   // Simple regex search for import from "$app/"
   const appImportRegex = /import\s+[^;]*\s+from\s+['"]\$app\/([^'"]+)['"]/g
   const result = {
@@ -33,6 +33,6 @@ export async function detectSvelteKitImports(compiledCode) {
 /**
  * Determine if a component needs SvelteKit test context.
  */
-export function needsSvelteKitContext(detected) {
+export const needsSvelteKitContext = detected => {
   return detected.appState || detected.appNavigation || detected.appPaths || detected.appEnvironment
 }

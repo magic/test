@@ -4,7 +4,9 @@ import is from '@magic/types'
 let origGetContext = null
 export const createCanvasPolyfill = () => {
   const HTMLCanvasElement = globalThis.HTMLCanvasElement
-  if (origGetContext) return
+  if (origGetContext) {
+    return
+  }
   origGetContext = HTMLCanvasElement.prototype.getContext
   HTMLCanvasElement.prototype.getContext = function (type, ...args) {
     if (type !== '2d') {

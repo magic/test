@@ -20,11 +20,17 @@ import { isolation } from './isolation.js'
 import { getWorkerPool } from '../lib/workerPool.js'
 const GLOBAL_MODIFICATION_RE = /(?:globalThis|window|global|self|process\.env)/
 const testNeedsIsolation = test => {
-  if (test.component) return true
-  if (test.before || test.after) return true
+  if (test.component) {
+    return true
+  }
+  if (test.before || test.after) {
+    return true
+  }
   if (test.fn) {
     const fnStr = test.fn.toString()
-    if (GLOBAL_MODIFICATION_RE.test(fnStr)) return true
+    if (GLOBAL_MODIFICATION_RE.test(fnStr)) {
+      return true
+    }
   }
   return false
 }
@@ -197,7 +203,9 @@ const runTestArray = async (
       const resultsMap = new Map(individualResults.map(r => [r.index, r.result]))
       for (let i = 0; i < tests.length; i++) {
         const r = resultsMap.get(i)
-        if (r) allResults.push(r)
+        if (r) {
+          allResults.push(r)
+        }
       }
     }
     return allResults
@@ -221,7 +229,9 @@ const runTestArray = async (
 const runTestObject = async (testsObj, name, parent, pkg, store, rawResults = []) => {
   if (is.function(testsObj.fn)) {
     const fns = getFNS()
-    if (!fns.includes(name)) return []
+    if (!fns.includes(name)) {
+      return []
+    }
     const test = { ...testsObj, name, parent, pkg }
     const result = await runTest(test, store, rawResults)
     return result ? [result] : []

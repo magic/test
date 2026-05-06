@@ -23,23 +23,23 @@ export const fn = implementation => {
   mockFn.callCount = 0
   mockFn._returnValue = undefined
   mockFn._throwError = null
-  mockFn.mockReturnValue = function (value) {
+  mockFn.mockReturnValue = value => {
     mockFn._returnValue = value
     mockFn._throwError = null
     return mockFn
   }
-  mockFn.mockThrow = function (error) {
+  mockFn.mockThrow = error => {
     mockFn._throwError = error
     mockFn._returnValue = undefined
     return mockFn
   }
-  mockFn.getCalls = function () {
+  mockFn.getCalls = () => {
     return mockFn.calls
   }
-  mockFn.getReturns = function () {
+  mockFn.getReturns = () => {
     return mockFn.returns
   }
-  mockFn.getErrors = function () {
+  mockFn.getErrors = () => {
     return mockFn.errors
   }
   return mockFn

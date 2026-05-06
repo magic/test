@@ -51,7 +51,9 @@ const AFTER_ALL_FILES = [
 ]
 const scanDir = async dir => {
   const exists = await fs.exists(dir)
-  if (!exists) return
+  if (!exists) {
+    return
+  }
   const entries = await fs.readdir(dir, { withFileTypes: true })
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name)
@@ -126,9 +128,15 @@ const processHookFiles = async () => {
 }
 await processHookFiles()
 const getTestName = (testObj, filePath, index) => {
-  if (testObj.info) return String(testObj.info)
-  if (testObj.name) return String(testObj.name)
-  if (testObj.fn && is.function(testObj.fn) && testObj.fn.name) return String(testObj.fn.name)
+  if (testObj.info) {
+    return String(testObj.info)
+  }
+  if (testObj.name) {
+    return String(testObj.name)
+  }
+  if (testObj.fn && is.function(testObj.fn) && testObj.fn.name) {
+    return String(testObj.fn.name)
+  }
   const baseName = path.basename(filePath, path.extname(filePath))
   return `${baseName} ${index + 1}`
 }
@@ -223,7 +231,9 @@ const convertTest = async (testObj, filePath, index) => {
   }
 }
 const convertSuite = async (tests, filePath) => {
-  if (!tests) return []
+  if (!tests) {
+    return []
+  }
   if (is.function(tests)) {
     const result = await tests({})
     if (result) {
@@ -276,9 +286,13 @@ const convertSuite = async (tests, filePath) => {
 }
 const processFile = async filePath => {
   const mod = await extractExport(filePath)
-  if (!mod) return []
+  if (!mod) {
+    return []
+  }
   const fileName = path.basename(filePath)
-  if (mod === undefined || mod === null) return []
+  if (mod === undefined || mod === null) {
+    return []
+  }
   const suites = []
   if (mod.default) {
     const suiteName = fileName.replace(/\.(js|ts|mjs)$/, '')
