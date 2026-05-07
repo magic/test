@@ -1,6 +1,6 @@
 {
   "name": "@magic/test",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "author": "Wizards & Witches",
   "description": "simple yet powerful unit testing library",
   "license": "AGPL-3.0",
@@ -34,9 +34,8 @@
     "format:check": "f --exclude ./docs/",
     "tsc": "tsc --noEmit",
     "tsc:test": "tsc -p tsconfig.test.json --noEmit",
-    "check": "tsc --noEmit",
-    "lint": "eslint",
-    "check": "npm run tsc && npm run tsc:test && npm run lint"
+    "check": "npm run tsc && npm run tsc:test && npm run lint",
+    "lint": "eslint"
   },
   "engines": {
     "node": ">=22.18.0"
