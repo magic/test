@@ -2283,6 +2283,10 @@ update dependencies
 - worker isolation: beforeAll and afterAll run in workers directly
 - before fields in tests get awaited if they return a raw promise
 
-##### 0.3.9 - unreleased
+##### 0.3.9
+
+- fix imports of test/index.(mjs|ts|js) files
+
+##### 0.3.10  - unreleased
 
 ...
