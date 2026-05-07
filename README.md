@@ -2287,6 +2287,6 @@ update dependencies
 
 - fix imports of test/index.(mjs|ts|js) files
 
-##### 0.3.10  - unreleased
+##### 0.3.10 - unreleased
 
 ...
