@@ -285,7 +285,7 @@ export const resolvePackageExport = async (
       ].filter(Boolean) as string[]
 
       const fallbackResolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
-      return { resolvedPath: fallbackResolved, isSvelteOnly: false }
+      return { resolvedPath: fallbackResolved ?? null, isSvelteOnly: false }
     }
   }
 
