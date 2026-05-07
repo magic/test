@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { pathToFileURL, fileURLToPath } from 'node:url'
 
 import fs from '@magic/fs'
 import is from '@magic/types'
@@ -41,15 +41,17 @@ const CONCURRENCY_LIMIT = 50
 
 const importFile = async (filePath: string): Promise<unknown> => {
   try {
-    const code = await fs.readFile(filePath, 'utf-8')
-    const transformedCode = await resolveSvelteOnlyExports(code, path.dirname(filePath))
+    const isUrl = filePath.startsWith('file://')
+    const fsPath = isUrl ? fileURLToPath(filePath) : filePath
+    const code = await fs.readFile(fsPath, 'utf-8')
+    const transformedCode = await resolveSvelteOnlyExports(code, path.dirname(fsPath))
 
     let importPath: string
     if (transformedCode !== code) {
-      const tempFile = await writeTempFile(filePath, transformedCode)
+      const tempFile = await writeTempFile(fsPath, transformedCode)
       importPath = pathToFileURL(tempFile).href
     } else {
-      importPath = pathToFileURL(filePath).href
+      importPath = isUrl ? filePath : pathToFileURL(fsPath).href
     }
 
     const mod = await import(importPath)
