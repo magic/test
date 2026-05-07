@@ -2281,6 +2281,7 @@ update dependencies
 - svelte: fix import chain handling for components
 - version: check if Lib is missing exports
 - worker isolation: beforeAll and afterAll run in workers directly
+- before fields in tests get awaited if they return a raw promise
 
 ##### 0.3.9 - unreleased
 
