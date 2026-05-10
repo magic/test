@@ -24,5 +24,11 @@ export interface BarrelCacheEntry {
 }
 
 export type ResolveAndCompileResult =
-  | { filePath: string; js: string; url: string | null; skipProcessing: true }
-  | { filePath: string; js: string; url: string }
+  | {
+      filePath: string
+      js: string
+      url: string | null
+      skipProcessing: true
+      isSvelteOnlyPackage?: boolean
+    }
+  | { filePath: string; js: string; url: string; isSvelteOnlyPackage?: boolean }

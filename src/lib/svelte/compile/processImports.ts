@@ -11,6 +11,7 @@ export const processImports = async (
   sourceFilePath: string,
   importChain: string[] = [],
 ): Promise<string> => {
+  console.log('[processImports] START, sourceFile:', sourceFilePath.split('/').pop())
   let processedCode = code
   const sourceDir = path.dirname(sourceFilePath)
   const imports: { imported: string; path: string; full: string }[] = []
@@ -22,8 +23,10 @@ export const processImports = async (
       imports.push({ imported: match[1], path: match[2], full: match[0] })
     }
   }
+  console.log('[processImports] Found', imports.length, 'imports')
 
   for (const { imported, path: importPath } of imports) {
+    console.log('[processImports] Processing import:', imported, 'from', importPath)
     try {
       const result = await resolveAndCompileImport(
         importPath,
@@ -31,13 +34,34 @@ export const processImports = async (
         sourceFilePath,
         importChain,
       )
+      console.log(
+        '[processImports] resolveAndCompileImport done for',
+        importPath,
+        'url:',
+        result.url,
+        'skipProcessing:',
+        'skipProcessing' in result ? result.skipProcessing : undefined,
+      )
 
       if ('skipProcessing' in result && result.skipProcessing) {
+        // Check if this is a svelte-only package that would fail Node resolution
+        // In that case, replace the import with a stub since the compiled code
+        // that includes this import will be run by Node.js
+        const isSvelteOnlyPackage = 'isSvelteOnlyPackage' in result && result.isSvelteOnlyPackage
+        if (isSvelteOnlyPackage) {
+          console.log('[processImports] Replacing svelte-only package import:', importPath)
+          const importRegex = new RegExp(
+            `import\\s+${imported.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+from\\s+['"]${importPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`,
+            'g',
+          )
+          processedCode = processedCode.replace(importRegex, `const ${imported} = {}`)
+        }
         continue
       }
 
       const url = 'url' in result && result.url
       if (!url) {
+        console.log('[processImports] No url resolved for', importPath, '- skipping import')
         continue
       }
       const importRegex = new RegExp(

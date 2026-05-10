@@ -3,13 +3,14 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.ts'
 import is from '@magic/types'
+import ts from 'typescript'
+import { compileModule } from 'svelte/compiler'
 
 export const resolve = async (
   specifier: string,
   context: { parentURL?: string },
   nextResolve: (specifier: string, context?: object) => Promise<{ url: string }>,
 ): Promise<{ url: string; shortCircuit?: boolean }> => {
-  // console.error('[resolve] called:', specifier.slice(0, 40))
   try {
     // Handle .js -> .ts conversion for imports without compiled JS
     if (specifier.endsWith('.js') && context.parentURL) {
@@ -67,11 +68,21 @@ export const resolve = async (
         }
 
         if (pkg.exports) {
+          const parts = specifier.split('/')
+          const subpath = parts.slice(2).join('/')
           for (const [key, val] of Object.entries(pkg.exports)) {
-            if (key !== '.' && is.str(val) && val.endsWith('.js')) {
-              const jsPath = path.join(nodeModulesPath, val)
-              if (await fs.exists(jsPath)) {
-                return { url: pathToFileURL(jsPath).href, shortCircuit: true }
+            if (key !== '.' && is.str(val)) {
+              const keyWithoutExt = key.replace(/\.js$/, '').replace(/\.mjs$/, '')
+              const subpathWithoutExt = subpath.replace(/\.js$/, '').replace(/\.mjs$/, '')
+              if (
+                key === `./${subpath}` ||
+                key === `./${subpath}.js` ||
+                keyWithoutExt === `./${subpathWithoutExt}`
+              ) {
+                const jsPath = path.join(nodeModulesPath, val)
+                if (await fs.exists(jsPath)) {
+                  return { url: pathToFileURL(jsPath).href, shortCircuit: true }
+                }
               }
             }
           }
@@ -100,8 +111,18 @@ export const resolve = async (
     // fall through
   }
 
-  // Always pass through to nextResolve to avoid shortCircuit error
   return nextResolve(specifier, context)
+}
+
+const transpileWithTypeScript = (code: string, filename: string): string => {
+  const result = ts.transpileModule(code, {
+    compilerOptions: {
+      target: ts.ScriptTarget.ESNext,
+      module: ts.ModuleKind.ESNext,
+    },
+    reportDiagnostics: false,
+  })
+  return result.outputText
 }
 
 export const load = async (
@@ -109,13 +130,47 @@ export const load = async (
   context: { format?: string },
   nextLoad: (url: string, context?: object) => Promise<{ format?: string; source?: string }>,
 ): Promise<{ format?: string; source?: string; shortCircuit?: boolean }> => {
-  // Handle .js -> .ts conversion for magic/test source files
   if (url.includes('/magic/util/test/src/') && url.endsWith('.js')) {
     const tsUrl = url.replace(/\.js$/, '.ts')
     const filePath = tsUrl.replace('file://', '')
     if (await fs.exists(filePath)) {
       const source = await fs.readFile(filePath, 'utf-8')
       return { format: 'module', source, shortCircuit: true }
+    }
+  }
+
+  if (url.endsWith('.svelte.ts')) {
+    const filePath = url.replace('file://', '')
+    if (await fs.exists(filePath)) {
+      const source = await fs.readFile(filePath, 'utf-8')
+      const transpiled = transpileWithTypeScript(source, filePath)
+
+      try {
+        const result = compileModule(transpiled, { filename: filePath })
+        return { format: 'module', source: result.js.code, shortCircuit: true }
+      } catch (e) {
+        const error = e as Error
+        throw new Error(`Failed to compile ${url}: ${error.message}`)
+      }
+    }
+  }
+
+  if (url.endsWith('.mjs')) {
+    const filePath = url.replace('file://', '')
+    if (await fs.exists(filePath)) {
+      let source = await fs.readFile(filePath, 'utf-8')
+
+      const hasTypeScript =
+        source.includes('import type') ||
+        source.includes(' as const') ||
+        source.includes(' as ') ||
+        source.includes('satisfies') ||
+        source.includes('declare ')
+
+      if (hasTypeScript) {
+        const transpiled = transpileWithTypeScript(source, filePath)
+        return { format: 'module', source: transpiled, shortCircuit: true }
+      }
     }
   }
 
