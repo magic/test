@@ -129,10 +129,8 @@ const handleJsWithSvelteReexports = async (
   visited?: Set<string>,
   exportNames?: string[],
 ): Promise<string> => {
-  console.log('[handleJs] START', jsFilePath.split('/').pop())
   visited ??= new Set()
   if (visited.has(jsFilePath)) {
-    console.log('[handleJs] SKIP (visited)', jsFilePath.split('/').pop())
     return code
   }
   visited.add(jsFilePath)
@@ -141,7 +139,6 @@ const handleJsWithSvelteReexports = async (
   const replacements: Array<{ original: string | RegExp; replacement: string }> = []
 
   const matches = [...code.matchAll(JS_SVELTE_REEXPORT_RE)]
-  console.log('[handleJs] Svelte re-exports found:', matches.length)
 
   const svelteCompilePromises: Array<{
     match: RegExpMatchArray
@@ -158,10 +155,8 @@ const handleJsWithSvelteReexports = async (
     svelteCompilePromises.push({ match, absoluteSveltePath })
   }
 
-  console.log('[handleJs] Compiling', svelteCompilePromises.length, 'Svelte files...')
   const svelteResults: Array<{ original: string | RegExp; replacement: string }> = []
   for (const { match, absoluteSveltePath } of svelteCompilePromises) {
-    console.log('[handleJs] Starting compile for', absoluteSveltePath.split('/').pop())
     try {
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(
@@ -173,27 +168,26 @@ const handleJsWithSvelteReexports = async (
         compileSvelteOnlyExport(absoluteSveltePath, jsDir, exportNames),
         timeoutPromise,
       ])) as string
-      console.log('[handleJs] Completed compile for', absoluteSveltePath.split('/').pop())
       const compiledUrl = pathToFileURL(result).href
       svelteResults.push({
         original: match[0],
         replacement: `${match[1]}${compiledUrl}${match[3]}`,
       })
-    } catch (e: unknown) {
+    } catch (e) {
+      const err = e as Error
       console.error(
         '[handleJs] COMPILE ERROR for',
         absoluteSveltePath.split('/').pop(),
         ':',
-        (e as Error).message,
+        err.message,
       )
       throw e
     }
   }
-  console.log('[handleJs] Svelte compilations done, count:', svelteResults.length)
+
   replacements.push(...svelteResults)
 
   const jsReexports = [...code.matchAll(JS_REEXPORT_RE_OR_ALL)]
-  console.log('[handleJs] JS_REEXPORT_RE_OR_ALL found:', jsReexports.length)
   const jsReexportResults = await Promise.all(
     jsReexports.map(async match => {
       const prefix = match[1]
@@ -299,7 +293,6 @@ const handleJsWithSvelteReexports = async (
     result = result.replace(original, replacement)
   }
 
-  console.log('[handleJs] DONE, result length:', result.length)
   return result
 }
 
