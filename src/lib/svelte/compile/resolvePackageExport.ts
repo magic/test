@@ -1,6 +1,5 @@
 import is from '@magic/types'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import fs from '@magic/fs'
 import { createRequire } from 'node:module'
 import { packageExportCache } from './packageExportCache.ts'
@@ -135,7 +134,6 @@ export const resolvePackageExport = async (
   }
 
   let nodeModulesPath: string
-  let resolvedFilePath: string
 
   // Use require.resolve with paths from sourceDir to properly resolve packages
   // from the project that contains the source file, not from process.cwd()

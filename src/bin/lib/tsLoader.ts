@@ -114,7 +114,7 @@ export const resolve = async (
   return nextResolve(specifier, context)
 }
 
-const transpileWithTypeScript = (code: string, filename: string): string => {
+const transpileWithTypeScript = (code: string): string => {
   const result = ts.transpileModule(code, {
     compilerOptions: {
       target: ts.ScriptTarget.ESNext,
@@ -143,22 +143,17 @@ export const load = async (
     const filePath = url.replace('file://', '')
     if (await fs.exists(filePath)) {
       const source = await fs.readFile(filePath, 'utf-8')
-      const transpiled = transpileWithTypeScript(source, filePath)
+      const transpiled = transpileWithTypeScript(source)
 
-      try {
-        const result = compileModule(transpiled, { filename: filePath })
-        return { format: 'module', source: result.js.code, shortCircuit: true }
-      } catch (e) {
-        const error = e as Error
-        throw new Error(`Failed to compile ${url}: ${error.message}`)
-      }
+      const result = compileModule(transpiled, { filename: filePath })
+      return { format: 'module', source: result.js.code, shortCircuit: true }
     }
   }
 
   if (url.endsWith('.mjs')) {
     const filePath = url.replace('file://', '')
     if (await fs.exists(filePath)) {
-      let source = await fs.readFile(filePath, 'utf-8')
+      const source = await fs.readFile(filePath, 'utf-8')
 
       const hasTypeScript =
         source.includes('import type') ||
@@ -168,7 +163,7 @@ export const load = async (
         source.includes('declare ')
 
       if (hasTypeScript) {
-        const transpiled = transpileWithTypeScript(source, filePath)
+        const transpiled = transpileWithTypeScript(source)
         return { format: 'module', source: transpiled, shortCircuit: true }
       }
     }

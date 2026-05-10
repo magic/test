@@ -1,7 +1,6 @@
 import type { ResolveAndCompileResult } from './types.ts'
 
 import path from 'node:path'
-import nodeFs from 'node:fs'
 import fs from '@magic/fs'
 
 import { resolveAlias, resolveViteAlias } from '../viteConfig/index.ts'
@@ -13,7 +12,6 @@ import { isSvelteFile } from './isSvelteFile.ts'
 import { getSvelteExports } from './getSvelteExports.ts'
 
 import { pathToFileURL } from 'node:url'
-import { createRequire } from 'node:module'
 
 import { compileSvelte } from './compileSvelte.ts'
 import { processImports } from './processImports.ts'
@@ -23,16 +21,6 @@ import { getTempFilePath } from './getTempFilePath.ts'
 import { compileBarrel } from './compileBarrel.ts'
 import { resolvePackageExport } from './resolvePackageExport.ts'
 import { compileSvelteOnlyExport } from './resolveSvelteOnlyExports.ts'
-
-const nodeModulesPath = (pkgName: string, sourceDir: string): string => {
-  const require_ = createRequire(pathToFileURL(sourceDir + '/'))
-  const resolved = require_.resolve(pkgName)
-  let nodeModulesPath = path.dirname(resolved)
-  while (nodeModulesPath && !nodeFs.existsSync(path.join(nodeModulesPath, 'package.json'))) {
-    nodeModulesPath = path.dirname(nodeModulesPath)
-  }
-  return nodeModulesPath || path.dirname(resolved)
-}
 
 const extractNamedImportsFromCode = (code: string, spec: string): string[] => {
   const namedImports: string[] = []

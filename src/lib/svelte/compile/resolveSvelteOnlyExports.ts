@@ -51,16 +51,12 @@ const writeTempFile = async (filePath: string, code: string): Promise<string> =>
 const JS_SVELTE_REEXPORT_RE =
   /(export\s+(?:\{[^}]*\}|\*\s+as\s+\w+|default(?:\s+as\s+\w+)?)\s+from\s+['"])([^'"]*\.svelte)(['"])/g
 
-const JS_REEXPORT_RE = /(export\s+\*\s+from\s+['"])([^'"]+\.js)(['"])/g
-
 const JS_REEXPORT_RE_OR_ALL = /(export\s+\*\s+from\s+['"])([^'"]+\.js)(['"])/g
 
 const ensureDirExists = async (filePath: string): Promise<void> => {
   const dir = path.dirname(filePath)
   await fs.mkdirp(dir)
 }
-
-const JS_REEXPORT_NAMED_RE = /(export\s+\{[^}]+\}\s+from\s+['"])([^'"]+\.js)(['"])/g
 
 const tmpFileCache = new Map<string, string>()
 
