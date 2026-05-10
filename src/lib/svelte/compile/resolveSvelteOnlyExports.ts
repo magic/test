@@ -268,7 +268,9 @@ const handleJsWithSvelteReexports = async (
   for (const match of relativeImports) {
     const fullMatch = match[0]
     const importPath = match[2]
-    if (!importPath) continue
+    if (!importPath) {
+      continue
+    }
 
     const absolutePath = path.resolve(jsDir, importPath)
     if (

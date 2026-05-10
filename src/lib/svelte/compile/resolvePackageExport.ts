@@ -85,7 +85,9 @@ const hasExportStarToSvelte = async (filePath: string, visited?: Set<string>): P
 
     for (const match of content.matchAll(EXPORT_STAR_RE)) {
       const reexportPath = match[1]
-      if (!reexportPath) continue
+      if (!reexportPath) {
+        continue
+      }
 
       const resolved = path.resolve(dir, reexportPath)
 
