@@ -2287,6 +2287,12 @@ update dependencies
 
 - fix imports of test/index.(mjs|ts|js) files
 
-##### 0.3.10 - unreleased
+##### 0.3.10
+
+- fix more edge cases in svelte compilation steps
+- add .css import support
+- update dependencies
+
+##### 0.3.11 - unreleased
 
 ...
