@@ -169,5 +169,9 @@ export const load = async (
     }
   }
 
+  if (url.endsWith('.css')) {
+    return { format: 'module', source: 'export default ""', shortCircuit: true }
+  }
+
   return nextLoad(url, context)
 }
