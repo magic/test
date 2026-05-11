@@ -73,15 +73,15 @@
     "@magic-themes/docs": "0.0.15",
     "@magic/core": "0.0.158",
     "@magic/format": "0.0.73",
-    "@systemkollektiv/components": "0.0.228",
-    "@systemkollektiv/audio-player": "0.0.115",
-    "@types/node": "25.6.0",
+    "@systemkollektiv/components": "0.0.231",
+    "@systemkollektiv/audio-player": "0.0.119",
+    "@types/node": "25.6.2",
     "eslint": "10.3.0",
     "prettier-plugin-svelte": "3.5.1",
     "svelte": "5.55.5",
     "typescript": "6.0.3",
     "typescript-eslint": "8.59.2",
-    "vite": "8.0.11"
+    "vite": "8.0.12"
   },
   "peerDependencies": {
     "svelte": "^5.0.0"
