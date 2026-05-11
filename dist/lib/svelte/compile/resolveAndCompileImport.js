@@ -6,6 +6,7 @@ import { TMP_DIR } from '../../../constants.js'
 import { acquireLock } from './acquireLock.js'
 import { isSvelteFile } from './isSvelteFile.js'
 import { getSvelteExports } from './getSvelteExports.js'
+import { pathToFileURL } from 'node:url'
 import { compileSvelte } from './compileSvelte.js'
 import { processImports } from './processImports.js'
 import { computeRelativePath } from './computeRelativePath.js'
@@ -52,6 +53,15 @@ export const resolveAndCompileImport = async (
     }
     const resolved = await resolvePackageExport(importPath, sourceDir)
     if (resolved.isSvelteOnly && resolved.resolvedPath) {
+      if (resolved.isSvelteOnlyPackage) {
+        return {
+          filePath: importPath,
+          js: '',
+          url: null,
+          skipProcessing: true,
+          isSvelteOnlyPackage: true,
+        }
+      }
       const sourceCode = await fs.readFile(sourceFilePath, 'utf-8')
       const namedImports = extractNamedImportsFromCode(sourceCode, importPath)
       const compiledPath = await compileSvelteOnlyExport(
@@ -59,16 +69,25 @@ export const resolveAndCompileImport = async (
         sourceDir,
         namedImports.length > 0 ? namedImports : undefined,
       )
-      const sourceTmpFile = getTempFilePath(sourceFilePath)
-      const fromDir = path.dirname(sourceTmpFile)
-      const relativePath = computeRelativePath(fromDir, compiledPath)
-      return { filePath: importPath, js: '', url: relativePath }
+      const compiledUrl = pathToFileURL(compiledPath).href
+      return { filePath: importPath, js: '', url: compiledUrl }
     }
     return { filePath: importPath, js: '', url: null, skipProcessing: true }
   }
   if (importType === 'bare') {
     const resolved = await resolvePackageExport(importPath, sourceDir)
     if (resolved.isSvelteOnly && resolved.resolvedPath) {
+      // If this is a svelte-only package (only has svelte export, no import/node condition),
+      // skip processing because the compiled output would contain imports Node.js can't resolve
+      if (resolved.isSvelteOnlyPackage) {
+        return {
+          filePath: importPath,
+          js: '',
+          url: null,
+          skipProcessing: true,
+          isSvelteOnlyPackage: true,
+        }
+      }
       const sourceCode = await fs.readFile(sourceFilePath, 'utf-8')
       const namedImports = extractNamedImportsFromCode(sourceCode, importPath)
       const compiledPath = await compileSvelteOnlyExport(
@@ -76,9 +95,13 @@ export const resolveAndCompileImport = async (
         sourceDir,
         namedImports.length > 0 ? namedImports : undefined,
       )
+      const compiledUrl = pathToFileURL(compiledPath).href
+      return { filePath: importPath, js: '', url: compiledUrl }
+    }
+    if (resolved.resolvedPath && !resolved.isSvelteOnly) {
       const sourceTmpFile = getTempFilePath(sourceFilePath)
       const fromDir = path.dirname(sourceTmpFile)
-      const relativePath = computeRelativePath(fromDir, compiledPath)
+      const relativePath = computeRelativePath(fromDir, resolved.resolvedPath)
       return { filePath: importPath, js: '', url: relativePath }
     }
     return { filePath: importPath, js: '', url: null, skipProcessing: true }
@@ -187,6 +210,12 @@ export const resolveAndCompileImport = async (
     const relativePath = computeRelativePath(fromDir, resolvedPath)
     return { filePath: resolvedPath, js: '', url: relativePath }
   }
+  if (importChain.includes(resolvedPath)) {
+    const sourceTmpFile = getTempFilePath(sourceFilePath)
+    const fromDir = path.dirname(sourceTmpFile)
+    const relativePath = computeRelativePath(fromDir, resolvedPath)
+    return { filePath: resolvedPath, js: '', url: relativePath }
+  }
   const relPath = path.relative(process.cwd(), resolvedPath)
   const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
   const tmpFileAbs = path.join(process.cwd(), tmpFile)
@@ -203,7 +232,8 @@ export const resolveAndCompileImport = async (
       }
     }
     const { js } = await compileSvelte(resolvedPath)
-    const processed = await processImports(js, resolvedPath, importChain)
+    const newChain = [...importChain, resolvedPath]
+    const processed = await processImports(js, resolvedPath, newChain)
     await fs.mkdirp(path.dirname(tmpFile))
     await fs.writeFile(tmpFile, processed)
     const stats = await fs.stat(resolvedPath)

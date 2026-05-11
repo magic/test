@@ -1,7 +1,7 @@
 import is from '@magic/types'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import fs from '@magic/fs'
+import { createRequire } from 'node:module'
 import { packageExportCache } from './packageExportCache.js'
 const SKIP_PATTERNS = ['./', '../', '$app/', '$lib/', '$', '/']
 const isSkipPattern = spec => {
@@ -27,11 +27,20 @@ const tryResolvePath = async (basePath, ...candidates) => {
     if (await fs.exists(fullPath)) {
       return fullPath
     }
+    // Try with .mjs if .js doesn't exist
+    if (candidate.endsWith('.js')) {
+      const mjsPath = candidate + '.mjs'
+      const mjsFullPath = path.join(basePath, mjsPath)
+      if (await fs.exists(mjsFullPath)) {
+        return mjsFullPath
+      }
+    }
   }
   return null
 }
 const SVELTE_REEXPORT_RE = /export\s+\{[^}]*\}\s+from\s+['"][^'"]*\.svelte['"]/g
 const SVELTE_DEFAULT_REEXPORT_RE = /export\s+.*\s+from\s+['"][^'"]*\.svelte['"]/g
+const EXPORT_STAR_RE = /export\s+\*\s+from\s+['"]([^'"]+)['"]/g
 const hasSvelteReExports = async filePath => {
   if (!filePath.endsWith('.js') && !filePath.endsWith('.mjs')) {
     return false
@@ -42,6 +51,46 @@ const hasSvelteReExports = async filePath => {
   } catch {
     return false
   }
+}
+const hasExportStarToSvelte = async (filePath, visited) => {
+  if (!filePath.endsWith('.js') && !filePath.endsWith('.mjs')) {
+    return false
+  }
+  visited ??= new Set()
+  if (visited.has(filePath)) {
+    return false
+  }
+  visited.add(filePath)
+  try {
+    const content = await fs.readFile(filePath, 'utf-8')
+    const dir = path.dirname(filePath)
+    for (const match of content.matchAll(EXPORT_STAR_RE)) {
+      const reexportPath = match[1]
+      if (!reexportPath) {
+        continue
+      }
+      const resolved = path.resolve(dir, reexportPath)
+      if (resolved.endsWith('.svelte')) {
+        return true
+      }
+      if (resolved.endsWith('.js') || resolved.endsWith('.mjs')) {
+        if (await hasExportStarToSvelte(resolved, visited)) {
+          return true
+        }
+        if (await hasSvelteReExports(resolved)) {
+          return true
+        }
+      }
+    }
+  } catch {
+    return false
+  }
+  return false
+}
+const hasOnlySvelteCondition = conditions => {
+  const allKeys = Object.keys(conditions)
+  const nonSvelteKeys = allKeys.filter(k => k !== 'svelte' && k !== 'types' && k !== 'default')
+  return nonSvelteKeys.length === 0 && 'svelte' in conditions
 }
 export const resolvePackageExport = async (pkgSpec, sourceDir) => {
   if (isSkipPattern(pkgSpec)) {
@@ -57,13 +106,12 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
     return cached
   }
   let nodeModulesPath
-  let resolvedFilePath
-  // let importMetaResolved = false
+  // Use require.resolve with paths from sourceDir to properly resolve packages
+  // from the project that contains the source file, not from process.cwd()
   try {
-    const resolved = import.meta.resolve(pkgName.name, pathToFileURL(sourceDir + '/'))
-    resolvedFilePath = fileURLToPath(resolved)
-    nodeModulesPath = path.dirname(resolvedFilePath)
-    // importMetaResolved = true
+    const require_ = createRequire(pathToFileURL(sourceDir + '/'))
+    const resolved = require_.resolve(pkgName.name)
+    nodeModulesPath = path.dirname(resolved)
   } catch {
     nodeModulesPath = path.join(process.cwd(), 'node_modules', pkgName.name)
   }
@@ -110,7 +158,7 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
     return { resolvedPath: resolved, isSvelteOnly: false }
   }
   if (subpath && is.object(exports) && !Array.isArray(exports)) {
-    const subExport = exports[`./${subpath}`]
+    const subExport = exports[`./${subpath}`] ?? exports[`./${subpath}.js`]
     if (subExport) {
       if (is.string(subExport)) {
         const resolved = await tryResolvePath(nodeModulesPath, subExport)
@@ -147,13 +195,14 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
       const hasNonSvelteCondition = ['import', 'node', 'module', 'require', 'default'].some(
         c => c in conditions && c !== 'svelte' && c !== 'types',
       )
+      const packageHasOnlySvelteCondition = hasOnlySvelteCondition(conditions)
       if (hasNonSvelteCondition) {
         const importPath = conditions.import || conditions.module || conditions.default
         if (importPath) {
           const resolved = await tryResolvePath(nodeModulesPath, importPath)
           if (resolved) {
             const svelteReExports = await hasSvelteReExports(resolved)
-            if (svelteReExports) {
+            if (svelteReExports || (await hasExportStarToSvelte(resolved))) {
               return { resolvedPath: resolved, isSvelteOnly: true, hasSvelteReExports: true }
             }
           }
@@ -168,7 +217,7 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
             // This prevents false positives for packages like @systemkollektiv/i18n that have
             // a svelte condition but don't actually re-export any Svelte components
             const svelteReExports = await hasSvelteReExports(resolved)
-            if (svelteReExports) {
+            if (svelteReExports || (await hasExportStarToSvelte(resolved))) {
               return { resolvedPath: resolved, isSvelteOnly: true, hasSvelteReExports: true }
             }
             // svelte condition exists but no Svelte re-exports found
@@ -182,7 +231,22 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
         if (resolved) {
           const svelteReExports = await hasSvelteReExports(resolved)
           if (svelteReExports) {
-            return { resolvedPath: resolved, isSvelteOnly: true, hasSvelteReExports: true }
+            return {
+              resolvedPath: resolved,
+              isSvelteOnly: true,
+              hasSvelteReExports: true,
+              isSvelteOnlyPackage: packageHasOnlySvelteCondition,
+            }
+          }
+          // svelte condition exists but no Svelte re-exports found
+          // If package only has svelte condition (no import/node), still mark it
+          if (packageHasOnlySvelteCondition) {
+            return {
+              resolvedPath: resolved,
+              isSvelteOnly: true,
+              hasSvelteReExports: false,
+              isSvelteOnlyPackage: true,
+            }
           }
         }
         const fallbackCandidates = [
@@ -196,7 +260,12 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
         if (fallbackResolved) {
           const svelteReExports = await hasSvelteReExports(fallbackResolved)
           if (svelteReExports) {
-            return { resolvedPath: fallbackResolved, isSvelteOnly: true, hasSvelteReExports: true }
+            return {
+              resolvedPath: fallbackResolved,
+              isSvelteOnly: true,
+              hasSvelteReExports: true,
+              isSvelteOnlyPackage: packageHasOnlySvelteCondition,
+            }
           }
         }
         // No Svelte re-exports found in root export conditions
@@ -239,7 +308,7 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
         'src/index.js',
       ].filter(Boolean)
       const fallbackResolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
-      return { resolvedPath: fallbackResolved, isSvelteOnly: false }
+      return { resolvedPath: fallbackResolved ?? null, isSvelteOnly: false }
     }
   }
   return { resolvedPath: null, isSvelteOnly: false }

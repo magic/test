@@ -15,12 +15,20 @@ const SIDE_EFFECT_RE = /(?:^|\n)(import\s+['"`])([^'"`\s]+)(['"])/g
 // const TYPE_IMPORT_RE = /import\s+type\s+.*?from\s+['"`][^'"`\s]+['"`]/g
 const pendingWrites = new Map()
 const writeTempFile = async (filePath, code) => {
-  const relPath = path.relative(process.cwd(), filePath)
-  const tempFile = path.join(process.cwd(), 'test/.tmp', relPath + '.mjs')
+  // For files in node_modules, preserve the relative path structure
+  // to ensure relative imports between them work correctly
+  let tempFile
+  if (filePath.includes('node_modules')) {
+    const relFromNodeModules = filePath.split('node_modules/').pop() || ''
+    tempFile = path.join(process.cwd(), 'test/.tmp', 'node_modules_processed', relFromNodeModules)
+  } else {
+    const relPath = path.relative(process.cwd(), filePath)
+    tempFile = path.join(process.cwd(), 'test/.tmp', relPath + '.mjs')
+  }
+  await ensureDirExists(tempFile)
   let pending = pendingWrites.get(tempFile)
   if (!pending) {
     pending = (async () => {
-      await fs.mkdirp(path.dirname(tempFile))
       await fs.writeFile(tempFile, code)
       pendingWrites.delete(tempFile)
     })()
@@ -31,7 +39,11 @@ const writeTempFile = async (filePath, code) => {
 }
 const JS_SVELTE_REEXPORT_RE =
   /(export\s+(?:\{[^}]*\}|\*\s+as\s+\w+|default(?:\s+as\s+\w+)?)\s+from\s+['"])([^'"]*\.svelte)(['"])/g
-const JS_REEXPORT_RE = /(export\s+\*\s+from\s+['"])([^'"]+\.ts)(['"])/g
+const JS_REEXPORT_RE_OR_ALL = /(export\s+\*\s+from\s+['"])([^'"]+\.js)(['"])/g
+const ensureDirExists = async filePath => {
+  const dir = path.dirname(filePath)
+  await fs.mkdirp(dir)
+}
 const tmpFileCache = new Map()
 const compiling = new Map()
 export const compileSvelteOnlyExport = async (sveltePath, sourceDir, exportNames) => {
@@ -90,60 +102,45 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
   const replacements = []
   const matches = [...code.matchAll(JS_SVELTE_REEXPORT_RE)]
   const svelteCompilePromises = []
-  const skippedSvelteReexports = []
   for (const match of matches) {
     const sveltePath = match[2]
     if (!sveltePath) {
       continue
     }
-    // If we have specific export names, check if this Svelte file provides any of them
-    let shouldCompile = true
-    if (exportNames && exportNames.length > 0) {
-      const destructureMatch = /\{\s*([^}]+)\s*\}/.exec(match[0])
-      if (destructureMatch?.[1]) {
-        const names = destructureMatch[1]
-          .split(',')
-          .map(n => {
-            const trimmed = n.trim()
-            if (!trimmed) {
-              return ''
-            }
-            const asParts = trimmed.split(' as ')
-            return asParts.length > 1 && asParts[1] ? asParts[1] : trimmed
-          })
-          .filter(Boolean)
-        const hasMatch = names.some(n => exportNames.includes(n))
-        if (!hasMatch) {
-          shouldCompile = false
-        }
-      }
-    }
-    if (!shouldCompile) {
-      skippedSvelteReexports.push(match[0])
-      continue
-    }
     const absoluteSveltePath = path.resolve(jsDir, sveltePath)
     svelteCompilePromises.push({ match, absoluteSveltePath })
   }
-  // Remove skipped Svelte re-exports by replacing them with empty strings
-  // Also remove the semicolon and trailing newline that follows the statement
-  for (const skipped of skippedSvelteReexports) {
-    const escaped = skipped.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const removalRe = new RegExp(escaped + ';?\\s*\\n?', 'g')
-    replacements.push({ original: removalRe, replacement: '' })
-  }
-  const svelteResults = await Promise.all(
-    svelteCompilePromises.map(async ({ match, absoluteSveltePath }) => {
-      const compiledPath = await compileSvelteOnlyExport(absoluteSveltePath, jsDir, exportNames)
-      const compiledUrl = pathToFileURL(compiledPath).href
-      return {
+  const svelteResults = []
+  for (const { match, absoluteSveltePath } of svelteCompilePromises) {
+    try {
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error('compile timeout for ' + absoluteSveltePath.split('/').pop())),
+          8000,
+        ),
+      )
+      const result = await Promise.race([
+        compileSvelteOnlyExport(absoluteSveltePath, jsDir, exportNames),
+        timeoutPromise,
+      ])
+      const compiledUrl = pathToFileURL(result).href
+      svelteResults.push({
         original: match[0],
         replacement: `${match[1]}${compiledUrl}${match[3]}`,
-      }
-    }),
-  )
+      })
+    } catch (e) {
+      const err = e
+      console.error(
+        '[handleJs] COMPILE ERROR for',
+        absoluteSveltePath.split('/').pop(),
+        ':',
+        err.message,
+      )
+      throw e
+    }
+  }
   replacements.push(...svelteResults)
-  const jsReexports = [...code.matchAll(JS_REEXPORT_RE)]
+  const jsReexports = [...code.matchAll(JS_REEXPORT_RE_OR_ALL)]
   const jsReexportResults = await Promise.all(
     jsReexports.map(async match => {
       const prefix = match[1]
@@ -211,6 +208,31 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
   )
   const namedJsReexportResultsClean = namedJsReexportResults.filter(r => r !== null)
   replacements.push(...namedJsReexportResultsClean)
+  // Also process and copy any relative JS imports that aren't re-exports
+  const relativeImports = [
+    ...code.matchAll(
+      /(?:^|\n)(import\s+(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)(?:\s*,\s*(?:\{[^}]*\}|\*\s+as\s+\w+|\w+))?\s+from\s+['"])(\.[^'"]+)(['"])/g,
+    ),
+  ]
+  for (const match of relativeImports) {
+    const fullMatch = match[0]
+    const importPath = match[2]
+    if (!importPath) {
+      continue
+    }
+    const absolutePath = path.resolve(jsDir, importPath)
+    if (
+      (await fs.exists(absolutePath)) &&
+      (absolutePath.endsWith('.js') || absolutePath.endsWith('.mjs'))
+    ) {
+      const depContent = await fs.readFile(absolutePath, 'utf-8')
+      await writeTempFile(absolutePath, depContent)
+      replacements.push({
+        original: fullMatch,
+        replacement: fullMatch.replace(importPath, `file://${absolutePath}`),
+      })
+    }
+  }
   let result = code
   for (const { original, replacement } of replacements) {
     result = result.replace(original, replacement)

@@ -23,6 +23,17 @@ export const processImports = async (code, sourceFilePath, importChain = []) => 
         importChain,
       )
       if ('skipProcessing' in result && result.skipProcessing) {
+        // Check if this is a svelte-only package that would fail Node resolution
+        // In that case, replace the import with a stub since the compiled code
+        // that includes this import will be run by Node.js
+        const isSvelteOnlyPackage = 'isSvelteOnlyPackage' in result && result.isSvelteOnlyPackage
+        if (isSvelteOnlyPackage) {
+          const importRegex = new RegExp(
+            `import\\s+${imported.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+from\\s+['"]${importPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`,
+            'g',
+          )
+          processedCode = processedCode.replace(importRegex, `const ${imported} = {}`)
+        }
         continue
       }
       const url = 'url' in result && result.url

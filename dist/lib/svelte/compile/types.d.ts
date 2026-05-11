@@ -27,9 +27,11 @@ export type ResolveAndCompileResult =
       js: string
       url: string | null
       skipProcessing: true
+      isSvelteOnlyPackage?: boolean
     }
   | {
       filePath: string
       js: string
       url: string
+      isSvelteOnlyPackage?: boolean
     }
