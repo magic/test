@@ -8,6 +8,7 @@ import { isTestResult } from './isTestResult.ts'
 import { printPercent } from './printPercent.ts'
 
 import type { InputValue, TestResult, TestResults } from '../../types.ts'
+import path from 'node:path'
 
 /**
  * Prints test results for a package and its suites.
@@ -56,9 +57,14 @@ export const info = (suites: unknown[], store: Store): boolean => {
           log.info(log.color('green', '* pass:'), 'got', result, 'expected', expString)
         }
       } else {
+        const basename = path.basename(key)
+        const dirname = path.dirname(key).replace('.', '/')
+
+        const cleanKey = `${dirname}/${basename}`
+
         log(
           log.color('red', '* fail:'),
-          key.replace(/\./g, '/'),
+          cleanKey,
           `executed: "${msg.toString().slice(0, 40).concat('...')}"\n`,
           `got: "${JSON.stringify(stringify(result as InputValue), null, 2)}"\n`,
           `wanted: "${JSON.stringify(stringify(expString as InputValue), null, 2)}"\n`,
