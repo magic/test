@@ -34,7 +34,7 @@ export default [
       const suite1 = results.suite1!
       return suite1.all === 2 && suite1.pass === 1
     },
-    expect: (r: boolean) => r === true,
+    expect: true,
     info: 'test() records parent suite results',
   },
 ] satisfies TestCase[]

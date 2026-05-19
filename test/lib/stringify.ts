@@ -11,12 +11,12 @@ export default [
   { fn: stringify([]), expect: [], info: 'empty array returns empty array' },
   {
     fn: stringify(['testing', () => {}]),
-    expect: ['testing', '() => {}'],
+    expect: ['testing', '() => { }'],
     info: 'empty array returns empty array',
   },
   {
     fn: stringify({ testing: true, fn: () => {} }),
-    expect: { testing: true, fn: '() => {}' },
+    expect: { testing: true, fn: '() => { }' },
     info: 'functions get stringified',
   },
   {

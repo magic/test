@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import { processWorkerResults } from '../../../src/run/lib/processWorkerResults.js'
 import type { TestResult } from '../../../src/types.js'
 import type { TestCase } from '../../../src/types.js'
@@ -56,7 +57,7 @@ export default [
       const rawResults: TestResult[] = []
       return processWorkerResults(results, rawResults, silentLogger)
     },
-    expect: (results: TestResult[]) => results.length === 2,
+    expect: is.len.eq(2),
     info: 'handles results with afterCleanupError and afterError',
   },
 ] satisfies TestCase[]

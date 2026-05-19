@@ -1,17 +1,10 @@
 import http from 'node:http'
 import { http as httpModule } from '../../src/lib/http.js'
 import type { TestObject } from '../../src/types.js'
+import { has } from '../../src/lib/has.js'
 
 interface TestGlobals {
   httpTestPort?: number
-}
-
-interface HttpResponse {
-  success?: boolean
-  method?: string
-  body?: unknown
-  status?: string
-  error?: string
 }
 
 let server: http.Server
@@ -35,7 +28,7 @@ const beforeAll = async () => {
         }, 5000)
       } else if (req.method === 'POST' && req.url === '/post') {
         let body = ''
-        req.on('data', chunk => (body += chunk))
+        req.on('data', (chunk: string) => (body += chunk))
         req.on('end', () => {
           res.writeHead(200, { 'Content-Type': 'application/json' })
           let parsedBody: unknown
@@ -87,7 +80,7 @@ export default {
         const result = await httpModule.get(`http://localhost:${g.httpTestPort}/get`)
         return result
       },
-      expect: (r: HttpResponse) => r.success === true && r.method === 'GET',
+      expect: has.properties({ success: true, method: 'GET' }),
       info: 'http.get works',
     },
     {
@@ -98,8 +91,7 @@ export default {
         })
         return result
       },
-      expect: (r: HttpResponse) =>
-        r.success === true && r.body && (r.body as Record<string, unknown>).test === 'data',
+      expect: has.property('body', { test: 'data' }),
       info: 'http.post works with JSON body',
     },
     {
@@ -111,7 +103,7 @@ export default {
         )
         return result
       },
-      expect: (r: HttpResponse) => r.success === true && r.body === 'plain string',
+      expect: has.properties({ success: true, body: 'plain string' }),
       info: 'http.post works with string body',
     },
     {
@@ -139,7 +131,7 @@ export default {
         }
         return error ? error.message.includes('500') : false
       },
-      expect: (r: boolean) => r === true,
+      expect: true,
       info: 'http.get rejects on 500',
     },
     {
@@ -155,7 +147,7 @@ export default {
         }
         return error ? error.message.includes('timeout') : false
       },
-      expect: (r: boolean) => r === true,
+      expect: true,
       info: 'http.get times out with custom timeout',
     },
     {
@@ -168,7 +160,7 @@ export default {
         }
         return error ? error.message.includes('Invalid URL') : false
       },
-      expect: (r: boolean) => r === true,
+      expect: true,
       info: 'http.get throws on invalid URL',
     },
     {
@@ -181,7 +173,7 @@ export default {
         }
         return error ? error.message.includes('Unsupported protocol') : false
       },
-      expect: (r: boolean) => r === true,
+      expect: true,
       info: 'http.get throws on unsupported protocol',
     },
     {
@@ -212,7 +204,7 @@ export default {
         )) as { success?: boolean; body?: Record<string, unknown> }
         return result.success === true && result.body?.test === 'https-reject'
       },
-      expect: (r: boolean) => r === true,
+      expect: true,
       info: 'http.post accepts rejectUnauthorized option',
     },
   ],

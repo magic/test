@@ -1,3 +1,4 @@
+import { has } from '../../../src/index.js'
 import { createFailResult } from '../../../src/run/lib/createFailResult.js'
 import type { TestCase } from '../../../src/types.js'
 
@@ -31,7 +32,7 @@ export default [
         parent: '',
         key: 'custom-key',
       }),
-    expect: (r: { key: string }) => r.key === 'custom-key',
+    expect: has.property('key', 'custom-key'),
     info: 'uses provided key over generated',
   },
   {

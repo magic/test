@@ -1,8 +1,6 @@
-import { is } from '../../src/index.js'
 import { cleanError } from '../../src/lib/cleanError.js'
 import type { TestCase } from '../../src/types.js'
-
-type CleanErrorResult = string[]
+import { has } from '../../src/lib/has.js'
 
 export default [
   { fn: cleanError, expect: undefined, info: 'empty argument returns argument' },
@@ -16,12 +14,12 @@ export default [
   },
   {
     fn: cleanError(new Error('testing')),
-    expect: (t: CleanErrorResult) => t[0] === 'Error: testing',
+    expect: has.at(0, 'Error: testing'),
     info: 'cleaned Error first element is Error: message',
   },
   {
     fn: cleanError(new Error('testing')),
-    expect: (t: CleanErrorResult) => t[1]?.includes('cleanError.'),
+    expect: has.at(1, has.string('cleanError.')),
     info: 'cleaned Error second element includes cleanError',
   },
   {
@@ -31,12 +29,12 @@ export default [
   },
   {
     fn: cleanError({ stack: 'testing' }),
-    expect: (t: CleanErrorResult) => is.undefined(t[1]),
+    expect: has.at(1, undefined),
     info: 'cleaned Error without multiline stack has undefined second element',
   },
   {
     fn: cleanError({ stack: 'testing' }),
-    expect: (t: CleanErrorResult) => t[0] === 'testing',
+    expect: has.at(0, 'testing'),
     info: 'cleaned Error without multiline stack first element is testing',
   },
   {
