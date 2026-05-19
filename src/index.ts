@@ -6,6 +6,8 @@ export { default as deep } from '@magic/deep'
 export { default as fs } from '@magic/fs'
 export { default as error } from '@magic/error'
 
+export { has } from './lib/has.js'
+
 export { run } from './run.ts'
 
 import { initDOM } from './lib/dom/index.ts'
