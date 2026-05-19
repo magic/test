@@ -26,7 +26,7 @@
     "clean": "magic clean",
     "serve": "magic serve",
     "dev": "magic dev",
-    "test": "npm run test:prepare && node dist/bin/t.js",
+    "test": "node dist/bin/t.js",
     "test:prepare": "tsc -p tsconfig.test.json",
     "test:native": "node --test dist/bin/node-test-runner.js --coverage && c8 report",
     "test:ci": "node dist/bin/t.js -p",
@@ -74,15 +74,15 @@
     "@magic-themes/docs": "0.0.15",
     "@magic/core": "0.0.158",
     "@magic/format": "0.0.73",
-    "@systemkollektiv/components": "0.0.231",
-    "@systemkollektiv/audio-player": "0.0.119",
-    "@types/node": "25.7.0",
-    "eslint": "10.3.0",
+    "@systemkollektiv/audio-player": "0.0.123",
+    "@systemkollektiv/components": "0.0.235",
+    "@types/node": "25.9.1",
+    "eslint": "10.4.0",
     "prettier-plugin-svelte": "3.5.2",
-    "svelte": "5.55.5",
+    "svelte": "5.55.8",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.59.3",
-    "vite": "8.0.12"
+    "typescript-eslint": "8.59.4",
+    "vite": "8.0.13"
   },
   "peerDependencies": {
     "svelte": "^5.0.0"
