@@ -27,6 +27,13 @@ export const resolve = async (
       try {
         const aliasResolved = await resolveViteAlias(specifier, new URL(context.parentURL).pathname)
         if (aliasResolved) {
+          // Check if resolved path exists, try extensions if not
+          const withExtensions = ['', '.ts', '.svelte.ts', '.js', '/index.ts', '/index.js']
+          for (const ext of withExtensions) {
+            if (await fs.exists(aliasResolved + ext)) {
+              return { url: pathToFileURL(aliasResolved + ext).href, shortCircuit: true }
+            }
+          }
           return { url: pathToFileURL(aliasResolved).href, shortCircuit: true }
         }
       } catch {
@@ -125,6 +132,42 @@ const transpileWithTypeScript = (code: string): string => {
   return result.outputText
 }
 
+const resolveDollarLibImports = async (code: string, filePath: string): Promise<string> => {
+  const dollarImportRe = /from\s+['"]($lib[^'"]*|$app[^'"]*)['"]/g
+  let match
+  const replacements: Array<{ original: string; replacement: string }> = []
+
+  while ((match = dollarImportRe.exec(code)) !== null) {
+    const fullMatch = match[0]
+    const importPath = match[1]
+    if (!importPath) {
+      continue
+    }
+
+    const parentDir = path.dirname(filePath)
+    const resolved = await resolveViteAlias(importPath, parentDir)
+    if (resolved) {
+      const withExtensions = [resolved, resolved + '.ts', resolved + '.svelte.ts', resolved + '.js']
+      let foundPath = resolved
+      for (const p of withExtensions) {
+        if (await fs.exists(p)) {
+          foundPath = p
+          break
+        }
+      }
+      replacements.push({
+        original: fullMatch,
+        replacement: `from '${pathToFileURL(foundPath).href}'`,
+      })
+    }
+  }
+
+  for (const { original, replacement } of replacements) {
+    code = code.replace(original, replacement)
+  }
+  return code
+}
+
 export const load = async (
   url: string,
   context: { format?: string },
@@ -143,10 +186,21 @@ export const load = async (
     const filePath = url.replace('file://', '')
     if (await fs.exists(filePath)) {
       const source = await fs.readFile(filePath, 'utf-8')
-      const transpiled = transpileWithTypeScript(source)
+      const withResolvedImports = await resolveDollarLibImports(source, filePath)
+      const transpiled = transpileWithTypeScript(withResolvedImports)
 
       const result = compileModule(transpiled, { filename: filePath })
       return { format: 'module', source: result.js.code, shortCircuit: true }
+    }
+  }
+
+  if (url.endsWith('.ts') && !url.includes('/magic/util/test/src/')) {
+    const filePath = url.replace('file://', '')
+    if (await fs.exists(filePath)) {
+      const source = await fs.readFile(filePath, 'utf-8')
+      const withResolvedImports = await resolveDollarLibImports(source, filePath)
+      const transpiled = transpileWithTypeScript(withResolvedImports)
+      return { format: 'module', source: transpiled, shortCircuit: true }
     }
   }
 
