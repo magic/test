@@ -58,6 +58,7 @@ incredibly fast.
   - [error](#lib-error)
   - [version](#lib-version)
   - [mock](#lib-mock)
+  - [has](#lib-has)
   - [DOM Environment](#lib-dom)
   - [svelte (experimental!)](#lib-svelte)
 - [svelte kit mocks](#lib-sveltekit-mocks)
@@ -897,6 +898,136 @@ export default [
 - `mock.log.error()` - Always logs
 - `mock.log.time()` - Logs timing if not NODE_ENV=production
 - `mock.log.timeEnd()` - Logs timing end if not NODE_ENV=production
+
+##### <a name="lib-has"></a> has
+
+Functions for asserting object properties without needing explicit type annotations or stringifying functions.
+
+```js
+import { has, is } from '@magic/test'
+```
+
+**has.property(key, check)** - Check a single property. Accepts either a predicate or a literal value
+
+```js
+// With predicate
+{
+  fn: () => handleSuiteHooks({}),
+  expect: has.property('afterAllCleanup', is.fn),
+  info: 'returns cleanup function',
+}
+
+// With literal value (uses is.deep.equal)
+{
+  fn: () => getUser(),
+  expect: has.property('age', 25),
+  info: 'user age is 25',
+}
+```
+
+**has.properties(spec)** - Check multiple properties. Mix predicates and literal values
+
+```js
+{
+  fn: () => getUser(),
+  expect: has.properties({ name: is.string, age: is.num }),
+  info: 'user has required properties',
+}
+
+// All literals
+{
+  fn: () => getUser(),
+  expect: has.properties({ name: 'John', age: 25 }),
+  info: 'exact user match',
+}
+```
+
+**has.any(spec)** - Check at least one property matches. Accepts predicates or literals
+
+```js
+{
+  fn: () => parseResult(),
+  expect: has.any({ error: is.error, data: is.object }),
+  info: 'result has either error or data',
+}
+
+// With literals
+{
+  fn: () => parseResult(),
+  expect: has.any({ error: 'not found', data: null }),
+  info: 'result has specific error or null data',
+}
+```
+
+**has.nested(path, predicate)** - Check a nested property path
+
+```js
+{
+  fn: () => getData(),
+  expect: has.nested('user.profile.name', is.string),
+  info: 'deep nested property exists',
+}
+```
+
+**has.string(substring)** - Check if value is a string containing substring
+
+```js
+{
+  fn: () => error.message,
+  expect: has.string('failed to connect'),
+  info: 'error message contains helpful context',
+}
+```
+
+**has.key(keyName)** - Check if object has a specific key
+
+```js
+{
+  fn: () => result,
+  expect: has.key('data'),
+  info: 'result has data key',
+}
+```
+
+**has.keys(keyNames[])** - Check if object has all specified keys
+
+```js
+{
+  fn: () => user,
+  expect: has.keys(['name', 'email']),
+  info: 'user has required fields',
+}
+```
+
+**has.includes(item)** - Check if array or string contains item (uses deep.equal for arrays)
+
+```js
+{
+  fn: () => roles,
+  expect: has.includes('admin'),
+  info: 'user has admin role',
+}
+```
+
+**has.oneOf(options[])** - Check if value equals one of the options (uses deep.equal)
+
+```js
+{
+  fn: () => status,
+  expect: has.oneOf(['pending', 'done', 'failed']),
+  info: 'status is a valid value',
+}
+```
+
+**has.matches(regex)** - Check if string matches regex pattern
+
+```js
+{
+  fn: () => phoneNumber,
+  expect: has.matches(/^\d{3}-\d{4}$/),
+  info: 'phone number is valid format',
+}
+```
 
 ##### <a name="lib-dom"></a>DOM Environment
 
