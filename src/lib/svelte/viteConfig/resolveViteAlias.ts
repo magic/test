@@ -86,7 +86,19 @@ export const resolveViteAlias = async (
 
     if (resolved) {
       // Check if file exists with various extensions
-      const extensions = ['', '.js', '.svelte', '.ts', '/index.js', '/index.svelte', '/index.ts']
+      const extensions = ['', '.js', '.svelte', '.ts']
+
+      // If resolved path ends with .js and doesn't exist, try .ts instead
+      if (resolved.endsWith('.js')) {
+        const withoutJs = resolved.slice(0, -3)
+        const withTs = withoutJs + '.ts'
+        if (await fs.exists(withTs)) {
+          const stat = await fs.stat(withTs)
+          if (!stat.isDirectory()) {
+            return withTs
+          }
+        }
+      }
 
       for (const ext of extensions) {
         const withExt = resolved + ext
@@ -114,7 +126,7 @@ export const resolveViteAlias = async (
     const aliasPath = importPath.slice(1) // Remove $
     const libPath = path.join(rootDir, 'src', aliasPath)
 
-    const extensions = ['', '.js', '.svelte', '.ts', '/index.js', '/index.svelte', '/index.ts']
+    const extensions = ['', '.js', '.svelte', '.ts']
     for (const ext of extensions) {
       const withExt = libPath + ext
       if (await fs.exists(withExt)) {
