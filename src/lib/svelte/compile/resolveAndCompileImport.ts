@@ -6,7 +6,7 @@ import fs from '@magic/fs'
 import { resolveAlias, resolveViteAlias } from '../viteConfig/index.ts'
 
 import { importCache } from './cache.ts'
-import { TMP_DIR } from '../../../constants.ts'
+import { TMP_DIR, CWD } from '../../../constants.ts'
 import { acquireLock } from './acquireLock.ts'
 import { isSvelteFile } from './isSvelteFile.ts'
 import { getSvelteExports } from './getSvelteExports.ts'
@@ -48,7 +48,7 @@ export const resolveAndCompileImport = async (
   const importType = classifyImport(importPath)
 
   if (importPath === 'svelte') {
-    const svelteClient = path.resolve(process.cwd(), 'node_modules/svelte/src/index-client.js')
+    const svelteClient = path.resolve(CWD, 'node_modules/svelte/src/index-client.js')
     if (await fs.exists(svelteClient)) {
       const sourceTmpFile = getTempFilePath(sourceFilePath)
       const fromDir = path.dirname(sourceTmpFile)
@@ -128,7 +128,7 @@ export const resolveAndCompileImport = async (
       if (importPath.startsWith('$lib')) {
         const rootDir = await (async () => {
           let current = path.dirname(sourceFilePath)
-          const root = process.cwd()
+          const root = CWD
           while (current && current !== path.dirname(current)) {
             const pkgPath = path.join(current, 'package.json')
             if (await fs.exists(pkgPath)) {
@@ -141,7 +141,7 @@ export const resolveAndCompileImport = async (
         const aliasPath = importPath.slice(1)
         resolvedPath = path.resolve(rootDir, 'src', aliasPath)
       } else if (importPath.startsWith('$app')) {
-        const rootDir = process.cwd()
+        const rootDir = CWD
         const shimName = importPath.slice(5)
         resolvedPath = path.join(rootDir, 'src/lib/svelte/shims/$app', shimName)
       } else {
@@ -237,9 +237,9 @@ export const resolveAndCompileImport = async (
     return { filePath: resolvedPath, js: '', url: relativePath }
   }
 
-  const relPath = path.relative(process.cwd(), resolvedPath)
+  const relPath = path.relative(CWD, resolvedPath)
   const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
-  const tmpFileAbs = path.join(process.cwd(), tmpFile)
+  const tmpFileAbs = path.join(CWD, tmpFile)
 
   const release = await acquireLock(tmpFile)
 

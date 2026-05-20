@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import fs from '@magic/fs'
 
-import { TMP_DIR } from '../../../constants.ts'
+import { TMP_DIR, CWD } from '../../../constants.ts'
 
 export let cleanupDone = false
 
@@ -14,7 +14,7 @@ export const cleanTempFiles = async (): Promise<void> => {
   cleanupDone = true
 
   try {
-    const tmpDir = path.join(process.cwd(), TMP_DIR)
+    const tmpDir = path.join(CWD, TMP_DIR)
     const exists = await fs.exists(tmpDir)
     if (!exists) {
       return

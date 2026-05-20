@@ -8,6 +8,7 @@ import fs from '@magic/fs'
 import { compileSvelteWithWrite } from './compileSvelteWithWrite.ts'
 import { resolvePackageExport, type PackageExportResolve } from './resolvePackageExport.ts'
 import { cache as compileCache } from './cache.ts'
+import { CWD } from '../../../constants.ts'
 
 const STATIC_IMPORT_RE =
   /(import\s+(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)(?:\s*,\s*(?:\{[^}]*\}|\*\s+as\s+\w+|\w+))?\s+from\s+['"`])([^'"`\s]+)(['"`])/g
@@ -30,10 +31,10 @@ const writeTempFile = async (filePath: string, code: string): Promise<string> =>
   let tempFile: string
   if (filePath.includes('node_modules')) {
     const relFromNodeModules = filePath.split('node_modules/').pop() || ''
-    tempFile = path.join(process.cwd(), 'test/.tmp', 'node_modules_processed', relFromNodeModules)
+    tempFile = path.join(CWD, 'test/.tmp', 'node_modules_processed', relFromNodeModules)
   } else {
-    const relPath = path.relative(process.cwd(), filePath)
-    tempFile = path.join(process.cwd(), 'test/.tmp', relPath + '.mjs')
+    const relPath = path.relative(CWD, filePath)
+    tempFile = path.join(CWD, 'test/.tmp', relPath + '.mjs')
   }
   await ensureDirExists(tempFile)
   let pending = pendingWrites.get(tempFile)

@@ -3,7 +3,7 @@ import path from 'node:path'
 import fs from '@magic/fs'
 
 import { barrelCache, processingBarrels } from './cache.ts'
-import { TMP_DIR } from '../../../constants.ts'
+import { TMP_DIR, CWD } from '../../../constants.ts'
 import { getSvelteExports } from './getSvelteExports.ts'
 import { processImports } from './processImports.ts'
 import { compileSvelte } from './compileSvelte.ts'

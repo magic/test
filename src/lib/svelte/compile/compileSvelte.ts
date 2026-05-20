@@ -6,7 +6,7 @@ import fs from '@magic/fs'
 import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.ts'
 
 import { cache } from './cache.ts'
-import { TMP_DIR } from '../../../constants.ts'
+import { TMP_DIR, CWD } from '../../../constants.ts'
 import { cleanTempFiles } from './cleanTempFiles.ts'
 import { acquireLock } from './acquireLock.ts'
 import type { CssObject } from './types.ts'
