@@ -316,6 +316,13 @@ export default [
   },
   // $app/server remote functions
   {
+    before: () => {
+      const originalWarn = console.warn
+      console.warn = () => {}
+      return () => {
+        console.warn = originalWarn
+      }
+    },
     fn: async () => {
       const { target, unmount } = await mount(
         './src/lib/svelte/testFixtures/components/ServerTest2.svelte',
