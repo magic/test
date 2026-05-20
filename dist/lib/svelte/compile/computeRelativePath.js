@@ -1,7 +1,8 @@
 import path from 'node:path'
+import { CWD } from '../../../constants.js'
 export const computeRelativePath = (fromDir, toFile) => {
-  const absoluteFrom = path.isAbsolute(fromDir) ? fromDir : path.join(process.cwd(), fromDir)
-  const absoluteTo = path.isAbsolute(toFile) ? toFile : path.join(process.cwd(), toFile)
+  const absoluteFrom = path.isAbsolute(fromDir) ? fromDir : path.join(CWD, fromDir)
+  const absoluteTo = path.isAbsolute(toFile) ? toFile : path.join(CWD, toFile)
   let relative = path.relative(absoluteFrom, absoluteTo)
   relative = relative.replace(/\\/g, '/')
   if (!relative.startsWith('/') && !relative.startsWith('.')) {
