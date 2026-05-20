@@ -2,6 +2,7 @@ import fs from '@magic/fs'
 import is from '@magic/types'
 import path from 'node:path'
 import { configCache } from './cache.js'
+import { escapeRegex } from './escapeRegex.js'
 export const parseViteConfig = async configPath => {
   const cached = configCache.get(configPath)
   if (cached) {
@@ -22,8 +23,6 @@ export const parseViteConfig = async configPath => {
         .replace(/path\.resolve\(__dirname/g, `path.resolve("${configDir}"`)
         .replace(/path\.resolve\(__filename/g, `path.resolve("${configDir}"`)
       const evaluated = new Function('path', `return (${cleaned})`)(path)
-      // Local helper to process single alias entry
-      const escapeRegex = str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       const processSingleAlias = entry => {
         const e = entry
         const find = e.find
