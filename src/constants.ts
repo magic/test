@@ -1,5 +1,7 @@
 export let TMP_DIR = 'test/.tmp'
 
+export const CWD = process.cwd()
+
 export const SVELTE_IMPORT_REGEX =
   /import\s+((?:\{[^}]*\}|\* as \w+|\w+))\s+from\s+['"]([^'"]+)['"]/g
 
