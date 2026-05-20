@@ -3,6 +3,7 @@ import is from '@magic/types'
 import path from 'node:path'
 
 import { configCache } from './cache.ts'
+import { escapeRegex } from './escapeRegex.ts'
 import type { AliasEntry, ViteConfig } from '../../../types.ts'
 
 export const parseViteConfig = async (configPath: string): Promise<ViteConfig> => {
@@ -30,9 +31,6 @@ export const parseViteConfig = async (configPath: string): Promise<ViteConfig> =
         .replace(/path\.resolve\(__filename/g, `path.resolve("${configDir}"`)
 
       const evaluated = new Function('path', `return (${cleaned})`)(path)
-
-      // Local helper to process single alias entry
-      const escapeRegex = (str: string): string => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
       const processSingleAlias = (entry: unknown): AliasEntry => {
         const e = entry as Record<string, unknown>
