@@ -28,27 +28,39 @@ export const compileBarrel = async (filePath, importChain = []) => {
       throw new Error(`No Svelte exports found in barrel file: ${filePath}`)
     }
     const compiledExports = []
-    for (const { name, path: sveltePath } of exports) {
+    for (const exp of exports) {
+      const { name, path: sveltePath, isDefaultReexport } = exp
       const { js } = await compileSvelte(sveltePath)
       const processed = await processImports(js, sveltePath, currentChain)
       const relPath = path.relative(process.cwd(), sveltePath)
       const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
       await fs.mkdirp(path.dirname(tmpFile))
       await fs.writeFile(tmpFile, processed)
-      compiledExports.push({ name, absPath: path.join(process.cwd(), tmpFile) })
+      compiledExports.push({ name, absPath: path.join(process.cwd(), tmpFile), isDefaultReexport })
     }
     const barrelRelPath = path.relative(process.cwd(), filePath)
     const wrapperFile = path.join(TMP_DIR, barrelRelPath.replace(/\.(ts|js)$/, '.barrel.js'))
     const wrapperAbsPath = path.join(process.cwd(), wrapperFile)
     const wrapperTmpDir = path.dirname(wrapperAbsPath)
     const wrapperExports = compiledExports
-      .map(({ name, absPath }) => {
+      .map(({ name, absPath, isDefaultReexport }) => {
         if (name.startsWith('type ') || name === '') {
           return null
         }
         const relative = computeRelativePath(wrapperTmpDir, absPath)
         if (name === 'default') {
           return `export { default } from '${relative}'`
+        }
+        if (name.includes(' as ') || isDefaultReexport) {
+          const exportedName = name.includes(' as ')
+            ? name
+                .split(/\s+as\s+/)
+                .pop()
+                ?.trim()
+            : name
+          if (exportedName) {
+            return `export { default as ${exportedName} } from '${relative}'`
+          }
         }
         return `export { ${name} } from '${relative}'`
       })

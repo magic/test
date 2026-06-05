@@ -15,12 +15,29 @@ export const getSvelteExports = async filePath => {
     if (!match[1] || !match[2]) {
       continue
     }
-    const exportedNames = match[1].split(',').map(s => s.trim())
+    const exportStatement = match[1].trim()
     const exportPath = match[2]
     const resolvedPath = path.resolve(sourceDir, exportPath)
     if (await fs.exists(resolvedPath)) {
+      const exportedNames = exportStatement.split(',')
       for (const name of exportedNames) {
-        exports.push({ name, path: resolvedPath })
+        const trimmed = name.trim()
+        if (trimmed.startsWith('type ') || trimmed === '') {
+          continue
+        }
+        if (trimmed.includes(' as ')) {
+          const parts = trimmed.split(/\s+as\s+/)
+          const lastPart = parts[parts.length - 1]
+          const exportedName = lastPart?.trim() || trimmed
+          const isDefaultReexport = parts[0]?.trim() === 'default'
+          exports.push({
+            name: exportedName,
+            path: resolvedPath,
+            isDefaultReexport: isDefaultReexport || undefined,
+          })
+        } else {
+          exports.push({ name: trimmed, path: resolvedPath })
+        }
       }
     }
   }
