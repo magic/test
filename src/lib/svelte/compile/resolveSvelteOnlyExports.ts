@@ -13,7 +13,7 @@ import type { ExportInfo } from './types.ts'
 
 const pendingWrites = new Map<string, Promise<void>>()
 
-const writeTempFile = async (filePath: string, code: string): Promise<string> => {
+export const writeTempFile = async (filePath: string, code: string): Promise<string> => {
   let tempFile: string
   if (filePath.includes('node_modules')) {
     const relFromNodeModules = filePath.split('node_modules/').pop() || ''
@@ -22,8 +22,11 @@ const writeTempFile = async (filePath: string, code: string): Promise<string> =>
     const relPath = path.relative(CWD, filePath)
     tempFile = path.join(CWD, 'test/.tmp', relPath + '.mjs')
   }
-  await ensureDirExists(tempFile)
+
+  await fs.mkdirp(path.dirname(tempFile))
+
   let pending = pendingWrites.get(tempFile)
+
   if (!pending) {
     pending = (async () => {
       await fs.writeFile(tempFile, code)
@@ -33,11 +36,6 @@ const writeTempFile = async (filePath: string, code: string): Promise<string> =>
   }
   await pending
   return tempFile
-}
-
-const ensureDirExists = async (filePath: string): Promise<void> => {
-  const dir = path.dirname(filePath)
-  await fs.mkdirp(dir)
 }
 
 const tmpFileCache = new Map<string, string>()
@@ -547,5 +545,3 @@ export const resolveSvelteOnlyExports = async (
 
   return result
 }
-
-export { writeTempFile }

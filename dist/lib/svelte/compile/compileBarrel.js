@@ -1,7 +1,7 @@
 import path from 'node:path'
 import fs from '@magic/fs'
 import { barrelCache, processingBarrels } from './cache.js'
-import { TMP_DIR } from '../../../constants.js'
+import { TMP_DIR, CWD } from '../../../constants.js'
 import { getSvelteExports } from './getSvelteExports.js'
 import { processImports } from './processImports.js'
 import { compileSvelte } from './compileSvelte.js'
@@ -32,15 +32,15 @@ export const compileBarrel = async (filePath, importChain = []) => {
       const { name, path: sveltePath, isDefaultReexport } = exp
       const { js } = await compileSvelte(sveltePath)
       const processed = await processImports(js, sveltePath, currentChain)
-      const relPath = path.relative(process.cwd(), sveltePath)
+      const relPath = path.relative(CWD, sveltePath)
       const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
       await fs.mkdirp(path.dirname(tmpFile))
       await fs.writeFile(tmpFile, processed)
-      compiledExports.push({ name, absPath: path.join(process.cwd(), tmpFile), isDefaultReexport })
+      compiledExports.push({ name, absPath: path.join(CWD, tmpFile), isDefaultReexport })
     }
-    const barrelRelPath = path.relative(process.cwd(), filePath)
+    const barrelRelPath = path.relative(CWD, filePath)
     const wrapperFile = path.join(TMP_DIR, barrelRelPath.replace(/\.(ts|js)$/, '.barrel.js'))
-    const wrapperAbsPath = path.join(process.cwd(), wrapperFile)
+    const wrapperAbsPath = path.join(CWD, wrapperFile)
     const wrapperTmpDir = path.dirname(wrapperAbsPath)
     const wrapperExports = compiledExports
       .map(({ name, absPath, isDefaultReexport }) => {

@@ -19,7 +19,7 @@ export interface CompileSvelteReturn {
 export const compileSvelte = async (filePath: string): Promise<CompileSvelteReturn> => {
   await cleanTempFiles()
 
-  const relPath = path.relative(process.cwd(), filePath)
+  const relPath = path.relative(CWD, filePath)
   const mapFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.map'))
 
   const release = await acquireLock(mapFile)

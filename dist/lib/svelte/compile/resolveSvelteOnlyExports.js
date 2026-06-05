@@ -8,7 +8,7 @@ import { cache as compileCache } from './cache.js'
 import { CWD } from '../../../constants.js'
 import { parseFile, extractExports, extractImports } from './astParse.js'
 const pendingWrites = new Map()
-const writeTempFile = async (filePath, code) => {
+export const writeTempFile = async (filePath, code) => {
   let tempFile
   if (filePath.includes('node_modules')) {
     const relFromNodeModules = filePath.split('node_modules/').pop() || ''
@@ -17,7 +17,7 @@ const writeTempFile = async (filePath, code) => {
     const relPath = path.relative(CWD, filePath)
     tempFile = path.join(CWD, 'test/.tmp', relPath + '.mjs')
   }
-  await ensureDirExists(tempFile)
+  await fs.mkdirp(path.dirname(tempFile))
   let pending = pendingWrites.get(tempFile)
   if (!pending) {
     pending = (async () => {
@@ -28,10 +28,6 @@ const writeTempFile = async (filePath, code) => {
   }
   await pending
   return tempFile
-}
-const ensureDirExists = async filePath => {
-  const dir = path.dirname(filePath)
-  await fs.mkdirp(dir)
 }
 const tmpFileCache = new Map()
 const compiling = new Map()
@@ -463,4 +459,3 @@ export const resolveSvelteOnlyExports = async (code, sourceDir) => {
   }
   return result
 }
-export { writeTempFile }

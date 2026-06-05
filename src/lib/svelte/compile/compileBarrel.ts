@@ -45,18 +45,18 @@ export const compileBarrel = async (
       const { js } = await compileSvelte(sveltePath)
       const processed = await processImports(js, sveltePath, currentChain)
 
-      const relPath = path.relative(process.cwd(), sveltePath)
+      const relPath = path.relative(CWD, sveltePath)
       const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
 
       await fs.mkdirp(path.dirname(tmpFile))
       await fs.writeFile(tmpFile, processed)
 
-      compiledExports.push({ name, absPath: path.join(process.cwd(), tmpFile), isDefaultReexport })
+      compiledExports.push({ name, absPath: path.join(CWD, tmpFile), isDefaultReexport })
     }
 
-    const barrelRelPath = path.relative(process.cwd(), filePath)
+    const barrelRelPath = path.relative(CWD, filePath)
     const wrapperFile = path.join(TMP_DIR, barrelRelPath.replace(/\.(ts|js)$/, '.barrel.js'))
-    const wrapperAbsPath = path.join(process.cwd(), wrapperFile)
+    const wrapperAbsPath = path.join(CWD, wrapperFile)
     const wrapperTmpDir = path.dirname(wrapperAbsPath)
 
     const wrapperExports = compiledExports

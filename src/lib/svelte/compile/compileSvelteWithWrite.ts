@@ -17,10 +17,10 @@ export const compileSvelteWithWrite = async (
 
   const transformedCode = transformForNode(code, filePath)
 
-  const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
-  const relPath = path.relative(process.cwd(), resolvedPath)
+  const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
+  const relPath = path.relative(CWD, resolvedPath)
   const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
-  const tmpFileAbs = path.resolve(process.cwd(), tmpFile)
+  const tmpFileAbs = path.resolve(CWD, tmpFile)
   const importUrl = pathToFileURL(tmpFileAbs).href
 
   await fs.mkdirp(path.dirname(tmpFileAbs))
