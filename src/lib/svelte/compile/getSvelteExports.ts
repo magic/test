@@ -5,7 +5,7 @@ import { barrelCache } from './cache.ts'
 
 export const getSvelteExports = async (
   filePath: string,
-): Promise<{ name: string; path: string }[]> => {
+): Promise<{ name: string; path: string; isDefaultReexport?: boolean }[]> => {
   const cached = barrelCache.get(filePath)
   if (cached) {
     return cached.exports
@@ -13,7 +13,7 @@ export const getSvelteExports = async (
 
   const content = await fs.readFile(filePath, 'utf-8')
 
-  const exports: { name: string; path: string }[] = []
+  const exports: { name: string; path: string; isDefaultReexport?: boolean }[] = []
 
   const regex = /export\s+\{([^}]+)\}\s+from\s+['"](\.\/[^'"]+\.svelte)['"]/g
   let match
@@ -24,13 +24,31 @@ export const getSvelteExports = async (
     if (!match[1] || !match[2]) {
       continue
     }
-    const exportedNames = match[1].split(',').map(s => s.trim())
+
+    const exportStatement = match[1].trim()
     const exportPath = match[2]
     const resolvedPath = path.resolve(sourceDir, exportPath)
 
     if (await fs.exists(resolvedPath)) {
+      const exportedNames = exportStatement.split(',')
       for (const name of exportedNames) {
-        exports.push({ name, path: resolvedPath })
+        const trimmed = name.trim()
+        if (trimmed.startsWith('type ') || trimmed === '') {
+          continue
+        }
+        if (trimmed.includes(' as ')) {
+          const parts = trimmed.split(/\s+as\s+/)
+          const lastPart = parts[parts.length - 1]
+          const exportedName = lastPart?.trim() || trimmed
+          const isDefaultReexport = parts[0]?.trim() === 'default'
+          exports.push({
+            name: exportedName,
+            path: resolvedPath,
+            isDefaultReexport: isDefaultReexport || undefined,
+          })
+        } else {
+          exports.push({ name: trimmed, path: resolvedPath })
+        }
       }
     }
   }
