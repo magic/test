@@ -1,15 +1,16 @@
 import type { WrappedTest } from '../../types.ts'
 
-import { testModifiesGlobals } from '../../lib/globalCheck.js'
-
 export const testNeedsIsolation = (test: WrappedTest): boolean => {
-  if (test.component) {
-    return true
-  }
   if (test.before || test.after) {
     return true
   }
-  if (testModifiesGlobals(test)) {
+  if (
+    Object.hasOwn(test, '__isolate') &&
+    (test as unknown as Record<string, unknown>).__isolate === true
+  ) {
+    return true
+  }
+  if (test.component) {
     return true
   }
   return false

@@ -27,6 +27,12 @@ export const evaluateTestResult = async (res, expect) => {
   if (!pass) {
     if (is.undefined(exp)) {
       pass = exp === res
+    } else if (exp === true) {
+      pass = res === true
+    } else if (exp === false) {
+      pass = res === false
+    } else if (is.string(exp) || is.number(exp)) {
+      pass = exp === res
     } else if (is.sameType(exp, res)) {
       pass = is.deep.equal(exp, res)
     }

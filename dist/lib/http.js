@@ -9,7 +9,7 @@ import is from '@magic/types'
  */
 const shouldRejectUnauthorized = () => {
   const env = process.env.MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED
-  if (env === undefined || env === 'true' || env === '1') {
+  if (is.undefined(env) || env === 'true' || env === '1') {
     return true
   }
   if (env === 'false' || env === '0') {

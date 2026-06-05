@@ -14,7 +14,7 @@ const checkValue = (value: unknown, check: Check): boolean => {
 
 export const property = (key: string, check: Check) => {
   return (result: unknown): boolean => {
-    if (result === null || !is.object(result)) {
+    if (is.null(result) || !is.object(result)) {
       return false
     }
     const value = (result as Record<string, unknown>)[key]
@@ -24,7 +24,7 @@ export const property = (key: string, check: Check) => {
 
 export const properties = (spec: Record<string, Check>) => {
   return (result: unknown): boolean => {
-    if (result === null || !is.object(result)) {
+    if (is.null(result) || !is.object(result)) {
       return false
     }
 
@@ -42,7 +42,7 @@ export const properties = (spec: Record<string, Check>) => {
 
 export const any = (spec: Record<string, Check>) => {
   return (result: unknown): boolean => {
-    if (result === null || !is.object(result)) {
+    if (is.null(result) || !is.object(result)) {
       return false
     }
 
@@ -90,7 +90,7 @@ export const at = (index: number, check: Check) => {
 
 export const key = (keyName: string) => {
   return (result: unknown): boolean => {
-    if (result === null || !is.object(result)) {
+    if (is.null(result) || !is.object(result)) {
       return false
     }
     return keyName in result
@@ -99,7 +99,7 @@ export const key = (keyName: string) => {
 
 export const keys = (keyNames: string[]) => {
   return (result: unknown): boolean => {
-    if (result === null || !is.object(result)) {
+    if (is.null(result) || !is.object(result)) {
       return false
     }
     for (const keyName of keyNames) {
@@ -111,8 +111,9 @@ export const keys = (keyNames: string[]) => {
   }
 }
 
-export const includes = (item: unknown) => {
-  return (result: unknown): boolean => {
+export const includes =
+  (item: unknown) =>
+  (result: unknown): boolean => {
     if (is.array(result)) {
       return result.some(v => is.deep.equal(v, item))
     }
@@ -121,19 +122,16 @@ export const includes = (item: unknown) => {
     }
     return false
   }
-}
 
-export const oneOf = (options: unknown[]) => {
-  return (result: unknown): boolean => {
-    return options.some(opt => is.deep.equal(result, opt))
-  }
-}
+export const oneOf =
+  (options: unknown[]) =>
+  (result: unknown): boolean =>
+    options.some(opt => is.deep.equal(result, opt))
 
-export const matches = (pattern: RegExp) => {
-  return (result: unknown): boolean => {
-    return is.string(result) && pattern.test(result)
-  }
-}
+export const matches =
+  (pattern: RegExp) =>
+  (result: unknown): boolean =>
+    is.string(result) && pattern.test(result)
 
 export const has = {
   property,

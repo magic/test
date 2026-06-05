@@ -3,6 +3,7 @@ import type { TSESTree } from '@typescript-eslint/types'
 import { parse as parseSvelte } from 'svelte/compiler'
 import crypto from 'node:crypto'
 import type { ExportInfo } from './types.ts'
+import is from '@magic/types'
 
 export type FileInfo = {
   code: string
@@ -26,13 +27,13 @@ const extractScriptFromSvelte = (source: string): string => {
     const parts: string[] = []
 
     const extractBody = (content: unknown): void => {
-      if (!content || typeof content !== 'object') {
+      if (!content || !is.object(content)) {
         return
       }
       const c = content as { body?: unknown[] }
       if (c.body && Array.isArray(c.body)) {
         for (const node of c.body) {
-          if (node && typeof node === 'object' && 'start' in node && 'end' in node) {
+          if (node && is.object(node) && 'start' in node && 'end' in node) {
             const n = node as { start: number; end: number }
             parts.push(source.slice(n.start, n.end))
           }
@@ -57,7 +58,9 @@ const extractScriptFromSvelte = (source: string): string => {
 const parseFile = (code: string, filePath: string): FileInfo => {
   const cacheKey = getCacheKey(code, filePath)
   const cached = astCache.get(cacheKey)
-  if (cached) return cached
+  if (cached) {
+    return cached
+  }
 
   const isSvelte = filePath.endsWith('.svelte')
   const codeToParse = isSvelte ? extractScriptFromSvelte(code) : code
@@ -94,9 +97,7 @@ const getDeclarationNames = (decl: TSESTree.Node): string[] => {
     case 'TSModuleDeclaration':
       return decl.id && decl.id.type === 'Identifier' ? [decl.id.name] : []
     case 'TSTypeParameterDeclaration':
-      return decl.params
-        .map(p => ('name' in p && typeof p.name === 'string' ? p.name : ''))
-        .filter(Boolean)
+      return decl.params.map(p => ('name' in p && is.string(p.name) ? p.name : '')).filter(Boolean)
     default:
       return []
   }
@@ -273,7 +274,7 @@ const findImportExpressions = (
     if (n.type === 'ImportExpression') {
       const imp = n as TSESTree.ImportExpression
       const src = imp.source as TSESTree.Literal
-      const source = typeof src.value === 'string' ? src.value : ''
+      const source = is.string(src.value) ? src.value : ''
       results.push({
         source,
         originalText: getOriginal(n, code),
@@ -285,11 +286,11 @@ const findImportExpressions = (
         continue
       }
       const val = (n as unknown as Record<string, unknown>)[key]
-      if (val && typeof val === 'object' && 'type' in (val as object)) {
+      if (val && is.object(val) && 'type' in (val as object)) {
         walk(val as TSESTree.Node)
       } else if (Array.isArray(val)) {
         for (const item of val) {
-          if (item && typeof item === 'object' && 'type' in (item as object)) {
+          if (item && is.object(item) && 'type' in (item as object)) {
             walk(item as TSESTree.Node)
           }
         }
@@ -330,10 +331,7 @@ const extractImports = (
 
       imports.push({
         type,
-        source:
-          typeof node.source.value === 'string'
-            ? node.source.value
-            : String(node.source.value || ''),
+        source: is.string(node.source.value) ? node.source.value : String(node.source.value || ''),
         specifiers,
         originalText: getOriginal(node, code),
       })

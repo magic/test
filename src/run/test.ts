@@ -10,9 +10,105 @@ import {
   executeTest,
   getTestTimeout,
   prepareTest,
+  testNeedsIsolation,
   withTimeout,
 } from './lib/index.ts'
 import type { WrappedTest, TestResult, Suite } from '../types.ts'
+
+type TestExecutionResult = {
+  result: unknown
+  pass: boolean
+  exp: unknown
+  expString: unknown
+  afterCleanup?: () => void | Promise<void>
+  afterError: string | null
+}
+
+const executeTestNoIsolation = async (
+  key: string,
+  fn: WrappedTest['fn'],
+  expect: WrappedTest['expect'],
+  test: WrappedTest,
+  componentFile: string | undefined,
+  componentProps: Record<string, unknown> | undefined,
+  runs: number,
+  timeoutMs: number,
+  parent: string,
+  name: string,
+): Promise<TestExecutionResult> => {
+  let result
+  let exp
+  let expString
+  let pass
+
+  const results: { res: unknown; pass: boolean; exp?: unknown; expString?: unknown }[] = []
+  for (let i = 0; i < runs; i++) {
+    let res
+    try {
+      const testPromise = executeTest(fn, key, componentFile, componentProps)
+      res = await withTimeout(testPromise, timeoutMs, key)
+    } catch (e) {
+      log.error(ERRORS.E_TEST_FN!, {
+        testKey: key,
+        testName: name,
+        parent,
+        component: componentFile,
+        error: cleanError(is.error(e) ? e : new Error(String(e))),
+      })
+      results.push({ res, pass: false })
+      continue
+    }
+
+    try {
+      const evalResult = await evaluateTestResult(res, expect)
+      const runPass = evalResult.pass
+
+      results.push({ res, pass: runPass, exp: evalResult.exp, expString: evalResult.expString })
+
+      if (!runPass) {
+        pass = false
+        result = res
+        exp = evalResult.exp
+        expString = evalResult.expString
+      }
+    } catch (e) {
+      log.error(ERRORS.E_TEST_EXPECT!, {
+        testKey: key,
+        testName: name,
+        parent,
+        error: cleanError(is.error(e) ? e : new Error(String(e))),
+      })
+      results.push({ res, pass: false })
+    }
+  }
+
+  pass = results.every(r => r.pass)
+  if (pass && results.length > 0) {
+    result = runs > 1 ? results.map(r => r.res) : results[0]!.res
+    const lastExp = results[results.length - 1]
+    if (lastExp) {
+      exp = lastExp.exp
+      expString = lastExp.expString
+    }
+  }
+
+  let afterError: string | null = null
+  if (is.function(test.after)) {
+    try {
+      await test.after()
+    } catch (e) {
+      afterError = cleanError(is.error(e) ? e : new Error(String(e))) as string | null
+      log.error(ERRORS.E_TEST_AFTER!, {
+        testKey: key,
+        testName: name,
+        parent,
+        error: afterError,
+      })
+    }
+  }
+
+  return { result, pass, exp, expString, afterError }
+}
 
 /**
  * Run a test or delegate to a suite.
@@ -62,103 +158,59 @@ export const runTest = async (
     const msg = cleanFunctionString(fn)
     const key = test.key || getTestKey(pkg, parent, name)
 
-    const isolatedResult = await isolation.executeIsolated(key, async () => {
-      let afterCleanup
+    const needsIsolation = testNeedsIsolation(test)
 
-      if (is.function(before) || is.promise(before)) {
-        try {
-          const result = is.function(before) ? await before(test) : await before
-          if (is.function(result)) {
-            afterCleanup = result as () => void | Promise<void>
+    let isolatedResult: TestExecutionResult
+
+    if (needsIsolation) {
+      isolatedResult = await isolation.executeIsolated(key, async () => {
+        let afterCleanup
+
+        if (is.function(before) || is.promise(before)) {
+          try {
+            const result = is.function(before) ? await before(test) : await before
+            if (is.function(result)) {
+              afterCleanup = result as () => void | Promise<void>
+            }
+          } catch (e) {
+            log.error(ERRORS.E_TEST_BEFORE!, {
+              testKey: key,
+              testName: name,
+              parent,
+              error: cleanError(is.error(e) ? e : new Error(String(e))),
+            })
           }
-        } catch (e) {
-          log.error(ERRORS.E_TEST_BEFORE!, {
-            testKey: key,
-            testName: name,
-            parent,
-            error: cleanError(is.error(e) ? e : new Error(String(e))),
-          })
-        }
-      }
-
-      let result
-      let exp
-      let expString
-      let pass
-
-      const results: { res: unknown; pass: boolean; exp?: unknown; expString?: unknown }[] = []
-      for (let i = 0; i < runs; i++) {
-        let res
-        try {
-          const testPromise = executeTest(
-            fn,
-            key,
-            componentFile,
-            componentProps as Record<string, unknown> | undefined,
-          )
-          res = await withTimeout(testPromise, timeoutMs, key)
-        } catch (e) {
-          log.error(ERRORS.E_TEST_FN!, {
-            testKey: key,
-            testName: name,
-            parent,
-            component: componentFile,
-            error: cleanError(is.error(e) ? e : new Error(String(e))),
-          })
-          results.push({ res, pass: false })
-          continue
         }
 
-        try {
-          const evalResult = await evaluateTestResult(res, expect)
-          const runPass = evalResult.pass
+        const execResult = await executeTestNoIsolation(
+          key,
+          fn,
+          expect,
+          test,
+          componentFile,
+          componentProps as Record<string, unknown> | undefined,
+          runs,
+          timeoutMs,
+          parent,
+          name,
+        )
 
-          results.push({ res, pass: runPass, exp: evalResult.exp, expString: evalResult.expString })
-
-          if (!runPass) {
-            pass = false
-            result = res
-            exp = evalResult.exp
-            expString = evalResult.expString
-          }
-        } catch (e) {
-          log.error(ERRORS.E_TEST_EXPECT!, {
-            testKey: key,
-            testName: name,
-            parent,
-            error: cleanError(is.error(e) ? e : new Error(String(e))),
-          })
-          results.push({ res, pass: false })
-        }
-      }
-
-      pass = results.every(r => r.pass)
-      if (pass && results.length > 0) {
-        result = runs > 1 ? results.map(r => r.res) : results[0]!.res
-        const lastExp = results[results.length - 1]
-        if (lastExp) {
-          exp = lastExp.exp
-          expString = lastExp.expString
-        }
-      }
-
-      let afterError = null
-      if (is.function(test.after)) {
-        try {
-          await test.after()
-        } catch (e) {
-          afterError = cleanError(is.error(e) ? e : new Error(String(e)))
-          log.error(ERRORS.E_TEST_AFTER!, {
-            testKey: key,
-            testName: name,
-            parent,
-            error: afterError,
-          })
-        }
-      }
-
-      return { result, pass, exp, expString, afterCleanup, afterError }
-    })
+        return { ...execResult, afterCleanup }
+      })
+    } else {
+      isolatedResult = await executeTestNoIsolation(
+        key,
+        fn,
+        expect,
+        test,
+        componentFile,
+        componentProps as Record<string, unknown> | undefined,
+        runs,
+        timeoutMs,
+        parent,
+        name,
+      )
+    }
 
     if (is.function(isolatedResult.afterCleanup)) {
       try {

@@ -8,7 +8,7 @@ const checkValue = (value, check) => {
 }
 export const property = (key, check) => {
   return result => {
-    if (result === null || !is.object(result)) {
+    if (is.null(result) || !is.object(result)) {
       return false
     }
     const value = result[key]
@@ -17,7 +17,7 @@ export const property = (key, check) => {
 }
 export const properties = spec => {
   return result => {
-    if (result === null || !is.object(result)) {
+    if (is.null(result) || !is.object(result)) {
       return false
     }
     for (const [key, check] of Object.entries(spec)) {
@@ -33,7 +33,7 @@ export const properties = spec => {
 }
 export const any = spec => {
   return result => {
-    if (result === null || !is.object(result)) {
+    if (is.null(result) || !is.object(result)) {
       return false
     }
     for (const [key, check] of Object.entries(spec)) {
@@ -73,7 +73,7 @@ export const at = (index, check) => {
 }
 export const key = keyName => {
   return result => {
-    if (result === null || !is.object(result)) {
+    if (is.null(result) || !is.object(result)) {
       return false
     }
     return keyName in result
@@ -81,7 +81,7 @@ export const key = keyName => {
 }
 export const keys = keyNames => {
   return result => {
-    if (result === null || !is.object(result)) {
+    if (is.null(result) || !is.object(result)) {
       return false
     }
     for (const keyName of keyNames) {
@@ -92,27 +92,17 @@ export const keys = keyNames => {
     return true
   }
 }
-export const includes = item => {
-  return result => {
-    if (is.array(result)) {
-      return result.some(v => is.deep.equal(v, item))
-    }
-    if (is.string(result) && is.string(item)) {
-      return result.includes(item)
-    }
-    return false
+export const includes = item => result => {
+  if (is.array(result)) {
+    return result.some(v => is.deep.equal(v, item))
   }
-}
-export const oneOf = options => {
-  return result => {
-    return options.some(opt => is.deep.equal(result, opt))
+  if (is.string(result) && is.string(item)) {
+    return result.includes(item)
   }
+  return false
 }
-export const matches = pattern => {
-  return result => {
-    return is.string(result) && pattern.test(result)
-  }
-}
+export const oneOf = options => result => options.some(opt => is.deep.equal(result, opt))
+export const matches = pattern => result => is.string(result) && pattern.test(result)
 export const has = {
   property,
   properties,

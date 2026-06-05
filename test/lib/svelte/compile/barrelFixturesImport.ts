@@ -2,6 +2,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { mount } from '../../../../src/svelte.js'
+import is from '@magic/types'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtureBase = path.join(
@@ -44,30 +45,22 @@ await titleComponentResult.unmount()
 
 export default [
   {
-    fn: async () => {
-      return typeof IndexSvelteJs === 'object' && IndexSvelteJs !== null
-    },
+    fn: () => is.object(IndexSvelteJs),
     expect: true,
     info: 'Index.svelte.js module loads correctly',
   },
   {
-    fn: async () => {
-      return typeof DefaultBarrel === 'object' && DefaultBarrel !== null
-    },
+    fn: () => is.object(DefaultBarrel),
     expect: true,
     info: 'DefaultBarrel.svelte.js module loads correctly',
   },
   {
-    fn: async () => {
-      return typeof TypeExports === 'object' && TypeExports !== null
-    },
+    fn: () => is.object(TypeExports),
     expect: true,
     info: 'TypeExports.svelte.js module loads correctly',
   },
   {
-    fn: async () => {
-      return typeof EmptyBarrel === 'object' && EmptyBarrel !== null
-    },
+    fn: () => is.object(EmptyBarrel),
     expect: true,
     info: 'EmptyBarrel.svelte.js module loads correctly',
   },
@@ -93,23 +86,17 @@ export default [
     info: 'TypeExports.svelte.js has expected exports',
   },
   {
-    fn: async () => {
-      return typeof defaultExportHtml === 'string' && defaultExportHtml.length > 0
-    },
+    fn: () => typeof defaultExportHtml === 'string' && defaultExportHtml.length > 0,
     expect: true,
     info: 'DefaultExport.svelte renders to html',
   },
   {
-    fn: async () => {
-      return typeof testComponentHtml === 'string' && testComponentHtml.length > 0
-    },
+    fn: () => typeof testComponentHtml === 'string' && testComponentHtml.length > 0,
     expect: true,
     info: 'TestComponent.svelte renders to html',
   },
   {
-    fn: async () => {
-      return typeof titleComponentHtml === 'string' && titleComponentHtml.length > 0
-    },
+    fn: () => typeof titleComponentHtml === 'string' && titleComponentHtml.length > 0,
     expect: true,
     info: 'TitleComponent.svelte renders to html',
   },

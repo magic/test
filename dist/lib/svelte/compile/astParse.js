@@ -1,6 +1,7 @@
 import { parse } from '@typescript-eslint/parser'
 import { parse as parseSvelte } from 'svelte/compiler'
 import crypto from 'node:crypto'
+import is from '@magic/types'
 const astCache = new Map()
 export const clearAstCache = () => astCache.clear()
 const getCacheKey = (code, filePath) => {
@@ -12,13 +13,13 @@ const extractScriptFromSvelte = source => {
     const ast = parseSvelte(source, { modern: true })
     const parts = []
     const extractBody = content => {
-      if (!content || typeof content !== 'object') {
+      if (!content || !is.object(content)) {
         return
       }
       const c = content
       if (c.body && Array.isArray(c.body)) {
         for (const node of c.body) {
-          if (node && typeof node === 'object' && 'start' in node && 'end' in node) {
+          if (node && is.object(node) && 'start' in node && 'end' in node) {
             const n = node
             parts.push(source.slice(n.start, n.end))
           }
@@ -39,7 +40,9 @@ const extractScriptFromSvelte = source => {
 const parseFile = (code, filePath) => {
   const cacheKey = getCacheKey(code, filePath)
   const cached = astCache.get(cacheKey)
-  if (cached) return cached
+  if (cached) {
+    return cached
+  }
   const isSvelte = filePath.endsWith('.svelte')
   const codeToParse = isSvelte ? extractScriptFromSvelte(code) : code
   const ast = parse(codeToParse, {
@@ -71,9 +74,7 @@ const getDeclarationNames = decl => {
     case 'TSModuleDeclaration':
       return decl.id && decl.id.type === 'Identifier' ? [decl.id.name] : []
     case 'TSTypeParameterDeclaration':
-      return decl.params
-        .map(p => ('name' in p && typeof p.name === 'string' ? p.name : ''))
-        .filter(Boolean)
+      return decl.params.map(p => ('name' in p && is.string(p.name) ? p.name : '')).filter(Boolean)
     default:
       return []
   }
@@ -203,7 +204,7 @@ const findImportExpressions = (node, code) => {
     if (n.type === 'ImportExpression') {
       const imp = n
       const src = imp.source
-      const source = typeof src.value === 'string' ? src.value : ''
+      const source = is.string(src.value) ? src.value : ''
       results.push({
         source,
         originalText: getOriginal(n, code),
@@ -214,11 +215,11 @@ const findImportExpressions = (node, code) => {
         continue
       }
       const val = n[key]
-      if (val && typeof val === 'object' && 'type' in val) {
+      if (val && is.object(val) && 'type' in val) {
         walk(val)
       } else if (Array.isArray(val)) {
         for (const item of val) {
-          if (item && typeof item === 'object' && 'type' in item) {
+          if (item && is.object(item) && 'type' in item) {
             walk(item)
           }
         }
@@ -242,10 +243,7 @@ const extractImports = fileInfo => {
       }
       imports.push({
         type,
-        source:
-          typeof node.source.value === 'string'
-            ? node.source.value
-            : String(node.source.value || ''),
+        source: is.string(node.source.value) ? node.source.value : String(node.source.value || ''),
         specifiers,
         originalText: getOriginal(node, code),
       })

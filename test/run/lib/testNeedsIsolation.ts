@@ -46,47 +46,6 @@ export default [
         name: 'test',
         pkg: 'pkg',
         parent: 'parent',
-        fn: () => {
-          // @ts-expect-error - intentional invalid global access for test
-          globalThis.someVar = 'test'
-        },
-      }),
-    expect: true,
-    info: 'returns true for test modifying globalThis',
-  },
-  {
-    fn: () =>
-      testNeedsIsolation({
-        name: 'test',
-        pkg: 'pkg',
-        parent: 'parent',
-        fn: () => {
-          // @ts-expect-error - intentional invalid window access for test
-          window.someVar = 'test'
-        },
-      }),
-    expect: true,
-    info: 'returns true for test modifying window',
-  },
-  {
-    fn: () =>
-      testNeedsIsolation({
-        name: 'test',
-        pkg: 'pkg',
-        parent: 'parent',
-        fn: () => {
-          process.env.SOME_VAR = 'test'
-        },
-      }),
-    expect: true,
-    info: 'returns true for test modifying process.env',
-  },
-  {
-    fn: () =>
-      testNeedsIsolation({
-        name: 'test',
-        pkg: 'pkg',
-        parent: 'parent',
         fn: 'string value',
       }),
     expect: false,

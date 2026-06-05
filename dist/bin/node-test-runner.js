@@ -166,7 +166,7 @@ const runAssertion = async (result, expect) => {
   // For other cases (including undefined), use same logic as run/test.ts
   let pass = false
   if (is.undefined(expect)) {
-    pass = result === undefined
+    pass = is.undefined(result)
   } else if (is.sameType(expect, result)) {
     if (is.arr(expect) || is.obj(expect)) {
       pass = is.deep.equal(result, expect)
@@ -290,7 +290,7 @@ const processFile = async filePath => {
     return []
   }
   const fileName = path.basename(filePath)
-  if (mod === undefined || mod === null) {
+  if (is.undefined(mod) || is.null(mod)) {
     return []
   }
   const suites = []

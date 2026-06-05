@@ -28,8 +28,11 @@ export default [
     info: 'returns boolean as-is',
   },
   {
-    fn: () => makeSafeClone(BigInt(123)),
-    expect: BigInt(123),
+    fn: () => {
+      const bigIntValue = BigInt(123)
+      return makeSafeClone(bigIntValue) === bigIntValue
+    },
+    expect: true,
     info: 'returns BigInt as-is',
   },
   {
