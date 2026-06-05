@@ -32,9 +32,7 @@ export default [
       const barrelPath = path.join(fixtureBase, 'Index.svelte.js')
       const exports = await getSvelteExports(barrelPath)
       const names = exports.map(e => e.name)
-      return (
-        names.includes('default as TestComponent') && names.includes('default as TitleComponent')
-      )
+      return names.includes('TestComponent') && names.includes('TitleComponent')
     },
     expect: true,
     info: 'getSvelteExports returns correct export names including alias',

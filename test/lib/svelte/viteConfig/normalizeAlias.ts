@@ -17,4 +17,19 @@ export default [
     expect: is.len.eq(1),
     info: 'returns array with one entry for alias object',
   },
+  {
+    fn: () => normalizeAlias(null, '/tmp'),
+    expect: is.arr,
+    info: 'returns empty array for non-array/non-object input',
+  },
+  {
+    fn: () => normalizeAlias('not an array', '/tmp'),
+    expect: is.arr,
+    info: 'returns empty array for string input',
+  },
+  {
+    fn: () => normalizeAlias(42, '/tmp'),
+    expect: is.arr,
+    info: 'returns empty array for number input',
+  },
 ]

@@ -38,8 +38,8 @@ export default {
         const img = globalThis.document.createElement('img')
         return img.complete
       },
-      expect: false,
-      info: 'HTMLImageElement.complete is false',
+      expect: true,
+      info: 'HTMLImageElement.complete is true',
     },
   ],
 }

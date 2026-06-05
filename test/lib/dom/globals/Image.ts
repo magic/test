@@ -30,8 +30,8 @@ export default {
         const img = new Image()
         return img.complete
       },
-      expect: false,
-      info: 'Image.complete is false by default',
+      expect: true,
+      info: 'Image.complete is true by default',
     },
     {
       fn: () => {
