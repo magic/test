@@ -62,10 +62,10 @@
     "@magic/types": "0.1.35",
     "c8": "11.0.0",
     "canvas": "3.2.3",
-    "happy-dom": "20.9.0",
+    "happy-dom": "20.10.1",
     "magic-string": "0.30.21",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.59.4"
+    "typescript-eslint": "8.60.1"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -76,13 +76,13 @@
     "@magic-themes/docs": "0.0.15",
     "@magic/core": "0.0.158",
     "@magic/format": "0.0.73",
-    "@systemkollektiv/audio-player": "0.0.123",
-    "@systemkollektiv/components": "0.0.235",
+    "@systemkollektiv/audio-player": "0.0.125",
+    "@systemkollektiv/components": "0.0.237",
     "@types/node": "25.9.1",
-    "eslint": "10.4.0",
-    "prettier-plugin-svelte": "3.5.2",
-    "svelte": "5.55.9",
-    "vite": "8.0.13"
+    "eslint": "10.4.1",
+    "prettier-plugin-svelte": "4.1.0",
+    "svelte": "5.56.2",
+    "vite": "8.0.16"
   },
   "overrides": {
     "cookie": "^1.0.0"
