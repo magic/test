@@ -8,7 +8,6 @@ export default [
       )
       const button = target?.querySelector('button')
       await unmount()
-      console.log({ button })
       return !!button
     },
     expect: true,
