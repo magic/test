@@ -106,9 +106,26 @@ export const resolve = async (
       if (context.parentURL) {
         const parentDir = path.dirname(new URL(context.parentURL).pathname)
         const sveltePath = path.resolve(parentDir, specifier + '.svelte')
-        if (await fs.exists(sveltePath)) {
+        const svelteTsPath = path.resolve(parentDir, specifier + '.svelte.ts')
+        const svelteJsPath = path.resolve(parentDir, specifier + '.svelte.js')
+
+        const sveltePathExists = await fs.exists(sveltePath)
+        const svelteTsPathExists = await fs.exists(svelteTsPath)
+        const svelteJsPathExists = await fs.exists(svelteJsPath)
+
+        let finalSveltePath: string | undefined = undefined
+
+        if (sveltePathExists) {
+          finalSveltePath = sveltePath
+        } else if (svelteTsPathExists) {
+          finalSveltePath = svelteTsPath
+        } else if (svelteJsPathExists) {
+          finalSveltePath = svelteJsPath
+        }
+
+        if (finalSveltePath) {
           const { compileSvelteWithWrite } = await import('../../lib/svelte/compile/index.ts')
-          const { importUrl } = await compileSvelteWithWrite(sveltePath)
+          const { importUrl } = await compileSvelteWithWrite(finalSveltePath)
           return { url: importUrl, shortCircuit: true }
         }
       }
