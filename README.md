@@ -2424,6 +2424,14 @@ update dependencies
 - add .css import support
 - update dependencies
 
-##### 0.3.11 - unreleased
+##### 0.3.11
+
+- performance improvements, better checks if tests need to be isolated
+- fix timing issues in isolation code
+- replace regex code checks with ast checks
+- add `has` functionality for object checks
+- update dependencies
+
+##### 0.3.12 - unreleased
 
 ...
