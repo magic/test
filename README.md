@@ -2432,6 +2432,10 @@ update dependencies
 - add `has` functionality for object checks
 - update dependencies
 
-##### 0.3.12 - unreleased
+##### 0.3.12
+
+- make svelte optional for consumers
+
+##### 0.3.13 - unreleased
 
 ...
