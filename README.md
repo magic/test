@@ -2435,6 +2435,7 @@ update dependencies
 ##### 0.3.12
 
 - make svelte optional for consumers
+- update dependencies
 
 ##### 0.3.13 - unreleased
 
