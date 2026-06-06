@@ -2445,6 +2445,10 @@ update dependencies
 
 - fireEvent function now correctly handles various addEventListener event types
 
-##### 0.3.15 - unreleased
+##### 0.3.15
+
+- fix import of .svelte.js/.ts files if js/ts extension is omitted
+
+##### 0.3.16 - unreleased
 
 ...
