@@ -6,7 +6,9 @@ export declare const ERROR_MESSAGES: {
   readonly E_TEST_NO_FN: (test: string) => string
   readonly E_TEST_EXPECT: (test: string, error: Error) => string
   readonly E_TEST_BEFORE: (test: string, error: Error) => string
+  readonly E_TEST_BEFORE_EACH: (test: string, error: Error) => string
   readonly E_TEST_AFTER: (test: string, error: Error) => string
+  readonly E_TEST_AFTER_EACH: (test: string, error: Error) => string
   readonly E_TEST_FN: (test: string, error: Error) => string
   readonly E_IMPORT: (msg: string) => string
 }

@@ -67,6 +67,16 @@ export interface Test {
   after?: TestAfterHook
 
   /**
+   * Hook executed before each test run (for isolation).
+   */
+  beforeEach?: CleanupFunction
+
+  /**
+   * Hook executed after each test run (for cleanup).
+   */
+  afterEach?: CleanupFunction
+
+  /**
    * Component to mount for Svelte component tests.
    * Can be a string path or [path, props] tuple.
    */

@@ -1,7 +1,10 @@
-import type { WrappedTest } from '../../types.ts'
+import type { WrappedTest, TestObject } from '../../types.ts'
 
-export const testNeedsIsolation = (test: WrappedTest): boolean => {
+export const testNeedsIsolation = (test: WrappedTest, suite?: TestObject): boolean => {
   if (test.before || test.after) {
+    return true
+  }
+  if (suite && (suite.beforeEach || suite.afterEach)) {
     return true
   }
   if (

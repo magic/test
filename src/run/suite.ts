@@ -68,6 +68,7 @@ const runTestArray = async (
   useWorkers: boolean,
   hasBeforeAll: boolean,
   suiteSnapshot?: Snapshot,
+  suiteObj?: TestObject,
 ): Promise<(TestResult | Suite)[]> => {
   if (needsIsolation && useWorkers) {
     const allResults: TestResult[] = []
@@ -82,7 +83,7 @@ const runTestArray = async (
         pkg,
       }
 
-      if (testNeedsIsolation(test)) {
+      if (testNeedsIsolation(test, suiteObj)) {
         testsWithHooks.push({ test: test, index: i })
       } else {
         testsWithoutHooks.push({ test: test, index: i })
@@ -121,7 +122,7 @@ const runTestArray = async (
       const pool = getWorkerPool()
       const individualPromises = testsWithHooks.map(({ test, index }) =>
         pool(() => {
-          if (test.component) {
+          if (test.component && !needsIsolation) {
             return runTest(test, store, rawResults).then(r => ({ result: r, index }))
           }
           return isolation
@@ -159,6 +160,33 @@ const runTestArray = async (
   }
 
   // No isolation needed: run in parallel without isolation
+  // But when needsIsolation is true, run sequentially to ensure proper hook execution
+  if (needsIsolation && (suiteObj?.beforeEach || suiteObj?.afterEach)) {
+    const results: (TestResult | Suite)[] = []
+    for (const t of tests) {
+      const test = {
+        ...t,
+        name,
+        parent,
+        pkg,
+      }
+
+      if (suiteObj && is.function(suiteObj.beforeEach)) {
+        await suiteObj.beforeEach()
+      }
+
+      const result = await runTest(test, store, rawResults)
+      if (result) {
+        results.push(result)
+      }
+
+      if (suiteObj && is.function(suiteObj.afterEach)) {
+        await suiteObj.afterEach()
+      }
+    }
+    return results
+  }
+
   const promises = tests.map(t => {
     const test = {
       ...t,
@@ -233,6 +261,7 @@ const runTestObject = async (
       useWorkers,
       hasBeforeAll,
       suiteSnapshot,
+      testsObj,
     )
 
     // Run afterAll cleanup

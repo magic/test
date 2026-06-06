@@ -10,7 +10,13 @@ export const suiteNeedsIsolation = tests => {
     if (!is.objectNative(tests)) {
       return false
     }
-    if (is.function(tests.before) || is.function(tests.after)) {
+    if (
+      is.function(tests.before) ||
+      is.function(tests.after) ||
+      is.function(tests.beforeEach) ||
+      is.function(tests.beforeAll) ||
+      is.function(tests.afterAll)
+    ) {
       return true
     }
     if (tests.tests && is.objectNative(tests.tests)) {

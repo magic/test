@@ -28,8 +28,14 @@ const runSingleMode = async () => {
     }
     let result
     try {
+      if (is.objectNative(tests) && is.function(tests.beforeEach)) {
+        await tests.beforeEach()
+      }
       result = await runSingleTestFromFileInWorker(tests, testIndex, testPkg, testParent, testName)
     } finally {
+      if (is.objectNative(tests) && is.function(tests.afterEach)) {
+        await tests.afterEach()
+      }
       if (afterAllCleanup) {
         await afterAllCleanup()
       }
@@ -81,6 +87,9 @@ const runBatchMode = async () => {
       for (let i = 0; i < testIndices.length; i++) {
         const testIndex = testIndices[i]
         const testName = testNames[i]
+        if (is.objectNative(tests) && is.function(tests.beforeEach)) {
+          await tests.beforeEach()
+        }
         const result = await runSingleTestFromFileInWorker(
           tests,
           testIndex,
@@ -92,6 +101,9 @@ const runBatchMode = async () => {
           ...result,
           result: makeSafeClone(result.result),
         })
+        if (is.objectNative(tests) && is.function(tests.afterEach)) {
+          await tests.afterEach()
+        }
       }
     } finally {
       if (afterAllCleanup) {

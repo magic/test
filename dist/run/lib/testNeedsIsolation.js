@@ -1,5 +1,8 @@
-export const testNeedsIsolation = test => {
+export const testNeedsIsolation = (test, suite) => {
   if (test.before || test.after) {
+    return true
+  }
+  if (suite && (suite.beforeEach || suite.afterEach)) {
     return true
   }
   if (Object.hasOwn(test, '__isolate') && test.__isolate === true) {

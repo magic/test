@@ -6,7 +6,9 @@ export const ERRORS: Record<string, string> = {
   E_TEST_NO_FN: 'E_TEST_NO_FN',
   E_TEST_EXPECT: 'E_TEST_EXPECT',
   E_TEST_BEFORE: 'E_TEST_BEFORE',
+  E_TEST_BEFORE_EACH: 'E_TEST_BEFORE_EACH',
   E_TEST_AFTER: 'E_TEST_AFTER',
+  E_TEST_AFTER_EACH: 'E_TEST_AFTER_EACH',
   E_TEST_FN: 'E_TEST_FN',
   E_NO_TESTS: 'E_NO_TESTS',
   E_IMPORT: 'E_IMPORT',
@@ -19,7 +21,10 @@ export const ERROR_MESSAGES = {
   E_TEST_NO_FN: (test: string) => `test.fn is not a function in ${test}`,
   E_TEST_EXPECT: (test: string, error: Error) => `Expect failed for ${test}: ${error}`,
   E_TEST_BEFORE: (test: string, error: Error) => `Before hook failed for ${test}: ${error}`,
+  E_TEST_BEFORE_EACH: (test: string, error: Error) =>
+    `BeforeEach hook failed for ${test}: ${error}`,
   E_TEST_AFTER: (test: string, error: Error) => `After hook failed for ${test}: ${error}`,
+  E_TEST_AFTER_EACH: (test: string, error: Error) => `AfterEach hook failed for ${test}: ${error}`,
   E_TEST_FN: (test: string, error: Error) => `Test function failed for ${test}: ${error}`,
   E_IMPORT: (msg: string) => `Failed to import: ${msg}`,
 } as const
