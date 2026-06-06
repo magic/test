@@ -2441,6 +2441,10 @@ update dependencies
 
 - update dependencies
 
-##### 0.3.14 - unreleased
+##### 0.3.14
+
+- fireEvent function now correctly handles various addEventListener event types
+
+##### 0.3.15 - unreleased
 
 ...
