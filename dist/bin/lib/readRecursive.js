@@ -22,7 +22,6 @@ import { pathToFileURL, fileURLToPath } from 'node:url'
 import fs from '@magic/fs'
 import is from '@magic/types'
 import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js'
-import { getViteDefine } from '../../lib/svelte/viteConfig/index.js'
 import {
   resolveSvelteOnlyExports,
   writeTempFile,
@@ -83,6 +82,7 @@ export const readRecursive = async (dir = '') => {
   if (await fs.exists(indexFileTsPath)) {
     indexFilePath = indexFileTsPath
   }
+  const { getViteDefine } = await import('../../lib/svelte/viteConfig/index.js')
   if (await fs.exists(indexFilePath)) {
     // if index.js exists, we will simply import it as is and do no recursion.
     const fileP = indexFilePath.replace(testDir, '')

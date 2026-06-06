@@ -113,7 +113,7 @@ const handleJsWithSvelteReexports = async (
 
   const replacements: Array<{ original: string; replacement: string }> = []
 
-  const fileInfo = parseFile(code, jsFilePath)
+  const fileInfo = await parseFile(code, jsFilePath)
   const exports = extractExports(fileInfo)
   const imports = extractImports(fileInfo)
 
@@ -275,7 +275,7 @@ const extractNamedExportsRecursive = async (
   visited.add(filePath)
 
   const content = await fs.readFile(filePath, 'utf-8')
-  const fileInfo = parseFile(content, filePath)
+  const fileInfo = await parseFile(content, filePath)
   const exports = extractExports(fileInfo)
   const result: ExportInfo[] = []
 
@@ -327,7 +327,7 @@ const findSvelteFileForExport = async (
   visited.add(filePath)
 
   const content = await fs.readFile(filePath, 'utf-8')
-  const fileInfo = parseFile(content, filePath)
+  const fileInfo = await parseFile(content, filePath)
   const exports = extractExports(fileInfo)
   const fileDir = path.dirname(filePath)
 
@@ -369,8 +369,8 @@ const isSkipPattern = (spec: string): boolean => {
   )
 }
 
-const extractNamedImportsFromCode = (code: string, spec: string): string[] => {
-  const fi = parseFile(code, '<inline>')
+const extractNamedImportsFromCode = async (code: string, spec: string): Promise<string[]> => {
+  const fi = await parseFile(code, '<inline>')
   const imports = extractImports(fi)
   return imports
     .filter(imp => imp.source === spec && (imp.type === 'static' || imp.type === 'namespace'))
@@ -395,7 +395,7 @@ export const resolveSvelteOnlyExports = async (
 ): Promise<string> => {
   let result = code
 
-  const fileInfo = parseFile(code, '<inline>')
+  const fileInfo = await parseFile(code, '<inline>')
   const imports = extractImports(fileInfo)
   const exports = extractExports(fileInfo)
 
@@ -424,7 +424,7 @@ export const resolveSvelteOnlyExports = async (
       let exportStarCode: string | null = null
 
       if (resolved.isSvelteOnly && resolved.resolvedPath) {
-        const namedImports = extractNamedImportsFromCode(code, spec)
+        const namedImports = await extractNamedImportsFromCode(code, spec)
 
         if (namedImports.length > 0) {
           const svelteFiles = await Promise.all(

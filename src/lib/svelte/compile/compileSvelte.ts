@@ -1,6 +1,5 @@
 import path from 'node:path'
 
-import { compile, preprocess } from 'svelte/compiler'
 import fs from '@magic/fs'
 
 import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.ts'
@@ -17,6 +16,8 @@ export interface CompileSvelteReturn {
 }
 
 export const compileSvelte = async (filePath: string): Promise<CompileSvelteReturn> => {
+  const { compile, preprocess } = await import('svelte/compiler')
+
   await cleanTempFiles()
 
   const relPath = path.relative(CWD, filePath)

@@ -19,13 +19,10 @@ export const executeTest = async (fn, _key, componentFile, componentProps) => {
       target.remove()
     }
   }
-  if (is.function(fn) || is.promise(fn)) {
-    if (is.function(fn)) {
-      return await fn()
-    }
-    if (is.promise(fn)) {
-      return await fn
-    }
+  if (is.function(fn)) {
+    return await fn()
+  } else if (is.promise(fn)) {
+    return await fn
   }
   return fn
 }

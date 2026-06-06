@@ -1,4 +1,3 @@
-import { parse } from 'svelte/compiler'
 import is from '@magic/types'
 
 import { getViteDefine } from './viteConfig/index.ts'
@@ -31,11 +30,15 @@ const walk = (node: unknown, handlers: { enter: (n: ASTNode) => void }): void =>
   visit(node)
 }
 
-const extractRuneVariables = (source: string): { state: string[]; derived: string[] } => {
+const extractRuneVariables = async (
+  source: string,
+): Promise<{ state: string[]; derived: string[] }> => {
   const state: string[] = []
   const derived: string[] = []
 
   try {
+    const { parse } = await import('svelte/compiler')
+
     const ast = parse(source, { modern: true })
 
     if (!ast.instance || !ast.instance.content) {
@@ -98,7 +101,7 @@ export const testExportsPreprocessor = () => {
         return { code: content }
       }
 
-      const { state, derived } = extractRuneVariables(content)
+      const { state, derived } = await extractRuneVariables(content)
 
       const toExport = [...state, ...derived]
 

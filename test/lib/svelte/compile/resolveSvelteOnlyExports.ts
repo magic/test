@@ -143,9 +143,9 @@ export default [
     info: 'isSkipPattern returns false for scoped package',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export { foo as bar, baz as qux } from './x'`
-      const fi = parseFile(code, 'test.js')
+      const fi = await parseFile(code, 'test.js')
       const exports = extractExports(fi)
       return (
         exports.length === 2 &&
@@ -159,9 +159,9 @@ export default [
     info: 'extracts export { foo as bar, baz as qux }',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export type { Foo } from './x'`
-      const fi = parseFile(code, 'test.ts')
+      const fi = await parseFile(code, 'test.ts')
       const exports = extractExports(fi)
       return exports.length === 1 && exports[0]!.name === 'Foo' && exports[0]!.isType === true
     },
@@ -169,9 +169,9 @@ export default [
     info: 'extracts export type { Foo }',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export * as NS from './x'`
-      const fi = parseFile(code, 'test.js')
+      const fi = await parseFile(code, 'test.js')
       const exports = extractExports(fi)
       return exports.length === 1 && exports[0]!.name === '*' && exports[0]!.source === './x'
     },
@@ -179,9 +179,9 @@ export default [
     info: 'extracts export * as NS from "./x"',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export { default as exports } from './x.svelte'`
-      const fi = parseFile(code, 'test.js')
+      const fi = await parseFile(code, 'test.js')
       const exports = extractExports(fi)
       return (
         exports.length === 1 &&
@@ -194,9 +194,9 @@ export default [
     info: 'extracts export default from "./x.svelte"',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export function foo<T>() {}`
-      const fi = parseFile(code, 'test.ts')
+      const fi = await parseFile(code, 'test.ts')
       const exports = extractExports(fi)
       return exports.length === 1 && exports[0]!.name === 'foo'
     },
@@ -204,9 +204,9 @@ export default [
     info: 'extracts export function with generics',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export enum Foo {}`
-      const fi = parseFile(code, 'test.ts')
+      const fi = await parseFile(code, 'test.ts')
       const exports = extractExports(fi)
       return exports.length === 1 && exports[0]!.name === 'Foo'
     },
@@ -214,9 +214,9 @@ export default [
     info: 'extracts export enum',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export interface Foo {}`
-      const fi = parseFile(code, 'test.ts')
+      const fi = await parseFile(code, 'test.ts')
       const exports = extractExports(fi)
       return exports.length === 1 && exports[0]!.name === 'Foo'
     },
@@ -224,9 +224,9 @@ export default [
     info: 'extracts export interface',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export type Foo = string`
-      const fi = parseFile(code, 'test.ts')
+      const fi = await parseFile(code, 'test.ts')
       const exports = extractExports(fi)
       return exports.length === 1 && exports[0]!.name === 'Foo'
     },
@@ -234,12 +234,12 @@ export default [
     info: 'extracts export type alias',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `<script>
 export const foo = 1;
 export { bar } from './bar.svelte';
 </script>`
-      const fi = parseFile(code, 'test.svelte')
+      const fi = await parseFile(code, 'test.svelte')
       const exports = extractExports(fi)
       return (
         exports.length === 2 &&
@@ -253,9 +253,9 @@ export { bar } from './bar.svelte';
     info: 'extracts exports from svelte file',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `import { foo, bar as baz } from './x'`
-      const fi = parseFile(code, 'test.js')
+      const fi = await parseFile(code, 'test.js')
       const imports = extractImports(fi)
       return (
         imports.length === 1 &&
@@ -269,9 +269,9 @@ export { bar } from './bar.svelte';
     info: 'extracts static imports',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `import * as NS from './x'`
-      const fi = parseFile(code, 'test.js')
+      const fi = await parseFile(code, 'test.js')
       const imports = extractImports(fi)
       return (
         imports.length === 1 &&
@@ -284,9 +284,9 @@ export { bar } from './bar.svelte';
     info: 'extracts namespace imports',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `import './x'`
-      const fi = parseFile(code, 'test.js')
+      const fi = await parseFile(code, 'test.js')
       const imports = extractImports(fi)
       return (
         imports.length === 1 &&
@@ -299,9 +299,9 @@ export { bar } from './bar.svelte';
     info: 'extracts side-effect imports',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `const x = await import('./x')`
-      const fi = parseFile(code, 'test.js')
+      const fi = await parseFile(code, 'test.js')
       const imports = extractImports(fi)
       return imports.length === 1 && imports[0]!.type === 'dynamic' && imports[0]!.source === './x'
     },
@@ -309,9 +309,9 @@ export { bar } from './bar.svelte';
     info: 'extracts dynamic imports',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export default function foo() {}`
-      const fi = parseFile(code, 'test.js')
+      const fi = await parseFile(code, 'test.js')
       const exports = extractExports(fi)
       return exports.length === 1 && exports[0]!.name === 'default' && exports[0]!.isDefault
     },
@@ -319,9 +319,9 @@ export { bar } from './bar.svelte';
     info: 'extracts export default function',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export default class Foo {}`
-      const fi = parseFile(code, 'test.js')
+      const fi = await parseFile(code, 'test.js')
       const exports = extractExports(fi)
       return exports.length === 1 && exports[0]!.name === 'default' && exports[0]!.isDefault
     },
@@ -329,9 +329,9 @@ export { bar } from './bar.svelte';
     info: 'extracts export default class',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export const a = 1, b = 2`
-      const fi = parseFile(code, 'test.js')
+      const fi = await parseFile(code, 'test.js')
       const exports = extractExports(fi)
       return exports.length === 2 && exports[0]!.name === 'a' && exports[1]!.name === 'b'
     },
@@ -339,9 +339,9 @@ export { bar } from './bar.svelte';
     info: 'extracts multiple const declarations',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export { foo, bar }`
-      const fi = parseFile(code, 'test.js')
+      const fi = await parseFile(code, 'test.js')
       const exports = extractExports(fi)
       return exports.length === 2 && exports[0]!.name === 'foo' && exports[1]!.name === 'bar'
     },
@@ -349,9 +349,9 @@ export { bar } from './bar.svelte';
     info: 'extracts named exports without source',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export { foo as bar } from './x'`
-      const fi = parseFile(code, 'test.js')
+      const fi = await parseFile(code, 'test.js')
       const exports = extractExports(fi)
       return exports.length === 1 && exports[0]!.name === 'foo' && exports[0]!.alias === 'bar'
     },
@@ -359,9 +359,9 @@ export { bar } from './bar.svelte';
     info: 'extracts export with alias',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export * from './x'`
-      const fi = parseFile(code, 'test.js')
+      const fi = await parseFile(code, 'test.js')
       const exports = extractExports(fi)
       return exports.length === 1 && exports[0]!.name === '*' && exports[0]!.isBatch
     },
@@ -369,9 +369,9 @@ export { bar } from './bar.svelte';
     info: 'extracts export all',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export = foo`
-      const fi = parseFile(code, 'test.ts')
+      const fi = await parseFile(code, 'test.ts')
       const exports = extractExports(fi)
       return exports.length === 1 && exports[0]!.name === 'default' && exports[0]!.isDefault
     },
@@ -379,9 +379,9 @@ export { bar } from './bar.svelte';
     info: 'extracts TSExportAssignment (export =)',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export const { a, b } = obj`
-      const fi = parseFile(code, 'test.js')
+      const fi = await parseFile(code, 'test.js')
       const exports = extractExports(fi)
       return exports.length === 2 && exports[0]!.name === 'a' && exports[1]!.name === 'b'
     },
@@ -389,9 +389,9 @@ export { bar } from './bar.svelte';
     info: 'extracts destructuring object export',
   },
   {
-    fn: () => {
+    fn: async () => {
       const code = `export const [x, y] = arr`
-      const fi = parseFile(code, 'test.js')
+      const fi = await parseFile(code, 'test.js')
       const exports = extractExports(fi)
       return exports.length === 2 && exports[0]!.name === 'x' && exports[1]!.name === 'y'
     },

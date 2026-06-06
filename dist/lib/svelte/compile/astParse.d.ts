@@ -6,8 +6,8 @@ export type FileInfo = {
   filePath: string
 }
 export declare const clearAstCache: () => void
-declare const extractScriptFromSvelte: (source: string) => string
-declare const parseFile: (code: string, filePath: string) => FileInfo
+declare const extractScriptFromSvelte: (source: string) => Promise<string>
+declare const parseFile: (code: string, filePath: string) => Promise<FileInfo>
 declare const getOriginal: (node: TSESTree.Node, code: string) => string
 declare const getDeclarationNames: (decl: TSESTree.Node) => string[]
 declare const extractExports: (fileInfo: FileInfo) => ExportInfo[]

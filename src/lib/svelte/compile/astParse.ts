@@ -1,6 +1,5 @@
 import { parse } from '@typescript-eslint/parser'
 import type { TSESTree } from '@typescript-eslint/types'
-import { parse as parseSvelte } from 'svelte/compiler'
 import crypto from 'node:crypto'
 import type { ExportInfo } from './types.ts'
 import is from '@magic/types'
@@ -20,8 +19,10 @@ const getCacheKey = (code: string, filePath: string): string => {
   return `${filePath}:${hash}`
 }
 
-const extractScriptFromSvelte = (source: string): string => {
+const extractScriptFromSvelte = async (source: string): Promise<string> => {
   try {
+    const { parse: parseSvelte } = await import('svelte/compiler')
+
     const ast = parseSvelte(source, { modern: true })
 
     const parts: string[] = []
@@ -55,7 +56,7 @@ const extractScriptFromSvelte = (source: string): string => {
   }
 }
 
-const parseFile = (code: string, filePath: string): FileInfo => {
+const parseFile = async (code: string, filePath: string): Promise<FileInfo> => {
   const cacheKey = getCacheKey(code, filePath)
   const cached = astCache.get(cacheKey)
   if (cached) {
@@ -63,7 +64,7 @@ const parseFile = (code: string, filePath: string): FileInfo => {
   }
 
   const isSvelte = filePath.endsWith('.svelte')
-  const codeToParse = isSvelte ? extractScriptFromSvelte(code) : code
+  const codeToParse = isSvelte ? await extractScriptFromSvelte(code) : code
 
   const ast = parse(codeToParse, {
     sourceType: 'module',

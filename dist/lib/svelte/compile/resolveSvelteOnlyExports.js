@@ -84,7 +84,7 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
   }
   visited.add(jsFilePath)
   const replacements = []
-  const fileInfo = parseFile(code, jsFilePath)
+  const fileInfo = await parseFile(code, jsFilePath)
   const exports = extractExports(fileInfo)
   const imports = extractImports(fileInfo)
   let jsDir = path.dirname(jsFilePath)
@@ -236,7 +236,7 @@ const extractNamedExportsRecursive = async (filePath, visited) => {
   visited ??= new Set()
   visited.add(filePath)
   const content = await fs.readFile(filePath, 'utf-8')
-  const fileInfo = parseFile(content, filePath)
+  const fileInfo = await parseFile(content, filePath)
   const exports = extractExports(fileInfo)
   const result = []
   for (const exp of exports) {
@@ -280,7 +280,7 @@ const findSvelteFileForExport = async (filePath, exportName, visited) => {
   visited ??= new Set()
   visited.add(filePath)
   const content = await fs.readFile(filePath, 'utf-8')
-  const fileInfo = parseFile(content, filePath)
+  const fileInfo = await parseFile(content, filePath)
   const exports = extractExports(fileInfo)
   const fileDir = path.dirname(filePath)
   for (const exp of exports) {
@@ -318,8 +318,8 @@ const isSkipPattern = spec => {
     spec.startsWith('./') || spec.startsWith('../') || spec.startsWith('$') || spec.startsWith('/')
   )
 }
-const extractNamedImportsFromCode = (code, spec) => {
-  const fi = parseFile(code, '<inline>')
+const extractNamedImportsFromCode = async (code, spec) => {
+  const fi = await parseFile(code, '<inline>')
   const imports = extractImports(fi)
   return imports
     .filter(imp => imp.source === spec && (imp.type === 'static' || imp.type === 'namespace'))
@@ -332,7 +332,7 @@ const extractNamedImportsFromCode = (code, spec) => {
 }
 export const resolveSvelteOnlyExports = async (code, sourceDir) => {
   let result = code
-  const fileInfo = parseFile(code, '<inline>')
+  const fileInfo = await parseFile(code, '<inline>')
   const imports = extractImports(fileInfo)
   const exports = extractExports(fileInfo)
   const specsToResolve = new Set()
@@ -355,7 +355,7 @@ export const resolveSvelteOnlyExports = async (code, sourceDir) => {
       let compiledPath = null
       let exportStarCode = null
       if (resolved.isSvelteOnly && resolved.resolvedPath) {
-        const namedImports = extractNamedImportsFromCode(code, spec)
+        const namedImports = await extractNamedImportsFromCode(code, spec)
         if (namedImports.length > 0) {
           const svelteFiles = await Promise.all(
             namedImports.map(async name => {

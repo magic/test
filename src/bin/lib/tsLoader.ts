@@ -4,7 +4,6 @@ import { pathToFileURL } from 'node:url'
 import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.ts'
 import is from '@magic/types'
 import ts from 'typescript'
-import { compileModule } from 'svelte/compiler'
 
 export const resolve = async (
   specifier: string,
@@ -188,6 +187,7 @@ export const load = async (
       const source = await fs.readFile(filePath, 'utf-8')
       const withResolvedImports = await resolveDollarLibImports(source, filePath)
       const transpiled = transpileWithTypeScript(withResolvedImports)
+      const { compileModule } = await import('svelte/compiler')
 
       const result = compileModule(transpiled, { filename: filePath })
       return { format: 'module', source: result.js.code, shortCircuit: true }

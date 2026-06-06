@@ -1,5 +1,4 @@
 import path from 'node:path'
-import { compile, preprocess } from 'svelte/compiler'
 import fs from '@magic/fs'
 import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.js'
 import { cache } from './cache.js'
@@ -7,6 +6,7 @@ import { TMP_DIR, CWD } from '../../../constants.js'
 import { cleanTempFiles } from './cleanTempFiles.js'
 import { acquireLock } from './acquireLock.js'
 export const compileSvelte = async filePath => {
+  const { compile, preprocess } = await import('svelte/compiler')
   await cleanTempFiles()
   const relPath = path.relative(CWD, filePath)
   const mapFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.map'))

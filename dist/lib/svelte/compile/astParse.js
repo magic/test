@@ -1,5 +1,4 @@
 import { parse } from '@typescript-eslint/parser'
-import { parse as parseSvelte } from 'svelte/compiler'
 import crypto from 'node:crypto'
 import is from '@magic/types'
 const astCache = new Map()
@@ -8,8 +7,9 @@ const getCacheKey = (code, filePath) => {
   const hash = crypto.createHash('sha256').update(code).digest('hex')
   return `${filePath}:${hash}`
 }
-const extractScriptFromSvelte = source => {
+const extractScriptFromSvelte = async source => {
   try {
+    const { parse: parseSvelte } = await import('svelte/compiler')
     const ast = parseSvelte(source, { modern: true })
     const parts = []
     const extractBody = content => {
@@ -37,14 +37,14 @@ const extractScriptFromSvelte = source => {
     return ''
   }
 }
-const parseFile = (code, filePath) => {
+const parseFile = async (code, filePath) => {
   const cacheKey = getCacheKey(code, filePath)
   const cached = astCache.get(cacheKey)
   if (cached) {
     return cached
   }
   const isSvelte = filePath.endsWith('.svelte')
-  const codeToParse = isSvelte ? extractScriptFromSvelte(code) : code
+  const codeToParse = isSvelte ? await extractScriptFromSvelte(code) : code
   const ast = parse(codeToParse, {
     sourceType: 'module',
     ecmaVersion: 'latest',
