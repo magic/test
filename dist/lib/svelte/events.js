@@ -10,6 +10,7 @@ import {
   ClipboardEvent,
   AnimationEvent,
   CustomEvent,
+  WheelEvent,
 } from 'happy-dom'
 class DragEvent extends Event {
   dataTransfer
@@ -314,18 +315,52 @@ export const checked = target => {
   Object.defineProperty(target, 'checked', { value: true, writable: false, configurable: true })
   target.dispatchEvent(new Event('change', { bubbles: true, cancelable: false }))
 }
+const getEventClass = eventName => {
+  if (eventName.startsWith('pointer')) {
+    return PointerEvent
+  }
+  if (eventName.startsWith('mouse')) {
+    return MouseEvent
+  }
+  if (eventName.startsWith('key')) {
+    return KeyboardEvent
+  }
+  if (eventName.startsWith('touch')) {
+    return TouchEvent
+  }
+  if (eventName.startsWith('drag')) {
+    return DragEvent
+  }
+  if (eventName.startsWith('wheel')) {
+    return WheelEvent
+  }
+  if (eventName.startsWith('focus')) {
+    return FocusEvent
+  }
+  if (eventName.startsWith('animation')) {
+    return AnimationEvent
+  }
+  if (eventName.startsWith('transition')) {
+    return TransitionEvent
+  }
+  if (eventName.startsWith('clipboard')) {
+    return ClipboardEvent
+  }
+  return Event
+}
 export const fireEvent = (target, eventName, options = {}) => {
   const { selector, detail, ...eventInit } = options
-  const el = getElement(target, selector)
+  const el = selector ? target.querySelector(selector) : target
   if (!el) {
     console.warn(`fireEvent: No element found for selector "${selector}"`)
     return
   }
   if (detail) {
     el.dispatchEvent(new CustomEvent(eventName, { bubbles: true, cancelable: true, detail }))
-  } else {
-    el.dispatchEvent(new Event(eventName, { bubbles: true, cancelable: true, ...eventInit }))
+    return
   }
+  const EventClass = getEventClass(eventName)
+  el.dispatchEvent(new EventClass(eventName, { bubbles: true, cancelable: true, ...eventInit }))
 }
 fireEvent.click = click
 fireEvent.dblClick = dblClick

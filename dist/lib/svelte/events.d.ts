@@ -78,12 +78,16 @@ export declare const pause: (target: HTMLMediaElement | Element) => void
 export declare const ended: (target: HTMLMediaElement | Element) => void
 export declare const volumeChange: (target: HTMLMediaElement | Element) => void
 export declare const checked: (target: HTMLInputElement | HTMLSelectElement | Element) => void
-type FireEventOptions = {
-  selector?: string
-  detail?: unknown
-}
 export declare const fireEvent: {
-  (target: Element | Document, eventName: string, options?: EventInit & FireEventOptions): void
+  (
+    target: unknown,
+    eventName: string,
+    options?: {
+      selector?: string
+      detail?: unknown
+      [key: string]: unknown
+    },
+  ): void
   click: (target: unknown, selector?: string) => void
   dblClick: (target: Element | Document, selector?: string) => void
   contextMenu: (target: Element | Document, selector?: string) => void
@@ -142,4 +146,3 @@ export declare const fireEvent: {
   checked: (target: HTMLInputElement | HTMLSelectElement | Element) => void
   trigger: (target: unknown, eventType: string, options?: EventInit) => void
 }
-export {}

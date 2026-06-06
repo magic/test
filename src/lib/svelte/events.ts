@@ -18,6 +18,7 @@ import {
   HTMLSelectElement,
   HTMLFormElement,
   HTMLMediaElement,
+  WheelEvent,
 } from 'happy-dom'
 
 class DragEvent extends Event {
@@ -387,18 +388,49 @@ export const checked = (target: HTMLInputElement | HTMLSelectElement | Element):
   target.dispatchEvent(new Event('change', { bubbles: true, cancelable: false }))
 }
 
-type FireEventOptions = {
-  selector?: string
-  detail?: unknown
+const getEventClass = (eventName: string) => {
+  if (eventName.startsWith('pointer')) {
+    return PointerEvent
+  }
+  if (eventName.startsWith('mouse')) {
+    return MouseEvent
+  }
+  if (eventName.startsWith('key')) {
+    return KeyboardEvent
+  }
+  if (eventName.startsWith('touch')) {
+    return TouchEvent
+  }
+  if (eventName.startsWith('drag')) {
+    return DragEvent
+  }
+  if (eventName.startsWith('wheel')) {
+    return WheelEvent
+  }
+  if (eventName.startsWith('focus')) {
+    return FocusEvent
+  }
+  if (eventName.startsWith('animation')) {
+    return AnimationEvent
+  }
+  if (eventName.startsWith('transition')) {
+    return TransitionEvent
+  }
+  if (eventName.startsWith('clipboard')) {
+    return ClipboardEvent
+  }
+  return Event
 }
 
 export const fireEvent = (
-  target: Element | Document,
+  target: unknown,
   eventName: string,
-  options: EventInit & FireEventOptions = {},
+  options: { selector?: string; detail?: unknown; [key: string]: unknown } = {},
 ): void => {
   const { selector, detail, ...eventInit } = options
-  const el = getElement(target, selector)
+  const el = selector
+    ? (target as Element).querySelector(selector)
+    : (target as Element | Document | null)
 
   if (!el) {
     console.warn(`fireEvent: No element found for selector "${selector}"`)
@@ -407,9 +439,10 @@ export const fireEvent = (
 
   if (detail) {
     el.dispatchEvent(new CustomEvent(eventName, { bubbles: true, cancelable: true, detail }))
-  } else {
-    el.dispatchEvent(new Event(eventName, { bubbles: true, cancelable: true, ...eventInit }))
+    return
   }
+  const EventClass = getEventClass(eventName)
+  el.dispatchEvent(new EventClass(eventName, { bubbles: true, cancelable: true, ...eventInit }))
 }
 
 fireEvent.click = click
