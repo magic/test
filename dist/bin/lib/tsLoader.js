@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url'
 import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.js'
 import is from '@magic/types'
 import ts from 'typescript'
+import log from '@magic/log'
 export const resolve = async (specifier, context, nextResolve) => {
   try {
     // Handle .js -> .ts conversion for imports without compiled JS
@@ -29,8 +30,8 @@ export const resolve = async (specifier, context, nextResolve) => {
           }
           return { url: pathToFileURL(aliasResolved).href, shortCircuit: true }
         }
-      } catch {
-        // ignore
+      } catch (e) {
+        log.error('Error', e)
       }
     }
     // Handle .svelte files
@@ -114,8 +115,9 @@ export const resolve = async (specifier, context, nextResolve) => {
         }
       }
     }
-  } catch {
+  } catch (e) {
     // fall through
+    log.error('Error resolving file', e)
   }
   return nextResolve(specifier, context)
 }

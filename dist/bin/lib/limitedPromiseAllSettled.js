@@ -24,6 +24,9 @@ export const limitedPromiseAllSettled = async (items, limit, fn) => {
     }
   }
   consume()
-  await Promise.all(running)
+  while (running.length > 0) {
+    await Promise.race(running)
+    consume()
+  }
   return results
 }
