@@ -127,9 +127,18 @@ const skipProps = [
 export class Isolation {
   snapshots
   suiteSnapshots
+  activeWorkers
   constructor() {
     this.snapshots = new Map()
     this.suiteSnapshots = new Map()
+    this.activeWorkers = new Set()
+  }
+  /**
+   * Terminate all active workers. Call this on shutdown.
+   */
+  async terminateAllWorkers() {
+    await Promise.all(Array.from(this.activeWorkers).map(worker => worker.terminate()))
+    this.activeWorkers.clear()
   }
   /**
    * Improved deepClone: returns primitives, copies common built-ins.
@@ -431,8 +440,10 @@ export class Isolation {
           suiteSnapshot: options.suiteSnapshot,
         },
       })
+      this.activeWorkers.add(worker)
       let settled = false
       const cleanup = () => {
+        this.activeWorkers.delete(worker)
         worker.terminate()
       }
       worker.on('message', result => {
@@ -479,8 +490,10 @@ export class Isolation {
           batchMode: true,
         },
       })
+      this.activeWorkers.add(worker)
       let settled = false
       const cleanup = () => {
+        this.activeWorkers.delete(worker)
         worker.terminate()
       }
       worker.on('message', result => {

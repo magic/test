@@ -5,7 +5,9 @@ import fs from '@magic/fs'
 import is from '@magic/types'
 import log from '@magic/log'
 import { abort } from '../run.js'
+import { isolation } from '../run/isolation.js'
 const cwd = process.cwd()
+let childProcess = null
 const res = cli({
   options: [
     ['--verbose', '--loud', '--l', '-l'],
@@ -120,12 +122,26 @@ const run = async () => {
       ...argv,
     ]
   }
-  await cli.spawn(cmd, argv)
+  childProcess = await cli.spawn(cmd, argv)
 }
 run()
 const shutdown = async () => {
   log.warn('Received shutdown signal, aborting tests...')
-  await abort()
+  if (childProcess) {
+    const pid = childProcess.pid
+    childProcess.kill('SIGINT')
+    if (pid) {
+      try {
+        process.kill(-pid, 'SIGINT')
+      } catch {
+        // process group already gone
+      }
+    }
+    childProcess = null
+  } else {
+    await isolation.terminateAllWorkers()
+    await abort()
+  }
   process.exit(1)
 }
 process.on('SIGTERM', shutdown).on('SIGINT', shutdown)

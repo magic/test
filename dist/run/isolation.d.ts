@@ -2,7 +2,12 @@ import type { Snapshot, TestResult } from '../types.ts'
 export declare class Isolation {
   private snapshots
   private suiteSnapshots
+  private activeWorkers
   constructor()
+  /**
+   * Terminate all active workers. Call this on shutdown.
+   */
+  terminateAllWorkers(): Promise<void>
   /**
    * Improved deepClone: returns primitives, copies common built-ins.
    */

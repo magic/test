@@ -12,10 +12,10 @@ import {
   CustomEvent,
   WheelEvent,
 } from 'happy-dom'
-class DragEvent extends Event {
+export class DragEvent extends Event {
   dataTransfer
 }
-class TransitionEvent extends Event {
+export class TransitionEvent extends Event {
   propertyName
   elapsedTime
 }
@@ -315,7 +315,7 @@ export const checked = target => {
   Object.defineProperty(target, 'checked', { value: true, writable: false, configurable: true })
   target.dispatchEvent(new Event('change', { bubbles: true, cancelable: false }))
 }
-const getEventClass = eventName => {
+export const getEventClass = eventName => {
   if (eventName.startsWith('pointer')) {
     return PointerEvent
   }

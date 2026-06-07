@@ -2,12 +2,28 @@ import {
   Element,
   Document,
   Window,
+  Event,
+  MouseEvent,
+  KeyboardEvent,
+  FocusEvent,
+  PointerEvent,
+  TouchEvent,
+  ClipboardEvent,
+  AnimationEvent,
   HTMLInputElement,
   HTMLTextAreaElement,
   HTMLSelectElement,
   HTMLFormElement,
   HTMLMediaElement,
+  WheelEvent,
 } from 'happy-dom'
+export declare class DragEvent extends Event {
+  dataTransfer?: unknown
+}
+export declare class TransitionEvent extends Event {
+  propertyName?: string
+  elapsedTime?: number
+}
 export declare const click: (target: unknown, selector?: string) => void
 export declare const dblClick: (target: Element | Document, selector?: string) => void
 export declare const contextMenu: (target: Element | Document, selector?: string) => void
@@ -78,6 +94,19 @@ export declare const pause: (target: HTMLMediaElement | Element) => void
 export declare const ended: (target: HTMLMediaElement | Element) => void
 export declare const volumeChange: (target: HTMLMediaElement | Element) => void
 export declare const checked: (target: HTMLInputElement | HTMLSelectElement | Element) => void
+type EventClassTypes =
+  | typeof Event
+  | typeof PointerEvent
+  | typeof MouseEvent
+  | typeof KeyboardEvent
+  | typeof TouchEvent
+  | typeof DragEvent
+  | typeof WheelEvent
+  | typeof FocusEvent
+  | typeof AnimationEvent
+  | typeof TransitionEvent
+  | typeof ClipboardEvent
+export declare const getEventClass: (eventName: string) => EventClassTypes
 export declare const fireEvent: {
   (
     target: unknown,
@@ -146,3 +175,4 @@ export declare const fireEvent: {
   checked: (target: HTMLInputElement | HTMLSelectElement | Element) => void
   trigger: (target: unknown, eventType: string, options?: EventInit) => void
 }
+export {}
