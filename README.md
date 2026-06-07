@@ -2370,6 +2370,10 @@ update dependencies
 - remove @systemkollektiv devDependencies, those packages are private for now
 - update dependencies
 
-##### 0.3.17 - unreleased
+##### 0.3.17
+
+- update test discovery, had edge cases where tests were not found
+
+##### 0.3.18 - unreleased
 
 ...
