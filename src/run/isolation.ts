@@ -132,10 +132,20 @@ const skipProps = [
 export class Isolation {
   private snapshots: Map<string, Snapshot>
   private suiteSnapshots: Map<string, Snapshot>
+  private activeWorkers: Set<Worker>
 
   constructor() {
     this.snapshots = new Map()
     this.suiteSnapshots = new Map()
+    this.activeWorkers = new Set()
+  }
+
+  /**
+   * Terminate all active workers. Call this on shutdown.
+   */
+  async terminateAllWorkers(): Promise<void> {
+    await Promise.all(Array.from(this.activeWorkers).map(worker => worker.terminate()))
+    this.activeWorkers.clear()
   }
 
   /**
@@ -485,8 +495,11 @@ export class Isolation {
         },
       })
 
+      this.activeWorkers.add(worker)
+
       let settled = false
       const cleanup = () => {
+        this.activeWorkers.delete(worker)
         worker.terminate()
       }
       worker.on('message', result => {
@@ -542,8 +555,11 @@ export class Isolation {
         },
       })
 
+      this.activeWorkers.add(worker)
+
       let settled = false
       const cleanup = () => {
+        this.activeWorkers.delete(worker)
         worker.terminate()
       }
       worker.on('message', result => {

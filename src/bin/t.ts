@@ -8,8 +8,10 @@ import is from '@magic/types'
 import log from '@magic/log'
 
 import { abort } from '../run.ts'
+import { isolation } from '../run/isolation.ts'
 
 const cwd = process.cwd()
+let childProcess: ReturnType<typeof cli.spawn> | null = null
 const res = cli({
   options: [
     ['--verbose', '--loud', '--l', '-l'],
@@ -144,14 +146,29 @@ const run = async () => {
     ]
   }
 
-  await cli.spawn(cmd, argv)
+  childProcess = await cli.spawn(cmd, argv)
 }
 
 run()
 
 const shutdown = async () => {
   log.warn('Received shutdown signal, aborting tests...')
-  await abort()
+
+  if (childProcess) {
+    const pid = childProcess.pid
+    childProcess.kill('SIGINT')
+    if (pid) {
+      try {
+        process.kill(-pid, 'SIGINT')
+      } catch {
+        // process group already gone
+      }
+    }
+    childProcess = null
+  } else {
+    await isolation.terminateAllWorkers()
+    await abort()
+  }
   process.exit(1)
 }
 
