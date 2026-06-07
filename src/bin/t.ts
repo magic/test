@@ -12,6 +12,8 @@ import { isolation } from '../run/isolation.ts'
 
 const cwd = process.cwd()
 let childProcess: ReturnType<typeof cli.spawn> | null = null
+let shutdownInProgress = false
+
 const res = cli({
   options: [
     ['--verbose', '--loud', '--l', '-l'],
@@ -151,15 +153,14 @@ const run = async () => {
 
 run()
 
-const shutdown = async () => {
+const gracefulShutdown = async () => {
   log.warn('Received shutdown signal, aborting tests...')
 
   if (childProcess) {
     const pid = childProcess.pid
-    childProcess.kill('SIGINT')
     if (pid) {
       try {
-        process.kill(-pid, 'SIGINT')
+        process.kill(-pid, 'SIGTERM')
       } catch {
         // process group already gone
       }
@@ -168,8 +169,45 @@ const shutdown = async () => {
   } else {
     await isolation.terminateAllWorkers()
     await abort()
+    process.exitCode = 1
   }
-  process.exit(1)
 }
 
-process.on('SIGTERM', shutdown).on('SIGINT', shutdown)
+const forceShutdown = async () => {
+  log.warn('Forcing shutdown...')
+
+  if (childProcess) {
+    const pid = childProcess.pid
+    if (pid) {
+      try {
+        process.kill(-pid, 'SIGKILL')
+      } catch {
+        // process group already gone
+      }
+    }
+    childProcess = null
+  } else {
+    process.exitCode = 137
+  }
+}
+
+const shutdown = async (force = false) => {
+  if (shutdownInProgress) {
+    return
+  }
+  shutdownInProgress = true
+
+  if (force) {
+    await forceShutdown()
+  } else {
+    await gracefulShutdown()
+    setTimeout(() => {
+      shutdown(true)
+    }, 5000)
+  }
+}
+
+process
+  .on('SIGTERM', () => shutdown(false))
+  .on('SIGINT', () => shutdown(false))
+  .on('SIGHUP', () => shutdown(false))
