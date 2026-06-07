@@ -38,6 +38,9 @@ export const limitedPromiseAllSettled = async <T>(
 
   consume()
 
-  await Promise.all(running)
+  while (running.length > 0) {
+    await Promise.race(running)
+    consume()
+  }
   return results
 }
