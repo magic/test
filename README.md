@@ -2449,6 +2449,10 @@ update dependencies
 
 - fix import of .svelte.js/.ts files if js/ts extension is omitted
 
-##### 0.3.16 - unreleased
+##### 0.3.16
+
+- better kill handling for workers and child_process
+
+##### 0.3.17 - unreleased
 
 ...
