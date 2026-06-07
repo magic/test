@@ -3,7 +3,8 @@ import type { TestCase } from '../../src/types.js'
 import { has } from '../../src/lib/has.js'
 
 export default [
-  { fn: cleanError, expect: undefined, info: 'empty argument returns argument' },
+  // @ts-expect-error - testing calling cleanError with no arguments
+  { fn: () => cleanError(), expect: undefined, info: 'empty argument returns argument' },
   { fn: cleanError(false), expect: false, info: '"false" as argument returns argument' },
   { fn: cleanError(true), expect: true, info: '"true" as argument returns argument' },
   { fn: cleanError(true), expect: true, info: '"true" as argument returns argument' },

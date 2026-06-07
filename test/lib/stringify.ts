@@ -4,7 +4,8 @@ import type { TestCase } from '../../src/types.js'
 const longString = 'a'.repeat(100)
 
 export default [
-  { fn: stringify, expect: undefined, info: 'empty argument returns argument' },
+  // @ts-expect-error - testing calling stringify with no arguments
+  { fn: () => stringify(), expect: undefined, info: 'empty argument returns argument' },
   { fn: stringify(false), expect: false, info: '"false" as argument returns "false"' },
   { fn: stringify(true), expect: true, info: '"true" as argument returns "true"' },
   { fn: stringify({}), expect: {}, info: 'empty object returns empty object' },

@@ -11,7 +11,7 @@ export default {
     },
     {
       fn: () => {
-        const result = globalThis.fetch('http://localhost')
+        const result = globalThis.fetch('data:text/html,hello')
         return result.then
       },
       expect: is.fn,
@@ -27,7 +27,7 @@ export default {
     },
     {
       fn: () => {
-        const result = globalThis.fetch('http://localhost', { method: 'POST' })
+        const result = globalThis.fetch('data:text/html,hello', { method: 'POST' })
         return result.then
       },
       expect: is.fn,
@@ -35,7 +35,7 @@ export default {
     },
     {
       fn: () => {
-        const result = globalThis.fetch(new Request('http://localhost'))
+        const result = globalThis.fetch(new Request('data:text/html,hello'))
         return result.then
       },
       expect: is.fn,

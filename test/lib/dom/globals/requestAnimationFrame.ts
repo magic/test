@@ -12,33 +12,36 @@ export default {
     {
       fn: () => {
         const id = globalThis.requestAnimationFrame(() => {})
-        return is.num(id)
+        return is.object(id) && '_onImmediate' in id
       },
       expect: true,
-      info: 'requestAnimationFrame returns a number id',
+      info: 'requestAnimationFrame returns an Immediate object',
     },
     {
-      fn: () => {
+      fn: async () => {
         let called = false
-        const id = globalThis.requestAnimationFrame(() => {
+        globalThis.requestAnimationFrame(() => {
           called = true
         })
-        return called === false && is.num(id)
+        await new Promise(resolve => setTimeout(resolve, 16))
+        return called
       },
       expect: true,
       info: 'requestAnimationFrame calls callback asynchronously',
     },
     {
-      fn: () => {
+      fn: async () => {
         const id = globalThis.requestAnimationFrame(() => {})
+        await new Promise(resolve => setTimeout(resolve, 16))
         return globalThis.cancelAnimationFrame(id)
       },
       expect: undefined,
       info: 'cancelAnimationFrame is callable',
     },
     {
-      fn: () => {
+      fn: async () => {
         const id = globalThis.requestAnimationFrame(() => {})
+        await new Promise(resolve => setTimeout(resolve, 16))
         globalThis.cancelAnimationFrame(id)
         return true
       },

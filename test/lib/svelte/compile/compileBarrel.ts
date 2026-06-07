@@ -35,6 +35,7 @@ export default [
   },
   {
     fn: async () => {
+      barrelCache.delete(barrelFixturePath)
       const result = await compileBarrel(barrelFixturePath)
       return result.js.includes('TestComponent')
     },
@@ -43,6 +44,7 @@ export default [
   },
   {
     fn: async () => {
+      barrelCache.delete(barrelFixturePath)
       const result = await compileBarrel(barrelFixturePath)
       return result.js.includes('TitleComponent')
     },
@@ -51,6 +53,7 @@ export default [
   },
   {
     fn: async () => {
+      barrelCache.delete(barrelFixturePath)
       try {
         await compileBarrel(barrelFixturePath, [barrelFixturePath])
         return false

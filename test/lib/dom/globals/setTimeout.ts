@@ -25,10 +25,10 @@ export default {
     {
       fn: () => {
         const id = globalThis.setTimeout(() => {}, 100)
-        return is.num(id)
+        return is.object(id) && '_idleTimeout' in id
       },
       expect: true,
-      info: 'setTimeout returns a number id',
+      info: 'setTimeout returns a Timeout object',
     },
     {
       fn: () => {

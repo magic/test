@@ -44,8 +44,8 @@ export default {
         await aliasCache.clear()
         await configCache.clear()
 
-        // Valid config
-        const configPath = path.join(TEST_ROOT, 'vite-' + Date.now() + '.config.js')
+        // Valid config - use standard vite.config.js name
+        const configPath = path.join(TEST_ROOT, 'vite.config.js')
         await fs.writeFile(
           configPath,
           `
@@ -65,8 +65,8 @@ export default {
         await aliasCache.clear()
         await configCache.clear()
 
-        // Config with parse error (invalid syntax)
-        const configPath = path.join(TEST_ROOT, 'vite-err-' + Date.now() + '.config.js')
+        // Config with parse error (invalid syntax) - use standard name so it gets found
+        const configPath = path.join(TEST_ROOT, 'vite.config.js')
         await fs.writeFile(configPath, `invalid syntax`)
 
         await new Promise(r => setTimeout(r, 10))
