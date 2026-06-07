@@ -47,6 +47,7 @@ import {
   volumeChange,
   checked,
 } from '../../../src/lib/svelte/events.js'
+import type { Test } from '../../../src/types.js'
 
 initDOM()
 const doc = getDocument()
@@ -694,4 +695,4 @@ export default [
     expect: true,
     info: 'scroll function runs without error',
   },
-]
+] satisfies Test[]
