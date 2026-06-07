@@ -2366,6 +2366,9 @@ update dependencies
 ##### 0.3.16
 
 - better kill handling for workers and child_process
+- README fixes
+- remove @systemkollektiv devDependencies, those packages are private for now
+- update dependencies
 
 ##### 0.3.17 - unreleased
 
