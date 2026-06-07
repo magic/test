@@ -57,17 +57,21 @@ incredibly fast.
   - [tryCatch](#lib-trycatch)
   - [error](#lib-error)
   - [version](#lib-version)
-  - [mock](#lib-mock)
-  - [has](#lib-has)
+- [mock](#lib-mock)
+  - [mock.log](#lib-mock-log)
+- [has](#lib-has)
   - [DOM Environment](#lib-dom)
   - [svelte (experimental!)](#lib-svelte)
 - [svelte kit mocks](#lib-sveltekit-mocks)
+  - [createStaticPage](#lib-sveltekit-static)
 - [Native Node.js Test Runner](#native-runner)
   - [Usage](#native-usage)
   - [Using in External Libraries](#native-external)
   - [Features](#native-features)
   - [Differences from Custom Runner](#native-differences)
   - [Test Isolation](#test-isolation)
+  - [\_\_isolate](#test-isolate)
+  - [Error Codes](#error-codes)
 - [Cli / Js Api Usage](#usage)
   - [js api](#usage-js)
   - [cli](#usage-cli)
@@ -132,20 +136,30 @@ repeated for easy copy pasting (without comments):
   }
 ```
 
-run the test:
+run the tests:
 
 ```bash
   npm test
 ```
 
+run coverage reports and get full test report including from passing tests:
+
+```bash
+  npm run coverage
+```
+
+This library tests itself, have a look at [the tests](https://github.com/magic/test/tree/master/test)
+
+Checkout [@magic/types](https://github.com/magic/types)
+and the other @magic libraries for more test examples.
+
 example output, from this repository, lots of worker tests:
 (passing test files are silent if -p is passed)
 
 ```
-###  Testing package: @magic/test
+### Testing package: @magic/test@0.3.15
 
-Ran 1235 tests in 1.7s. Passed 1235/1235 100%
-
+Ran 1843 tests in 4.7s. Passed 1843/1843 100%
 ```
 
 fastest tests from a private project
@@ -158,11 +172,12 @@ Ran 90307 tests in 265.5ms. Passed 90307/90307 100%
 Ran 90307 tests in 268.1ms. Passed 90307/90307 100%
 ```
 
-run coverage reports and get full test report including from passing tests:
+### benchmarks are a lie.
 
-```bash
-  npm run coverage
-```
+those numbers lie a bit,
+the actual time to finish usually is around 1-2 seconds for smaller projects,
+5-15 seconds for bigger projects with lots of svelte components,
+mainly caused by c8 coverage, svelte compilation, worker isolation and node.js runtime start times.
 
 ##### <a name="test-suites"></a>data/fs driven test suite creation:
 
@@ -172,7 +187,7 @@ run coverage reports and get full test report including from passing tests:
 - tests one function per suite
 - tests one feature per test
 
-###### Filesystem based naming
+###### Filesystem or Data driven naming for tests
 
 the following directory structure:
 
@@ -182,13 +197,11 @@ the following directory structure:
   ./suite2.js
 ```
 
-has the same result as exporting the following from ./test/index.js
-
-###### Data driven naming
+creates the same output as exporting the following from ./test/index.js does:
 
 ```javascript
-import suite1 from './suite1'
-import suite2 from './suite2'
+import suite1 from './suite1.js'
+import suite2 from './suite2.js'
 
 export default {
   suite1,
@@ -198,7 +211,7 @@ export default {
 
 ##### Important
 
-if test/index.js exists, no other files will be loaded.
+if test/index.js exists, no other files will be loaded by the discovery mechanism.
 
 if test/lib/index.js exists, no other files from that subdirectory will be loaded.
 
@@ -219,7 +232,7 @@ export default { fn: false, expect: t => t === false, info: 'expect true to be t
 // if fn is a promise the resolved value will be returned
 export default { fn: new Promise(r => r(true)), expect: true, info: 'expect true to be true' }
 
-// if expects is a promise it will resolve before being compared to the fn return value
+// if expect is a promise it will resolve before being compared to the fn return value
 export default { fn: true, expect: new Promise(r => r(true)), info: 'expect true to be true' }
 
 // callback functions can be tested easily too:
@@ -253,9 +266,9 @@ export default [
     info: 'deep compare arrays/objects for equality',
   },
   {
-    fn: () => {
-      key: 1
-    },
+    fn: () => ({
+      key: 1,
+    }),
     expect: is.deep.different({ value: 1 }),
     info: 'deep compare arrays/objects for difference',
   },
@@ -264,7 +277,8 @@ export default [
 
 ###### Caveat:
 
-if you want to test if a function is a function, wrap the function
+if you want to test if a function is a function, wrap the function,
+by default, @magic/test will try to execute the function and use the return value for the expect.
 
 ```javascript
 import { is } from '@magic/test'
@@ -282,7 +296,10 @@ export default {
 
 ```javascript
 // test/mytest.ts
-export default { fn: () => true, expect: true, info: 'TypeScript test works!' }
+import type { Test } from '@magic/test'
+export default [
+  { fn: () => true, expect: true, info: 'TypeScript test works!' }
+] satisfies Test[]
 ```
 
 This requires Node.js 22.18.0 or later.
@@ -310,27 +327,27 @@ export default {
 ##### <a name="tests-promises"></a>promises
 
 ```javascript
-import { promise, is } from '@magic/test'
+import { promise, is, type Test } from '@magic/test'
 
 export default [
   // kinda clumsy, but works. until you try handling errors.
   {
-    fn: new Promise(cb => setTimeOut(() => cb(true), 2000)),
+    fn: new Promise(cb => setTimeout(() => cb(true), 2000)),
     expect: true,
     info: 'handle promises',
   },
   // better!
   {
-    fn: promise(cb => setTimeOut(() => cb(null, true), 200)),
+    fn: promise(cb => setTimeout(() => cb(null, true), 200)),
     expect: true,
     info: 'handle promises in a nicer way',
   },
   {
-    fn: promise(cb => setTimeOut(() => cb(new Error('error')), 200)),
+    fn: promise(cb => setTimeout(() => cb(new Error('error')), 200)),
     expect: is.error,
     info: 'handle promise errors in a nice way',
   },
-]
+] satisfies Test[]
 ```
 
 ##### <a name="tests-runs"></a>running tests multiple times
@@ -371,7 +388,9 @@ export default [
 ]
 ```
 
-##### <a name="tests-hooks"></a>run functions before and/or after individual test
+##### <a name="tests-hooks"></a>run functions before and/or after individual tests
+
+Since before and after usually setup globals, all tests with before/after properties will be run in a worker to make sure they do not pollute the globals
 
 ```javascript
 const after = () => {
@@ -398,9 +417,13 @@ export default [
 
 ##### <a name="tests-suite-hooks"></a>run functions before and/or after a suite of tests
 
+Suites that use beforeAll, afterAll, beforeEach or afterEach will run in a worker to make sure we do not pollute globals for other suites.
+
 ```javascript
+import type { TestObject } from '@magic/test'
+
 const afterAll = () => {
-  // Test has finished, cleanup.'
+  // Suite has finished, cleanup.'
   global.testing = undefined
 }
 
@@ -412,21 +435,41 @@ const beforeAll = () => {
   return afterAll
 }
 
-export default [
-  {
-    fn: () => { global.testing = 'changed in test' },
-    // if beforeAll returns a function, it will execute after the test suite.
-    beforeAll,
-    // this is optional if beforeall returns a function.
-    // in this example, afterAll will trigger twice.
-    afterAll,
-    expect: () => global.testing === 'changed in test',
-  },
+const beforeEach = () => {
+  // this will run before EACH test in the suite
+  global.testing = true
+}
+
+const afterEach = () => {
+  // this will run after EACH test in the suite
+  global.testing = false
+}
+
+export default {
+  // if beforeAll returns a function, it will execute after the test suite.
+  beforeAll,
+  // this is optional if beforeall returns a function.
+  // in this example, afterAll will trigger twice.
+  afterAll,
+
+  // this will run before each test in the suite
+  beforeEach,
+  // this will run after each test in the suite
+  afterEach,
+
+  tests: [
+    {
+      fn: () => { global.testing = 'changed in test' },
+      expect: () => global.testing === 'changed in test',
+    },
+  ],
+} satisfies TestObject
 ```
 
 **File-based Hooks:**
 
-You can also create `test/beforeAll.js` and `test/afterAll.js` files that run before/after all tests in a suite. If the exported function returns another function, it will be executed after the suite completes.
+You can also create `test/beforeAll.js` and `test/afterAll.js` files that run before/after all tests.
+If the exported function returns another function, it will be executed after the tests complete.
 
 **Note:** These files must be placed at the **root** `test/` directory (not in subdirectories).
 
@@ -445,31 +488,6 @@ export default () => {
 // test/afterAll.js
 export default () => {
   // cleanup after all tests
-}
-```
-
-##### <a name="tests-each-hooks"></a>beforeEach and afterEach hooks
-
-You can also define `beforeEach` and `afterEach` hooks in your test objects that run before/after each individual test:
-
-```javascript
-const beforeEach = () => {
-  // Runs before each test in this suite
-  global.testState = { initialized: true }
-}
-
-const afterEach = testResult => {
-  // Runs after each test, receives the test result
-  console.log('Test completed:', testResult?.pass)
-}
-
-export default {
-  beforeEach,
-  afterEach,
-  tests: [
-    { fn: () => global.testState.initialized, expect: true },
-    { fn: () => true, expect: true },
-  ],
 }
 ```
 
@@ -549,7 +567,6 @@ export default [
 - `fs.rmdir(path)` - remove directory
 - `fs.stat(path)` - get file stats
 - `fs.readdir(path)` - read directory contents
-- Plus async versions in `fs.promises`
 
 ###### <a name="lib-curry"></a>curry
 
@@ -584,7 +601,7 @@ log.error('Something went wrong')
 log.critical('Game over')
 ```
 
-Supports template strings and arrays:
+supports multiple arguments, just as console.log:
 
 ```javascript
 log.info('Testing', library, 'at version', version)
@@ -634,48 +651,30 @@ import { env, isProd, isTest, isDev } from '@magic/test'
 
 export default [
   {
-    fn: env.isNodeProd,
-    expect: process.env.NODE_ENV === 'production',
+    fn: env.isNodeProd && process.env.NODE_ENV === 'production',
+    expect: true,
     info: 'checks if NODE_ENV is production',
   },
   {
-    fn: env.isNodeDev,
-    expect: process.env.NODE_ENV === 'development',
+    fn: env.isNodeDev && process.env.NODE_ENV === 'development',
+    expect: true,
     info: 'checks if NODE_ENV is development',
   },
   {
-    fn: env.isProd,
-    expect: process.argv.includes('-p'),
+    fn: env.isProd && process.argv.includes('-p'),
+    expect: true,
     info: 'checks if -p flag is passed',
   },
   {
-    fn: env.isVerbose,
-    expect: process.argv.includes('-l'),
-    info: 'checks if -l flag is passed',
+    fn: env.isVerbose && process.argv.includes('-l'),
+    expect: true,
+    info: 'checks if -l or --verbose flag is passed',
   },
   {
     fn: env.getErrorLength,
     expect: undefined, // default, can be overridden by MAGIC_TEST_ERROR_LENGTH
     info: 'get error length limit',
   },
-]
-```
-
-##### <a name="lib-env-constants"></a>Environment Constants
-
-These boolean constants reflect the current NODE_ENV:
-
-- `isProd` - true when NODE_ENV is 'production'
-- `isTest` - true when NODE_ENV is 'test' (default)
-- `isDev` - true when NODE_ENV is 'development'
-
-```javascript
-import { isProd, isTest, isDev } from '@magic/test'
-
-export default [
-  { fn: isProd, expect: process.env.NODE_ENV === 'production' },
-  { fn: isTest, expect: process.env.NODE_ENV === 'test' },
-  { fn: isDev, expect: process.env.NODE_ENV === 'development' },
 ]
 ```
 
@@ -689,19 +688,17 @@ import { promise, is } from '@magic/test'
 
 export default [
   {
-    fn: promise(cb => setTimeOut(() => cb(null, true), 200)),
+    fn: promise(cb => setTimeout(() => cb(null, true), 200)),
     expect: true,
     info: 'handle promises in a nice way',
   },
   {
-    fn: promise(cb => setTimeOut(() => cb(new Error('error')), 200)),
+    fn: promise(cb => setTimeout(() => cb(new Error('error')), 200)),
     expect: is.error,
     info: 'handle promise errors in a nice way',
   },
 ]
 ```
-
-**Note:** `stringify` and `handleResponse` are internal utilities and are not exported.
 
 ###### <a name="lib-http"></a>http
 
@@ -754,8 +751,6 @@ export default [
 - JSON parsing for responses with `Content-Type: application/json`
 - Raw string returns for non-JSON responses
 - `rejectUnauthorized: false` for self-signed certificates
-
-**Note:** `css` is internal, not exported.
 
 ###### <a name="lib-trycatch"></a> tryCatch
 
@@ -891,7 +886,7 @@ export default [
 - `getReturns()` - Get all return values
 - `getErrors()` - Get all thrown errors
 
-**mock.log:**
+###### <a name="lib-mock-log"></a>mock.log
 
 - `mock.log.log()` - Logs if not NODE_ENV=production
 - `mock.log.warn()` - Logs if not NODE_ENV=production
@@ -1068,12 +1063,14 @@ initDOM()
 
 ###### <a name="lib-svelte"></a>Svelte Testing
 
-**Svelte support is VERY experimental and will be expanded whenever we write tests for our libraries.**
+**Svelte support is VERY experimental and will be expanded whenever we write tests for our libraries. it currently tests about 20 libraries with a varying degree of complexity and handles most edge cases we encountered**
 
 @magic/test has built-in support for testing Svelte 5 components. Compiles Svelte, mounts them in a DOM, and gives you utilities to interact and assert.
 
+internally uses js-dom to create the dom and html elements.
+
 ```javascript
-import { mount, html, tryCatch } from '@magic/test'
+import { mount, tryCatch } from '@magic/test'
 
 const component = './path/to/MyComponent.svelte'
 
@@ -1081,7 +1078,7 @@ export default [
   {
     component,
     props: { message: 'Hello' },
-    fn: ({ target }) => html(target).includes('Hello'),
+    fn: ({ target }) => target.innerHTML.includes('Hello'),
     expect: true,
     info: 'renders the message prop',
   },
@@ -1161,20 +1158,20 @@ const component = './src/lib/svelte/components/Counter.svelte'
 export default [
   {
     component,
-    fn: async ({ target, component: instance }) => {
+    fn: async ({ target, component }) => {
       // Access exported state from the component
-      return instance.count
+      return component.count
     },
     expect: 0,
     info: 'initial count is 0',
   },
   {
     component,
-    fn: async ({ target, component: instance }) => {
+    fn: async ({ target, component }) => {
       // Click the increment button and check state
       target.querySelector('.increment').click()
       await tick()
-      return instance.count
+      return component.count
     },
     expect: 1,
     info: 'count increments on button click',
@@ -1205,7 +1202,7 @@ export default [
 
 **SvelteKit Mocks:**
 
-Mocks SvelteKit's $app modules:
+Mocks SvelteKit's `$app` modules:
 
 ```javascript
 import { browser, dev, prod, createStaticPage } from '@magic/test'
@@ -1226,8 +1223,15 @@ export default [
     expect: false,
     info: 'not in prod by default',
   },
+  {
+    fn: createStaticPage,
+    expect: t => typeof t.html === 'string' && typeof t.render === 'function',
+    info: 'createStaticPage returns html string and render function',
+  },
 ]
 ```
+
+###### <a name="lib-sveltekit-static"></a>createStaticPage
 
 **compileSvelte:**
 
@@ -1260,41 +1264,10 @@ export default [
   {
     fn: async () => {
       const svelte = await ensureSvelte()
-      return svelte.version
+      return svelte.version.startsWith('5')
     },
-    expect: '5.0.0',
+    expect: true,
     info: 'loads svelte package',
-  },
-]
-```
-
-#### <a name="lib-sveltekit-mocks"></a>SvelteKit Mocks
-
-Mocks SvelteKit's `$app` modules:
-
-```javascript
-import { browser, dev, prod, createStaticPage } from '@magic/test'
-
-export default [
-  {
-    fn: () => browser, // true if in browser environment
-    expect: false,
-    info: 'not in browser by default',
-  },
-  {
-    fn: () => dev, // true if in dev mode
-    expect: process.env.NODE_ENV === 'development',
-    info: 'dev reflects NODE_ENV',
-  },
-  {
-    fn: () => prod, // true if in production mode
-    expect: false,
-    info: 'not in prod by default',
-  },
-  {
-    fn: createStaticPage,
-    expect: t => typeof t.html === 'string' && typeof t.render === 'function',
-    info: 'createStaticPage returns html string and render function',
   },
 ]
 ```
@@ -1312,12 +1285,12 @@ npm run test:native
 
 Add to your `package.json`:
 
-```json5
+```json
 {
-  scripts: {
-    test: 't -p',
-    'test:native': 'node --test src/bin/node-test-runner.js',
-  },
+  "scripts": {
+    "test": "t -p",
+    "test:native": "node --test src/bin/node-test-runner.js"
+  }
 }
 ```
 
@@ -1386,6 +1359,8 @@ export default [
 **Global Isolation Mode:**
 
 By default, tests in the same file share global state. To enable strict isolation where each test gets a fresh environment:
+
+###### <a name="test-isolate"></a>\_\_isolate
 
 ```javascript
 // This runs each test in isolation with fresh globals
@@ -1567,11 +1542,6 @@ Or use a single command to run all shards in parallel:
 npm run test:shard:0 & npm run test:shard:1 & npm run test:shard:2 & npm run test:shard:3 & wait
 ```
 
-This library tests itself, have a look at [the tests](https://github.com/magic/test/tree/master/test)
-
-Checkout [@magic/types](https://github.com/magic/types)
-and the other magic libraries for more test examples.
-
 #### Exit Codes
 
 @magic/test returns specific exit codes to indicate test results:
@@ -1594,7 +1564,7 @@ Follow these tips to get the most out of @magic/test:
 **Use the `-p` flag for development:**
 
 ```bash
-# Fast mode - no coverage, only shows failures
+# Fast mode - no coverage, only shows failures and result summary
 npm test
 # or
 t -p
@@ -1673,53 +1643,6 @@ export default [
 ]
 ```
 
-#### Verbose Output
-
-The `-l` (or `--verbose`, `--loud`) flag enables detailed output:
-
-```bash
-# Shows all tests including passing ones
-t -l
-```
-
-**What verbose mode shows:**
-
-- All test results (not just failures)
-- Individual test execution time
-- Full test names with suite hierarchy
-- Detailed error messages with stack traces
-
-**Default mode (without `-l`):**
-
-- Only shows failing tests
-- Shows summary only for passing suites
-- Faster output for large test suites
-
-**Example output without `-l`:**
-
-```
-### Testing package: my-lib
-/addition.js => Pass: 3/3 100%
-/multiplication.js => Pass: 4/4 100%
-Ran 7 tests in 12ms. Passed 7/7 100%
-```
-
-**Example output with `-l`:**
-
-```
-### Testing package: my-lib
-▶ addition
-  ✔ adds two positive numbers (1.2ms)
-  ✔ handles zero correctly (0.8ms)
-  ✔ handles negative numbers (0.9ms)
-▶ multiplication
-  ✔ multiplies by zero (0.7ms)
-  ✔ multiplies by one (0.6ms)
-  ✔ multiplies two positives (0.8ms)
-  ✔ handles negative numbers (0.9ms)
-Ran 7 tests in 12ms. Passed 7/7 100%
-```
-
 #### Common Pitfalls
 
 Avoid these common mistakes when writing tests:
@@ -1759,6 +1682,12 @@ export default {
   fn: () => doSomething(),
   expect: true,
 }
+
+// Also correct: let @magic/test execute the function
+export default {
+  fn: doSomething,
+  expect: true,
+}
 ```
 
 **3. Mutating shared state between tests:**
@@ -1768,7 +1697,7 @@ export default {
 let counter = 0
 export default [
   { fn: () => ++counter, expect: 1 },
-  { fn: () => ++counter, expect: 2 }, // fails! counter is now 1
+  { fn: () => ++counter, expect: 1 }, // fails! counter is now 2
 ]
 
 // Correct: use local state or reset in beforeEach
@@ -1783,24 +1712,7 @@ export default {
 }
 ```
 
-**4. Using the wrong equality check:**
-
-```javascript
-// Wrong: checks reference equality
-export default {
-  fn: () => [1, 2, 3],
-  expect: [1, 2, 3], // fails! different arrays
-}
-
-// Correct: use @magic/types for deep comparison
-import { is } from '@magic/test'
-export default {
-  fn: () => [1, 2, 3],
-  expect: is.deep.equal([1, 2, 3]),
-}
-```
-
-**5. Not awaiting async operations:**
+**4. Not awaiting async operations:**
 
 ```javascript
 // Wrong: test finishes before promise resolves
@@ -1829,9 +1741,11 @@ export default {
 }
 ```
 
-**6. Incorrect hook usage:**
+**5. Incorrect hook usage:**
 
 ```javascript
+import type { Test, TestObject } from '@magic/test'
+
 // Wrong: before/after hooks on individual tests, not suites
 export default [
   {
@@ -1840,7 +1754,7 @@ export default [
     afterAll: () => {},
     expect: true,
   },
-]
+] satisfies Test[]
 
 // Correct: hooks at suite level
 const beforeAll = () => {}
@@ -1851,10 +1765,10 @@ export default {
   tests: [
     { fn: () => true, expect: true },
   ],
-}
+} satisfies TestObject
 ```
 
-#### Error Codes
+##### <a name="error-codes"></a>Error Codes
 
 @magic/test uses error codes to help with debugging and programmatic error handling. You can import these constants from `@magic/test`:
 
