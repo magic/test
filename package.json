@@ -76,8 +76,6 @@
     "@magic-themes/docs": "0.0.15",
     "@magic/core": "0.0.158",
     "@magic/format": "0.0.74",
-    "@systemkollektiv/audio-player": "0.0.125",
-    "@systemkollektiv/components": "0.0.237",
     "@types/node": "25.9.2",
     "eslint": "10.4.1",
     "prettier-plugin-svelte": "4.1.0",
