@@ -21,11 +21,11 @@ import {
   WheelEvent,
 } from 'happy-dom'
 
-class DragEvent extends Event {
+export class DragEvent extends Event {
   dataTransfer?: unknown
 }
 
-class TransitionEvent extends Event {
+export class TransitionEvent extends Event {
   propertyName?: string
   elapsedTime?: number
 }
@@ -388,7 +388,20 @@ export const checked = (target: HTMLInputElement | HTMLSelectElement | Element):
   target.dispatchEvent(new Event('change', { bubbles: true, cancelable: false }))
 }
 
-const getEventClass = (eventName: string) => {
+type EventClassTypes =
+  | typeof Event
+  | typeof PointerEvent
+  | typeof MouseEvent
+  | typeof KeyboardEvent
+  | typeof TouchEvent
+  | typeof DragEvent
+  | typeof WheelEvent
+  | typeof FocusEvent
+  | typeof AnimationEvent
+  | typeof TransitionEvent
+  | typeof ClipboardEvent
+
+export const getEventClass = (eventName: string): EventClassTypes => {
   if (eventName.startsWith('pointer')) {
     return PointerEvent
   }
