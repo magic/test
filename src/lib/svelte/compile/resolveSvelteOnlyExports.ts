@@ -205,16 +205,27 @@ const handleJsWithSvelteReexports = async (
 
         const specifiers = exps.map(exp => {
           const exportName = exp.alias || exp.name
-          const isDefault = exp.name === 'default' || exp.name === '*'
+          const isDefault = exp.name === 'default'
           return isDefault ? `default as ${exportName}` : exportName
         })
 
-        replacements.push({
-          original:
-            firstExp.originalText ||
-            `export { ${exps.map(e => e.name).join(', ')} } from '${firstExp.source}'`,
-          replacement: `export { ${specifiers.join(', ')} } from '${compiledUrl}'`,
-        })
+        const hasNamespaceReexport = exps.some(exp => exp.name === '*' && exp.alias)
+        if (hasNamespaceReexport) {
+          const namespaceExport = exps.find(exp => exp.name === '*' && exp.alias)!
+          replacements.push({
+            original:
+              firstExp.originalText ||
+              `export * as ${namespaceExport.alias} from '${firstExp.source}'`,
+            replacement: `export * as ${namespaceExport.alias} from '${compiledUrl}'`,
+          })
+        } else {
+          replacements.push({
+            original:
+              firstExp.originalText ||
+              `export { ${exps.map(e => e.name).join(', ')} } from '${firstExp.source}'`,
+            replacement: `export { ${specifiers.join(', ')} } from '${compiledUrl}'`,
+          })
+        }
       } catch (e) {
         const err = e as Error
         console.error(
@@ -241,16 +252,27 @@ const handleJsWithSvelteReexports = async (
 
         const specifiers = exps.map(exp => {
           const exportName = exp.alias || exp.name
-          const isDefault = exp.name === 'default' || exp.name === '*'
+          const isDefault = exp.name === 'default'
           return isDefault ? `default as ${exportName}` : exportName
         })
 
-        replacements.push({
-          original:
-            firstExp.originalText ||
-            `export { ${exps.map(e => e.name).join(', ')} } from '${firstExp.source}'`,
-          replacement: `export { ${specifiers.join(', ')} } from '${tempUrl}'`,
-        })
+        const hasNamespaceReexport = exps.some(exp => exp.name === '*' && exp.alias)
+        if (hasNamespaceReexport) {
+          const namespaceExport = exps.find(exp => exp.name === '*' && exp.alias)!
+          replacements.push({
+            original:
+              firstExp.originalText ||
+              `export * as ${namespaceExport.alias} from '${firstExp.source}'`,
+            replacement: `export * as ${namespaceExport.alias} from '${tempUrl}'`,
+          })
+        } else {
+          replacements.push({
+            original:
+              firstExp.originalText ||
+              `export { ${exps.map(e => e.name).join(', ')} } from '${firstExp.source}'`,
+            replacement: `export { ${specifiers.join(', ')} } from '${tempUrl}'`,
+          })
+        }
       }
     }
   }
