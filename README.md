@@ -2374,6 +2374,11 @@ update dependencies
 
 - update test discovery, had edge cases where tests were not found
 
-##### 0.3.18 - unreleased
+##### 0.3.18
+
+- update test svelte compiler to correctly build variable exports from svelte script tags
+- update dependencies
+
+##### 0.3.19 - unreleased
 
 ...
