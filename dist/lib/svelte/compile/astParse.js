@@ -162,12 +162,15 @@ const extractExports = fileInfo => {
         originalText: getOriginal(node, code),
       })
     } else if (node.type === 'ExportAllDeclaration') {
+      const alias =
+        node.exported && node.exported.type === 'Identifier' ? node.exported.name : undefined
       exports.push({
         name: '*',
+        alias,
         source: node.source.value,
         isType: node.exportKind === 'type',
         isDefault: false,
-        isBatch: true,
+        isBatch: !alias,
         originalText: getOriginal(node, code),
       })
     } else if (node.type === 'TSExportAssignment') {
