@@ -2379,6 +2379,10 @@ update dependencies
 - update test svelte compiler to correctly build variable exports from svelte script tags
 - update dependencies
 
-##### 0.3.19 - unreleased
+##### 0.3.19
+
+- better resolution for imported dependencies in tests, especially <script> tags in svelte components that export functions/variables
+
+##### 0.3.20 - unreleased
 
 ...
