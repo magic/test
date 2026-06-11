@@ -127,9 +127,22 @@ const handleJsWithSvelteReexports = async (
     }
   }
 
+  const exportsByOriginalText = new Map<string, typeof exports>()
   for (const exp of exports) {
-    if (exp.isBatch && exp.source?.endsWith('.svelte')) {
-      const absoluteSveltePath = path.resolve(jsDir, exp.source)
+    const key = exp.originalText || ''
+    const group = exportsByOriginalText.get(key) || []
+    group.push(exp)
+    exportsByOriginalText.set(key, group)
+  }
+
+  for (const exps of exportsByOriginalText.values()) {
+    if (exps.length === 0) {
+      continue
+    }
+    const firstExp = exps[0]!
+
+    if (firstExp.isBatch && firstExp.source?.endsWith('.svelte')) {
+      const absoluteSveltePath = path.resolve(jsDir, firstExp.source)
       try {
         const timeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(
@@ -144,7 +157,7 @@ const handleJsWithSvelteReexports = async (
         const compiledUrl = pathToFileURL(result).href
         const svelteDefaultName = path.basename(absoluteSveltePath, '.svelte')
         replacements.push({
-          original: exp.originalText || `export * from '${exp.source}'`,
+          original: firstExp.originalText || `export * from '${firstExp.source}'`,
           replacement: `export { ${svelteDefaultName} } from '${compiledUrl}'`,
         })
       } catch (e) {
@@ -157,8 +170,8 @@ const handleJsWithSvelteReexports = async (
         )
         throw e
       }
-    } else if (exp.isBatch && exp.source?.endsWith('.js')) {
-      const absolutePath = path.resolve(jsDir, exp.source)
+    } else if (firstExp.isBatch && firstExp.source?.endsWith('.js')) {
+      const absolutePath = path.resolve(jsDir, firstExp.source)
       if (await fs.exists(absolutePath)) {
         const reexportContent = await fs.readFile(absolutePath, 'utf-8')
         const processedReexport = await handleJsWithSvelteReexports(
@@ -171,12 +184,12 @@ const handleJsWithSvelteReexports = async (
         const tempFile = await writeTempFile(absolutePath, processedReexport)
         const tempUrl = pathToFileURL(tempFile).href
         replacements.push({
-          original: exp.originalText || `export * from '${exp.source}'`,
+          original: firstExp.originalText || `export * from '${firstExp.source}'`,
           replacement: `export * from '${tempUrl}'`,
         })
       }
-    } else if (exp.source?.endsWith('.svelte')) {
-      const absoluteSveltePath = path.resolve(jsDir, exp.source)
+    } else if (firstExp.source?.endsWith('.svelte')) {
+      const absoluteSveltePath = path.resolve(jsDir, firstExp.source)
       try {
         const timeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(
@@ -189,15 +202,18 @@ const handleJsWithSvelteReexports = async (
           timeoutPromise,
         ])) as string
         const compiledUrl = pathToFileURL(result).href
-        const exportName = exp.alias || exp.name
-        const isDefault = exp.name === 'default' || exp.name === '*'
+
+        const specifiers = exps.map(exp => {
+          const exportName = exp.alias || exp.name
+          const isDefault = exp.name === 'default' || exp.name === '*'
+          return isDefault ? `default as ${exportName}` : exportName
+        })
+
         replacements.push({
           original:
-            exp.originalText ||
-            `export { ${exp.name} as ${exp.alias || exp.name} } from '${exp.source}'`,
-          replacement: isDefault
-            ? `export { default as ${exportName} } from '${compiledUrl}'`
-            : `export { ${exportName} } from '${compiledUrl}'`,
+            firstExp.originalText ||
+            `export { ${exps.map(e => e.name).join(', ')} } from '${firstExp.source}'`,
+          replacement: `export { ${specifiers.join(', ')} } from '${compiledUrl}'`,
         })
       } catch (e) {
         const err = e as Error
@@ -209,8 +225,8 @@ const handleJsWithSvelteReexports = async (
         )
         throw e
       }
-    } else if (exp.source?.endsWith('.js')) {
-      const absolutePath = path.resolve(jsDir, exp.source)
+    } else if (firstExp.source?.endsWith('.js')) {
+      const absolutePath = path.resolve(jsDir, firstExp.source)
       if (await fs.exists(absolutePath)) {
         const reexportContent = await fs.readFile(absolutePath, 'utf-8')
         const processedReexport = await handleJsWithSvelteReexports(
@@ -222,14 +238,18 @@ const handleJsWithSvelteReexports = async (
         )
         const tempFile = await writeTempFile(absolutePath, processedReexport)
         const tempUrl = pathToFileURL(tempFile).href
-        const isDefault = exp.name === 'default' || exp.name === '*'
+
+        const specifiers = exps.map(exp => {
+          const exportName = exp.alias || exp.name
+          const isDefault = exp.name === 'default' || exp.name === '*'
+          return isDefault ? `default as ${exportName}` : exportName
+        })
+
         replacements.push({
           original:
-            exp.originalText ||
-            `export { ${exp.name} as ${exp.alias || exp.name} } from '${exp.source}'`,
-          replacement: isDefault
-            ? `export { default as ${exp.alias || exp.name} } from '${tempUrl}'`
-            : `export { ${exp.alias || exp.name} } from '${tempUrl}'`,
+            firstExp.originalText ||
+            `export { ${exps.map(e => e.name).join(', ')} } from '${firstExp.source}'`,
+          replacement: `export { ${specifiers.join(', ')} } from '${tempUrl}'`,
         })
       }
     }
