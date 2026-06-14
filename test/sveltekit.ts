@@ -83,7 +83,7 @@ export default [
       await unmount()
       return logs
     },
-    expect: 'before:goto',
+    expect: 'before:goto|after:goto|on:goto|on:cleanup',
     info: 'beforeNavigate, afterNavigate, onNavigate callbacks fire in order',
   },
   // pushState updates page.url

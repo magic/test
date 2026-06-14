@@ -23,7 +23,7 @@ export default {
         globalThis.requestAnimationFrame(() => {
           called = true
         })
-        await new Promise(resolve => setTimeout(resolve, 16))
+        await new Promise(resolve => setImmediate(resolve))
         return called
       },
       expect: true,
