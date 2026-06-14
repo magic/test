@@ -268,13 +268,21 @@ const handleJsWithSvelteReexports = async (
         let tempUrl: string
 
         if (SVELTE_RUNE_REGEX.test(reexportContent)) {
-          const result = compileModule(reexportContent, { filename: absolutePath })
-          const jsCodeString = String(result.js.code)
-          const code = await processImports(jsCodeString, absolutePath)
-          const transformedCode = transformForNode(code, absolutePath)
-          tempFile = await writeTempFile(absolutePath, transformedCode)
-          tempUrl = pathToFileURL(tempFile).href
-          processedReexport = transformedCode
+          try {
+            const result = compileModule(reexportContent, { filename: absolutePath })
+            const jsCodeString = String(result.js.code)
+            const code = await processImports(jsCodeString, absolutePath)
+            const transformedCode = transformForNode(code, absolutePath)
+            tempFile = await writeTempFile(absolutePath, transformedCode)
+            tempUrl = pathToFileURL(tempFile).href
+            processedReexport = transformedCode
+          } catch {
+            // Pre-compiled Svelte files may contain `import * as $` which Svelte 5 rejects
+            // Skip processing and use original content
+            processedReexport = reexportContent
+            tempFile = await writeTempFile(absolutePath, processedReexport)
+            tempUrl = pathToFileURL(tempFile).href
+          }
         } else {
           processedReexport = await handleJsWithSvelteReexports(
             reexportContent,
@@ -339,10 +347,15 @@ const handleJsWithSvelteReexports = async (
           const depContent = await fs.readFile(absolutePath, 'utf-8')
           let contentToWrite = depContent
           if (SVELTE_RUNE_REGEX.test(depContent)) {
-            const result = compileModule(depContent, { filename: absolutePath })
-            const jsCodeString = String(result.js.code)
-            const code = await processImports(jsCodeString, absolutePath)
-            contentToWrite = transformForNode(code, absolutePath)
+            try {
+              const result = compileModule(depContent, { filename: absolutePath })
+              const jsCodeString = String(result.js.code)
+              const code = await processImports(jsCodeString, absolutePath)
+              contentToWrite = transformForNode(code, absolutePath)
+            } catch {
+              // Pre-compiled Svelte files may contain `import * as $` which Svelte 5 rejects
+              // Skip processing and use original content
+            }
           }
           const tempFile = await writeTempFile(absolutePath, contentToWrite)
           const tempUrl = pathToFileURL(tempFile).href

@@ -22,7 +22,8 @@ export const parseViteConfig = async configPath => {
         .replace(/import\s*\([^)]*\)\s*as\s*\w+/g, '')
         .replace(/path\.resolve\(__dirname/g, `path.resolve("${configDir}"`)
         .replace(/path\.resolve\(__filename/g, `path.resolve("${configDir}"`)
-      const evaluated = new Function('path', `return (${cleaned})`)(path)
+      // Add common globals to scope: vitest, path
+      const evaluated = new Function('path', 'vitest', `return (${cleaned})`)(path, undefined)
       const processSingleAlias = entry => {
         const e = entry
         const find = e.find
@@ -75,7 +76,12 @@ export const parseViteConfig = async configPath => {
       const cleaned = defineStr
         .replace(/import\s*\([^)]*\)\s*as\s*\w+/g, '')
         .replace(/process\.env\./g, 'process.env.')
-      const evaluated = new Function('process', 'return (' + cleaned + ')')(process)
+      // Add common globals to scope: vitest, path, process
+      const evaluated = new Function('process', 'path', 'vitest', 'return (' + cleaned + ')')(
+        process,
+        path,
+        undefined,
+      )
       config.define = evaluated
     } catch (e) {
       const message = is.error(e) ? e.message : String(e)
@@ -90,7 +96,12 @@ export const parseViteConfig = async configPath => {
         const cleaned = defineStr
           .replace(/import\s*\([^)]*\)\s*as\s*\w+/g, '')
           .replace(/process\.env\./g, 'process.env.')
-        const evaluated = new Function('process', 'return (' + cleaned + ')')(process)
+        // Add common globals to scope: vitest, path, process
+        const evaluated = new Function('process', 'path', 'vitest', 'return (' + cleaned + ')')(
+          process,
+          path,
+          undefined,
+        )
         config.define = evaluated
       } catch (e) {
         const message = is.error(e) ? e.message : String(e)

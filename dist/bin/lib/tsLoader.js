@@ -52,17 +52,23 @@ export const resolve = async (specifier, context, nextResolve) => {
         const source = await fs.readFile(resolvedPath, 'utf-8')
         const hasRune = /\$(?:state|derived|effect|props|bindable)\b/.test(source)
         if (hasRune) {
-          const { compileModule } = await import('svelte/compiler')
-          const result = compileModule(source, { filename: resolvedPath })
-          const { writeTempFile } =
-            await import('../../lib/svelte/compile/resolveSvelteOnlyExports.js')
-          const { processImports } = await import('../../lib/svelte/compile/processImports.js')
-          const { transformForNode } = await import('../../lib/svelte/compile/transformForNode.js')
-          const jsCode = String(result.js.code)
-          const processed = await processImports(jsCode, resolvedPath)
-          const transformed = transformForNode(processed, resolvedPath)
-          const importUrl = pathToFileURL(await writeTempFile(resolvedPath, transformed)).href
-          return { url: importUrl, shortCircuit: true }
+          try {
+            const { compileModule } = await import('svelte/compiler')
+            const result = compileModule(source, { filename: resolvedPath })
+            const { writeTempFile } =
+              await import('../../lib/svelte/compile/resolveSvelteOnlyExports.js')
+            const { processImports } = await import('../../lib/svelte/compile/processImports.js')
+            const { transformForNode } =
+              await import('../../lib/svelte/compile/transformForNode.js')
+            const jsCode = String(result.js.code)
+            const processed = await processImports(jsCode, resolvedPath)
+            const transformed = transformForNode(processed, resolvedPath)
+            const importUrl = pathToFileURL(await writeTempFile(resolvedPath, transformed)).href
+            return { url: importUrl, shortCircuit: true }
+          } catch {
+            // Pre-compiled Svelte files may contain `import * as $` which Svelte 5 rejects
+            // Fall through to let Node.js handle it
+          }
         }
       }
     }
@@ -209,8 +215,14 @@ export const load = async (url, context, nextLoad) => {
       const withResolvedImports = await resolveDollarLibImports(source, filePath)
       const transpiled = transpileWithTypeScript(withResolvedImports)
       const { compileModule } = await import('svelte/compiler')
-      const result = compileModule(transpiled, { filename: filePath })
-      return { format: 'module', source: result.js.code, shortCircuit: true }
+      try {
+        const result = compileModule(transpiled, { filename: filePath })
+        return { format: 'module', source: result.js.code, shortCircuit: true }
+      } catch {
+        // Pre-compiled Svelte files may contain `import * as $` which Svelte 5 rejects
+        // Fall back to TypeScript transpilation only
+        return { format: 'module', source: transpiled, shortCircuit: true }
+      }
     }
   }
   if (url.endsWith('.ts') && !url.includes('/magic/util/test/src/')) {
