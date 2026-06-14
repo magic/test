@@ -2384,6 +2384,10 @@ update dependencies
 - svelte edge cases
 - custom test defines for globals
 
-##### 0.3.20 - unreleased
+##### 0.3.20
+
+- prevent double-compilation of svelte components
+
+##### 0.3.21 - unreleased
 
 ...
