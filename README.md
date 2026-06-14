@@ -2379,6 +2379,11 @@ update dependencies
 - better resolution for imported dependencies in tests, especially <script> tags in svelte components that export functions/variables
 - update dependencies
 
+##### 0.3.19
+
+- svelte edge cases
+- custom test defines for globals
+
 ##### 0.3.20 - unreleased
 
 ...
