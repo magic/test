@@ -311,21 +311,6 @@ const handleJsWithSvelteReexports = async (
           })
         }
       }
-    } else if (firstExp.source?.startsWith('.')) {
-      const absoluteUrl = await resolveRelativeToUrl(firstExp.source, jsDir)
-      if (absoluteUrl) {
-        const specifiers = exps.map(exp => {
-          const exportName = exp.alias || exp.name
-          const isDefault = exp.name === 'default'
-          return isDefault ? 'default as ' + exportName : exportName
-        })
-        replacements.push({
-          original:
-            firstExp.originalText ||
-            'export { ' + exps.map(e => e.name).join(', ') + " } from '" + firstExp.source + "'",
-          replacement: 'export { ' + specifiers.join(', ') + " } from '" + absoluteUrl + "'",
-        })
-      }
     }
   }
 
@@ -334,8 +319,10 @@ const handleJsWithSvelteReexports = async (
       const importPath = imp.source
       if (importPath.startsWith('.')) {
         const absolutePath = path.resolve(jsDir, importPath)
-        const absoluteUrl = await resolveRelativeToUrl(importPath, jsDir)
-        if (absoluteUrl && (absolutePath.endsWith('.js') || absolutePath.endsWith('.mjs'))) {
+        if (
+          (await fs.exists(absolutePath)) &&
+          (absolutePath.endsWith('.js') || absolutePath.endsWith('.mjs'))
+        ) {
           const depContent = await fs.readFile(absolutePath, 'utf-8')
           let contentToWrite = depContent
           if (SVELTE_RUNE_REGEX.test(depContent)) {
@@ -350,12 +337,6 @@ const handleJsWithSvelteReexports = async (
             original:
               imp.originalText || `import { ${imp.specifiers.join(', ')} } from '${importPath}'`,
             replacement: `import { ${imp.specifiers.join(', ')} } from '${tempUrl}'`,
-          })
-        } else if (absoluteUrl) {
-          replacements.push({
-            original:
-              imp.originalText || `import { ${imp.specifiers.join(', ')} } from '${importPath}'`,
-            replacement: `import { ${imp.specifiers.join(', ')} } from '${absoluteUrl}'`,
           })
         }
       }

@@ -11,6 +11,23 @@ export const processImports = async (code, sourceFilePath, importChain = []) => 
   const regex = new RegExp(SVELTE_IMPORT_REGEX.source, 'g')
   while ((match = regex.exec(code)) !== null) {
     if (match[1] && match[2] && match[0]) {
+      const matchStart = match.index
+      let inBlockComment = false
+      for (let i = 0; i < matchStart; i++) {
+        if (code[i] === '/' && code[i + 1] === '*') {
+          inBlockComment = true
+        } else if (code[i] === '*' && code[i + 1] === '/') {
+          inBlockComment = false
+        }
+      }
+      if (inBlockComment) {
+        continue
+      }
+      const lineStart = code.lastIndexOf('\n', matchStart) + 1
+      const lineBeforeMatch = code.slice(lineStart, matchStart)
+      if (lineBeforeMatch.includes('//')) {
+        continue
+      }
       imports.push({ imported: match[1], path: match[2], full: match[0] })
     }
   }

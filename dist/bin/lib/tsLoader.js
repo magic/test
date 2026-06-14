@@ -44,6 +44,28 @@ export const resolve = async (specifier, context, nextResolve) => {
         return { url: importUrl, shortCircuit: true }
       }
     }
+    // Handle .svelte.js files with Svelte 5 runes
+    if (specifier.endsWith('.svelte.js') && context.parentURL) {
+      const parentDir = path.dirname(new URL(context.parentURL).pathname)
+      const resolvedPath = path.resolve(parentDir, specifier)
+      if (await fs.exists(resolvedPath)) {
+        const source = await fs.readFile(resolvedPath, 'utf-8')
+        const hasRune = /\$(?:state|derived|effect|props|bindable)\b/.test(source)
+        if (hasRune) {
+          const { compileModule } = await import('svelte/compiler')
+          const result = compileModule(source, { filename: resolvedPath })
+          const { writeTempFile } =
+            await import('../../lib/svelte/compile/resolveSvelteOnlyExports.js')
+          const { processImports } = await import('../../lib/svelte/compile/processImports.js')
+          const { transformForNode } = await import('../../lib/svelte/compile/transformForNode.js')
+          const jsCode = String(result.js.code)
+          const processed = await processImports(jsCode, resolvedPath)
+          const transformed = transformForNode(processed, resolvedPath)
+          const importUrl = pathToFileURL(await writeTempFile(resolvedPath, transformed)).href
+          return { url: importUrl, shortCircuit: true }
+        }
+      }
+    }
     // Handle scoped packages (non-magic)
     if (specifier.startsWith('@') && specifier.includes('/') && context.parentURL) {
       if (specifier.startsWith('@magic/')) {
@@ -112,6 +134,14 @@ export const resolve = async (specifier, context, nextResolve) => {
           const { compileSvelteWithWrite } = await import('../../lib/svelte/compile/index.js')
           const { importUrl } = await compileSvelteWithWrite(finalSveltePath)
           return { url: importUrl, shortCircuit: true }
+        }
+        const tsPath = path.resolve(parentDir, specifier + '.ts')
+        const jsPath = path.resolve(parentDir, specifier + '.js')
+        if (await fs.exists(tsPath)) {
+          return { url: pathToFileURL(tsPath).href, shortCircuit: true }
+        }
+        if (await fs.exists(jsPath)) {
+          return { url: pathToFileURL(jsPath).href, shortCircuit: true }
         }
       }
     }

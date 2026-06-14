@@ -3,11 +3,27 @@ import { pathToFileURL } from 'node:url'
 import crypto from 'node:crypto'
 import fs from '@magic/fs'
 import { compileSvelteWithWrite } from './compileSvelteWithWrite.js'
+import { processImports } from './processImports.js'
+import { transformForNode } from './transformForNode.js'
 import { resolvePackageExport } from './resolvePackageExport.js'
 import { cache as compileCache } from './cache.js'
 import { CWD } from '../../../constants.js'
 import { parseFile, extractExports, extractImports } from './astParse.js'
+const { compileModule } = await import('svelte/compiler')
 const pendingWrites = new Map()
+const SVELTE_RUNE_REGEX =
+  /\$(?:state|derived|effect|props|bindable|state\.config|effect\.pre|effect\.post|derived\.by)\b/
+const resolveRelativeToUrl = async (relativePath, baseDir) => {
+  const absolutePath = path.resolve(baseDir, relativePath)
+  const extensions = ['', '.ts', '.js', '.mjs']
+  for (const ext of extensions) {
+    const withExt = absolutePath + ext
+    if (await fs.exists(withExt)) {
+      return pathToFileURL(withExt).href
+    }
+  }
+  return undefined
+}
 export const writeTempFile = async (filePath, code) => {
   let tempFile
   if (filePath.includes('node_modules')) {
@@ -114,7 +130,7 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
         const timeoutPromise = new Promise((_, reject) =>
           setTimeout(
             () => reject(new Error('compile timeout for ' + absoluteSveltePath.split('/').pop())),
-            8000,
+            30000,
           ),
         )
         const result = await Promise.race([
@@ -161,7 +177,7 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
         const timeoutPromise = new Promise((_, reject) =>
           setTimeout(
             () => reject(new Error('compile timeout for ' + absoluteSveltePath.split('/').pop())),
-            8000,
+            30000,
           ),
         )
         const result = await Promise.race([
@@ -205,15 +221,28 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
       const absolutePath = path.resolve(jsDir, firstExp.source)
       if (await fs.exists(absolutePath)) {
         const reexportContent = await fs.readFile(absolutePath, 'utf-8')
-        const processedReexport = await handleJsWithSvelteReexports(
-          reexportContent,
-          absolutePath,
-          path.dirname(absolutePath),
-          visited,
-          exportNames,
-        )
-        const tempFile = await writeTempFile(absolutePath, processedReexport)
-        const tempUrl = pathToFileURL(tempFile).href
+        let processedReexport
+        let tempFile
+        let tempUrl
+        if (SVELTE_RUNE_REGEX.test(reexportContent)) {
+          const result = compileModule(reexportContent, { filename: absolutePath })
+          const jsCodeString = String(result.js.code)
+          const code = await processImports(jsCodeString, absolutePath)
+          const transformedCode = transformForNode(code, absolutePath)
+          tempFile = await writeTempFile(absolutePath, transformedCode)
+          tempUrl = pathToFileURL(tempFile).href
+          processedReexport = transformedCode
+        } else {
+          processedReexport = await handleJsWithSvelteReexports(
+            reexportContent,
+            absolutePath,
+            path.dirname(absolutePath),
+            visited,
+            exportNames,
+          )
+          tempFile = await writeTempFile(absolutePath, processedReexport)
+          tempUrl = pathToFileURL(tempFile).href
+        }
         const specifiers = exps.map(exp => {
           const exportName = exp.alias || exp.name
           const isDefault = exp.name === 'default'
@@ -237,6 +266,21 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
           })
         }
       }
+    } else if (firstExp.source?.startsWith('.')) {
+      const absoluteUrl = await resolveRelativeToUrl(firstExp.source, jsDir)
+      if (absoluteUrl) {
+        const specifiers = exps.map(exp => {
+          const exportName = exp.alias || exp.name
+          const isDefault = exp.name === 'default'
+          return isDefault ? 'default as ' + exportName : exportName
+        })
+        replacements.push({
+          original:
+            firstExp.originalText ||
+            'export { ' + exps.map(e => e.name).join(', ') + " } from '" + firstExp.source + "'",
+          replacement: 'export { ' + specifiers.join(', ') + " } from '" + absoluteUrl + "'",
+        })
+      }
     }
   }
   for (const imp of imports) {
@@ -244,16 +288,28 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
       const importPath = imp.source
       if (importPath.startsWith('.')) {
         const absolutePath = path.resolve(jsDir, importPath)
-        if (
-          (await fs.exists(absolutePath)) &&
-          (absolutePath.endsWith('.js') || absolutePath.endsWith('.mjs'))
-        ) {
+        const absoluteUrl = await resolveRelativeToUrl(importPath, jsDir)
+        if (absoluteUrl && (absolutePath.endsWith('.js') || absolutePath.endsWith('.mjs'))) {
           const depContent = await fs.readFile(absolutePath, 'utf-8')
-          await writeTempFile(absolutePath, depContent)
+          let contentToWrite = depContent
+          if (SVELTE_RUNE_REGEX.test(depContent)) {
+            const result = compileModule(depContent, { filename: absolutePath })
+            const jsCodeString = String(result.js.code)
+            const code = await processImports(jsCodeString, absolutePath)
+            contentToWrite = transformForNode(code, absolutePath)
+          }
+          const tempFile = await writeTempFile(absolutePath, contentToWrite)
+          const tempUrl = pathToFileURL(tempFile).href
           replacements.push({
             original:
               imp.originalText || `import { ${imp.specifiers.join(', ')} } from '${importPath}'`,
-            replacement: `import { ${imp.specifiers.join(', ')} } from 'file://${absolutePath}'`,
+            replacement: `import { ${imp.specifiers.join(', ')} } from '${tempUrl}'`,
+          })
+        } else if (absoluteUrl) {
+          replacements.push({
+            original:
+              imp.originalText || `import { ${imp.specifiers.join(', ')} } from '${importPath}'`,
+            replacement: `import { ${imp.specifiers.join(', ')} } from '${absoluteUrl}'`,
           })
         }
       }

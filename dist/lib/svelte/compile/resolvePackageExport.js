@@ -41,13 +41,60 @@ const tryResolvePath = async (basePath, ...candidates) => {
 const SVELTE_REEXPORT_RE = /export\s+\{[^}]*\}\s+from\s+['"][^'"]*\.svelte['"]/g
 const SVELTE_DEFAULT_REEXPORT_RE = /export\s+.*\s+from\s+['"][^'"]*\.svelte['"]/g
 const EXPORT_STAR_RE = /export\s+\*\s+from\s+['"]([^'"]+)['"]/g
-const hasSvelteReExports = async filePath => {
+const SVELTE_RUNE_RE =
+  /\$(?:state|derived|effect|props|bindable|state\.config|effect\.pre|effect\.post|derived\.by)\b/
+const EXPORT_NAMED_RE = /export\s+\{\s*\w[\w\s,]*\}\s+from\s+['"]([^'"]+)['"]/g
+const hasSvelteReExports = async (filePath, visited) => {
   if (!filePath.endsWith('.js') && !filePath.endsWith('.mjs')) {
     return false
   }
+  visited ??= new Set()
+  if (visited.has(filePath)) {
+    return false
+  }
+  visited.add(filePath)
   try {
     const content = await fs.readFile(filePath, 'utf-8')
-    return SVELTE_REEXPORT_RE.test(content) || SVELTE_DEFAULT_REEXPORT_RE.test(content)
+    if (SVELTE_REEXPORT_RE.test(content) || SVELTE_DEFAULT_REEXPORT_RE.test(content)) {
+      return true
+    }
+    if (SVELTE_RUNE_RE.test(content)) {
+      return true
+    }
+    const dir = path.dirname(filePath)
+    for (const match of content.matchAll(EXPORT_STAR_RE)) {
+      const reexportPath = match[1]
+      if (!reexportPath) {
+        continue
+      }
+      const resolved = path.resolve(dir, reexportPath)
+      if (resolved.endsWith('.svelte') || resolved.endsWith('.svelte.js')) {
+        return true
+      }
+      if (
+        (resolved.endsWith('.js') || resolved.endsWith('.mjs')) &&
+        (await hasSvelteReExports(resolved, visited))
+      ) {
+        return true
+      }
+    }
+    for (const match of content.matchAll(EXPORT_NAMED_RE)) {
+      const reexportPath = match[1]
+      if (!reexportPath) {
+        continue
+      }
+      const resolved = path.resolve(dir, reexportPath)
+      if (resolved.endsWith('.svelte.js')) {
+        return true
+      }
+      if (
+        (resolved.endsWith('.js') || resolved.endsWith('.mjs')) &&
+        (await hasSvelteReExports(resolved, visited))
+      ) {
+        return true
+      }
+    }
+    return false
   } catch {
     return false
   }

@@ -45,6 +45,9 @@ export const compileSvelte = async (filePath: string): Promise<CompileSvelteRetu
       generate: 'client',
       dev: false,
       filename: filePath,
+      experimental: {
+        async: true,
+      },
     })
 
     if (!result.js) {

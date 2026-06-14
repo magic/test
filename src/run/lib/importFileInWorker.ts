@@ -1,10 +1,16 @@
+import path from 'node:path'
 import is from '@magic/types'
 
 import { getViteDefine } from '../../lib/svelte/viteConfig/index.ts'
+import { loadTestDefines } from '../../bin/lib/loadTestDefines.ts'
 
 export const importFileInWorker = async (filePath: string): Promise<unknown> => {
   try {
-    const defines = await getViteDefine(filePath)
+    const rootDir = process.cwd()
+    const defines = {
+      ...(await getViteDefine(filePath)),
+      ...(await loadTestDefines(rootDir)),
+    }
     for (const [key, value] of Object.entries(defines)) {
       // @ts-expect-error - dynamic globalThis property assignment
       globalThis[key] = value

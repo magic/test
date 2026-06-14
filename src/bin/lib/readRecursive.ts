@@ -4,6 +4,7 @@ import { pathToFileURL, fileURLToPath } from 'node:url'
 import fs from '@magic/fs'
 import is from '@magic/types'
 import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.ts'
+import { loadTestDefines } from './loadTestDefines.ts'
 import {
   resolveSvelteOnlyExports,
   writeTempFile,
@@ -94,13 +95,17 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
   }
 
   const { getViteDefine } = await import('../../lib/svelte/viteConfig/index.ts')
+  const testDefines = await loadTestDefines(process.cwd())
 
   if (await fs.exists(indexFilePath)) {
     // if index.js exists, we will simply import it as is and do no recursion.
     const fileP = indexFilePath.replace(testDir, '')
     const importPath = pathToFileURL(indexFilePath).href
     try {
-      const defines = await getViteDefine(indexFilePath)
+      const defines = {
+        ...(await getViteDefine(indexFilePath)),
+        ...testDefines,
+      }
       for (const [key, value] of Object.entries(defines)) {
         // @ts-expect-error - dynamic globalThis property assignment
         globalThis[key] = value
@@ -154,7 +159,10 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
         const fileP = filePath.replace(testDir, '')
 
         try {
-          const defines = await getViteDefine(filePath)
+          const defines = {
+            ...(await getViteDefine(filePath)),
+            ...testDefines,
+          }
           for (const [key, value] of Object.entries(defines)) {
             // @ts-expect-error - dynamic globalThis property assignment
             globalThis[key] = value

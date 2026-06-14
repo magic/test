@@ -19,9 +19,14 @@ var __rewriteRelativeImportExtension =
   }
 import is from '@magic/types'
 import { getViteDefine } from '../../lib/svelte/viteConfig/index.js'
+import { loadTestDefines } from '../../bin/lib/loadTestDefines.js'
 export const importFileInWorker = async filePath => {
   try {
-    const defines = await getViteDefine(filePath)
+    const rootDir = process.cwd()
+    const defines = {
+      ...(await getViteDefine(filePath)),
+      ...(await loadTestDefines(rootDir)),
+    }
     for (const [key, value] of Object.entries(defines)) {
       // @ts-expect-error - dynamic globalThis property assignment
       globalThis[key] = value

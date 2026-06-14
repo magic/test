@@ -26,6 +26,9 @@ export const compileSvelte = async filePath => {
       generate: 'client',
       dev: false,
       filename: filePath,
+      experimental: {
+        async: true,
+      },
     })
     if (!result.js) {
       throw new Error('Compilation failed: no JS output')

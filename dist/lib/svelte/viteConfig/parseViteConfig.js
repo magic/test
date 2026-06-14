@@ -75,11 +75,27 @@ export const parseViteConfig = async configPath => {
       const cleaned = defineStr
         .replace(/import\s*\([^)]*\)\s*as\s*\w+/g, '')
         .replace(/process\.env\./g, 'process.env.')
-      const evaluated = new Function('process', `return (${cleaned})`)(process)
+      const evaluated = new Function('process', 'return (' + cleaned + ')')(process)
       config.define = evaluated
     } catch (e) {
       const message = is.error(e) ? e.message : String(e)
-      console.warn(`[svelte-alias] Failed to parse vite.config define: ${message}`)
+      console.warn('[svelte-alias] Failed to parse vite.config define: ' + message)
+    }
+  } else {
+    const constDefineMatch = content.match(/const define\s*=\s*(\{[\s\S]*?\})/)
+    if (constDefineMatch && constDefineMatch[1]) {
+      try {
+        let defineStr = constDefineMatch[1]
+        defineStr = defineStr.replace(/;\s*$/, '')
+        const cleaned = defineStr
+          .replace(/import\s*\([^)]*\)\s*as\s*\w+/g, '')
+          .replace(/process\.env\./g, 'process.env.')
+        const evaluated = new Function('process', 'return (' + cleaned + ')')(process)
+        config.define = evaluated
+      } catch (e) {
+        const message = is.error(e) ? e.message : String(e)
+        console.warn('[svelte-alias] Failed to parse vite.config const define: ' + message)
+      }
     }
   }
   const stats = await fs.stat(configPath)
