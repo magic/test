@@ -2387,6 +2387,7 @@ update dependencies
 ##### 0.3.20
 
 - prevent double-compilation of svelte components
+- update dependencies
 
 ##### 0.3.21 - unreleased
 
