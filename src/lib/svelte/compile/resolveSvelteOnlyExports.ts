@@ -10,15 +10,13 @@ import { transformForNode } from './transformForNode.ts'
 import { resolvePackageExport, type PackageExportResolve } from './resolvePackageExport.ts'
 import { cache as compileCache } from './cache.ts'
 import { CWD } from '../../../constants.ts'
+import { SVELTE_RUNE_REGEX } from '../constants.ts'
 import { parseFile, extractExports, extractImports } from './astParse.ts'
 import type { ExportInfo } from './types.ts'
 
 const { compileModule } = await import('svelte/compiler')
 
 const pendingWrites = new Map<string, Promise<void>>()
-
-const SVELTE_RUNE_REGEX =
-  /\$(?:state|derived|effect|props|bindable|state\.config|effect\.pre|effect\.post|derived\.by)\b/
 
 const resolveRelativeToUrl = async (
   relativePath: string,
