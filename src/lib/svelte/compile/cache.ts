@@ -4,23 +4,30 @@ import fs from '@magic/fs'
 import { LRUCache } from '../LRUCache.ts'
 
 import { TMP_DIR, CWD } from '../../../constants.ts'
-import type { CssObject } from './types.ts'
+import type { CompileCacheEntry, ImportCacheEntry, BarrelCacheEntry, CssObject } from './types.ts'
 
-// Legacy export for backward compatibility (deprecated, use CacheManager)
+// Export LRUCache for external use
 export { LRUCache }
 
-/**
- * Unified pending promises map
- * All async operations go through here for deduplication
- */
-export const pendingPromises = new Map<string, Promise<unknown>>()
+// Export cache instances for backward compatibility
+export const cache = new LRUCache<CompileCacheEntry>(100)
+export const importCache = new LRUCache<ImportCacheEntry>(100)
+export const barrelCache = new Map<string, BarrelCacheEntry>()
+export const processingBarrels = new Set<string>()
 
-/**
- * Clear pending promises map (for test cleanup)
- */
-export const clearPendingPromises = () => {
-  pendingPromises.clear()
-}
+// Promise-based deduplication maps
+export const pendingBarrelCompiles = new Map<
+  string,
+  Promise<{ filePath: string; js: string; wrapperAbsPath: string }>
+>()
+export const pendingSvelteCompiles = new Map<
+  string,
+  Promise<{ js: string; css: CssObject | null }>
+>()
+export const pendingSvelteExports = new Map<
+  string,
+  Promise<{ name: string; path: string; isDefaultReexport?: boolean }[]>
+>()
 
 /**
  * Generic cache entry type
@@ -35,6 +42,7 @@ interface CacheEntry<T> {
  * Handles: promise dedup, memory cache, disk cache
  */
 export class CacheManager<T> {
+  private pendingCompiles = new Map<string, Promise<T>>()
   private memoryCache = new Map<string, CacheEntry<T>>()
 
   // Cache stats
@@ -46,6 +54,13 @@ export class CacheManager<T> {
    */
   async getOrCompile(filePath: string, compileFn: () => Promise<T>): Promise<T> {
     const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
+
+    // Check promise dedup first
+    const pending = this.pendingCompiles.get(absPath)
+    if (pending) {
+      this.hits++
+      return pending
+    }
 
     // Check memory cache
     const cached = this.memoryCache.get(absPath)
@@ -74,23 +89,30 @@ export class CacheManager<T> {
     this.misses++
 
     // Create promise BEFORE starting work to prevent concurrent duplicates
-    const compilePromise = compileFn().then(async result => {
-      // Store in memory cache
+    const compilePromise = (async () => {
       try {
-        const stats = await fs.stat(absPath)
-        this.memoryCache.set(absPath, { data: result, mtime: stats.mtimeMs })
-      } catch {
-        // Ignore
+        const result = await compileFn()
+
+        // Store in memory cache
+        try {
+          const stats = await fs.stat(absPath)
+          this.memoryCache.set(absPath, { data: result, mtime: stats.mtimeMs })
+        } catch {
+          // Ignore
+        }
+
+        // Write to disk cache if it's the right type
+        if (this.isSvelteResult(result)) {
+          await this.writeDiskCache(absPath, result.js)
+        }
+
+        return result
+      } finally {
+        this.pendingCompiles.delete(absPath)
       }
+    })()
 
-      // Write to disk cache if it's the right type
-      if (this.isSvelteResult(result)) {
-        await this.writeDiskCache(absPath, result.js)
-      }
-
-      return result
-    })
-
+    this.pendingCompiles.set(absPath, compilePromise)
     return compilePromise
   }
 
@@ -158,6 +180,7 @@ export class CacheManager<T> {
    * Reset all caches
    */
   reset(): void {
+    this.pendingCompiles.clear()
     this.memoryCache.clear()
     this.hits = 0
     this.misses = 0

@@ -5,6 +5,6 @@ export interface CompileSvelteReturn {
 }
 /**
  * Pure compilation function - caching handled by CacheManager in tsLoader
- * Uses pendingPromises for deduplication
+ * Uses pendingSvelteCompiles for deduplication
  */
 export declare const compileSvelte: (filePath: string) => Promise<CompileSvelteReturn>

@@ -1,10 +1,8 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import {
-  compileBarrel,
-  barrelWrapperCache,
-} from '../../../../src/lib/svelte/compile/compileBarrel.js'
+import { compileBarrel } from '../../../../src/lib/svelte/compile/compileBarrel.js'
+import { barrelCache } from '../../../../src/lib/svelte/compile/cache.js'
 import type { TestCase } from '../../../../src/types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -37,7 +35,7 @@ export default [
   },
   {
     fn: async () => {
-      barrelWrapperCache.delete(barrelFixturePath)
+      barrelCache.delete(barrelFixturePath)
       const result = await compileBarrel(barrelFixturePath)
       return result.js.includes('TestComponent')
     },
@@ -46,7 +44,7 @@ export default [
   },
   {
     fn: async () => {
-      barrelWrapperCache.delete(barrelFixturePath)
+      barrelCache.delete(barrelFixturePath)
       const result = await compileBarrel(barrelFixturePath)
       return result.js.includes('TitleComponent')
     },
@@ -55,7 +53,7 @@ export default [
   },
   {
     fn: async () => {
-      barrelWrapperCache.delete(barrelFixturePath)
+      barrelCache.delete(barrelFixturePath)
       try {
         await compileBarrel(barrelFixturePath, [barrelFixturePath])
         return false
@@ -99,18 +97,18 @@ export default [
   {
     fn: async () => {
       const cacheKey = barrelFixturePath
-      barrelWrapperCache.delete(cacheKey)
-      const before = barrelWrapperCache.has(cacheKey)
+      barrelCache.delete(cacheKey)
+      const before = barrelCache.has(cacheKey)
       await compileBarrel(barrelFixturePath)
-      const after = barrelWrapperCache.has(cacheKey)
+      const after = barrelCache.has(cacheKey)
       return before === false && after === true
     },
     expect: true,
-    info: 'compileBarrel caches result in barrelWrapperCache',
+    info: 'compileBarrel caches result in barrelCache',
   },
   {
     fn: async () => {
-      barrelWrapperCache.delete(barrelFixturePath)
+      barrelCache.delete(barrelFixturePath)
       const result1 = await compileBarrel(barrelFixturePath)
       const result2 = await compileBarrel(barrelFixturePath)
       return result1.wrapperAbsPath === result2.wrapperAbsPath
