@@ -2389,6 +2389,18 @@ update dependencies
 - prevent double-compilation of svelte components
 - update dependencies
 
-##### 0.3.21 - unreleased
+##### 0.3.21
+
+- various build performance improvements, especially for svelte components
+- add timing traces with MAGIC_TEST_TRACE env var and --trace CLI flag
+- add promise-based caching via CacheManager
+- consolidate worker pool into single source
+- centralize caching in CacheManager at tsLoader level
+- increase default test timeout to 30s
+- fixed tsLoader .ts file handling
+- add more tests for @magic/test itself
+- update dependencies
+
+##### 0.3.22 - unreleased
 
 ...
