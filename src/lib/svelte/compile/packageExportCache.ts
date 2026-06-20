@@ -5,4 +5,4 @@ export interface PackageExportResolve {
   isSvelteOnly: boolean
 }
 
-export const packageExportCache = new LRUCache<PackageExportResolve>(200, process.cwd())
+export const packageExportCache = new LRUCache<PackageExportResolve>(200)
