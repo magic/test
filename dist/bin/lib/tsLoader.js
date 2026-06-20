@@ -17,8 +17,22 @@ const compileSvelteFile = async filePath => {
       await import('../../lib/svelte/compile/compileSvelteWithWrite.js')
     return compileSvelteWithWrite(filePath)
   })
+  // Handle disk cache results which don't have importUrl
+  if (result?.importUrl) {
+    traceEnd(id, 'cache hit')
+    return result.importUrl
+  }
+  // Reconstruct importUrl from tmpFile path (disk cache returns { js, css, mtime })
+  if (result?.js) {
+    const relPath = path.relative(process.cwd(), filePath)
+    const tmpFile = path.join('test/.tmp', relPath.replace(/\.svelte$/, '.svelte.js'))
+    const tmpFileAbs = path.resolve(process.cwd(), tmpFile)
+    const importUrl = pathToFileURL(tmpFileAbs).href
+    traceEnd(id, 'cache hit')
+    return importUrl
+  }
   traceEnd(id, 'cache hit')
-  return result.importUrl
+  return undefined
 }
 export const resolve = async (specifier, context, nextResolve) => {
   const id = traceStart(`tsLoader.resolve ${specifier.split('/').pop() || specifier}`)
@@ -30,12 +44,21 @@ export const resolve = async (specifier, context, nextResolve) => {
 }
 const resolveImpl = async (specifier, context, nextResolve) => {
   try {
+    // Handle .js -> .ts conversion for absolute file:// URLs
+    if (specifier.endsWith('.js') && specifier.startsWith('file://')) {
+      const tsUrl = specifier.replace(/\.js$/, '.ts')
+      const tsPath = tsUrl.replace('file://', '')
+      const jsPath = specifier.replace('file://', '')
+      if (await fs.exists(tsPath)) {
+        return { url: tsUrl, shortCircuit: true }
+      }
+    }
     // Handle .js -> .ts conversion for imports without compiled JS
     if (specifier.endsWith('.js') && context.parentURL) {
       const parentDir = path.dirname(new URL(context.parentURL).pathname)
       const jsPath = path.resolve(parentDir, specifier)
       const tsPath = jsPath.slice(0, -3) + '.ts'
-      if ((await fs.exists(tsPath)) && !(await fs.exists(jsPath))) {
+      if (await fs.exists(tsPath)) {
         return nextResolve(specifier.replace(/\.js$/, '.ts'), context)
       }
     }
@@ -63,7 +86,9 @@ const resolveImpl = async (specifier, context, nextResolve) => {
       const resolvedPath = path.resolve(parentDir, specifier)
       if (await fs.exists(resolvedPath)) {
         const importUrl = await compileSvelteFile(resolvedPath)
-        return { url: importUrl, shortCircuit: true }
+        if (importUrl) {
+          return { url: importUrl, shortCircuit: true }
+        }
       }
     }
     // Handle .svelte.js files with Svelte 5 runes
@@ -109,7 +134,9 @@ const resolveImpl = async (specifier, context, nextResolve) => {
           const sveltePath = path.join(nodeModulesPath, pkg.exports['.'].svelte)
           if (await fs.exists(sveltePath)) {
             const importUrl = await compileSvelteFile(sveltePath)
-            return { url: importUrl, shortCircuit: true }
+            if (importUrl) {
+              return { url: importUrl, shortCircuit: true }
+            }
           }
         }
         if (pkg.exports) {
@@ -159,7 +186,9 @@ const resolveImpl = async (specifier, context, nextResolve) => {
         }
         if (finalSveltePath) {
           const importUrl = await compileSvelteFile(finalSveltePath)
-          return { url: importUrl, shortCircuit: true }
+          if (importUrl) {
+            return { url: importUrl, shortCircuit: true }
+          }
         }
         const tsPath = path.resolve(parentDir, specifier + '.ts')
         const jsPath = path.resolve(parentDir, specifier + '.js')
@@ -169,6 +198,14 @@ const resolveImpl = async (specifier, context, nextResolve) => {
         if (await fs.exists(jsPath)) {
           return { url: pathToFileURL(jsPath).href, shortCircuit: true }
         }
+      }
+    }
+    // Handle explicit .ts imports (e.g., import './file.ts')
+    if (specifier.endsWith('.ts') && context.parentURL) {
+      const parentDir = path.dirname(new URL(context.parentURL).pathname)
+      const tsPath = path.resolve(parentDir, specifier)
+      if (await fs.exists(tsPath)) {
+        return { url: pathToFileURL(tsPath).href, shortCircuit: true }
       }
     }
   } catch (e) {
