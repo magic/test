@@ -1,4 +1,5 @@
 import log from '@magic/log'
+import { cacheManager } from './cache.ts'
 
 // Performance trace entry
 interface TraceEntry {
@@ -175,11 +176,11 @@ export const printTraceSummary = () => {
   console.log(c.bold + '  Compilation Timing Summary' + c.reset)
   console.log(c.bold + '═'.repeat(70) + c.reset + '\n')
 
-  // Cache stats
-  if (cacheStats.total > 0) {
-    const hitPct = ((cacheStats.hits / cacheStats.total) * 100).toFixed(1)
+  // Cache stats from CacheManager
+  const stats = cacheManager.getStats()
+  if (stats.hits > 0 || stats.misses > 0) {
     console.log(
-      `  ${c.bold}Cache:${c.reset} ${c.green}${cacheStats.hits} hits${c.reset}, ${c.red}${cacheStats.misses} misses${c.reset} (${hitPct}% hit rate)`,
+      `  ${c.bold}Cache:${c.reset} ${c.green}${stats.hits} hits${c.reset}, ${c.red}${stats.misses} misses${c.reset} (${stats.hitRate}% hit rate)`,
     )
     console.log()
   }

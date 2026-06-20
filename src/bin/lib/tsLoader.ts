@@ -5,7 +5,24 @@ import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.t
 import is from '@magic/types'
 import ts from 'typescript'
 import log from '@magic/log'
-import { traceStart, traceEnd, traceAsync } from '../../lib/svelte/compile/timing.ts'
+import { traceStart, traceEnd } from '../../lib/svelte/compile/timing.ts'
+import { cacheManager } from '../../lib/svelte/compile/cache.ts'
+
+// Use shared cache manager for all Svelte compilation
+// Helper to get or compile a Svelte file with caching
+const compileSvelteFile = async (filePath: string): Promise<string> => {
+  const id = traceStart(`compileSvelteWithWrite ${path.basename(filePath)}`)
+
+  // Use cache manager for all caching (promise dedup, memory, disk)
+  const result = await cacheManager.getOrCompile(filePath, async () => {
+    const { compileSvelteWithWrite } =
+      await import('../../lib/svelte/compile/compileSvelteWithWrite.ts')
+    return compileSvelteWithWrite(filePath)
+  })
+
+  traceEnd(id, 'cache hit')
+  return result.importUrl
+}
 
 export const resolve = async (
   specifier: string,
@@ -14,7 +31,6 @@ export const resolve = async (
 ): Promise<{ url: string; shortCircuit?: boolean }> => {
   const id = traceStart(`tsLoader.resolve ${specifier.split('/').pop() || specifier}`)
   try {
-    traceEnd(id)
     return await resolveImpl(specifier, context, nextResolve)
   } finally {
     traceEnd(id)
@@ -61,8 +77,7 @@ const resolveImpl = async (
       const parentDir = path.dirname(new URL(context.parentURL).pathname)
       const resolvedPath = path.resolve(parentDir, specifier)
       if (await fs.exists(resolvedPath)) {
-        const { compileSvelteWithWrite } = await import('../../lib/svelte/compile/index.ts')
-        const { importUrl } = await compileSvelteWithWrite(resolvedPath)
+        const importUrl = await compileSvelteFile(resolvedPath)
         return { url: importUrl, shortCircuit: true }
       }
     }
@@ -112,8 +127,7 @@ const resolveImpl = async (
         if (pkg.exports?.['.']?.svelte && !pkg.exports?.['.']?.import) {
           const sveltePath = path.join(nodeModulesPath, pkg.exports['.'].svelte)
           if (await fs.exists(sveltePath)) {
-            const { compileSvelteWithWrite } = await import('../../lib/svelte/compile/index.ts')
-            const { importUrl } = await compileSvelteWithWrite(sveltePath)
+            const importUrl = await compileSvelteFile(sveltePath)
             return { url: importUrl, shortCircuit: true }
           }
         }
@@ -169,8 +183,7 @@ const resolveImpl = async (
         }
 
         if (finalSveltePath) {
-          const { compileSvelteWithWrite } = await import('../../lib/svelte/compile/index.ts')
-          const { importUrl } = await compileSvelteWithWrite(finalSveltePath)
+          const importUrl = await compileSvelteFile(finalSveltePath)
           return { url: importUrl, shortCircuit: true }
         }
 

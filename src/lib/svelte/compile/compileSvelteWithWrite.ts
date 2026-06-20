@@ -15,6 +15,7 @@ export const compileSvelteWithWrite = async (
 ): Promise<{ js: string; css: CssObject | null; tmpFile: string; importUrl: string }> => {
   const id = traceStart(`compileSvelteWithWrite ${path.basename(filePath)}`)
   try {
+    // Pure compile (no caching - handled by CacheManager)
     const { js, css } = await compileSvelte(filePath)
 
     const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
@@ -23,39 +24,27 @@ export const compileSvelteWithWrite = async (
     const tmpFileAbs = path.resolve(CWD, tmpFile)
     const importUrl = pathToFileURL(tmpFileAbs).href
 
-    // Check disk cache for fully transformed file
-    // Cache key: file path + source mtime
-    try {
-      const sourceStats = await fs.stat(resolvedPath)
-      const compiledStats = await fs.stat(tmpFileAbs)
-      if (compiledStats.mtimeMs >= sourceStats.mtimeMs) {
-        // Return cached file directly - it's already fully transformed
-        const cachedJs = await fs.readFile(tmpFileAbs, 'utf-8')
-        traceEnd(id, 'disk cache hit')
-        return { js: cachedJs, css, tmpFile, importUrl }
-      }
-    } catch {
-      // File doesn't exist or is stale - continue with compilation
-    }
-
-    // Cache miss - do the full work
+    // Transform imports (resolves $app/*, $lib/*, etc.)
     const processId = traceStart('processImports')
     const code = await processImports(js, filePath)
     traceEnd(processId)
 
+    // Node.js compatibility transforms
     const transformId = traceStart('transformForNode')
     const transformedCode = transformForNode(code, filePath)
     traceEnd(transformId)
 
+    // Write to temp file
     await fs.mkdirp(path.dirname(tmpFileAbs))
     const writeId = traceStart('fs.writeFile')
     await fs.writeFile(tmpFileAbs, transformedCode)
     traceEnd(writeId)
 
-    traceEnd(id, 'compiled')
     return { js: transformedCode, css, tmpFile, importUrl }
   } catch (e) {
     traceEnd(id, `ERROR: ${(e as Error).message}`)
     throw e
+  } finally {
+    // Don't traceEnd here - either returned early (traced) or threw (traced above)
   }
 }
