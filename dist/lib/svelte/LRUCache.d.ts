@@ -1,9 +1,7 @@
 export declare class LRUCache<T> {
   maxSize: number
   cache: Map<string, T>
-  cwd: string | null
-  constructor(maxSize?: number, cwd?: string)
-  normalizeKey(key: string): string
+  constructor(maxSize?: number)
   get(key: string): T | undefined
   set(key: string, value: T): void
   clear(): void

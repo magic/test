@@ -2,17 +2,16 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import crypto from 'node:crypto'
 import fs from '@magic/fs'
+import { getSvelteCompiler } from '../compiler-cache.js'
 import { compileSvelteWithWrite } from './compileSvelteWithWrite.js'
 import { processImports } from './processImports.js'
 import { transformForNode } from './transformForNode.js'
 import { resolvePackageExport } from './resolvePackageExport.js'
 import { cache as compileCache } from './cache.js'
 import { CWD } from '../../../constants.js'
+import { SVELTE_RUNE_REGEX } from '../constants.js'
 import { parseFile, extractExports, extractImports } from './astParse.js'
-const { compileModule } = await import('svelte/compiler')
 const pendingWrites = new Map()
-const SVELTE_RUNE_REGEX =
-  /\$(?:state|derived|effect|props|bindable|state\.config|effect\.pre|effect\.post|derived\.by)\b/
 const resolveRelativeToUrl = async (relativePath, baseDir) => {
   const absolutePath = path.resolve(baseDir, relativePath)
   const extensions = ['', '.ts', '.js', '.mjs']
@@ -226,6 +225,7 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
         let tempUrl
         if (SVELTE_RUNE_REGEX.test(reexportContent)) {
           try {
+            const { compileModule } = await getSvelteCompiler()
             const result = compileModule(reexportContent, { filename: absolutePath })
             const jsCodeString = String(result.js.code)
             const code = await processImports(jsCodeString, absolutePath)
@@ -302,6 +302,7 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
           let contentToWrite = depContent
           if (SVELTE_RUNE_REGEX.test(depContent)) {
             try {
+              const { compileModule } = await getSvelteCompiler()
               const result = compileModule(depContent, { filename: absolutePath })
               const jsCodeString = String(result.js.code)
               const code = await processImports(jsCodeString, absolutePath)

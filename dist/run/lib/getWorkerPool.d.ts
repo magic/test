@@ -1,2 +1,2 @@
-export declare const WORKER_LIMIT: number
-export declare const getWorkerPool: () => <T>(fn: () => Promise<T>) => Promise<T>
+export { getWorkerPool, WORKER_LIMIT } from '../../lib/workerPool.ts'
+export { getEffectiveWorkerLimit } from './getEffectiveWorkerLimit.ts'

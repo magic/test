@@ -7,7 +7,7 @@ export const parseViteConfig = async configPath => {
   const cached = configCache.get(configPath)
   if (cached) {
     const stats = await fs.stat(configPath)
-    if (stats.mtime.getTime() === cached.mtime) {
+    if (stats.mtimeMs === cached.mtime) {
       return cached.config
     }
   }
@@ -110,6 +110,6 @@ export const parseViteConfig = async configPath => {
     }
   }
   const stats = await fs.stat(configPath)
-  configCache.set(configPath, { config, mtime: stats.mtime.getTime() })
+  configCache.set(configPath, { config, mtime: stats.mtimeMs })
   return config
 }

@@ -1,6 +1,11 @@
 import fs from '@magic/fs'
 import path from 'node:path'
+const projectRootCache = new Map()
 export const findProjectRoot = async sourceDir => {
+  const cached = projectRootCache.get(sourceDir)
+  if (cached) {
+    return cached
+  }
   const root = process.cwd()
   if (sourceDir.includes('node_modules')) {
     return root
@@ -10,9 +15,11 @@ export const findProjectRoot = async sourceDir => {
     const pkgPath = path.join(current, 'package.json')
     const exists = await fs.exists(pkgPath)
     if (exists) {
+      projectRootCache.set(sourceDir, current)
       return current
     }
     current = path.dirname(current)
   }
+  projectRootCache.set(sourceDir, root)
   return root
 }

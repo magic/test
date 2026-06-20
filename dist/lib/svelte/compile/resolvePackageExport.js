@@ -3,6 +3,14 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { createRequire } from 'node:module'
 import { packageExportCache } from './packageExportCache.js'
+import {
+  SVELTE_RUNE_REGEX,
+  SVELTE_COMPILED_REGEX,
+  SVELTE_REEXPORT_REGEX,
+  SVELTE_DEFAULT_REEXPORT_REGEX,
+  EXPORT_STAR_REGEX,
+  EXPORT_NAMED_REGEX,
+} from '../constants.js'
 const SKIP_PATTERNS = ['./', '../', '$app/', '$lib/', '$', '/']
 const isSkipPattern = spec => {
   return SKIP_PATTERNS.some(p => spec.startsWith(p))
@@ -38,16 +46,6 @@ const tryResolvePath = async (basePath, ...candidates) => {
   }
   return null
 }
-const SVELTE_REEXPORT_RE = /export\s+\{[^}]*\}\s+from\s+['"][^'"]*\.svelte['"]/g
-const SVELTE_DEFAULT_REEXPORT_RE = /export\s+.*\s+from\s+['"][^'"]*\.svelte['"]/g
-const EXPORT_STAR_RE = /export\s+\*\s+from\s+['"]([^'"]+)['"]/g
-// Svelte runes that appear in SOURCE files (e.g., $state, $derived)
-// This matches rune declarations, not compiled output
-const SVELTE_RUNE_RE =
-  /\$(?:state|derived|effect|props|bindable|state\.config|effect\.pre|effect\.post|derived\.by)\b/
-// Pattern to detect already-compiled Svelte output - these indicate the file doesn't need compilation
-const SVELTE_COMPILED_RE = /import\s+\*\s+as\s+\$\s+from\s+['"]svelte\/internal\//
-const EXPORT_NAMED_RE = /export\s+\{\s*\w[\w\s,]*\}\s+from\s+['"]([^'"]+)['"]/g
 // Check if a file is already compiled Svelte output
 const isAlreadyCompiledSvelte = async filePath => {
   if (!filePath.endsWith('.js') && !filePath.endsWith('.mjs')) {
@@ -56,7 +54,7 @@ const isAlreadyCompiledSvelte = async filePath => {
   try {
     const content = await fs.readFile(filePath, 'utf-8')
     // If file has the Svelte compiler output pattern, it's already compiled
-    return SVELTE_COMPILED_RE.test(content)
+    return SVELTE_COMPILED_REGEX.test(content)
   } catch {
     return false
   }
@@ -77,16 +75,16 @@ const hasSvelteReExports = async (filePath, visited) => {
   }
   try {
     const content = await fs.readFile(filePath, 'utf-8')
-    if (SVELTE_REEXPORT_RE.test(content) || SVELTE_DEFAULT_REEXPORT_RE.test(content)) {
+    if (SVELTE_REEXPORT_REGEX.test(content) || SVELTE_DEFAULT_REEXPORT_REGEX.test(content)) {
       return true
     }
     // Only check for runes if not already compiled (runes in compiled output are internal)
     // Note: We already checked for compiled output above, so this only matches source files
-    if (SVELTE_RUNE_RE.test(content)) {
+    if (SVELTE_RUNE_REGEX.test(content)) {
       return true
     }
     const dir = path.dirname(filePath)
-    for (const match of content.matchAll(EXPORT_STAR_RE)) {
+    for (const match of content.matchAll(EXPORT_STAR_REGEX)) {
       const reexportPath = match[1]
       if (!reexportPath) {
         continue
@@ -102,7 +100,7 @@ const hasSvelteReExports = async (filePath, visited) => {
         return true
       }
     }
-    for (const match of content.matchAll(EXPORT_NAMED_RE)) {
+    for (const match of content.matchAll(EXPORT_NAMED_REGEX)) {
       const reexportPath = match[1]
       if (!reexportPath) {
         continue
@@ -139,7 +137,7 @@ const hasExportStarToSvelte = async (filePath, visited) => {
   try {
     const content = await fs.readFile(filePath, 'utf-8')
     const dir = path.dirname(filePath)
-    for (const match of content.matchAll(EXPORT_STAR_RE)) {
+    for (const match of content.matchAll(EXPORT_STAR_REGEX)) {
       const reexportPath = match[1]
       if (!reexportPath) {
         continue

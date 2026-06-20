@@ -21,6 +21,7 @@ import { getTempFilePath } from './getTempFilePath.ts'
 import { compileBarrel } from './compileBarrel.ts'
 import { resolvePackageExport } from './resolvePackageExport.ts'
 import { compileSvelteOnlyExport } from './resolveSvelteOnlyExports.ts'
+import { tryStat } from '../../../lib/fs.ts'
 
 const extractNamedImportsFromCode = (code: string, spec: string): string[] => {
   const namedImports: string[] = []
@@ -180,7 +181,7 @@ export const resolveAndCompileImport = async (
     }
   }
 
-  const pathStats = (await fs.exists(resolvedPath)) ? await fs.stat(resolvedPath) : null
+  const pathStats = await tryStat(resolvedPath)
   if (pathStats?.isDirectory()) {
     const importFileName = path.basename(importPath)
     const possibleFile = path.join(resolvedPath, importFileName)

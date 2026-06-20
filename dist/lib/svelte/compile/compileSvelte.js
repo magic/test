@@ -1,12 +1,13 @@
 import path from 'node:path'
 import fs from '@magic/fs'
 import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.js'
+import { getSvelteCompiler } from '../compiler-cache.js'
 import { cache } from './cache.js'
 import { TMP_DIR, CWD } from '../../../constants.js'
 import { cleanTempFiles } from './cleanTempFiles.js'
 import { acquireLock } from './acquireLock.js'
 export const compileSvelte = async filePath => {
-  const { compile, preprocess } = await import('svelte/compiler')
+  const { compile, preprocess } = await getSvelteCompiler()
   await cleanTempFiles()
   const relPath = path.relative(CWD, filePath)
   const mapFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.map'))
@@ -15,7 +16,7 @@ export const compileSvelte = async filePath => {
     const cached = cache.get(filePath)
     if (cached) {
       const stats = await fs.stat(filePath)
-      if (stats.mtime.getTime() === cached.mtime) {
+      if (stats.mtimeMs === cached.mtime) {
         return { js: cached.js, css: cached.css }
       }
     }
@@ -45,7 +46,7 @@ export const compileSvelte = async filePath => {
     }
     const stats = await fs.stat(filePath)
     const jsCodeFinal = jsCodeString
-    const cacheEntry = { js: jsCodeFinal, css: css ?? null, mtime: stats.mtime.getTime() }
+    const cacheEntry = { js: jsCodeFinal, css: css ?? null, mtime: stats.mtimeMs }
     cache.set(filePath, cacheEntry)
     return { js: jsCodeFinal, css: css ?? null }
   } finally {

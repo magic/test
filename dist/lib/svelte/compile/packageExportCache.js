@@ -1,2 +1,2 @@
 import { LRUCache } from '../LRUCache.js'
-export const packageExportCache = new LRUCache(200, process.cwd())
+export const packageExportCache = new LRUCache(200)

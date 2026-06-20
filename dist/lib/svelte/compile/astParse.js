@@ -1,7 +1,31 @@
-import { parse } from '@typescript-eslint/parser'
+import { getParser } from '../ast-cache.js'
+import { getSvelteCompiler } from '../compiler-cache.js'
 import crypto from 'node:crypto'
 import is from '@magic/types'
-const astCache = new Map()
+const MAX_AST_CACHE_SIZE = 500
+// Custom cache functions since LRUCache normalizes keys
+const cacheMap = new Map()
+const getCache = key => {
+  const value = cacheMap.get(key)
+  if (value) {
+    // Move to end (LRU)
+    cacheMap.delete(key)
+    cacheMap.set(key, value)
+  }
+  return value
+}
+const setCache = (key, value) => {
+  if (cacheMap.has(key)) {
+    cacheMap.delete(key)
+  } else if (cacheMap.size >= MAX_AST_CACHE_SIZE) {
+    const firstKey = cacheMap.keys().next().value
+    if (firstKey) {
+      cacheMap.delete(firstKey)
+    }
+  }
+  cacheMap.set(key, value)
+}
+const astCache = { get: getCache, set: setCache, clear: () => cacheMap.clear() }
 export const clearAstCache = () => astCache.clear()
 const getCacheKey = (code, filePath) => {
   const hash = crypto.createHash('sha256').update(code).digest('hex')
@@ -9,7 +33,7 @@ const getCacheKey = (code, filePath) => {
 }
 const extractScriptFromSvelte = async source => {
   try {
-    const { parse: parseSvelte } = await import('svelte/compiler')
+    const { parse: parseSvelte } = await getSvelteCompiler()
     const ast = parseSvelte(source, { modern: true })
     const parts = []
     const extractBody = content => {
@@ -39,19 +63,20 @@ const extractScriptFromSvelte = async source => {
 }
 const parseFile = async (code, filePath) => {
   const cacheKey = getCacheKey(code, filePath)
-  const cached = astCache.get(cacheKey)
+  const cached = getCache(cacheKey)
   if (cached) {
     return cached
   }
   const isSvelte = filePath.endsWith('.svelte')
   const codeToParse = isSvelte ? await extractScriptFromSvelte(code) : code
+  const { parse } = await getParser()
   const ast = parse(codeToParse, {
     sourceType: 'module',
     ecmaVersion: 'latest',
     range: true,
   })
   const result = { code: codeToParse, ast, filePath }
-  astCache.set(cacheKey, result)
+  setCache(cacheKey, result)
   return result
 }
 const getOriginal = (node, code) => {

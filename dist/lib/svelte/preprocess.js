@@ -1,5 +1,6 @@
 import is from '@magic/types'
 import { getViteDefine } from './viteConfig/index.js'
+import { getSvelteCompiler } from './compiler-cache.js'
 const walk = (node, handlers) => {
   const visit = n => {
     if (!n || !is.object(n)) {
@@ -22,7 +23,7 @@ const extractRuneVariables = async source => {
   const state = []
   const derived = []
   try {
-    const { parse } = await import('svelte/compiler')
+    const { parse } = await getSvelteCompiler()
     const ast = parse(source, { modern: true })
     if (!ast.instance || !ast.instance.content) {
       return { state, derived }
