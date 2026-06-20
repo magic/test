@@ -10,7 +10,7 @@ interface TraceEntry {
 
 // Global trace state
 let traces: Map<string, TraceEntry> = new Map()
-let traceEnabled = process.env.TEST_TRACE === '1'
+let traceEnabled = process.env.MAGIC_TEST_TRACE === '1'
 
 // ANSI colors for trace output
 const colors = {
