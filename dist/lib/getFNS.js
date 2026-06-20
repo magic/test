@@ -3,5 +3,5 @@
  */
 export const getFNS = (env = process.env) => {
   const fn = env.FN || ''
-  return fn.includes(' ') ? fn.split(/ ,;/).filter(Boolean) : fn
+  return fn.includes(' ') ? fn.split(/[ ,;]/).filter(Boolean) : fn
 }
