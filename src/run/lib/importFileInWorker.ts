@@ -1,4 +1,3 @@
-import path from 'node:path'
 import is from '@magic/types'
 
 import { getViteDefine } from '../../lib/svelte/viteConfig/index.ts'

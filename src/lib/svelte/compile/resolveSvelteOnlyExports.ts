@@ -5,12 +5,11 @@ import crypto from 'node:crypto'
 import fs from '@magic/fs'
 
 import { compileSvelteWithWrite } from './compileSvelteWithWrite.ts'
-import { compileSvelte } from './compileSvelte.ts'
 import { processImports } from './processImports.ts'
 import { transformForNode } from './transformForNode.ts'
 import { resolvePackageExport, type PackageExportResolve } from './resolvePackageExport.ts'
 import { cache as compileCache } from './cache.ts'
-import { CWD, TMP_DIR } from '../../../constants.ts'
+import { CWD } from '../../../constants.ts'
 import { parseFile, extractExports, extractImports } from './astParse.ts'
 import type { ExportInfo } from './types.ts'
 
