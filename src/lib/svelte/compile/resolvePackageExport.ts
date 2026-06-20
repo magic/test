@@ -61,8 +61,6 @@ const tryResolvePath = async (
   return null
 }
 
-
-
 // Check if a file is already compiled Svelte output
 const isAlreadyCompiledSvelte = async (filePath: string): Promise<boolean> => {
   if (!filePath.endsWith('.js') && !filePath.endsWith('.mjs')) {

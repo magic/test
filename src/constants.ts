@@ -2,8 +2,6 @@ export let TMP_DIR = 'test/.tmp'
 
 export const CWD = process.cwd()
 
-
-
 export const setTmpDir = (dir: string) => {
   TMP_DIR = dir
 }
