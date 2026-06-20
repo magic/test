@@ -3,6 +3,7 @@ import { expectedArguments } from '../../src/lib/expectedArguments.js'
 import type { TestCase } from '../../src/types.js'
 
 export default [
+  // Basic cases
   { fn: () => expectedArguments(() => {}), expect: is.array },
   { fn: () => expectedArguments(() => {}), expect: is.empty },
   { fn: () => expectedArguments((_a: unknown) => {}), expect: is.array },
@@ -19,12 +20,12 @@ export default [
   {
     fn: () => expectedArguments((_a: unknown, _b: unknown, _c = 0) => {}),
     expect: is.len.eq(3),
-    info: 'Also works with argument default values',
+    info: 'works with argument default values',
   },
   {
     fn: () => expectedArguments((_a: unknown, _b: unknown, ..._c: unknown[]) => {}),
     expect: is.len.eq(3),
-    info: 'Also works with spread arguments',
+    info: 'works with spread arguments',
   },
   {
     fn: () => expectedArguments(function (_a: unknown, _b: unknown, _c: unknown) {}),
@@ -34,6 +35,7 @@ export default [
     fn: () => expectedArguments(function () {}),
     expect: is.empty,
   },
+  // Destructured arguments
   {
     fn: () => {
       const args = expectedArguments(function ({ a, b }: { a: unknown; b: unknown }) {
@@ -74,6 +76,7 @@ export default [
     expect: true,
     info: 'extracts destructured array argument - includes',
   },
+  // Edge cases
   {
     fn: () => expectedArguments(42),
     expect: is.empty,
@@ -124,5 +127,48 @@ export default [
     },
     expect: true,
     info: 'spread argument includes ... in name',
+  },
+  // Destructuring with underscore prefix handling
+  {
+    fn: () => {
+      const args = expectedArguments(([_a]: [unknown]) => {})
+      return args[0]
+    },
+    expect: '[a]',
+    info: 'handles array destructuring with underscore prefix',
+  },
+  {
+    fn: () => {
+      const args = expectedArguments(({ _a }: { _a: unknown }) => {})
+      return args[0]
+    },
+    expect: '{ _a }',
+    info: 'handles object destructuring with underscore prefix (spaces preserved by TS)',
+  },
+  // Generator function
+  {
+    fn: () => {
+      const args = expectedArguments(function* (_a: unknown, _b: unknown) {})
+      return args.length
+    },
+    expect: 2,
+    info: 'extracts arguments from generator function',
+  },
+  // Uncovered branches - underscore prefix in destructuring (lines 37-38)
+  {
+    fn: () => {
+      const args = expectedArguments(function (_arg: unknown) {})
+      return args[0] === '_arg'
+    },
+    expect: true,
+    info: 'underscore prefix preserved in destructuring',
+  },
+  {
+    fn: () => {
+      const args = expectedArguments(function ({ a, b }: { a: unknown; b: unknown }) {})
+      return args[0]
+    },
+    expect: '{ a',
+    info: 'object destructuring without underscore',
   },
 ] satisfies TestCase[]

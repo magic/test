@@ -141,4 +141,10 @@ export default [
     expect: (results: Test[]) => results.every(result => result.fn === true),
     info: 'should handle function specs',
   },
+  // Test missing lib exports
+  {
+    fn: () => version({}, { missing: 'string' }, 'emptyLib'),
+    expect: (results: Test[]) => results.some(r => r.info?.includes('missing export')),
+    info: 'reports missing lib exports',
+  },
 ] satisfies TestCase[]

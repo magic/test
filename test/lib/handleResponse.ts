@@ -1,5 +1,12 @@
 import is from '@magic/types'
-import { handleResponse } from '../../src/lib/handleResponse.js'
+import {
+  handleResponse,
+  isResponseError,
+  JsonParseError,
+  HttpStatusError,
+  SizeLimitError,
+  NetworkError,
+} from '../../src/lib/handleResponse.js'
 import type { TestCase } from '../../src/types.js'
 
 interface MockResponse {
@@ -197,5 +204,96 @@ export default [
     },
     expect: '{"ignored":true}',
     info: 'non-JSON content type returns raw string',
+  },
+  // Error with URL and body (lines 48-54)
+  {
+    fn: async () => {
+      let error: unknown
+      const { res, wait } = createMockResponse(404, 'text/plain', 'Not Found')
+      handleResponse(
+        res,
+        (v: unknown) => v,
+        (e: unknown) => (error = e),
+        'https://example.com/api',
+      )
+      await wait
+      return error
+    },
+    expect: (e: HttpStatusError) =>
+      e instanceof HttpStatusError && e.message.includes('https://example.com/api'),
+    info: 'error includes URL when provided',
+  },
+  {
+    fn: async () => {
+      let error: unknown
+      const { res, wait } = createMockResponse(500, 'text/plain', 'Internal Server Error')
+      handleResponse(
+        res,
+        (v: unknown) => v,
+        (e: unknown) => (error = e),
+        'https://api.example.com',
+      )
+      await wait
+      return error
+    },
+    expect: (e: HttpStatusError) => e instanceof HttpStatusError && e.responseStatusCode === 500,
+    info: 'HttpStatusError has correct status code',
+  },
+  {
+    fn: async () => {
+      let error: unknown
+      const { res, wait } = createMockResponse(404, 'application/json', '{"error":"not found"}')
+      handleResponse(
+        res,
+        (v: unknown) => v,
+        (e: unknown) => (error = e),
+      )
+      await wait
+      return error
+    },
+    expect: (e: HttpStatusError) => e instanceof HttpStatusError,
+    info: 'handles JSON error response on non-2xx',
+  },
+  // JSON parse error
+  {
+    fn: async () => {
+      let error: unknown
+      const { res, wait } = createMockResponse(200, 'application/json', '{broken}')
+      handleResponse(
+        res,
+        (v: unknown) => v,
+        (e: unknown) => (error = e),
+      )
+      await wait
+      return error
+    },
+    expect: (e: JsonParseError) => e instanceof JsonParseError,
+    info: 'JsonParseError on invalid JSON',
+  },
+  // isResponseError type guard
+  {
+    fn: () => isResponseError(new JsonParseError('test')),
+    expect: true,
+    info: 'isResponseError returns true for JsonParseError',
+  },
+  {
+    fn: () => isResponseError(new HttpStatusError('test', 404)),
+    expect: true,
+    info: 'isResponseError returns true for HttpStatusError',
+  },
+  {
+    fn: () => isResponseError(new SizeLimitError('test')),
+    expect: true,
+    info: 'isResponseError returns true for SizeLimitError',
+  },
+  {
+    fn: () => isResponseError(new NetworkError('test')),
+    expect: true,
+    info: 'isResponseError returns true for NetworkError',
+  },
+  {
+    fn: () => isResponseError(new Error('not a response error')),
+    expect: false,
+    info: 'isResponseError returns false for regular Error',
   },
 ] satisfies TestCase[]

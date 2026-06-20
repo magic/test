@@ -1,56 +1,115 @@
 import { stringify } from '../../src/lib/stringify.js'
-import type { TestCase } from '../../src/types.js'
+import type { TestCase } from '../../src/types.ts'
 
-const longString = 'a'.repeat(100)
+// Store original env
+const originalArgv = [...process.argv]
+const originalEnv = { ...process.env }
+
+const withArgv = (args: string[], fn: () => unknown) => {
+  const original = [...process.argv]
+  process.argv = ['node', 'test', ...args]
+  try {
+    return fn()
+  } finally {
+    process.argv = original
+  }
+}
+
+const withEnv = (envVars: Record<string, string | undefined>, fn: () => unknown) => {
+  // Save and clear
+  for (const key of Object.keys(process.env)) {
+    if (!(key in envVars)) {
+      delete process.env[key]
+    }
+  }
+  for (const [key, value] of Object.entries(envVars)) {
+    if (value === undefined) {
+      delete process.env[key]
+    } else {
+      process.env[key] = value
+    }
+  }
+  try {
+    return fn()
+  } finally {
+    // Restore
+    for (const key of Object.keys(process.env)) {
+      delete process.env[key]
+    }
+    Object.assign(process.env, originalEnv)
+  }
+}
 
 export default [
-  // @ts-expect-error - testing calling stringify with no arguments
-  { fn: () => stringify(), expect: undefined, info: 'empty argument returns argument' },
-  { fn: stringify(false), expect: false, info: '"false" as argument returns "false"' },
-  { fn: stringify(true), expect: true, info: '"true" as argument returns "true"' },
-  { fn: stringify({}), expect: {}, info: 'empty object returns empty object' },
-  { fn: stringify([]), expect: [], info: 'empty array returns empty array' },
   {
-    fn: stringify(['testing', () => {}]),
-    expect: ['testing', '() => { }'],
-    info: 'empty array returns empty array',
+    fn: () => stringify('short'),
+    expect: 'short',
+    info: 'returns short strings unchanged',
   },
   {
-    fn: stringify({ testing: true, fn: () => {} }),
-    expect: { testing: true, fn: '() => { }' },
-    info: 'functions get stringified',
+    fn: () => stringify('a'.repeat(100)),
+    expect: 'a'.repeat(70),
+    info: 'truncates long strings to 70 chars',
   },
   {
-    fn: () => {
-      const original = process.env.MAGIC_TEST_ERROR_LENGTH
-      delete process.env.MAGIC_TEST_ERROR_LENGTH
-      const result = (stringify(longString) as string).length
-      process.env.MAGIC_TEST_ERROR_LENGTH = original
-      return result
-    },
-    expect: 70,
-    info: 'strings truncate to 70 by default',
+    fn: () => stringify(42),
+    expect: 42,
+    info: 'returns numbers unchanged',
   },
   {
-    fn: () => {
-      const original = process.env.MAGIC_TEST_ERROR_LENGTH
-      process.env.MAGIC_TEST_ERROR_LENGTH = '50'
-      const result = (stringify(longString) as string).length
-      process.env.MAGIC_TEST_ERROR_LENGTH = original
-      return result
-    },
-    expect: 50,
-    info: 'strings truncate to errorLength when set',
+    fn: () => stringify(true),
+    expect: true,
+    info: 'returns booleans unchanged',
   },
   {
-    fn: () => {
-      const original = process.env.MAGIC_TEST_ERROR_LENGTH
-      process.env.MAGIC_TEST_ERROR_LENGTH = '0'
-      const result = (stringify(longString) as string).length
-      process.env.MAGIC_TEST_ERROR_LENGTH = original
-      return result
-    },
-    expect: 100,
-    info: 'strings do not truncate when errorLength is 0',
+    fn: () => stringify(null),
+    expect: null,
+    info: 'returns null unchanged',
+  },
+  {
+    fn: () => stringify(undefined),
+    expect: undefined,
+    info: 'returns undefined unchanged',
+  },
+  {
+    fn: () => stringify([1, 2, 3]),
+    expect: [1, 2, 3],
+    info: 'processes arrays recursively',
+  },
+  {
+    fn: () => stringify({ a: 1, b: 2 }),
+    expect: { a: 1, b: 2 },
+    info: 'processes objects recursively',
+  },
+  {
+    fn: () => stringify(() => 'test'),
+    expect: "() => 'test'",
+    info: 'converts functions to strings',
+  },
+  {
+    fn: () => stringify([1, () => 2, { nested: true }]),
+    expect: [1, '() => 2', { nested: true }],
+    info: 'handles mixed arrays with functions',
+  },
+  {
+    fn: () => stringify({ fn: () => 'hello', str: 'world' }),
+    expect: { fn: "() => 'hello'", str: 'world' },
+    info: 'handles mixed objects with functions',
+  },
+  // Error length tests (lines 28-29 uncovered)
+  {
+    fn: () => withArgv(['--verbose'], () => stringify('a'.repeat(200))),
+    expect: 'a'.repeat(200),
+    info: 'no truncation with --verbose flag',
+  },
+  {
+    fn: () => withEnv({ MAGIC_TEST_ERROR_LENGTH: '0' }, () => stringify('a'.repeat(200))),
+    expect: 'a'.repeat(200),
+    info: 'no truncation when MAGIC_TEST_ERROR_LENGTH is 0',
+  },
+  {
+    fn: () => withEnv({ MAGIC_TEST_ERROR_LENGTH: '50' }, () => stringify('a'.repeat(100))),
+    expect: 'a'.repeat(50),
+    info: 'respects MAGIC_TEST_ERROR_LENGTH env var',
   },
 ] satisfies TestCase[]

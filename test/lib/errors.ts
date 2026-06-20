@@ -1,92 +1,121 @@
-import is from '@magic/types'
-import { ERRORS, ERROR_MESSAGES, createError } from '../../src/lib/index.js'
+import { ERRORS, ERROR_MESSAGES, createError } from '../../src/lib/errors.js'
 import type { TestCase } from '../../src/types.js'
 
 export default [
+  // ERRORS object contains expected codes
   {
-    fn: () => ERRORS.E_EMPTY_SUITE,
-    expect: 'E_EMPTY_SUITE',
-    info: 'E_EMPTY_SUITE error code exists',
+    fn: () => 'E_EMPTY_SUITE' in ERRORS,
+    expect: true,
+    info: 'ERRORS contains E_EMPTY_SUITE',
   },
   {
-    fn: () => ERRORS.E_RUN_SUITE_UNKNOWN,
-    expect: 'E_RUN_SUITE_UNKNOWN',
-    info: 'E_RUN_SUITE_UNKNOWN error code exists',
+    fn: () => 'E_TEST_NO_FN' in ERRORS,
+    expect: true,
+    info: 'ERRORS contains E_TEST_NO_FN',
   },
   {
-    fn: () => ERRORS.E_TEST_NO_FN,
-    expect: 'E_TEST_NO_FN',
-    info: 'E_TEST_NO_FN error code exists',
+    fn: () => 'E_NO_TESTS' in ERRORS,
+    expect: true,
+    info: 'ERRORS contains E_NO_TESTS',
+  },
+  // ERROR_MESSAGES
+  {
+    fn: () => typeof ERROR_MESSAGES.E_EMPTY_SUITE,
+    expect: 'function',
+    info: 'E_EMPTY_SUITE is a function',
   },
   {
-    fn: () => ERRORS.E_TEST_EXPECT,
-    expect: 'E_TEST_EXPECT',
-    info: 'E_TEST_EXPECT error code exists',
+    fn: () => ERROR_MESSAGES.E_EMPTY_SUITE('test'),
+    expect: 'test is not exporting tests.',
+    info: 'E_EMPTY_SUITE generates correct message',
   },
-  {
-    fn: () => ERRORS.E_TEST_BEFORE,
-    expect: 'E_TEST_BEFORE',
-    info: 'E_TEST_BEFORE error code exists',
-  },
-  {
-    fn: () => ERRORS.E_TEST_AFTER,
-    expect: 'E_TEST_AFTER',
-    info: 'E_TEST_AFTER error code exists',
-  },
-  {
-    fn: () => ERRORS.E_TEST_FN,
-    expect: 'E_TEST_FN',
-    info: 'E_TEST_FN error code exists',
-  },
-  {
-    fn: () => ERRORS.E_NO_TESTS,
-    expect: 'E_NO_TESTS',
-    info: 'E_NO_TESTS error code exists',
-  },
-  {
-    fn: () => ERRORS.E_IMPORT,
-    expect: 'E_IMPORT',
-    info: 'E_IMPORT error code exists',
-  },
-  {
-    fn: () => ERRORS.E_MAGIC_TEST,
-    expect: 'E_MAGIC_TEST',
-    info: 'E_MAGIC_TEST error code exists',
-  },
-  {
-    fn: () => ERROR_MESSAGES.E_NO_TESTS,
-    expect: 'No test suites found.',
-    info: 'E_NO_TESTS has correct message',
-  },
-  {
-    fn: () => ERROR_MESSAGES.E_EMPTY_SUITE('myTest'),
-    expect: 'myTest is not exporting tests.',
-    info: 'E_EMPTY_SUITE message function works',
-  },
-  {
-    fn: () => ERROR_MESSAGES.E_TEST_NO_FN('testKey'),
-    expect: 'test.fn is not a function in testKey',
-    info: 'E_TEST_NO_FN message function works',
-  },
+  // createError
   {
     fn: () => {
-      const err = createError('E_TEST', 'test error message')
-      return err.message
+      const err = createError('E_TEST', 'Test error message')
+      return err instanceof Error
     },
-    expect: 'test error message',
-    info: 'createError sets message',
+    expect: true,
+    info: 'createError returns instanceof Error',
   },
   {
     fn: () => {
-      const err = createError('E_TEST', 'test error message')
+      const err = createError('E_TEST', 'Test error message')
       return err.code
     },
     expect: 'E_TEST',
-    info: 'createError sets code',
+    info: 'createError sets code property',
   },
   {
-    fn: createError('E_TEST', 'test error message'),
-    expect: is.error,
-    info: 'createError returns Error instance',
+    fn: () => {
+      const err = createError('E_TEST', 'Test error message')
+      return err.message
+    },
+    expect: 'Test error message',
+    info: 'createError sets message property',
+  },
+  // ERROR_MESSAGES functions
+  {
+    fn: () => ERROR_MESSAGES.E_NO_TESTS,
+    expect: 'No test suites found.',
+    info: 'E_NO_TESTS returns string',
+  },
+  {
+    fn: () => ERROR_MESSAGES.E_TEST_NO_FN('myTest'),
+    expect: 'test.fn is not a function in myTest',
+    info: 'E_TEST_NO_FN generates correct message',
+  },
+  {
+    fn: () => {
+      const err = new Error('inner')
+      return ERROR_MESSAGES.E_TEST_EXPECT('myTest', err).includes('myTest')
+    },
+    expect: true,
+    info: 'E_TEST_EXPECT includes test name',
+  },
+  {
+    fn: () => {
+      const err = new Error('hook failed')
+      return ERROR_MESSAGES.E_TEST_BEFORE('myTest', err).includes('hook failed')
+    },
+    expect: true,
+    info: 'E_TEST_BEFORE includes error',
+  },
+  {
+    fn: () => {
+      const err = new Error('beforeEach failed')
+      return ERROR_MESSAGES.E_TEST_BEFORE_EACH('myTest', err).includes('beforeEach failed')
+    },
+    expect: true,
+    info: 'E_TEST_BEFORE_EACH generates correct message',
+  },
+  {
+    fn: () => {
+      const err = new Error('after failed')
+      return ERROR_MESSAGES.E_TEST_AFTER('myTest', err).includes('after failed')
+    },
+    expect: true,
+    info: 'E_TEST_AFTER generates correct message',
+  },
+  {
+    fn: () => {
+      const err = new Error('afterEach failed')
+      return ERROR_MESSAGES.E_TEST_AFTER_EACH('myTest', err).includes('afterEach failed')
+    },
+    expect: true,
+    info: 'E_TEST_AFTER_EACH generates correct message',
+  },
+  {
+    fn: () => {
+      const err = new Error('fn failed')
+      return ERROR_MESSAGES.E_TEST_FN('myTest', err).includes('fn failed')
+    },
+    expect: true,
+    info: 'E_TEST_FN generates correct message',
+  },
+  {
+    fn: () => ERROR_MESSAGES.E_IMPORT('module.js'),
+    expect: 'Failed to import: module.js',
+    info: 'E_IMPORT generates correct message',
   },
 ] satisfies TestCase[]

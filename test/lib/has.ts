@@ -361,6 +361,16 @@ export default [
     info: 'includes returns true for array with item',
   },
   {
+    fn: () => includes({ a: 1 })([{ a: 1 }, { b: 2 }]),
+    expect: true,
+    info: 'includes uses deep.equal for objects in array',
+  },
+  {
+    fn: () => includes('a')(['A', 'B', 'C']),
+    expect: false,
+    info: 'includes is case sensitive',
+  },
+  {
     fn: () => includes('d')(['a', 'b', 'c']),
     expect: false,
     info: 'includes returns false for array without item',
