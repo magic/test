@@ -4,6 +4,7 @@ import log from '@magic/log'
 import fs from '@magic/fs'
 import { stats, createStore, ERRORS } from './lib/index.js'
 import { runSuite } from './run/suite.js'
+import { printTraceSummary, isTraceEnabled } from './lib/svelte/compile/timing.js'
 const cwd = process.cwd()
 /**
  * Aggregate raw test results into the store's results object.
@@ -215,5 +216,9 @@ export const run = async (tests, options = {}) => {
     await fs.rmrf(tmpDir)
   }
   stats.info(suites, store)
+  // Print compile trace summary if enabled
+  if (isTraceEnabled()) {
+    printTraceSummary()
+  }
   process.exit(0)
 }

@@ -3,6 +3,7 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { createRequire } from 'node:module'
 import { packageExportCache } from './packageExportCache.ts'
+import { traceStart, traceEnd } from './timing.ts'
 import {
   SVELTE_RUNE_REGEX,
   SVELTE_COMPILED_REGEX,
@@ -205,9 +206,11 @@ export const resolvePackageExport = async (
     return { resolvedPath: null, isSvelteOnly: false }
   }
 
+  const id = traceStart(`resolvePackageExport ${pkgSpec}`)
   const cacheKey = `${pkgSpec}:${sourceDir}`
   const cached = packageExportCache.get(cacheKey)
   if (cached) {
+    traceEnd(id, 'cache hit')
     return cached
   }
 
@@ -238,16 +241,16 @@ export const resolvePackageExport = async (
   }
 
   if (!(await fs.exists(pkgPath))) {
+    traceEnd(id)
     return { resolvedPath: null, isSvelteOnly: false }
   }
-  if (!(await fs.exists(pkgPath))) {
-    return { resolvedPath: null, isSvelteOnly: false }
-  }
+  // Duplicate check removed - already verified above
 
   let pkg: { exports?: unknown; main?: string; module?: string }
   try {
     pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'))
   } catch {
+    traceEnd(id)
     return { resolvedPath: null, isSvelteOnly: false }
   }
 
@@ -264,11 +267,13 @@ export const resolvePackageExport = async (
     ].filter(a => !is.undef(a) && is.str(a))
 
     const resolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
+    traceEnd(id)
     return { resolvedPath: resolved, isSvelteOnly: false }
   }
 
   if (is.string(exports)) {
     const resolved = await tryResolvePath(nodeModulesPath, exports)
+    traceEnd(id)
     return { resolvedPath: resolved, isSvelteOnly: false }
   }
 
@@ -279,6 +284,7 @@ export const resolvePackageExport = async (
     if (subExport) {
       if (is.string(subExport)) {
         const resolved = await tryResolvePath(nodeModulesPath, subExport)
+        traceEnd(id)
         return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
       }
       if (is.object(subExport) && subExport !== null) {
@@ -297,6 +303,7 @@ export const resolvePackageExport = async (
 
     const fallbackCandidates = ['./lib/' + subpath, './' + subpath, subpath]
     const resolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
+    traceEnd(id)
     return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
   }
 
@@ -308,6 +315,7 @@ export const resolvePackageExport = async (
 
     if (is.string(rootExport)) {
       const resolved = await tryResolvePath(nodeModulesPath, rootExport)
+      traceEnd(id)
       return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
     }
 
@@ -441,10 +449,12 @@ export const resolvePackageExport = async (
       ].filter(Boolean) as string[]
 
       const fallbackResolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
+      traceEnd(id)
       return { resolvedPath: fallbackResolved ?? null, isSvelteOnly: false }
     }
   }
 
+  traceEnd(id)
   return { resolvedPath: null, isSvelteOnly: false }
 }
 

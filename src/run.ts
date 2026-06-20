@@ -7,6 +7,7 @@ import fs from '@magic/fs'
 import { stats, createStore, ERRORS, Store } from './lib/index.ts'
 import { runSuite } from './run/suite.ts'
 import type { TestSuites, TestCollection, CleanupFunction, TestResult } from './types.ts'
+import { printTraceSummary, isTraceEnabled } from './lib/svelte/compile/timing.ts'
 
 const cwd = process.cwd()
 
@@ -267,6 +268,11 @@ export const run = async (
   }
 
   stats.info(suites, store)
+
+  // Print compile trace summary if enabled
+  if (isTraceEnabled()) {
+    printTraceSummary()
+  }
 
   process.exit(0)
 }

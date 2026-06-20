@@ -5,7 +5,7 @@ import fs from '@magic/fs'
 import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.ts'
 import { getSvelteCompiler } from '../compiler-cache.ts'
 
-import { cache } from './cache.ts'
+import { cache, pendingSvelteCompiles } from './cache.ts'
 import { TMP_DIR, CWD } from '../../../constants.ts'
 import { cleanTempFiles } from './cleanTempFiles.ts'
 import { acquireLock } from './acquireLock.ts'
@@ -17,6 +17,12 @@ export interface CompileSvelteReturn {
 }
 
 export const compileSvelte = async (filePath: string): Promise<CompileSvelteReturn> => {
+  // Check if another call is already compiling this file
+  const pending = pendingSvelteCompiles.get(filePath)
+  if (pending) {
+    return await pending
+  }
+
   const { compile, preprocess } = await getSvelteCompiler()
 
   await cleanTempFiles()
@@ -27,8 +33,8 @@ export const compileSvelte = async (filePath: string): Promise<CompileSvelteRetu
   const release = await acquireLock(mapFile)
 
   try {
+    // Check in-memory cache first
     const cached = cache.get(filePath)
-
     if (cached) {
       const stats = await fs.stat(filePath)
       if (stats.mtimeMs === cached.mtime) {

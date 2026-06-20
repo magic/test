@@ -2,17 +2,23 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.js'
 import { getSvelteCompiler } from '../compiler-cache.js'
-import { cache } from './cache.js'
+import { cache, pendingSvelteCompiles } from './cache.js'
 import { TMP_DIR, CWD } from '../../../constants.js'
 import { cleanTempFiles } from './cleanTempFiles.js'
 import { acquireLock } from './acquireLock.js'
 export const compileSvelte = async filePath => {
+  // Check if another call is already compiling this file
+  const pending = pendingSvelteCompiles.get(filePath)
+  if (pending) {
+    return await pending
+  }
   const { compile, preprocess } = await getSvelteCompiler()
   await cleanTempFiles()
   const relPath = path.relative(CWD, filePath)
   const mapFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.map'))
   const release = await acquireLock(mapFile)
   try {
+    // Check in-memory cache first
     const cached = cache.get(filePath)
     if (cached) {
       const stats = await fs.stat(filePath)

@@ -5,7 +5,17 @@ import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.j
 import is from '@magic/types'
 import ts from 'typescript'
 import log from '@magic/log'
+import { traceStart, traceEnd } from '../../lib/svelte/compile/timing.js'
 export const resolve = async (specifier, context, nextResolve) => {
+  const id = traceStart(`tsLoader.resolve ${specifier.split('/').pop() || specifier}`)
+  try {
+    traceEnd(id)
+    return await resolveImpl(specifier, context, nextResolve)
+  } finally {
+    traceEnd(id)
+  }
+}
+const resolveImpl = async (specifier, context, nextResolve) => {
   try {
     // Handle .js -> .ts conversion for imports without compiled JS
     if (specifier.endsWith('.js') && context.parentURL) {
@@ -158,6 +168,7 @@ export const resolve = async (specifier, context, nextResolve) => {
   return nextResolve(specifier, context)
 }
 const transpileWithTypeScript = code => {
+  const id = traceStart('tsLoader.transpile')
   const result = ts.transpileModule(code, {
     compilerOptions: {
       target: ts.ScriptTarget.ESNext,
@@ -165,7 +176,9 @@ const transpileWithTypeScript = code => {
     },
     reportDiagnostics: false,
   })
-  return result.outputText
+  const output = result.outputText
+  traceEnd(id)
+  return output
 }
 const resolveDollarLibImports = async (code, filePath) => {
   const dollarImportRe = /from\s+['"]($lib[^'"]*|$app[^'"]*)['"]/g
@@ -200,6 +213,14 @@ const resolveDollarLibImports = async (code, filePath) => {
   return code
 }
 export const load = async (url, context, nextLoad) => {
+  const id = traceStart(`tsLoader.load ${url.split('/').pop() || url}`)
+  try {
+    return await loadImpl(url, context, nextLoad)
+  } finally {
+    traceEnd(id)
+  }
+}
+const loadImpl = async (url, context, nextLoad) => {
   if (url.includes('/magic/util/test/src/') && url.endsWith('.js')) {
     const tsUrl = url.replace(/\.js$/, '.ts')
     const filePath = tsUrl.replace('file://', '')

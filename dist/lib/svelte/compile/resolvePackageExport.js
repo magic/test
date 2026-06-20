@@ -3,6 +3,7 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { createRequire } from 'node:module'
 import { packageExportCache } from './packageExportCache.js'
+import { traceStart, traceEnd } from './timing.js'
 import {
   SVELTE_RUNE_REGEX,
   SVELTE_COMPILED_REGEX,
@@ -173,9 +174,11 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
   if (!pkgName) {
     return { resolvedPath: null, isSvelteOnly: false }
   }
+  const id = traceStart(`resolvePackageExport ${pkgSpec}`)
   const cacheKey = `${pkgSpec}:${sourceDir}`
   const cached = packageExportCache.get(cacheKey)
   if (cached) {
+    traceEnd(id, 'cache hit')
     return cached
   }
   let nodeModulesPath
@@ -202,15 +205,15 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
     }
   }
   if (!(await fs.exists(pkgPath))) {
+    traceEnd(id)
     return { resolvedPath: null, isSvelteOnly: false }
   }
-  if (!(await fs.exists(pkgPath))) {
-    return { resolvedPath: null, isSvelteOnly: false }
-  }
+  // Duplicate check removed - already verified above
   let pkg
   try {
     pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'))
   } catch {
+    traceEnd(id)
     return { resolvedPath: null, isSvelteOnly: false }
   }
   const subpath = pkgName.subpath
@@ -224,10 +227,12 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
       'src/index.js',
     ].filter(a => !is.undef(a) && is.str(a))
     const resolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
+    traceEnd(id)
     return { resolvedPath: resolved, isSvelteOnly: false }
   }
   if (is.string(exports)) {
     const resolved = await tryResolvePath(nodeModulesPath, exports)
+    traceEnd(id)
     return { resolvedPath: resolved, isSvelteOnly: false }
   }
   if (subpath && is.object(exports) && !Array.isArray(exports)) {
@@ -235,6 +240,7 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
     if (subExport) {
       if (is.string(subExport)) {
         const resolved = await tryResolvePath(nodeModulesPath, subExport)
+        traceEnd(id)
         return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
       }
       if (is.object(subExport) && subExport !== null) {
@@ -252,6 +258,7 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
     }
     const fallbackCandidates = ['./lib/' + subpath, './' + subpath, subpath]
     const resolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
+    traceEnd(id)
     return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
   }
   if (is.object(exports) && exports !== null && !Array.isArray(exports)) {
@@ -261,6 +268,7 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
     }
     if (is.string(rootExport)) {
       const resolved = await tryResolvePath(nodeModulesPath, rootExport)
+      traceEnd(id)
       return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
     }
     if (is.object(rootExport) && rootExport !== null) {
@@ -381,9 +389,11 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
         'src/index.js',
       ].filter(Boolean)
       const fallbackResolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
+      traceEnd(id)
       return { resolvedPath: fallbackResolved ?? null, isSvelteOnly: false }
     }
   }
+  traceEnd(id)
   return { resolvedPath: null, isSvelteOnly: false }
 }
 const pathToFileURL = p => {

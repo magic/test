@@ -8,23 +8,51 @@ import type { CssObject } from './types.ts'
 import { transformForNode } from './transformForNode.ts'
 import { compileSvelte } from './compileSvelte.ts'
 import { processImports } from './processImports.ts'
+import { traceStart, traceEnd } from './timing.ts'
 
 export const compileSvelteWithWrite = async (
   filePath: string,
 ): Promise<{ js: string; css: CssObject | null; tmpFile: string; importUrl: string }> => {
-  const { js, css } = await compileSvelte(filePath)
-  const code = await processImports(js, filePath)
+  const id = traceStart(`compileSvelteWithWrite ${path.basename(filePath)}`)
+  try {
+    const { js, css } = await compileSvelte(filePath)
 
-  const transformedCode = transformForNode(code, filePath)
+    const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
+    const relPath = path.relative(CWD, resolvedPath)
+    const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
+    const tmpFileAbs = path.resolve(CWD, tmpFile)
+    const importUrl = pathToFileURL(tmpFileAbs).href
 
-  const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
-  const relPath = path.relative(CWD, resolvedPath)
-  const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
-  const tmpFileAbs = path.resolve(CWD, tmpFile)
-  const importUrl = pathToFileURL(tmpFileAbs).href
+    // Check disk cache for fully transformed file
+    // Cache key: file path + source mtime
+    try {
+      const sourceStats = await fs.stat(resolvedPath)
+      const compiledStats = await fs.stat(tmpFileAbs)
+      if (compiledStats.mtimeMs >= sourceStats.mtimeMs) {
+        // Return cached file directly - it's already fully transformed
+        const cachedJs = await fs.readFile(tmpFileAbs, 'utf-8')
+        traceEnd(id, 'disk cache hit')
+        return { js: cachedJs, css, tmpFile, importUrl }
+      }
+    } catch {
+      // Cache miss - need to transform and write
+    }
 
-  await fs.mkdirp(path.dirname(tmpFileAbs))
-  await fs.writeFile(tmpFileAbs, transformedCode)
+    const processId = traceStart('processImports')
+    const code = await processImports(js, filePath)
+    traceEnd(processId)
 
-  return { js: transformedCode, css, tmpFile, importUrl }
+    const transformId = traceStart('transformForNode')
+    const transformedCode = transformForNode(code, filePath)
+    traceEnd(transformId)
+
+    await fs.mkdirp(path.dirname(tmpFileAbs))
+    const writeId = traceStart('fs.writeFile')
+    await fs.writeFile(tmpFileAbs, transformedCode)
+    traceEnd(writeId)
+
+    return { js: transformedCode, css, tmpFile, importUrl }
+  } finally {
+    traceEnd(id)
+  }
 }

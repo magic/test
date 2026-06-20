@@ -5,8 +5,22 @@ import is from '@magic/types'
 
 import { SVELTE_IMPORT_REGEX } from '../constants.ts'
 import { resolveAndCompileImport } from './resolveAndCompileImport.ts'
+import { traceStart, traceEnd } from './timing.ts'
 
 export const processImports = async (
+  code: string,
+  sourceFilePath: string,
+  importChain: string[] = [],
+): Promise<string> => {
+  const id = traceStart(`processImports ${path.basename(sourceFilePath)}`)
+  try {
+    return await processImportsImpl(code, sourceFilePath, importChain)
+  } finally {
+    traceEnd(id)
+  }
+}
+
+const processImportsImpl = async (
   code: string,
   sourceFilePath: string,
   importChain: string[] = [],
@@ -40,7 +54,14 @@ export const processImports = async (
     }
   }
 
-  for (const { imported, path: importPath } of imports) {
+  const importCount = imports.length
+  for (let i = 0; i < imports.length; i++) {
+    const item = imports[i]
+    if (!item) continue
+    const { imported, path: importPath } = item
+    const resolveId = traceStart(
+      `resolve.import[${i + 1}/${importCount}] ${importPath.split('/').pop() || importPath}`,
+    )
     try {
       const result = await resolveAndCompileImport(
         importPath,
@@ -61,11 +82,13 @@ export const processImports = async (
           )
           processedCode = processedCode.replace(importRegex, `const ${imported} = {}`)
         }
+        traceEnd(resolveId)
         continue
       }
 
       const url = 'url' in result && result.url
       if (!url) {
+        traceEnd(resolveId)
         continue
       }
       const importRegex = new RegExp(
@@ -73,7 +96,9 @@ export const processImports = async (
         'g',
       )
       processedCode = processedCode.replace(importRegex, `import ${imported} from '${url}'`)
+      traceEnd(resolveId)
     } catch (e) {
+      traceEnd(resolveId, 'ERROR')
       const message = is.error(e) ? e.message : String(e)
       log.error('Could not resolve import', importPath, message)
       throw e

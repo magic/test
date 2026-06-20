@@ -5,8 +5,23 @@ import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.t
 import is from '@magic/types'
 import ts from 'typescript'
 import log from '@magic/log'
+import { traceStart, traceEnd, traceAsync } from '../../lib/svelte/compile/timing.ts'
 
 export const resolve = async (
+  specifier: string,
+  context: { parentURL?: string },
+  nextResolve: (specifier: string, context?: object) => Promise<{ url: string }>,
+): Promise<{ url: string; shortCircuit?: boolean }> => {
+  const id = traceStart(`tsLoader.resolve ${specifier.split('/').pop() || specifier}`)
+  try {
+    traceEnd(id)
+    return await resolveImpl(specifier, context, nextResolve)
+  } finally {
+    traceEnd(id)
+  }
+}
+
+const resolveImpl = async (
   specifier: string,
   context: { parentURL?: string },
   nextResolve: (specifier: string, context?: object) => Promise<{ url: string }>,
@@ -178,6 +193,7 @@ export const resolve = async (
 }
 
 const transpileWithTypeScript = (code: string): string => {
+  const id = traceStart('tsLoader.transpile')
   const result = ts.transpileModule(code, {
     compilerOptions: {
       target: ts.ScriptTarget.ESNext,
@@ -185,7 +201,9 @@ const transpileWithTypeScript = (code: string): string => {
     },
     reportDiagnostics: false,
   })
-  return result.outputText
+  const output = result.outputText
+  traceEnd(id)
+  return output
 }
 
 const resolveDollarLibImports = async (code: string, filePath: string): Promise<string> => {
@@ -225,6 +243,19 @@ const resolveDollarLibImports = async (code: string, filePath: string): Promise<
 }
 
 export const load = async (
+  url: string,
+  context: { format?: string },
+  nextLoad: (url: string, context?: object) => Promise<{ format?: string; source?: string }>,
+): Promise<{ format?: string; source?: string; shortCircuit?: boolean }> => {
+  const id = traceStart(`tsLoader.load ${url.split('/').pop() || url}`)
+  try {
+    return await loadImpl(url, context, nextLoad)
+  } finally {
+    traceEnd(id)
+  }
+}
+
+const loadImpl = async (
   url: string,
   context: { format?: string },
   nextLoad: (url: string, context?: object) => Promise<{ format?: string; source?: string }>,

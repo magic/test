@@ -22,6 +22,7 @@ import { compileBarrel } from './compileBarrel.ts'
 import { resolvePackageExport } from './resolvePackageExport.ts'
 import { compileSvelteOnlyExport } from './resolveSvelteOnlyExports.ts'
 import { tryStat } from '../../../lib/fs.ts'
+import { traceStart, traceEnd } from './timing.ts'
 
 const extractNamedImportsFromCode = (code: string, spec: string): string[] => {
   const namedImports: string[] = []
@@ -46,6 +47,20 @@ export const resolveAndCompileImport = async (
   sourceFilePath: string,
   importChain: string[] = [],
 ): Promise<ResolveAndCompileResult> => {
+  const id = traceStart(`resolveAndCompileImport ${importPath.split('/').pop() || importPath}`)
+  try {
+    return await resolveAndCompileImportImpl(importPath, sourceDir, sourceFilePath, importChain)
+  } finally {
+    traceEnd(id)
+  }
+}
+
+const resolveAndCompileImportImpl = async (
+  importPath: string,
+  sourceDir: string,
+  sourceFilePath: string,
+  importChain: string[] = [],
+): Promise<ResolveAndCompileResult> => {
   const importType = classifyImport(importPath)
 
   if (importPath === 'svelte') {
@@ -59,10 +74,13 @@ export const resolveAndCompileImport = async (
   }
 
   if (importType === 'scoped') {
+    const scopedId = traceStart('resolve.scoped')
     if (importPath.startsWith('@magic/')) {
+      traceEnd(scopedId)
       return { filePath: importPath, js: '', url: null, skipProcessing: true }
     }
     const resolved = await resolvePackageExport(importPath, sourceDir)
+    traceEnd(scopedId)
     if (resolved.isSvelteOnly && resolved.resolvedPath) {
       if (resolved.isSvelteOnlyPackage) {
         return {
@@ -87,8 +105,10 @@ export const resolveAndCompileImport = async (
   }
 
   if (importType === 'bare') {
+    const bareId = traceStart('resolve.bare')
     const resolved = await resolvePackageExport(importPath, sourceDir)
     if (resolved.isSvelteOnly && resolved.resolvedPath) {
+      traceEnd(bareId)
       // If this is a svelte-only package (only has svelte export, no import/node condition),
       // skip processing because the compiled output would contain imports Node.js can't resolve
       if (resolved.isSvelteOnlyPackage) {
@@ -114,17 +134,21 @@ export const resolveAndCompileImport = async (
       const sourceTmpFile = getTempFilePath(sourceFilePath)
       const fromDir = path.dirname(sourceTmpFile)
       const relativePath = computeRelativePath(fromDir, resolved.resolvedPath)
+      traceEnd(bareId)
       return { filePath: importPath, js: '', url: relativePath }
     }
+    traceEnd(bareId)
     return { filePath: importPath, js: '', url: null, skipProcessing: true }
   }
 
   let resolvedPath: string | undefined
 
   if (importType === 'vite-alias') {
+    const aliasId = traceStart('resolve.vite-alias')
     const aliasResolved = await resolveViteAlias(importPath, sourceFilePath)
     if (aliasResolved) {
       resolvedPath = aliasResolved
+      traceEnd(aliasId)
     } else {
       if (importPath.startsWith('$lib')) {
         const rootDir = await (async () => {
@@ -146,6 +170,7 @@ export const resolveAndCompileImport = async (
         const shimName = importPath.slice(5)
         resolvedPath = path.join(rootDir, 'src/lib/svelte/shims/$app', shimName)
       } else {
+        traceEnd(aliasId)
         return { filePath: importPath, js: '', url: null, skipProcessing: true }
       }
     }
@@ -159,6 +184,7 @@ export const resolveAndCompileImport = async (
   }
 
   if (!path.extname(resolvedPath)) {
+    const extId = traceStart('resolve.extensions')
     const extensions = ['.ts', '.js', '.svelte', '/index.ts', '/index.js', '/index.svelte']
     for (const ext of extensions) {
       const withExt = resolvedPath + ext
@@ -167,6 +193,7 @@ export const resolveAndCompileImport = async (
         break
       }
     }
+    traceEnd(extId)
   } else if (resolvedPath.endsWith('.js')) {
     const tsPath = resolvedPath.slice(0, -3) + '.ts'
     if (await fs.exists(tsPath)) {
@@ -214,14 +241,17 @@ export const resolveAndCompileImport = async (
 
   const ext = path.extname(resolvedPath)
   if (ext === '.ts' || ext === '.js') {
+    const barrelId = traceStart('compileBarrel')
     const exports = await getSvelteExports(resolvedPath)
     if (exports.length > 0) {
       const barrelResult = await compileBarrel(resolvedPath, importChain)
+      traceEnd(barrelId)
       const sourceTmpFile = getTempFilePath(sourceFilePath)
       const fromDir = path.dirname(sourceTmpFile)
       const relativePath = computeRelativePath(fromDir, barrelResult.wrapperAbsPath)
       return { filePath: resolvedPath, js: barrelResult.js, url: relativePath }
     }
+    traceEnd(barrelId)
   }
 
   if (!isSvelteFile(resolvedPath)) {
@@ -245,10 +275,12 @@ export const resolveAndCompileImport = async (
   const release = await acquireLock(tmpFile)
 
   try {
+    const compileId = traceStart('compile.svelte-file')
     const cached = importCache.get(resolvedPath)
     if (cached) {
       const stats = await fs.stat(resolvedPath)
       if (stats.mtimeMs === cached.mtime) {
+        traceEnd(compileId, 'cache hit')
         const sourceTmpFile = getTempFilePath(sourceFilePath)
         const fromDir = path.dirname(sourceTmpFile)
         const relativePath = computeRelativePath(fromDir, cached.absPath)
@@ -259,10 +291,14 @@ export const resolveAndCompileImport = async (
     const { js } = await compileSvelte(resolvedPath)
 
     const newChain = [...importChain, resolvedPath]
+    const processId = traceStart('processImports')
     const processed = await processImports(js, resolvedPath, newChain)
+    traceEnd(processId)
 
+    const writeId = traceStart('fs.writeFile')
     await fs.mkdirp(path.dirname(tmpFile))
     await fs.writeFile(tmpFile, processed)
+    traceEnd(writeId)
 
     const stats = await fs.stat(resolvedPath)
 
@@ -271,6 +307,7 @@ export const resolveAndCompileImport = async (
       absPath: tmpFileAbs,
       mtime: stats.mtimeMs,
     })
+    traceEnd(compileId)
 
     const sourceTmpFile = getTempFilePath(sourceFilePath)
     const fromDir = path.dirname(sourceTmpFile)
