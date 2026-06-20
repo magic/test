@@ -4,7 +4,7 @@ import './lib/registerLoader.js'
 import log from '@magic/log'
 import is from '@magic/types'
 import { run, abort } from '../run.js'
-import { maybeInjectMagic, readRecursive } from './lib/index.js'
+import { maybeInjectMagic, readRecursive, resetVisitedDirs } from './lib/index.js'
 const getShardConfig = () => {
   const rawShards = process.env.MAGIC_TEST_SHARDING_SHARDS
   const rawShardId = process.env.MAGIC_TEST_SHARDING_ID
@@ -22,6 +22,8 @@ const getShardConfig = () => {
 }
 const init = async () => {
   await maybeInjectMagic()
+  // Reset state between runs to prevent stale cache issues
+  resetVisitedDirs()
   const tests = await readRecursive()
   if (!tests) {
     log.error('NO tests specified')

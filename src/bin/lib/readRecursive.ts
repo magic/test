@@ -77,6 +77,13 @@ const importFile = async (filePath: string): Promise<unknown> => {
 
 const visitedDirs = new Set<string>()
 
+/**
+ * Reset visitedDirs between test runs to prevent stale symlink cycle detection
+ */
+export const resetVisitedDirs = () => {
+  visitedDirs.clear()
+}
+
 export const readRecursive = async (dir = ''): Promise<TestSuites> => {
   const testDir = path.join(process.cwd(), 'test')
   const targetDir = path.join(testDir, dir)
