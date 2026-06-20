@@ -36,7 +36,7 @@ const res = cli({
       '--shards': 'total number of shards',
       '--shard-id': 'shard id (0-indexed)',
       '--error-length': 'max length for error strings (default 70, 0 = no limit)',
-      '--timeout': 'test timeout in ms (default: 10000)',
+      '--timeout': 'test timeout in ms (default: 30000)',
       '--workers': 'max parallel workers (default: auto, env: MAGIC_TEST_WORKERS)',
     },
     header: `
