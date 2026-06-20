@@ -1,22 +1,29 @@
-import { fileLocks } from './cache.ts'
+// Queue of release functions per file path
+const lockQueues = new Map<string, Array<() => void>>()
 
 export const acquireLock = async (filePath: string): Promise<() => void> => {
-  while (fileLocks.has(filePath)) {
-    const lockPromise = fileLocks.get(filePath)
-    if (lockPromise) {
-      await lockPromise
-      fileLocks.delete(filePath)
-    }
+  const waiters = lockQueues.get(filePath)
+  if (waiters && waiters.length > 0) {
+    // Another request is holding the lock, queue behind it
+    await new Promise<void>(resolve => {
+      waiters.push(resolve)
+    })
   }
 
-  let release: (value: unknown) => void
-  const promise = new Promise(resolve => {
-    release = resolve
-  })
-  fileLocks.set(filePath, promise)
+  // We now hold the lock (or are first)
+  // Ensure we have a queue for this file
+  const queue = lockQueues.get(filePath) ?? []
+  lockQueues.set(filePath, queue)
 
   return () => {
-    fileLocks.delete(filePath)
-    release(undefined)
+    const q = lockQueues.get(filePath)
+    const next = q?.shift()
+    if (next) {
+      // Signal next waiter to proceed
+      next()
+    } else {
+      // No more waiters, clean up
+      lockQueues.delete(filePath)
+    }
   }
 }
