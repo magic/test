@@ -1,51 +1,55 @@
 import path from 'node:path'
 import fs from '@magic/fs'
 
-import { barrelCache, pendingSvelteExports } from './cache.ts'
+import { pendingPromises } from './cache.ts'
 import { traceStart, traceEnd } from './timing.ts'
 
-export const getSvelteExports = async (
-  filePath: string,
-): Promise<{ name: string; path: string; isDefaultReexport?: boolean }[]> => {
+export type SvelteExport = { name: string; path: string; isDefaultReexport?: boolean }
+
+// Simple barrel exports cache (stores exports array)
+const barrelExportsCache = new Map<string, SvelteExport[]>()
+
+export const getSvelteExports = async (filePath: string): Promise<SvelteExport[]> => {
   const id = traceStart(`getSvelteExports ${path.basename(filePath)}`)
+  const key = `exports:${filePath}`
 
-  // Check if another process is already getting exports for this file
-  const pending = pendingSvelteExports.get(filePath)
-  if (pending) {
-    traceEnd(id, 'waiting for pending')
-    const result = await pending
-    return result
-  }
-
-  // Check barrelCache first (contains exports from previous barrel compilations)
-  const cached = barrelCache.get(filePath)
+  // Check barrelExportsCache first
+  const cached = barrelExportsCache.get(filePath)
   if (cached) {
     traceEnd(id, 'cache hit')
-    return cached.exports
+    return cached
   }
 
-  // Create promise and store it for other callers to await
-  const exportsPromise = (async () => {
+  // Check if already getting exports for this file
+  const existing = pendingPromises.get(key)
+  if (existing) {
+    traceEnd(id, 'waiting for pending')
+    return existing as Promise<SvelteExport[]>
+  }
+
+  const promise = (async (): Promise<SvelteExport[]> => {
     try {
       return await getSvelteExportsImpl(filePath)
     } finally {
-      pendingSvelteExports.delete(filePath)
+      pendingPromises.delete(key)
     }
   })()
 
-  pendingSvelteExports.set(filePath, exportsPromise)
+  pendingPromises.set(key, promise)
 
-  const result = await exportsPromise
+  const exports = await promise
+
+  // Cache the exports for future use
+  barrelExportsCache.set(filePath, exports)
+
   traceEnd(id)
-  return result
+  return exports
 }
 
-const getSvelteExportsImpl = async (
-  filePath: string,
-): Promise<{ name: string; path: string; isDefaultReexport?: boolean }[]> => {
+const getSvelteExportsImpl = async (filePath: string): Promise<SvelteExport[]> => {
   const content = await fs.readFile(filePath, 'utf-8')
 
-  const exports: { name: string; path: string; isDefaultReexport?: boolean }[] = []
+  const exports: SvelteExport[] = []
 
   const regex = /export\s+\{([^}]+)\}\s+from\s+['"](\.\/[^'"]+\.svelte)['"]/g
   let match

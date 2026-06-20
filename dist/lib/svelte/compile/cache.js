@@ -2,23 +2,24 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { LRUCache } from '../LRUCache.js'
 import { TMP_DIR, CWD } from '../../../constants.js'
-// Export LRUCache for external use
+// Legacy export for backward compatibility (deprecated, use CacheManager)
 export { LRUCache }
-// Export cache instances for backward compatibility
-export const cache = new LRUCache(100)
-export const importCache = new LRUCache(100)
-export const barrelCache = new Map()
-export const processingBarrels = new Set()
-// Promise-based deduplication maps
-export const pendingBarrelCompiles = new Map()
-export const pendingSvelteCompiles = new Map()
-export const pendingSvelteExports = new Map()
+/**
+ * Unified pending promises map
+ * All async operations go through here for deduplication
+ */
+export const pendingPromises = new Map()
+/**
+ * Clear pending promises map (for test cleanup)
+ */
+export const clearPendingPromises = () => {
+  pendingPromises.clear()
+}
 /**
  * Centralized cache manager for Svelte compilation
  * Handles: promise dedup, memory cache, disk cache
  */
 export class CacheManager {
-  pendingCompiles = new Map()
   memoryCache = new Map()
   // Cache stats
   hits = 0
@@ -28,12 +29,6 @@ export class CacheManager {
    */
   async getOrCompile(filePath, compileFn) {
     const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
-    // Check promise dedup first
-    const pending = this.pendingCompiles.get(absPath)
-    if (pending) {
-      this.hits++
-      return pending
-    }
     // Check memory cache
     const cached = this.memoryCache.get(absPath)
     if (cached) {
@@ -58,26 +53,20 @@ export class CacheManager {
     // Need to compile
     this.misses++
     // Create promise BEFORE starting work to prevent concurrent duplicates
-    const compilePromise = (async () => {
+    const compilePromise = compileFn().then(async result => {
+      // Store in memory cache
       try {
-        const result = await compileFn()
-        // Store in memory cache
-        try {
-          const stats = await fs.stat(absPath)
-          this.memoryCache.set(absPath, { data: result, mtime: stats.mtimeMs })
-        } catch {
-          // Ignore
-        }
-        // Write to disk cache if it's the right type
-        if (this.isSvelteResult(result)) {
-          await this.writeDiskCache(absPath, result.js)
-        }
-        return result
-      } finally {
-        this.pendingCompiles.delete(absPath)
+        const stats = await fs.stat(absPath)
+        this.memoryCache.set(absPath, { data: result, mtime: stats.mtimeMs })
+      } catch {
+        // Ignore
       }
-    })()
-    this.pendingCompiles.set(absPath, compilePromise)
+      // Write to disk cache if it's the right type
+      if (this.isSvelteResult(result)) {
+        await this.writeDiskCache(absPath, result.js)
+      }
+      return result
+    })
     return compilePromise
   }
   /**
@@ -134,7 +123,6 @@ export class CacheManager {
    * Reset all caches
    */
   reset() {
-    this.pendingCompiles.clear()
     this.memoryCache.clear()
     this.hits = 0
     this.misses = 0

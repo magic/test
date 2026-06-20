@@ -4,7 +4,7 @@ export interface CompileSvelteReturn {
   css: CssObject | null
 }
 /**
- * Pure compilation function - no caching logic here
- * Caching is handled by the CacheManager in tsLoader
+ * Pure compilation function - caching handled by CacheManager in tsLoader
+ * Uses pendingPromises for deduplication
  */
 export declare const compileSvelte: (filePath: string) => Promise<CompileSvelteReturn>

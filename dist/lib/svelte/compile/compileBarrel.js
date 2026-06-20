@@ -1,12 +1,14 @@
 import path from 'node:path'
 import fs from '@magic/fs'
-import { barrelCache, processingBarrels, pendingBarrelCompiles } from './cache.js'
+import { pendingPromises } from './cache.js'
 import { TMP_DIR, CWD } from '../../../constants.js'
 import { getSvelteExports } from './getSvelteExports.js'
 import { processImports } from './processImports.js'
 import { compileSvelte } from './compileSvelte.js'
 import { computeRelativePath } from './computeRelativePath.js'
 import { traceStart, traceEnd } from './timing.js'
+// Simple barrel wrapper cache (stores wrapperAbsPath only)
+export const barrelWrapperCache = new Map()
 export const compileBarrel = async (filePath, importChain = []) => {
   const id = traceStart(`compileBarrel ${path.basename(filePath)}`)
   try {
@@ -22,45 +24,35 @@ export const compileBarrel = async (filePath, importChain = []) => {
       )
     }
     // Check if another process is already compiling this barrel
-    // Wait for it to complete instead of duplicating work
-    // Only check pending if not already cached
-    const cached = barrelCache.get(filePath)
-    if (cached) {
-      // Need to re-read the compiled file since we only cache wrapperAbsPath
+    const cachedWrapper = barrelWrapperCache.get(filePath)
+    if (cachedWrapper) {
       try {
-        const js = await fs.readFile(cached.wrapperAbsPath, 'utf-8')
+        const js = await fs.readFile(cachedWrapper, 'utf-8')
         traceEnd(id, 'cache hit')
-        return { filePath, js, wrapperAbsPath: cached.wrapperAbsPath }
+        return { filePath, js, wrapperAbsPath: cachedWrapper }
       } catch {
         // File was deleted, continue to recompile
+        barrelWrapperCache.delete(filePath)
       }
     }
-    const pending = pendingBarrelCompiles.get(filePath)
-    if (pending) {
+    const key = `barrel:${filePath}`
+    // Check if already compiling
+    const existing = pendingPromises.get(key)
+    if (existing) {
       traceEnd(id, 'waiting for pending')
-      const result = await pending
-      // Re-read from disk to get the actual JS content
-      try {
-        const js = await fs.readFile(result.wrapperAbsPath, 'utf-8')
-        return { filePath, js, wrapperAbsPath: result.wrapperAbsPath }
-      } catch {
-        // File doesn't exist, continue to recompile
-        pendingBarrelCompiles.delete(filePath)
-      }
+      return existing
     }
-    const currentChain = [...importChain, filePath]
-    processingBarrels.add(filePath)
-    // Create promise and store it for other callers to await
-    const compilePromise = (async () => {
+    const promise = (async () => {
       try {
-        return await compileBarrelImpl(filePath, currentChain)
+        return await compileBarrelImpl(filePath, importChain)
       } finally {
-        processingBarrels.delete(filePath)
-        pendingBarrelCompiles.delete(filePath)
+        pendingPromises.delete(key)
       }
     })()
-    pendingBarrelCompiles.set(filePath, compilePromise)
-    const result = await compilePromise
+    pendingPromises.set(key, promise)
+    const result = await promise
+    // Cache the wrapper path
+    barrelWrapperCache.set(filePath, result.wrapperAbsPath)
     traceEnd(id)
     return result
   } catch (error) {
@@ -68,7 +60,7 @@ export const compileBarrel = async (filePath, importChain = []) => {
     throw error
   }
 }
-const compileBarrelImpl = async (filePath, currentChain) => {
+const compileBarrelImpl = async (filePath, importChain) => {
   const exports = await getSvelteExports(filePath)
   if (exports.length === 0) {
     throw new Error(`No Svelte exports found in barrel file: ${filePath}`)
@@ -83,7 +75,7 @@ const compileBarrelImpl = async (filePath, currentChain) => {
     const compileId = traceStart(`compileBarrel.export[${i + 1}/${exports.length}] ${name}`)
     const { js } = await compileSvelte(sveltePath)
     const processId = traceStart('processImports')
-    const processed = await processImports(js, sveltePath, currentChain)
+    const processed = await processImports(js, sveltePath, importChain)
     traceEnd(processId)
     traceEnd(compileId)
     const relPath = path.relative(CWD, sveltePath)
@@ -124,6 +116,5 @@ const compileBarrelImpl = async (filePath, currentChain) => {
   await fs.mkdirp(path.dirname(wrapperFile))
   await fs.writeFile(wrapperFile, wrapperCode)
   traceEnd(writeId)
-  barrelCache.set(filePath, { exports, wrapperAbsPath })
   return { filePath, js: wrapperCode, wrapperAbsPath }
 }
