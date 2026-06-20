@@ -1,4 +1,5 @@
 import { parse } from '@typescript-eslint/parser'
+import { getSvelteCompiler } from '../compiler-cache.ts'
 import type { TSESTree } from '@typescript-eslint/types'
 import crypto from 'node:crypto'
 import type { ExportInfo } from './types.ts'
@@ -21,7 +22,7 @@ const getCacheKey = (code: string, filePath: string): string => {
 
 const extractScriptFromSvelte = async (source: string): Promise<string> => {
   try {
-    const { parse: parseSvelte } = await import('svelte/compiler')
+    const { parse: parseSvelte } = await getSvelteCompiler()
 
     const ast = parseSvelte(source, { modern: true })
 

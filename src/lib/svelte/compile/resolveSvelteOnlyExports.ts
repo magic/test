@@ -4,6 +4,7 @@ import crypto from 'node:crypto'
 
 import fs from '@magic/fs'
 
+import { getSvelteCompiler } from '../compiler-cache.ts'
 import { compileSvelteWithWrite } from './compileSvelteWithWrite.ts'
 import { processImports } from './processImports.ts'
 import { transformForNode } from './transformForNode.ts'
@@ -13,8 +14,6 @@ import { CWD } from '../../../constants.ts'
 import { SVELTE_RUNE_REGEX } from '../constants.ts'
 import { parseFile, extractExports, extractImports } from './astParse.ts'
 import type { ExportInfo } from './types.ts'
-
-const { compileModule } = await import('svelte/compiler')
 
 const pendingWrites = new Map<string, Promise<void>>()
 
@@ -266,6 +265,7 @@ const handleJsWithSvelteReexports = async (
 
         if (SVELTE_RUNE_REGEX.test(reexportContent)) {
           try {
+            const { compileModule } = await getSvelteCompiler()
             const result = compileModule(reexportContent, { filename: absolutePath })
             const jsCodeString = String(result.js.code)
             const code = await processImports(jsCodeString, absolutePath)
@@ -345,6 +345,7 @@ const handleJsWithSvelteReexports = async (
           let contentToWrite = depContent
           if (SVELTE_RUNE_REGEX.test(depContent)) {
             try {
+              const { compileModule } = await getSvelteCompiler()
               const result = compileModule(depContent, { filename: absolutePath })
               const jsCodeString = String(result.js.code)
               const code = await processImports(jsCodeString, absolutePath)

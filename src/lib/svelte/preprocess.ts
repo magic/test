@@ -1,6 +1,7 @@
 import is from '@magic/types'
 
 import { getViteDefine } from './viteConfig/index.ts'
+import { getSvelteCompiler } from './compiler-cache.ts'
 
 type ASTNode = { [key: string]: unknown; type: string }
 
@@ -37,7 +38,7 @@ const extractRuneVariables = async (
   const derived: string[] = []
 
   try {
-    const { parse } = await import('svelte/compiler')
+    const { parse } = await getSvelteCompiler()
 
     const ast = parse(source, { modern: true })
 

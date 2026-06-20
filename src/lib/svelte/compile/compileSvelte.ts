@@ -3,6 +3,7 @@ import path from 'node:path'
 import fs from '@magic/fs'
 
 import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.ts'
+import { getSvelteCompiler } from '../compiler-cache.ts'
 
 import { cache } from './cache.ts'
 import { TMP_DIR, CWD } from '../../../constants.ts'
@@ -16,7 +17,7 @@ export interface CompileSvelteReturn {
 }
 
 export const compileSvelte = async (filePath: string): Promise<CompileSvelteReturn> => {
-  const { compile, preprocess } = await import('svelte/compiler')
+  const { compile, preprocess } = await getSvelteCompiler()
 
   await cleanTempFiles()
 
