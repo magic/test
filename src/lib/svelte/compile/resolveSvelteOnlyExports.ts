@@ -9,7 +9,7 @@ import { compileSvelteWithWrite } from './compileSvelteWithWrite.ts'
 import { processImports } from './processImports.ts'
 import { transformForNode } from './transformForNode.ts'
 import { resolvePackageExport, type PackageExportResolve } from './resolvePackageExport.ts'
-import { pendingPromises } from './cache.ts'
+import { cache as compileCache } from './cache.ts'
 import { CWD } from '../../../constants.ts'
 import { SVELTE_RUNE_REGEX } from '../constants.ts'
 import { parseFile, extractExports, extractImports } from './astParse.ts'
@@ -65,6 +65,10 @@ export const writeTempFile = async (filePath: string, code: string): Promise<str
   return promise
 }
 
+const tmpFileCache = new Map<string, string>()
+
+const compiling = new Map<string, Promise<string>>()
+
 export const compileSvelteOnlyExport = async (
   sveltePath: string,
   sourceDir: string,
@@ -83,13 +87,17 @@ export const compileSvelteOnlyExport = async (
   const hash = crypto.createHash('sha256').update(content).digest('hex')
   const cacheKey = `${sveltePath}:${hash}`
 
-  // Check if already compiling
-  const existing = pendingPromises.get(cacheKey)
-  if (existing) {
-    return existing as Promise<string>
+  const cachedTmpFile = tmpFileCache.get(sveltePath)
+  if (cachedTmpFile && compileCache.get(cacheKey)) {
+    return cachedTmpFile
   }
 
-  const promise = (async (): Promise<string> => {
+  const existing = compiling.get(cacheKey)
+  if (existing) {
+    return existing
+  }
+
+  const promise = (async () => {
     try {
       if (sveltePath.endsWith('.js') || sveltePath.endsWith('.mjs')) {
         const processedCode = await handleJsWithSvelteReexports(
@@ -99,17 +107,21 @@ export const compileSvelteOnlyExport = async (
           undefined,
           exportNames,
         )
-        return writeTempFile(sveltePath, processedCode)
+        const tempFile = await writeTempFile(sveltePath, processedCode)
+        compileCache.set(cacheKey, { js: content, css: null, mtime: Date.now() })
+        tmpFileCache.set(sveltePath, tempFile)
+        return tempFile
       }
 
       const { tmpFile } = await compileSvelteWithWrite(sveltePath)
+      compileCache.set(cacheKey, { js: content, css: null, mtime: Date.now() })
+      tmpFileCache.set(sveltePath, tmpFile)
       return tmpFile
     } finally {
-      pendingPromises.delete(cacheKey)
+      compiling.delete(cacheKey)
     }
   })()
-
-  pendingPromises.set(cacheKey, promise)
+  compiling.set(cacheKey, promise)
   return promise
 }
 

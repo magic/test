@@ -1,20 +1,41 @@
 import { LRUCache } from '../LRUCache.ts'
-import type { CssObject } from './types.ts'
+import type { CompileCacheEntry, ImportCacheEntry, BarrelCacheEntry, CssObject } from './types.ts'
 export { LRUCache }
-/**
- * Unified pending promises map
- * All async operations go through here for deduplication
- */
-export declare const pendingPromises: Map<string, Promise<unknown>>
-/**
- * Clear pending promises map (for test cleanup)
- */
-export declare const clearPendingPromises: () => void
+export declare const cache: LRUCache<CompileCacheEntry>
+export declare const importCache: LRUCache<ImportCacheEntry>
+export declare const barrelCache: Map<string, BarrelCacheEntry>
+export declare const processingBarrels: Set<string>
+export declare const pendingBarrelCompiles: Map<
+  string,
+  Promise<{
+    filePath: string
+    js: string
+    wrapperAbsPath: string
+  }>
+>
+export declare const pendingSvelteCompiles: Map<
+  string,
+  Promise<{
+    js: string
+    css: CssObject | null
+  }>
+>
+export declare const pendingSvelteExports: Map<
+  string,
+  Promise<
+    {
+      name: string
+      path: string
+      isDefaultReexport?: boolean
+    }[]
+  >
+>
 /**
  * Centralized cache manager for Svelte compilation
  * Handles: promise dedup, memory cache, disk cache
  */
 export declare class CacheManager<T> {
+  private pendingCompiles
   private memoryCache
   hits: number
   misses: number

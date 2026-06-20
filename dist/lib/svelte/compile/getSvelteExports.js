@@ -1,37 +1,34 @@
 import path from 'node:path'
 import fs from '@magic/fs'
-import { pendingPromises } from './cache.js'
+import { barrelCache, pendingSvelteExports } from './cache.js'
 import { traceStart, traceEnd } from './timing.js'
-// Simple barrel exports cache (stores exports array)
-const barrelExportsCache = new Map()
 export const getSvelteExports = async filePath => {
   const id = traceStart(`getSvelteExports ${path.basename(filePath)}`)
-  const key = `exports:${filePath}`
-  // Check barrelExportsCache first
-  const cached = barrelExportsCache.get(filePath)
+  // Check if another process is already getting exports for this file
+  const pending = pendingSvelteExports.get(filePath)
+  if (pending) {
+    traceEnd(id, 'waiting for pending')
+    const result = await pending
+    return result
+  }
+  // Check barrelCache first (contains exports from previous barrel compilations)
+  const cached = barrelCache.get(filePath)
   if (cached) {
     traceEnd(id, 'cache hit')
-    return cached
+    return cached.exports
   }
-  // Check if already getting exports for this file
-  const existing = pendingPromises.get(key)
-  if (existing) {
-    traceEnd(id, 'waiting for pending')
-    return existing
-  }
-  const promise = (async () => {
+  // Create promise and store it for other callers to await
+  const exportsPromise = (async () => {
     try {
       return await getSvelteExportsImpl(filePath)
     } finally {
-      pendingPromises.delete(key)
+      pendingSvelteExports.delete(filePath)
     }
   })()
-  pendingPromises.set(key, promise)
-  const exports = await promise
-  // Cache the exports for future use
-  barrelExportsCache.set(filePath, exports)
+  pendingSvelteExports.set(filePath, exportsPromise)
+  const result = await exportsPromise
   traceEnd(id)
-  return exports
+  return result
 }
 const getSvelteExportsImpl = async filePath => {
   const content = await fs.readFile(filePath, 'utf-8')

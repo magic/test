@@ -1,6 +1,7 @@
 import path from 'node:path'
 import fs from '@magic/fs'
 import { resolveAlias, resolveViteAlias } from '../viteConfig/index.js'
+import { importCache } from './cache.js'
 import { TMP_DIR, CWD } from '../../../constants.js'
 import { acquireLock } from './acquireLock.js'
 import { isSvelteFile } from './isSvelteFile.js'
@@ -16,30 +17,6 @@ import { resolvePackageExport } from './resolvePackageExport.js'
 import { compileSvelteOnlyExport } from './resolveSvelteOnlyExports.js'
 import { tryStat } from '../../../lib/fs.js'
 import { traceStart, traceEnd } from './timing.js'
-// Simple import result cache - only memory cache, no disk cache
-// Disk cache is only for compileSvelte results
-class ImportResultCache {
-  memoryCache = new Map()
-  pendingPromises = new Map()
-  async getOrCompile(filePath, compileFn) {
-    const cached = this.memoryCache.get(filePath)
-    if (cached) {
-      return cached
-    }
-    const existing = this.pendingPromises.get(filePath)
-    if (existing) {
-      return existing
-    }
-    const promise = compileFn().then(result => {
-      this.memoryCache.set(filePath, result)
-      this.pendingPromises.delete(filePath)
-      return result
-    })
-    this.pendingPromises.set(filePath, promise)
-    return promise
-  }
-}
-const importResultCache = new ImportResultCache()
 const extractNamedImportsFromCode = (code, spec) => {
   const namedImports = []
   const escapedSpec = spec.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -275,19 +252,37 @@ const resolveAndCompileImportImpl = async (
   const release = await acquireLock(tmpFile)
   try {
     const compileId = traceStart('compile.svelte-file')
-    const result = await importResultCache.getOrCompile(resolvedPath, async () => {
-      const { js } = await compileSvelte(resolvedPath)
-      const newChain = [...importChain, resolvedPath]
-      const processed = await processImports(js, resolvedPath, newChain)
-      await fs.mkdirp(path.dirname(tmpFile))
-      await fs.writeFile(tmpFile, processed)
-      return { js: processed, absPath: tmpFileAbs }
+    const cached = importCache.get(resolvedPath)
+    if (cached) {
+      const stats = await fs.stat(resolvedPath)
+      if (stats.mtimeMs === cached.mtime) {
+        traceEnd(compileId, 'cache hit')
+        const sourceTmpFile = getTempFilePath(sourceFilePath)
+        const fromDir = path.dirname(sourceTmpFile)
+        const relativePath = computeRelativePath(fromDir, cached.absPath)
+        return { filePath: resolvedPath, js: cached.js, url: relativePath }
+      }
+    }
+    const { js } = await compileSvelte(resolvedPath)
+    const newChain = [...importChain, resolvedPath]
+    const processId = traceStart('processImports')
+    const processed = await processImports(js, resolvedPath, newChain)
+    traceEnd(processId)
+    const writeId = traceStart('fs.writeFile')
+    await fs.mkdirp(path.dirname(tmpFile))
+    await fs.writeFile(tmpFile, processed)
+    traceEnd(writeId)
+    const stats = await fs.stat(resolvedPath)
+    importCache.set(resolvedPath, {
+      js: processed,
+      absPath: tmpFileAbs,
+      mtime: stats.mtimeMs,
     })
     traceEnd(compileId)
     const sourceTmpFile = getTempFilePath(sourceFilePath)
     const fromDir = path.dirname(sourceTmpFile)
-    const relativePath = computeRelativePath(fromDir, result.absPath)
-    return { filePath: resolvedPath, js: result.js, url: relativePath }
+    const relativePath = computeRelativePath(fromDir, tmpFileAbs)
+    return { filePath: resolvedPath, js: processed, url: relativePath }
   } finally {
     release()
   }
