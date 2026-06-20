@@ -247,7 +247,7 @@ export const resolveAndCompileImport = async (
     const cached = importCache.get(resolvedPath)
     if (cached) {
       const stats = await fs.stat(resolvedPath)
-      if (stats.mtime.getTime() === cached.mtime) {
+      if (stats.mtimeMs === cached.mtime) {
         const sourceTmpFile = getTempFilePath(sourceFilePath)
         const fromDir = path.dirname(sourceTmpFile)
         const relativePath = computeRelativePath(fromDir, cached.absPath)
@@ -268,7 +268,7 @@ export const resolveAndCompileImport = async (
     importCache.set(resolvedPath, {
       js: processed,
       absPath: tmpFileAbs,
-      mtime: stats.mtime.getTime(),
+      mtime: stats.mtimeMs,
     })
 
     const sourceTmpFile = getTempFilePath(sourceFilePath)

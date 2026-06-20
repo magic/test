@@ -31,7 +31,7 @@ export const compileSvelte = async (filePath: string): Promise<CompileSvelteRetu
 
     if (cached) {
       const stats = await fs.stat(filePath)
-      if (stats.mtime.getTime() === cached.mtime) {
+      if (stats.mtimeMs === cached.mtime) {
         return { js: cached.js, css: cached.css }
       }
     }
@@ -72,7 +72,7 @@ export const compileSvelte = async (filePath: string): Promise<CompileSvelteRetu
     const stats = await fs.stat(filePath)
     const jsCodeFinal = jsCodeString
 
-    const cacheEntry = { js: jsCodeFinal, css: css ?? null, mtime: stats.mtime.getTime() }
+    const cacheEntry = { js: jsCodeFinal, css: css ?? null, mtime: stats.mtimeMs }
     cache.set(filePath, cacheEntry)
 
     return { js: jsCodeFinal, css: css ?? null }
