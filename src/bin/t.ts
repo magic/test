@@ -25,7 +25,10 @@ const res = cli({
     ['--timeout', '--to', '-t'],
     ['--workers', '--w', '-w'],
   ],
-  env: [[['--production', '--prod', '--p', '-p'], 'NODE_ENV', 'production']],
+  env: [
+    [['--production', '--prod', '--p', '-p'], 'NODE_ENV', 'production'],
+    [['--trace'], 'MAGIC_TEST_TRACE', '1'],
+  ],
   help: {
     name: '@magic/test t',
     options: {
@@ -38,6 +41,7 @@ const res = cli({
       '--error-length': 'max length for error strings (default 70, 0 = no limit)',
       '--timeout': 'test timeout in ms (default: 30000)',
       '--workers': 'max parallel workers (default: auto, env: MAGIC_TEST_WORKERS)',
+      '--trace': 'enable test tracing (env: MAGIC_TEST_TRACE=1)',
     },
     header: `
 simple unit testing. runs all tests found in {cwd}/test/
