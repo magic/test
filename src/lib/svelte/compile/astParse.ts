@@ -1,4 +1,4 @@
-import { parse } from '@typescript-eslint/parser'
+import { getParser } from '../ast-cache.ts'
 import { getSvelteCompiler } from '../compiler-cache.ts'
 import type { TSESTree } from '@typescript-eslint/types'
 import crypto from 'node:crypto'
@@ -67,6 +67,7 @@ const parseFile = async (code: string, filePath: string): Promise<FileInfo> => {
   const isSvelte = filePath.endsWith('.svelte')
   const codeToParse = isSvelte ? await extractScriptFromSvelte(code) : code
 
+  const { parse } = await getParser()
   const ast = parse(codeToParse, {
     sourceType: 'module',
     ecmaVersion: 'latest',
