@@ -62,10 +62,10 @@
     "@magic/types": "0.1.37",
     "c8": "11.0.0",
     "canvas": "3.2.3",
-    "happy-dom": "20.10.3",
+    "happy-dom": "20.10.6",
     "magic-string": "0.30.21",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.61.0"
+    "typescript-eslint": "8.61.1"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -76,9 +76,9 @@
     "@magic-themes/docs": "0.0.15",
     "@magic/core": "0.0.158",
     "@magic/format": "0.0.74",
-    "@types/node": "25.9.3",
+    "@types/node": "26.0.0",
     "eslint": "10.5.0",
-    "prettier-plugin-svelte": "4.1.0",
+    "prettier-plugin-svelte": "4.1.1",
     "svelte": "5.56.3",
     "vite": "8.0.16"
   },
