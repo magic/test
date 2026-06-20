@@ -15,7 +15,7 @@ import { SVELTE_RUNE_REGEX } from '../constants.ts'
 import { parseFile, extractExports, extractImports } from './astParse.ts'
 import type { ExportInfo } from './types.ts'
 
-const pendingWrites = new Map<string, Promise<void>>()
+const pendingWrites = new Map<string, Promise<string>>()
 
 const resolveRelativeToUrl = async (
   relativePath: string,
@@ -42,19 +42,27 @@ export const writeTempFile = async (filePath: string, code: string): Promise<str
     tempFile = path.join(CWD, 'test/.tmp', relPath + '.mjs')
   }
 
-  await fs.mkdirp(path.dirname(tempFile))
-
-  let pending = pendingWrites.get(tempFile)
-
-  if (!pending) {
-    pending = (async () => {
-      await fs.writeFile(tempFile, code)
-      pendingWrites.delete(tempFile)
-    })()
-    pendingWrites.set(tempFile, pending)
+  // Check for existing pending write first
+  const existing = pendingWrites.get(tempFile)
+  if (existing) {
+    await existing
+    return tempFile
   }
-  await pending
-  return tempFile
+
+  // Create promise synchronously before any await to prevent race condition
+  const promise = (async () => {
+    try {
+      await fs.mkdirp(path.dirname(tempFile))
+      await fs.writeFile(tempFile, code)
+    } finally {
+      pendingWrites.delete(tempFile)
+    }
+    return tempFile
+  })()
+
+  // Set in map immediately (before await) to catch concurrent callers
+  pendingWrites.set(tempFile, promise)
+  return promise
 }
 
 export const compileSvelteOnlyExport = async (
