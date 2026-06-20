@@ -15,6 +15,9 @@ export type BarrelResult = { filePath: string; js: string; wrapperAbsPath: strin
 // Simple barrel wrapper cache (stores wrapperAbsPath only)
 export const barrelWrapperCache = new Map<string, string>()
 
+// Configurable concurrency for barrel export compilation
+const BARREL_CONCURRENCY = parseInt(process.env.BARREL_CONCURRENCY || '5', 10)
+
 export const compileBarrel = async (
   filePath: string,
   importChain: string[] = [],
@@ -89,30 +92,46 @@ const compileBarrelImpl = async (
     throw new Error(`No Svelte exports found in barrel file: ${filePath}`)
   }
 
-  const compiledExports: { name: string; absPath: string; isDefaultReexport?: boolean }[] = []
+  // Phase 1: Compile all exports in parallel batches
+  const compiledExports: { name: string; absPath: string; isDefaultReexport?: boolean }[] =
+    new Array(exports.length)
 
-  for (let i = 0; i < exports.length; i++) {
-    const exp = exports[i]
-    if (!exp) {
-      continue
+  for (let batchStart = 0; batchStart < exports.length; batchStart += BARREL_CONCURRENCY) {
+    const batch = exports.slice(batchStart, batchStart + BARREL_CONCURRENCY)
+    const batchResults = await Promise.all(
+      batch.map((exp, batchIdx) => {
+        const idx = batchStart + batchIdx
+        if (!exp) {
+          return Promise.resolve(null)
+        }
+        return (async () => {
+          const { name, path: sveltePath, isDefaultReexport } = exp
+          const compileId = traceStart(`compileBarrel.export[${idx + 1}/${exports.length}] ${name}`)
+          const { js } = await compileSvelte(sveltePath)
+          const processId = traceStart('processImports')
+          const processed = await processImports(js, sveltePath, importChain)
+          traceEnd(processId)
+          traceEnd(compileId)
+
+          const relPath = path.relative(CWD, sveltePath)
+          const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
+
+          // Write in parallel within batch
+          await fs.mkdirp(path.dirname(tmpFile))
+          await fs.writeFile(tmpFile, processed)
+
+          return { idx, name, absPath: path.join(CWD, tmpFile), isDefaultReexport }
+        })()
+      }),
+    )
+    for (const result of batchResults) {
+      if (result) {
+        compiledExports[result.idx] = result
+      }
     }
-    const { name, path: sveltePath, isDefaultReexport } = exp
-    const compileId = traceStart(`compileBarrel.export[${i + 1}/${exports.length}] ${name}`)
-    const { js } = await compileSvelte(sveltePath)
-    const processId = traceStart('processImports')
-    const processed = await processImports(js, sveltePath, importChain)
-    traceEnd(processId)
-    traceEnd(compileId)
-
-    const relPath = path.relative(CWD, sveltePath)
-    const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
-
-    await fs.mkdirp(path.dirname(tmpFile))
-    await fs.writeFile(tmpFile, processed)
-
-    compiledExports.push({ name, absPath: path.join(CWD, tmpFile), isDefaultReexport })
   }
 
+  // Phase 2: Write barrel wrapper (depends on all exports written)
   const barrelRelPath = path.relative(CWD, filePath)
   const wrapperFile = path.join(TMP_DIR, barrelRelPath.replace(/\.(ts|js)$/, '.barrel.js'))
   const wrapperAbsPath = path.join(CWD, wrapperFile)
