@@ -96,7 +96,9 @@ const compileBarrelImpl = async (
 
   for (let i = 0; i < exports.length; i++) {
     const exp = exports[i]
-    if (!exp) continue
+    if (!exp) {
+      continue
+    }
     const { name, path: sveltePath, isDefaultReexport } = exp
     const compileId = traceStart(`compileBarrel.export[${i + 1}/${exports.length}] ${name}`)
     const { js } = await compileSvelte(sveltePath)

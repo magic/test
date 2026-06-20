@@ -20,7 +20,7 @@ interface CacheStats {
 }
 
 // Global trace state
-let traces: Map<string, TraceEntry> = new Map()
+const traces: Map<string, TraceEntry> = new Map()
 let traceEnabled = process.env.TEST_TRACE === '1'
 let cacheStats: CacheStats = { hits: 0, misses: 0, total: 0 }
 
@@ -66,7 +66,9 @@ const extractComponent = (name: string): string | undefined => {
 
 // Start a named trace
 export const traceStart = (name: string): string => {
-  if (!traceEnabled) return name
+  if (!traceEnabled) {
+    return name
+  }
 
   const id = `${name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   traces.set(id, {
@@ -83,10 +85,14 @@ export const traceStart = (name: string): string => {
 
 // End a trace and optionally log the duration
 export const traceEnd = (id: string, details?: string): number | undefined => {
-  if (!traceEnabled) return undefined
+  if (!traceEnabled) {
+    return undefined
+  }
 
   const entry = traces.get(id)
-  if (!entry) return undefined
+  if (!entry) {
+    return undefined
+  }
 
   const duration = performance.now() - entry.start
   entry.end = performance.now()
@@ -97,9 +103,15 @@ export const traceEnd = (id: string, details?: string): number | undefined => {
 
   // Color based on duration
   let color = c.green
-  if (duration > 100) color = c.yellow
-  if (duration > 500) color = c.magenta
-  if (duration > 1000) color = c.reset
+  if (duration > 100) {
+    color = c.yellow
+  }
+  if (duration > 500) {
+    color = c.magenta
+  }
+  if (duration > 1000) {
+    color = c.reset
+  }
 
   // Add cache indicator
   let cacheIndicator = ''
@@ -154,7 +166,9 @@ const getUniqueFiles = (traces: TraceEntry[]): Map<string, number> => {
 
 // Print enhanced summary of all traces
 export const printTraceSummary = () => {
-  if (!traceEnabled) return
+  if (!traceEnabled) {
+    return
+  }
 
   // Group by operation name (base name)
   const ops = new Map<string, { total: number; count: number; entries: TraceEntry[] }>()
@@ -200,9 +214,15 @@ export const printTraceSummary = () => {
 
     // Color based on avg duration
     let color = c.green
-    if (avg > 50) color = c.yellow
-    if (avg > 200) color = c.magenta
-    if (avg > 500) color = c.reset
+    if (avg > 50) {
+      color = c.yellow
+    }
+    if (avg > 200) {
+      color = c.magenta
+    }
+    if (avg > 500) {
+      color = c.reset
+    }
 
     console.log(`  ${name.padEnd(30)} ${color}${avg.toFixed(2).padStart(8)}ms avg${c.reset}`)
     console.log(
@@ -227,7 +247,7 @@ export const printTraceSummary = () => {
   console.log(`  ${c.bold}Duplicate Analysis:${c.reset}\n`)
 
   const duplicates: { file: string; count: number }[] = []
-  for (const [name, group] of sorted) {
+  for (const [_name, group] of sorted) {
     const files = getUniqueFiles(group.entries)
     for (const [file, count] of files) {
       if (count > 1) {

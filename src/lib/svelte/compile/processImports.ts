@@ -57,7 +57,9 @@ const processImportsImpl = async (
   const importCount = imports.length
   for (let i = 0; i < imports.length; i++) {
     const item = imports[i]
-    if (!item) continue
+    if (!item) {
+      continue
+    }
     const { imported, path: importPath } = item
     const resolveId = traceStart(
       `resolve.import[${i + 1}/${importCount}] ${importPath.split('/').pop() || importPath}`,
