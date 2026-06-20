@@ -35,9 +35,10 @@ export const compileSvelteWithWrite = async (
         return { js: cachedJs, css, tmpFile, importUrl }
       }
     } catch {
-      // Cache miss - need to transform and write
+      // File doesn't exist or is stale - continue with compilation
     }
 
+    // Cache miss - do the full work
     const processId = traceStart('processImports')
     const code = await processImports(js, filePath)
     traceEnd(processId)
@@ -51,8 +52,10 @@ export const compileSvelteWithWrite = async (
     await fs.writeFile(tmpFileAbs, transformedCode)
     traceEnd(writeId)
 
+    traceEnd(id, 'compiled')
     return { js: transformedCode, css, tmpFile, importUrl }
-  } finally {
-    traceEnd(id)
+  } catch (e) {
+    traceEnd(id, `ERROR: ${(e as Error).message}`)
+    throw e
   }
 }

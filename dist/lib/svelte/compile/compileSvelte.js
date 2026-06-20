@@ -7,11 +7,24 @@ import { TMP_DIR, CWD } from '../../../constants.js'
 import { cleanTempFiles } from './cleanTempFiles.js'
 import { acquireLock } from './acquireLock.js'
 export const compileSvelte = async filePath => {
-  // Check if another call is already compiling this file
+  // Check if another call is already compiling this file (promise dedup)
   const pending = pendingSvelteCompiles.get(filePath)
   if (pending) {
     return await pending
   }
+  // Create and store promise BEFORE starting work to prevent concurrent duplicates
+  const compilePromise = (async () => {
+    try {
+      return await doCompileSvelte(filePath)
+    } finally {
+      // Clean up pending promise when done
+      pendingSvelteCompiles.delete(filePath)
+    }
+  })()
+  pendingSvelteCompiles.set(filePath, compilePromise)
+  return compilePromise
+}
+const doCompileSvelte = async filePath => {
   const { compile, preprocess } = await getSvelteCompiler()
   await cleanTempFiles()
   const relPath = path.relative(CWD, filePath)

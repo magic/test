@@ -3,17 +3,28 @@ import log from '@magic/log'
 // Performance trace entry
 interface TraceEntry {
   name: string
+  component?: string // extracted component name for grouping
   start: number
   end?: number
   duration?: number
+  details?: string
+  caller?: string
+}
+
+// Cache stats tracking
+interface CacheStats {
+  hits: number
+  misses: number
+  total: number
 }
 
 // Global trace state
 let traces: Map<string, TraceEntry> = new Map()
-let traceEnabled = process.env.MAGIC_TEST_TRACE === '1'
+let traceEnabled = process.env.TEST_TRACE === '1'
+let cacheStats: CacheStats = { hits: 0, misses: 0, total: 0 }
 
-// ANSI colors for trace output
-const colors = {
+// ANSI colors
+const c = {
   reset: '\x1b[0m',
   dim: '\x1b[2m',
   cyan: '\x1b[36m',
@@ -21,6 +32,7 @@ const colors = {
   yellow: '\x1b[33m',
   magenta: '\x1b[35m',
   bold: '\x1b[1m',
+  red: '\x1b[31m',
 }
 
 export const enableTracing = () => {
@@ -33,6 +45,24 @@ export const disableTracing = () => {
 
 export const isTracingEnabled = () => traceEnabled
 
+export const resetTraces = () => {
+  traces.clear()
+  cacheStats = { hits: 0, misses: 0, total: 0 }
+}
+
+// Extract component name from a trace name like "compileSvelteWithWrite Counter.svelte"
+const extractComponent = (name: string): string | undefined => {
+  const parts = name.split(' ')
+  // If last part looks like a filename, use it
+  if (parts.length > 1) {
+    const last = parts[parts.length - 1]
+    if (last && (last.endsWith('.svelte') || last.endsWith('.ts') || last.endsWith('.js'))) {
+      return last
+    }
+  }
+  return undefined
+}
+
 // Start a named trace
 export const traceStart = (name: string): string => {
   if (!traceEnabled) return name
@@ -40,13 +70,12 @@ export const traceStart = (name: string): string => {
   const id = `${name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   traces.set(id, {
     name,
+    component: extractComponent(name),
     start: performance.now(),
   })
 
   const time = new Date().toISOString().split('T')[1]?.slice(0, 8) || ''
-  log.info(
-    `${colors.dim}[${time}]${colors.reset} ${colors.cyan}→${colors.reset} ${colors.bold}${name}${colors.reset}`,
-  )
+  log.info(`${c.dim}[${time}]${c.reset} ${c.cyan}→${c.reset} ${c.bold}${name}${c.reset}`)
 
   return id
 }
@@ -61,18 +90,34 @@ export const traceEnd = (id: string, details?: string): number | undefined => {
   const duration = performance.now() - entry.start
   entry.end = performance.now()
   entry.duration = duration
+  entry.details = details
 
   const time = new Date().toISOString().split('T')[1]?.slice(0, 8) || ''
 
   // Color based on duration
-  let color = colors.green
-  if (duration > 100) color = colors.yellow
-  if (duration > 500) color = colors.magenta
-  if (duration > 1000) color = colors.reset // Will show red if terminal supports it
+  let color = c.green
+  if (duration > 100) color = c.yellow
+  if (duration > 500) color = c.magenta
+  if (duration > 1000) color = c.reset
 
-  const detailStr = details ? ` ${colors.dim}(${details})${colors.reset}` : ''
+  // Add cache indicator
+  let cacheIndicator = ''
+  if (details?.includes('cache hit')) {
+    cacheIndicator = ` ${c.green}[HIT]${c.reset}`
+    cacheStats.hits++
+  } else if (details?.includes('cache miss') || details?.includes('compiled')) {
+    cacheIndicator = ` ${c.red}[MISS]${c.reset}`
+    cacheStats.misses++
+  }
+  // Only count for total if this is a cacheable operation
+  if (details?.includes('cache') || details?.includes('compiled')) {
+    cacheStats.total++
+  }
+
+  const detailStr = details && !details.includes('cache') ? ` ${c.dim}(${details})${c.reset}` : ''
+
   log.info(
-    `${colors.dim}[${time}]${colors.reset} ${color}←${colors.reset} ${colors.dim}${entry.name}${colors.reset} ${color}${duration.toFixed(2)}ms${colors.reset}${detailStr}`,
+    `${c.dim}[${time}]${c.reset} ${color}←${c.reset} ${c.dim}${entry.name}${c.reset} ${color}${duration.toFixed(2)}ms${c.reset}${detailStr}${cacheIndicator}`,
   )
 
   return duration
@@ -90,96 +135,137 @@ export const traceAsync = async <T>(
     traceEnd(id, details)
     return result
   } catch (error) {
-    const duration = traceEnd(id, `ERROR: ${(error as Error).message}`)
+    traceEnd(id, `ERROR: ${(error as Error).message}`)
     throw error
   }
 }
 
-// Print summary of all traces
+// Get unique file names from traces
+const getUniqueFiles = (traces: TraceEntry[]): Map<string, number> => {
+  const files = new Map<string, number>()
+  for (const trace of traces) {
+    if (trace.component) {
+      files.set(trace.component, (files.get(trace.component) || 0) + 1)
+    }
+  }
+  return files
+}
+
+// Print enhanced summary of all traces
 export const printTraceSummary = () => {
   if (!traceEnabled) return
 
-  console.log('\n' + colors.bold + '═'.repeat(60) + colors.reset)
-  console.log(colors.bold + '  Compilation Timing Summary' + colors.reset)
-  console.log(colors.bold + '═'.repeat(60) + colors.reset + '\n')
-
-  // Group by name pattern
-  const groups = new Map<string, { total: number; count: number; entries: TraceEntry[] }>()
+  // Group by operation name (base name)
+  const ops = new Map<string, { total: number; count: number; entries: TraceEntry[] }>()
 
   for (const entry of traces.values()) {
-    // Normalize name by removing unique suffixes
-    const baseName = entry.name.split(' ')[0] || entry.name
-    const group = groups.get(baseName) || { total: 0, count: 0, entries: [] }
+    const name = entry.name ?? 'unknown'
+    const baseName = name.split(' ')[0] ?? name
+    const group = ops.get(baseName) || { total: 0, count: 0, entries: [] }
     group.total += entry.duration || 0
     group.count++
     group.entries.push(entry)
-    groups.set(baseName, group)
+    ops.set(baseName, group)
   }
 
-  // Sort by total time
-  const sorted = [...groups.entries()].sort((a, b) => b[1].total - a[1].total)
+  const sorted = [...ops.entries()].sort((a, b) => b[1].total - a[1].total)
+  const totalTime = sorted.reduce((sum, [, g]) => sum + g.total, 0)
 
-  let totalTime = 0
-  for (const [, group] of sorted) {
-    totalTime += group.total
+  console.log('\n' + c.bold + '═'.repeat(70) + c.reset)
+  console.log(c.bold + '  Compilation Timing Summary' + c.reset)
+  console.log(c.bold + '═'.repeat(70) + c.reset + '\n')
+
+  // Cache stats
+  if (cacheStats.total > 0) {
+    const hitPct = ((cacheStats.hits / cacheStats.total) * 100).toFixed(1)
+    console.log(
+      `  ${c.bold}Cache:${c.reset} ${c.green}${cacheStats.hits} hits${c.reset}, ${c.red}${cacheStats.misses} misses${c.reset} (${hitPct}% hit rate)`,
+    )
+    console.log()
   }
 
-  for (const [name, group] of sorted) {
+  // Operations summary
+  console.log(`  ${c.bold}Operations (sorted by total time):${c.reset}\n`)
+
+  for (const [name, group] of sorted.slice(0, 15)) {
     const avg = group.total / group.count
     const pct = (group.total / totalTime) * 100
     const barLen = Math.round(pct / 2)
     const bar = '█'.repeat(barLen) + '░'.repeat(50 - barLen)
 
+    // Get unique files for this operation
+    const uniqueFiles = getUniqueFiles(group.entries)
+    const uniqueCount = uniqueFiles.size
+
+    // Color based on avg duration
+    let color = c.green
+    if (avg > 50) color = c.yellow
+    if (avg > 200) color = c.magenta
+    if (avg > 500) color = c.reset
+
+    console.log(`  ${name.padEnd(30)} ${color}${avg.toFixed(2).padStart(8)}ms avg${c.reset}`)
     console.log(
-      `  ${name.padEnd(35)} ${colors.cyan}${avg.toFixed(2).padStart(8)}ms avg${colors.reset}`,
+      `  ${c.dim}${group.count}x calls, ${uniqueCount} unique files, total: ${group.total.toFixed(2)}ms (${pct.toFixed(1)}%)${c.reset}`,
     )
-    console.log(
-      `  ${colors.dim}${group.count}x  total: ${group.total.toFixed(2)}ms  ${pct.toFixed(1)}%${colors.reset}`,
-    )
-    console.log(`  ${colors.dim}[${bar}]${colors.reset}\n`)
+    console.log(`  ${c.dim}[${bar}]${c.reset}`)
+
+    // Show slowest files if there are many unique files
+    if (uniqueCount > 1 && group.count > uniqueCount) {
+      const slowest = [...uniqueFiles.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([file, count]) => `${file} (${count}x)`)
+        .join(', ')
+      console.log(`  ${c.dim}Top: ${slowest}${c.reset}`)
+    }
+
+    console.log()
   }
 
-  console.log(colors.bold + '═'.repeat(60) + colors.reset)
-  console.log(`  ${colors.green}Total compilation time: ${totalTime.toFixed(2)}ms${colors.reset}\n`)
-  console.log(colors.bold + '═'.repeat(60) + colors.reset + '\n')
+  // Duplicate analysis - show operations that repeat more than once
+  console.log(`  ${c.bold}Duplicate Analysis:${c.reset}\n`)
+
+  const duplicates: { file: string; count: number }[] = []
+  for (const [name, group] of sorted) {
+    const files = getUniqueFiles(group.entries)
+    for (const [file, count] of files) {
+      if (count > 1) {
+        duplicates.push({ file, count })
+      }
+    }
+  }
+
+  if (duplicates.length > 0) {
+    duplicates.sort((a, b) => b.count - a.count)
+    for (const { file, count } of duplicates.slice(0, 10)) {
+      if (count > 1) {
+        console.log(
+          `  ${c.yellow}${file}${c.reset}: compiled ${count}x ${c.dim}(should be 1)${c.reset}`,
+        )
+      }
+    }
+  } else {
+    console.log(`  ${c.green}No duplicate compilations detected ✓${c.reset}`)
+  }
+
+  console.log()
+  console.log(c.bold + '═'.repeat(70) + c.reset)
+  console.log(
+    `  ${c.green}Total: ${totalTime.toFixed(2)}ms | ${sorted.reduce((s, [, g]) => s + g.count, 0)} operations${c.reset}`,
+  )
+  console.log(c.bold + '═'.repeat(70) + c.reset + '\n')
 }
 
-// Check if trace is enabled
-export const isTraceEnabled = () => traceEnabled
+export const isTraceEnabled = isTracingEnabled
 
-// Reset all traces
-export const resetTraces = () => {
-  traces.clear()
-}
-
-// Get trace data for external use
-export const getTraceData = () => {
-  return [...traces.entries()].map(([id, entry]) => ({
-    id,
-    ...entry,
+// Legacy export for compatibility
+export const getTraceSummary = () => {
+  return [...traces.values()].map(e => ({
+    name: e.name,
+    component: e.component,
+    duration: e.duration,
+    details: e.details,
   }))
 }
 
-// Get grouped summary data
-export const getTraceSummary = () => {
-  const groups = new Map<string, { total: number; count: number; min: number; max: number }>()
-
-  for (const entry of traces.values()) {
-    const name = entry.name
-    const group = groups.get(name) || { total: 0, count: 0, min: Infinity, max: -Infinity }
-    const duration = entry.duration || 0
-    group.total += duration
-    group.count++
-    group.min = Math.min(group.min, duration)
-    group.max = Math.max(group.max, duration)
-    groups.set(name, group)
-  }
-
-  return [...groups.entries()]
-    .map(([name, stats]) => ({
-      name,
-      ...stats,
-      avg: stats.total / stats.count,
-    }))
-    .sort((a, b) => b.total - a.total)
-}
+export const getTraceData = () => getTraceSummary()
