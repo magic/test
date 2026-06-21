@@ -266,16 +266,26 @@ const resolveAndCompileImportImplCore = async (
   }
 
   if (!(await fs.exists(resolvedPath))) {
-    if (await fs.exists(resolvedPath + '.svelte')) {
-      resolvedPath = resolvedPath + '.svelte'
-    } else if (await fs.exists(path.join(resolvedPath, 'index.svelte'))) {
-      resolvedPath = path.join(resolvedPath, 'index.svelte')
-    } else if (!path.extname(resolvedPath) && !resolvedPath.includes('.')) {
+    // Parallel existence checks
+    const checks = [
+      { path: resolvedPath + '.svelte', result: resolvedPath + '.svelte' },
+      {
+        path: path.join(resolvedPath, 'index.svelte'),
+        result: path.join(resolvedPath, 'index.svelte'),
+      },
+    ]
+    if (!path.extname(resolvedPath) && !resolvedPath.includes('.')) {
       const sourceDirName = path.dirname(sourceFilePath)
       const possiblePath = path.join(sourceDirName, importPath.replace(/^\.\//, ''))
-      if (await fs.exists(possiblePath)) {
-        resolvedPath = possiblePath
-      }
+      checks.push({ path: possiblePath, result: possiblePath })
+    }
+
+    const results = await Promise.all(
+      checks.map(c => fs.exists(c.path).then(exists => (exists ? c.result : null))),
+    )
+    const found = results.find(r => r !== null)
+    if (found) {
+      resolvedPath = found as string
     }
   }
 
