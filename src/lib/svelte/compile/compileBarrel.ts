@@ -10,34 +10,7 @@ import { compileSvelte } from './compileSvelte.ts'
 import { computeRelativePath } from './computeRelativePath.ts'
 import { traceStart, traceEnd } from './timing.ts'
 import { writeQueue } from './writeQueue.ts'
-
-// Parallel execution with concurrency limit
-const MAX_CONCURRENT = 5
-
-async function parallelMap<T, R>(
-  items: T[],
-  fn: (item: T, index: number) => Promise<R>,
-  concurrency: number,
-): Promise<R[]> {
-  const results: R[] = new Array(items.length)
-  const executing: Promise<void>[] = []
-
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i]!
-    const promise = fn(item, i).then(result => {
-      results[i] = result
-      executing.splice(executing.indexOf(promise), 1)
-    })
-    executing.push(promise)
-
-    if (executing.length >= concurrency) {
-      await Promise.race(executing)
-    }
-  }
-
-  await Promise.all(executing)
-  return results
-}
+import { parallelMap, MAX_CONCURRENT } from './parallelMap.ts'
 
 // Check if file needs writing (skip if content unchanged)
 const shouldWriteFile = async (filePath: string, newContent: string): Promise<boolean> => {
