@@ -4,7 +4,7 @@ import {
   testImportsMutableModuleState,
 } from '../../src/lib/mutableStateCheck.js'
 import fs from '@magic/fs'
-import type { TestCase, TestObject, WrappedTest } from '../../src/types.d.js'
+import type { TestCase, TestObject, WrappedTest } from '../../src/types.js'
 
 // Type for globalThis with index signature
 type GlobalAny = Record<string, unknown> & typeof globalThis

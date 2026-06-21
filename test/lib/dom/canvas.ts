@@ -1,5 +1,5 @@
 import { createCanvasPolyfill } from '../../../src/lib/dom/canvas.js'
-import type { TestCase } from '../../../src/types.d.js'
+import type { TestCase } from '../../../src/types.js'
 
 export default [
   // createCanvasPolyfill - called twice should not throw

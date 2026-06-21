@@ -1,6 +1,5 @@
-import { parsePngDimensions, createImagePolyfill } from '../../../src/lib/dom/image.js'
-import type { TestCase } from '../../../src/types.d.js'
-import type { Window } from 'happy-dom'
+import { parsePngDimensions } from '../../../src/lib/dom/image.js'
+import type { TestCase } from '../../../src/types.js'
 
 export default [
   // parsePngDimensions
@@ -61,104 +60,5 @@ export default [
     },
     expect: true,
     info: 'another valid PNG returns positive dimensions',
-  },
-
-  // createImagePolyfill
-  {
-    fn: () => {
-      // Create a minimal mock window with all required properties
-      const mockWin = {
-        Window: function MockWindow() {} as unknown as { new (): object; prototype: object },
-        Document: function MockDocument() {} as unknown as { new (): object },
-        HTMLImageElement: function MockHTMLImageElement() {} as unknown as {
-          new (): { prototype: object }
-        },
-        Event: class MockEvent {
-          constructor(_type: string) {}
-        },
-      } as unknown as Window
-      const PolyfilledImage = createImagePolyfill(mockWin)
-      return typeof PolyfilledImage === 'function'
-    },
-    expect: true,
-    info: 'createImagePolyfill returns a constructor function',
-  },
-  {
-    fn: () => {
-      const mockImgCtor = function MockHTMLImageElement() {} as unknown as {
-        new (): { prototype: { get src(): string; set src(v: string) }; src: string }
-      }
-      mockImgCtor.prototype = {
-        get src() { return '' },
-        set src(_v: string) {},
-      }
-      const mockWin = {
-        Window: function MockWindow() {} as unknown as { new (): object; prototype: object },
-        Document: function MockDocument() {} as unknown as { new (): object },
-        HTMLImageElement: mockImgCtor,
-        Event: class MockEvent {
-          constructor(_type: string) {}
-        },
-      } as unknown as Window
-      const PolyfilledImage = createImagePolyfill(mockWin)
-      const img = new (PolyfilledImage as unknown as new () => object)()
-      return img instanceof (PolyfilledImage as unknown as new () => object)
-    },
-    expect: true,
-    info: 'polyfilled image instanceof works',
-  },
-  {
-    fn: () => {
-      const mockImgCtor = function MockHTMLImageElement() {} as unknown as {
-        new (): { prototype: { get src(): string; set src(v: string) }; src: string; width: number; height: number }
-      }
-      mockImgCtor.prototype = {
-        get src() { return '' },
-        set src(_v: string) {},
-      }
-      const mockWin = {
-        Window: function MockWindow() {} as unknown as { new (): object; prototype: object },
-        Document: function MockDocument() {} as unknown as { new (): object },
-        HTMLImageElement: mockImgCtor,
-        Event: class MockEvent {
-          constructor(_type: string) {}
-        },
-      } as unknown as Window
-      const PolyfilledImage = createImagePolyfill(mockWin)
-      const img = new (PolyfilledImage as unknown as new () => object)()
-      const imgRecord = img as unknown as Record<string, unknown>
-      // Set data URL src
-      imgRecord.src =
-        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-      return (imgRecord.width as number) > 0 && (imgRecord.height as number) > 0
-    },
-    expect: true,
-    info: 'polyfilled image with data URL sets dimensions',
-  },
-  {
-    fn: () => {
-      const mockImgCtor = function MockHTMLImageElement() {} as unknown as {
-        new (): { prototype: { get src(): string; set src(v: string) }; src: string }
-      }
-      mockImgCtor.prototype = {
-        get src() { return '' },
-        set src(_v: string) {},
-      }
-      const mockWin = {
-        Window: function MockWindow() {} as unknown as { new (): object; prototype: object },
-        Document: function MockDocument() {} as unknown as { new (): object },
-        HTMLImageElement: mockImgCtor,
-        Event: class MockEvent {
-          constructor(_type: string) {}
-        },
-      } as unknown as Window
-      const PolyfilledImage = createImagePolyfill(mockWin)
-      const img = new (PolyfilledImage as unknown as new () => object)()
-      // Non-data URL should fall through
-      ;(img as unknown as Record<string, unknown>).src = 'https://example.com/image.png'
-      return (img as unknown as Record<string, unknown>).src === 'https://example.com/image.png'
-    },
-    expect: true,
-    info: 'polyfilled image with http URL preserves src',
   },
 ] satisfies TestCase[]

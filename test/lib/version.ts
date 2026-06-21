@@ -192,7 +192,7 @@ export default [
   {
     fn: () => {
       const lib = { fn: 'string' }
-      const spec = { fn: (v: unknown) => false }
+      const spec = { fn: (_v: unknown) => false }
       const results = version(lib as Record<string, unknown>, spec, 'lib')
       return results.some(r => r.fn === false)
     },

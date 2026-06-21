@@ -1,6 +1,6 @@
 import { info } from '../../../src/lib/stats/info.js'
 import { createStore } from '../../../src/lib/store.js'
-import type { TestCase, TestResult } from '../../src/types.js'
+import type { TestCase, TestResult } from '../../../src/types.js'
 
 export default [
   // Empty suites
