@@ -2,6 +2,7 @@ import is from '@magic/types'
 import path from 'node:path'
 import fs from '@magic/fs'
 import { createRequire } from 'node:module'
+import log from '@magic/log'
 import { packageExportCache } from './packageExportCache.ts'
 import { LRUCache } from '../LRUCache.ts'
 import { traceStart, traceEnd } from './timing.ts'
@@ -10,11 +11,11 @@ import { traceStart, traceEnd } from './timing.ts'
 const svelteReExportsCache = new LRUCache<boolean>(500)
 const exportStarCache = new LRUCache<boolean>(500)
 
-// Cache for package resolution paths (nodeModulesPath per package)
-const nodeModulesPathCache = new Map<string, string>()
+// Cache for package resolution paths (nodeModulesPath per package, LRU for memory safety)
+const nodeModulesPathCache = new LRUCache<string>(100)
 
-// Deduplication for concurrent requests
-const pendingResolves = new Map<string, Promise<unknown>>()
+// Deduplication for concurrent requests (Map is fine since bounded by concurrency)
+const pendingResolves = new Map<string, Promise<PackageExportResolve>>()
 
 // Skip pattern regex (faster than array.some)
 import {
@@ -50,28 +51,24 @@ const getPackageName = (spec: string): { name: string; subpath: string } | null 
   return { name, subpath: parts.slice(1).join('/') }
 }
 
+const pathToFileURL = (p: string): URL => {
+  return new URL(`file://${p}`)
+}
+
 const tryResolvePath = async (
   basePath: string,
   ...candidates: string[]
 ): Promise<string | null> => {
-  // Parallel check all candidates
-  const results = await Promise.all(
-    candidates.map(async candidate => {
-      const fullPath = path.join(basePath, candidate)
-      if (await fs.exists(fullPath)) {
-        return fullPath
-      }
-      // Try with .mjs if .js doesn't exist
-      if (candidate.endsWith('.js')) {
-        const mjsPath = candidate + '.mjs'
-        const mjsFullPath = path.join(basePath, mjsPath)
-        if (await fs.exists(mjsFullPath)) {
-          return mjsFullPath
-        }
-      }
-      return null
-    }),
-  )
+  // Build all potential paths upfront (JS + MJS variants)
+  const paths: string[] = []
+  for (const candidate of candidates) {
+    paths.push(path.join(basePath, candidate))
+    if (candidate.endsWith('.js')) {
+      paths.push(path.join(basePath, candidate + '.mjs'))
+    }
+  }
+  // Check all in parallel
+  const results = await Promise.all(paths.map(p => fs.exists(p).then(exists => (exists ? p : null))))
   return results.find(r => r !== null) ?? null
 }
 
@@ -123,7 +120,7 @@ const hasSvelteReExports = async (
 
   for (const match of exportStarMatches) {
     const reexportPath = match[1]
-    if (!reexportPath) continue
+    if (!reexportPath) {continue}
     const resolved = path.resolve(dir, reexportPath)
     if (resolved.endsWith('.svelte') || resolved.endsWith('.svelte.js')) {
       svelteReExportsCache.set(filePath, true)
@@ -140,7 +137,7 @@ const hasSvelteReExports = async (
 
   for (const match of exportNamedMatches) {
     const reexportPath = match[1]
-    if (!reexportPath) continue
+    if (!reexportPath) {continue}
     const resolved = path.resolve(dir, reexportPath)
     if (resolved.endsWith('.svelte.js')) {
       svelteReExportsCache.set(filePath, true)
@@ -197,7 +194,7 @@ const hasExportStarToSvelte = async (
 
   for (const match of exportStarMatches) {
     const reexportPath = match[1]
-    if (!reexportPath) continue
+    if (!reexportPath) {continue}
     const resolved = path.resolve(dir, reexportPath)
 
     if (resolved.endsWith('.svelte')) {
@@ -252,11 +249,10 @@ export const resolvePackageExport = async (
   const cacheKey = `${pkgSpec}:${sourceDir}`
 
   // Check deduplication first
-  const dedupKey = `${pkgSpec}:${sourceDir}`
-  const pending = pendingResolves.get(dedupKey)
+  const pending = pendingResolves.get(cacheKey)
   if (pending) {
     traceEnd(id, 'dedup')
-    return pending as Promise<PackageExportResolve>
+    return pending
   }
 
   const cached = packageExportCache.get(cacheKey)
@@ -266,17 +262,16 @@ export const resolvePackageExport = async (
   }
 
   const promise = resolvePackageExportImpl(pkgSpec, sourceDir, pkgName, cacheKey)
-  pendingResolves.set(dedupKey, promise)
+  pendingResolves.set(cacheKey, promise)
   try {
     return await promise
   } finally {
-    pendingResolves.delete(dedupKey)
-    traceEnd(id)
+    pendingResolves.delete(cacheKey)
   }
 }
 
 const resolvePackageExportImpl = async (
-  pkgSpec: string,
+  _pkgSpec: string,
   sourceDir: string,
   pkgName: { name: string; subpath: string },
   cacheKey: string,
@@ -302,27 +297,31 @@ const resolvePackageExportImpl = async (
 
   let pkgPath = path.join(nodeModulesPath, 'package.json')
   if (!(await fs.exists(pkgPath))) {
+    // Collect all potential package.json paths up the tree
+    const candidates: { dir: string; pkgPath: string }[] = []
     let current = nodeModulesPath
     while (current !== path.dirname(current)) {
-      const parentPkg = path.join(current, 'package.json')
-      if (await fs.exists(parentPkg)) {
-        pkgPath = parentPkg
-        nodeModulesPath = current
-        break
-      }
+      candidates.push({ dir: current, pkgPath: path.join(current, 'package.json') })
       current = path.dirname(current)
+    }
+    // Check all paths in parallel
+    const results = await Promise.all(candidates.map(c => fs.exists(c.pkgPath).then(exists => ({ ...c, exists }))))
+    const found = results.find(r => r.exists)
+    if (found) {
+      pkgPath = found.pkgPath
+      nodeModulesPath = found.dir
     }
   }
 
   if (!(await fs.exists(pkgPath))) {
     return { resolvedPath: null, isSvelteOnly: false }
   }
-  // Duplicate check removed - already verified above
 
   let pkg: { exports?: unknown; main?: string; module?: string }
   try {
     pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'))
-  } catch {
+  } catch (e) {
+    log.warn('Failed to parse package.json:', pkgPath, (e as Error).message)
     return { resolvedPath: null, isSvelteOnly: false }
   }
 
@@ -529,8 +528,4 @@ const resolvePackageExportImpl = async (
   // Cache the result
   packageExportCache.set(cacheKey, result)
   return result
-}
-
-const pathToFileURL = (p: string): URL => {
-  return new URL(`file://${p}`)
 }
