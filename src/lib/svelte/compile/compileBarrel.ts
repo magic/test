@@ -9,6 +9,7 @@ import { processImports } from './processImports.ts'
 import { compileSvelte } from './compileSvelte.ts'
 import { computeRelativePath } from './computeRelativePath.ts'
 import { traceStart, traceEnd } from './timing.ts'
+import { writeQueue } from './writeQueue.ts'
 
 // Parallel execution with concurrency limit
 const MAX_CONCURRENT = 5
@@ -150,13 +151,13 @@ const compileBarrelImpl = async (
 
       const relPath = path.relative(CWD, sveltePath)
       const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
+      const tmpFileAbs = path.join(CWD, tmpFile)
 
-      if (await shouldWriteFile(tmpFile, processed)) {
-        await fs.mkdirp(path.dirname(tmpFile))
-        await fs.writeFile(tmpFile, processed)
+      if (await shouldWriteFile(tmpFileAbs, processed)) {
+        await writeQueue.write(tmpFileAbs, processed)
       }
 
-      return { name, absPath: path.join(CWD, tmpFile), isDefaultReexport }
+      return { name, absPath: tmpFileAbs, isDefaultReexport }
     },
     MAX_CONCURRENT,
   )
@@ -196,9 +197,8 @@ const compileBarrelImpl = async (
 
   const wrapperCode = wrapperExports.join('\n')
 
-  if (await shouldWriteFile(wrapperFile, wrapperCode)) {
-    await fs.mkdirp(path.dirname(wrapperFile))
-    await fs.writeFile(wrapperFile, wrapperCode)
+  if (await shouldWriteFile(wrapperAbsPath, wrapperCode)) {
+    await writeQueue.write(wrapperAbsPath, wrapperCode)
   }
   traceEnd(writeId)
 

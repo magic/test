@@ -6,6 +6,7 @@ import { transformForNode } from './transformForNode.js'
 import { compileSvelte } from './compileSvelte.js'
 import { processImports } from './processImports.js'
 import { traceStart, traceEnd } from './timing.js'
+import { writeQueue } from './writeQueue.js'
 // Check if file needs writing (skip if content unchanged)
 const shouldWriteFile = async (filePath, newContent) => {
   try {
@@ -40,11 +41,10 @@ export const compileSvelteWithWrite = async filePath => {
     const transformId = traceStart('transformForNode')
     const transformedCode = transformForNode(code, filePath)
     traceEnd(transformId)
-    // Write to temp file (skip if unchanged)
+    // Write to temp file (batched, skip if unchanged)
     const writeId = traceStart('fs.writeFile')
     if (await shouldWriteFile(tmpFileAbs, transformedCode)) {
-      await fs.mkdirp(path.dirname(tmpFileAbs))
-      await fs.writeFile(tmpFileAbs, transformedCode)
+      await writeQueue.write(tmpFileAbs, transformedCode)
     }
     traceEnd(writeId)
     return { js: transformedCode, css, tmpFile, importUrl }

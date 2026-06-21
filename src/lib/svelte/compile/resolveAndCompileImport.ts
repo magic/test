@@ -23,6 +23,7 @@ import { resolvePackageExport } from './resolvePackageExport.ts'
 import { compileSvelteOnlyExport } from './resolveSvelteOnlyExports.ts'
 import { tryStat } from '../../../lib/fs.ts'
 import { traceStart, traceEnd } from './timing.ts'
+import { writeQueue } from './writeQueue.ts'
 
 // Deduplication: pending resolve promises by resolved path
 const pendingResolves = new Map<string, Promise<ResolveAndCompileResult>>()
@@ -352,8 +353,7 @@ const resolveAndCompileImportImplCore = async (
 
     const writeId = traceStart('fs.writeFile')
     if (await shouldWriteFile(tmpFile, processed)) {
-      await fs.mkdirp(path.dirname(tmpFile))
-      await fs.writeFile(tmpFile, processed)
+      await writeQueue.write(tmpFile, processed)
     }
     traceEnd(writeId)
 

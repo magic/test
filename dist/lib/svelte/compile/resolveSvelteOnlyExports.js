@@ -11,6 +11,7 @@ import { cache as compileCache } from './cache.js'
 import { CWD } from '../../../constants.js'
 import { SVELTE_RUNE_REGEX } from '../constants.js'
 import { parseFile, extractExports, extractImports } from './astParse.js'
+import { writeQueue } from './writeQueue.js'
 const pendingWrites = new Map()
 // Check if file needs writing (skip if content unchanged)
 const shouldWriteFile = async (filePath, newContent) => {
@@ -59,8 +60,7 @@ export const writeTempFile = async (filePath, code) => {
       if (!(await shouldWriteFile(tempFile, code))) {
         return tempFile
       }
-      await fs.mkdirp(path.dirname(tempFile))
-      await fs.writeFile(tempFile, code)
+      await writeQueue.write(tempFile, code)
     } finally {
       pendingWrites.delete(tempFile)
     }

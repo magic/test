@@ -13,6 +13,7 @@ import { cache as compileCache } from './cache.ts'
 import { CWD } from '../../../constants.ts'
 import { SVELTE_RUNE_REGEX } from '../constants.ts'
 import { parseFile, extractExports, extractImports } from './astParse.ts'
+import { writeQueue } from './writeQueue.ts'
 import type { ExportInfo } from './types.ts'
 
 const pendingWrites = new Map<string, Promise<string>>()
@@ -71,8 +72,7 @@ export const writeTempFile = async (filePath: string, code: string): Promise<str
       if (!(await shouldWriteFile(tempFile, code))) {
         return tempFile
       }
-      await fs.mkdirp(path.dirname(tempFile))
-      await fs.writeFile(tempFile, code)
+      await writeQueue.write(tempFile, code)
     } finally {
       pendingWrites.delete(tempFile)
     }
