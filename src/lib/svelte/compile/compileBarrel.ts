@@ -1,6 +1,7 @@
 import path from 'node:path'
 
 import fs from '@magic/fs'
+import { mkdir, writeFile } from 'node:fs/promises'
 
 import { barrelCache, processingBarrels, pendingBarrelCompiles } from './cache.ts'
 import { CACHE_DIR, CWD } from '../../../constants.ts'
@@ -10,21 +11,6 @@ import { compileSvelte } from './compileSvelte.ts'
 import { computeRelativePath } from './computeRelativePath.ts'
 import { traceStart, traceEnd } from './timing.ts'
 import { parallelMap, MAX_CONCURRENT } from './parallelMap.ts'
-
-// Check if file needs writing (skip if content unchanged)
-const shouldWriteFile = async (filePath: string, newContent: string): Promise<boolean> => {
-  try {
-    const stats = await fs.stat(filePath)
-    const newSize = Buffer.byteLength(newContent, 'utf-8')
-    if (stats.size !== newSize) {
-      return true
-    }
-    const existing = await fs.readFile(filePath, 'utf-8')
-    return existing !== newContent
-  } catch {
-    return true
-  }
-}
 
 export const compileBarrel = async (
   filePath: string,
@@ -125,14 +111,11 @@ const compileBarrelImpl = async (
       const tmpFile = path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
       const tmpFileAbs = path.join(CWD, tmpFile)
 
-      // Queue write without awaiting
-      const needsWrite = await shouldWriteFile(tmpFileAbs, processed)
-
       return {
         name,
         absPath: tmpFileAbs,
         isDefaultReexport,
-        content: needsWrite ? processed : null,
+        content: processed,
       }
     },
     MAX_CONCURRENT,
@@ -145,10 +128,11 @@ const compileBarrelImpl = async (
 
   const writeId = traceStart('fs.writeFile')
 
-  // Collect all files to write
-  const filesToWrite = compiledExports
-    .filter(e => e.content !== null)
-    .map(e => ({ path: e.absPath, content: e.content! }))
+  // Collect all files to write (always write - skip shouldWriteFile check for speed)
+  const filesToWrite: { path: string; content: string }[] = compiledExports.map(e => ({
+    path: e.absPath,
+    content: e.content,
+  }))
 
   // Generate wrapper code
   const wrapperExports = compiledExports
@@ -176,20 +160,17 @@ const compileBarrelImpl = async (
 
       return `export { ${name} } from '${relative}'`
     })
-    .filter(Boolean)
+    .filter((e): e is string => e !== null)
 
   const wrapperCode = wrapperExports.join('\n')
 
-  // Check if wrapper needs writing
-  const wrapperNeedsWrite = await shouldWriteFile(wrapperAbsPath, wrapperCode)
-  if (wrapperNeedsWrite) {
-    filesToWrite.push({ path: wrapperAbsPath, content: wrapperCode })
-  }
+  // Always write wrapper
+  filesToWrite.push({ path: wrapperAbsPath, content: wrapperCode })
 
   // Write all files in parallel, creating directories once
   const dirsToCreate = new Set(filesToWrite.map(f => path.dirname(f.path)))
-  await Promise.all([...dirsToCreate].map(d => fs.mkdirp(d)))
-  await Promise.all(filesToWrite.map(f => fs.writeFile(f.path, f.content)))
+  await Promise.all([...dirsToCreate].map(d => mkdir(d, { recursive: true })))
+  await Promise.all(filesToWrite.map(f => writeFile(f.path, f.content)))
   traceEnd(writeId)
 
   barrelCache.set(filePath, { exports, wrapperAbsPath })

@@ -29,21 +29,6 @@ import { existsCached } from './pathCache.ts'
 // Deduplication: pending resolve promises by resolved path
 const pendingResolves = new Map<string, Promise<ResolveAndCompileResult>>()
 
-// Check if file needs writing (skip if content unchanged)
-const shouldWriteFile = async (filePath: string, newContent: string): Promise<boolean> => {
-  try {
-    const stats = await fs.stat(filePath)
-    const newSize = Buffer.byteLength(newContent, 'utf-8')
-    if (stats.size !== newSize) {
-      return true
-    }
-    const existing = await fs.readFile(filePath, 'utf-8')
-    return existing !== newContent
-  } catch {
-    return true
-  }
-}
-
 const extractNamedImportsFromCode = (code: string, spec: string): string[] => {
   const namedImports: string[] = []
   const escapedSpec = spec.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -353,9 +338,7 @@ const resolveAndCompileImportImplCore = async (
     traceEnd(processId)
 
     const writeId = traceStart('fs.writeFile')
-    if (await shouldWriteFile(tmpFile, processed)) {
-      await writeQueue.write(tmpFile, processed)
-    }
+    await writeQueue.write(tmpFile, processed)
     traceEnd(writeId)
 
     const stats = await fs.stat(resolvedPath)

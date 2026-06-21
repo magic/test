@@ -14,20 +14,7 @@ import { parseFile, extractExports, extractImports } from './astParse.js'
 import { writeQueue } from './writeQueue.js'
 import { existsCached } from './pathCache.js'
 const pendingWrites = new Map()
-// Check if file needs writing (skip if content unchanged)
-const shouldWriteFile = async (filePath, newContent) => {
-  try {
-    const stats = await fs.stat(filePath)
-    const newSize = Buffer.byteLength(newContent, 'utf-8')
-    if (stats.size !== newSize) {
-      return true
-    }
-    const existing = await fs.readFile(filePath, 'utf-8')
-    return existing !== newContent
-  } catch {
-    return true // File doesn't exist, need to write
-  }
-}
+// Helper to resolve relative imports to file URLs
 const resolveRelativeToUrl = async (relativePath, baseDir) => {
   const absolutePath = path.resolve(baseDir, relativePath)
   const extensions = ['', '.ts', '.js', '.mjs']
@@ -57,10 +44,6 @@ export const writeTempFile = async (filePath, code) => {
   // Create promise synchronously before any await to prevent race condition
   const promise = (async () => {
     try {
-      // Skip write if content unchanged
-      if (!(await shouldWriteFile(tempFile, code))) {
-        return tempFile
-      }
       await writeQueue.write(tempFile, code)
     } finally {
       pendingWrites.delete(tempFile)

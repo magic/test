@@ -1,7 +1,6 @@
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-
-import fs from '@magic/fs'
+import fs from 'node:fs/promises'
 
 import { CACHE_DIR, CWD } from '../../../constants.ts'
 import type { CssObject } from './types.ts'
@@ -9,21 +8,6 @@ import { transformForNode } from './transformForNode.ts'
 import { compileSvelte } from './compileSvelte.ts'
 import { processImports } from './processImports.ts'
 import { traceStart, traceEnd } from './timing.ts'
-
-// Check if file needs writing (skip if content unchanged)
-const shouldWriteFile = async (filePath: string, newContent: string): Promise<boolean> => {
-  try {
-    const stats = await fs.stat(filePath)
-    const newSize = Buffer.byteLength(newContent, 'utf-8')
-    if (stats.size !== newSize) {
-      return true
-    }
-    const existing = await fs.readFile(filePath, 'utf-8')
-    return existing !== newContent
-  } catch {
-    return true
-  }
-}
 
 export const compileSvelteWithWrite = async (
   filePath: string,
@@ -49,13 +33,13 @@ export const compileSvelteWithWrite = async (
     const transformedCode = transformForNode(code, filePath)
     traceEnd(transformId)
 
-    // Write to temp file synchronously (skip if unchanged)
-    const writeId = traceStart('fs.writeFile')
-    if (await shouldWriteFile(tmpFileAbs, transformedCode)) {
-      await fs.mkdirp(path.dirname(tmpFileAbs))
-      await fs.writeFile(tmpFileAbs, transformedCode)
-    }
-    traceEnd(writeId)
+    // Write to temp file synchronously
+    const mkdirId = traceStart('fs.mkdir')
+    await fs.mkdir(path.dirname(tmpFileAbs), { recursive: true })
+    traceEnd(mkdirId)
+    const fileWriteId = traceStart('fs.writeFile')
+    await fs.writeFile(tmpFileAbs, transformedCode)
+    traceEnd(fileWriteId)
 
     return { js: transformedCode, css, tmpFile, importUrl }
   } catch (e) {

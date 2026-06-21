@@ -1,4 +1,4 @@
-import fs from '@magic/fs'
+import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 class WriteQueue {
   pendingWrites = new Map()
@@ -29,8 +29,8 @@ class WriteQueue {
     const request = this.pendingWrites.get(filePath)
     if (request) {
       this.pendingWrites.delete(filePath)
-      await fs.mkdirp(path.dirname(request.path))
-      await fs.writeFile(request.path, request.content)
+      await mkdir(path.dirname(request.path), { recursive: true })
+      await writeFile(request.path, request.content)
     }
   }
   /**
@@ -52,8 +52,8 @@ class WriteQueue {
       // Write all files in parallel
       await Promise.all(
         writes.map(async w => {
-          await fs.mkdirp(path.dirname(w.path))
-          await fs.writeFile(w.path, w.content)
+          await mkdir(path.dirname(w.path), { recursive: true })
+          await writeFile(w.path, w.content)
         }),
       )
       this.flushPromise = null
