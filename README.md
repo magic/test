@@ -2399,6 +2399,12 @@ update dependencies
 - increase default test timeout to 30s
 - fixed tsLoader .ts file handling
 - add more tests for @magic/test itself
+- implement persistent disk cache in node_modules/.magic-test-cache
+- parallelize import resolution, barrel exports, and fs.exists checks
+- cache fs.exists results, processImports results, and resolveViteAlias results
+- skip writing unchanged files during compilation
+- consolidate caches into single pendingPromises map
+- add more tests for @magic/test itself
 - update dependencies
 
 ##### 0.3.22 - unreleased
