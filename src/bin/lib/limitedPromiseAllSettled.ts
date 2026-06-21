@@ -15,9 +15,9 @@ export const limitedPromiseAllSettled = async <T>(
   const processItem = async (item: T, index: number): Promise<void> => {
     try {
       const value = await fn(item, index)
-      results[index] = { status: 'fulfilled', value: value as T }
+      results[index]! = { status: 'fulfilled', value: value as T }
     } catch (reason) {
-      results[index] = { status: 'rejected', reason }
+      results[index]! = { status: 'rejected', reason }
     }
   }
 

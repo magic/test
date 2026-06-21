@@ -165,7 +165,10 @@ export default [
   },
   {
     fn: () => {
-      const args = expectedArguments(function ({ a, b }: { a: unknown; b: unknown }) {})
+      const args = expectedArguments(function ({ a, b }: { a: unknown; b: unknown }) {
+        void a
+        void b
+      })
       return args[0]
     },
     expect: '{ a',

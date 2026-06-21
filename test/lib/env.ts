@@ -3,7 +3,7 @@ import type { TestCase } from '../../src/types.js'
 
 // Store original env
 const originalEnv = { ...process.env }
-const originalArgv = [...process.argv]
+const _originalArgv = [...process.argv]
 
 // Helper to temporarily modify env
 const withEnv = (envVars: Record<string, string | undefined>, fn: () => unknown) => {

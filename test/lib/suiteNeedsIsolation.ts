@@ -4,6 +4,9 @@ import {
 } from '../../src/lib/suiteNeedsIsolation.js'
 import type { TestCase } from '../../src/types.js'
 
+// Helper to access properties without 'any'
+type GlobalAny = Record<string, unknown> & typeof globalThis
+
 export default [
   {
     fn: () => suiteNeedsIsolation({ tests: { nested: { before: () => {} } } }),
@@ -77,12 +80,15 @@ export default [
     info: 'suiteBeforeAllModifiesGlobalState returns false when beforeAll does not modify globals',
   },
   {
-    fn: () => suiteBeforeAllModifiesGlobalState({ beforeAll: () => globalThis.x }),
+    fn: () => suiteBeforeAllModifiesGlobalState({ beforeAll: () => (globalThis as GlobalAny).x }),
     expect: true,
     info: 'suiteBeforeAllModifiesGlobalState detects beforeAll modifying globals',
   },
   {
-    fn: () => suiteBeforeAllModifiesGlobalState({ tests: { beforeAll: () => globalThis.x } }),
+    fn: () =>
+      suiteBeforeAllModifiesGlobalState({
+        tests: { beforeAll: () => (globalThis as GlobalAny).x },
+      }),
     expect: true,
     info: 'suiteBeforeAllModifiesGlobalState detects nested beforeAll modifying globals',
   },

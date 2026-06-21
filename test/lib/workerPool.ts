@@ -89,7 +89,7 @@ export default [
     fn: async () => {
       const pool = getWorkerPool(1)
       let resolve: (v: string) => void
-      const promise = new Promise<string>(r => (resolve = r))
+      const _promise = new Promise<string>(r => (resolve = r))
       const p1 = pool(async () => {
         await new Promise(r => setTimeout(r, 10))
         return 'p1'
