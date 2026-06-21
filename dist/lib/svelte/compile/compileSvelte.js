@@ -3,9 +3,7 @@ import fs from '@magic/fs'
 import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.js'
 import { getSvelteCompiler } from '../compiler-cache.js'
 import { cache, pendingSvelteCompiles } from './cache.js'
-import { CACHE_DIR, CWD } from '../../../constants.js'
-import { cleanTempFiles } from './cleanTempFiles.js'
-import { acquireLock } from './acquireLock.js'
+import { CWD } from '../../../constants.js'
 /**
  * Pure compilation function - caching handled by CacheManager in tsLoader
  * Uses pendingSvelteCompiles for deduplication
@@ -17,41 +15,27 @@ export const compileSvelte = async filePath => {
     return pending
   }
   const { compile, preprocess } = await getSvelteCompiler()
-  await cleanTempFiles()
   const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
-  const relPath = path.relative(CWD, absPath)
-  const mapFile = path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.map'))
-  const release = await acquireLock(mapFile)
-  try {
-    const source = await fs.readFile(absPath, 'utf-8')
-    const preprocessors = [testExportsPreprocessor(), viteDefinePreprocessor()]
-    const preprocessed = await preprocess(source, preprocessors)
-    const result = compile(preprocessed.code, {
-      generate: 'client',
-      dev: false,
-      filename: absPath,
-      experimental: { async: true },
-    })
-    if (!result.js) {
-      throw new Error('Compilation failed: no JS output')
-    }
-    let jsCodeString = String(result.js.code)
-    const { css } = result
-    // Write sourcemap
-    if (result.js.map) {
-      const sourcemap = result.js.map
-      sourcemap.sources = [absPath]
-      sourcemap.sourcesContent = [source]
-      await fs.mkdirp(path.dirname(mapFile))
-      await fs.writeFile(mapFile, JSON.stringify(sourcemap))
-      jsCodeString += '\n//# sourceMappingURL=' + path.basename(mapFile)
-    }
-    // Legacy in-memory cache for backward compatibility
-    const stats = await fs.stat(absPath)
-    cache.set(absPath, { js: jsCodeString, css: css ?? null, mtime: stats.mtimeMs })
-    return { js: jsCodeString, css: css ?? null }
-  } finally {
-    release()
-    pendingSvelteCompiles.delete(filePath)
+  const source = await fs.readFile(absPath, 'utf-8')
+  const preprocessors = [testExportsPreprocessor(), viteDefinePreprocessor()]
+  const preprocessed = await preprocess(source, preprocessors)
+  const result = compile(preprocessed.code, {
+    generate: 'client',
+    dev: false,
+    filename: absPath,
+    experimental: { async: true },
+  })
+  if (!result.js) {
+    throw new Error('Compilation failed: no JS output')
   }
+  // Note: Svelte 5 generates sourcemap objects but doesn't embed them.
+  // We don't write .map files since tests don't need debugging.
+  const jsCodeString = String(result.js.code)
+  const { css } = result
+  // Legacy in-memory cache for backward compatibility
+  const stats = await fs.stat(absPath)
+  cache.set(absPath, { js: jsCodeString, css: css ?? null, mtime: stats.mtimeMs })
+  // Clean up dedup map
+  pendingSvelteCompiles.delete(filePath)
+  return { js: jsCodeString, css: css ?? null }
 }

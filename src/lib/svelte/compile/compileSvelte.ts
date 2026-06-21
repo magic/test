@@ -6,9 +6,7 @@ import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.t
 import { getSvelteCompiler } from '../compiler-cache.ts'
 
 import { cache, pendingSvelteCompiles } from './cache.ts'
-import { CACHE_DIR, CWD } from '../../../constants.ts'
-import { cleanTempFiles } from './cleanTempFiles.ts'
-import { acquireLock } from './acquireLock.ts'
+import { CWD } from '../../../constants.ts'
 import type { CssObject } from './types.ts'
 
 export interface CompileSvelteReturn {
@@ -29,52 +27,35 @@ export const compileSvelte = async (filePath: string): Promise<CompileSvelteRetu
 
   const { compile, preprocess } = await getSvelteCompiler()
 
-  await cleanTempFiles()
-
   const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
-  const relPath = path.relative(CWD, absPath)
-  const mapFile = path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.map'))
 
-  const release = await acquireLock(mapFile)
+  const source = await fs.readFile(absPath, 'utf-8')
 
-  try {
-    const source = await fs.readFile(absPath, 'utf-8')
+  const preprocessors = [testExportsPreprocessor(), viteDefinePreprocessor()]
+  const preprocessed = await preprocess(source, preprocessors)
 
-    const preprocessors = [testExportsPreprocessor(), viteDefinePreprocessor()]
-    const preprocessed = await preprocess(source, preprocessors)
+  const result = compile(preprocessed.code, {
+    generate: 'client',
+    dev: false,
+    filename: absPath,
+    experimental: { async: true },
+  })
 
-    const result = compile(preprocessed.code, {
-      generate: 'client',
-      dev: false,
-      filename: absPath,
-      experimental: { async: true },
-    })
-
-    if (!result.js) {
-      throw new Error('Compilation failed: no JS output')
-    }
-
-    let jsCodeString = String(result.js.code)
-    const { css } = result
-
-    // Write sourcemap
-    if (result.js.map) {
-      const sourcemap = result.js.map
-      sourcemap.sources = [absPath]
-      sourcemap.sourcesContent = [source]
-
-      await fs.mkdirp(path.dirname(mapFile))
-      await fs.writeFile(mapFile, JSON.stringify(sourcemap))
-      jsCodeString += '\n//# sourceMappingURL=' + path.basename(mapFile)
-    }
-
-    // Legacy in-memory cache for backward compatibility
-    const stats = await fs.stat(absPath)
-    cache.set(absPath, { js: jsCodeString, css: css ?? null, mtime: stats.mtimeMs })
-
-    return { js: jsCodeString, css: css ?? null }
-  } finally {
-    release()
-    pendingSvelteCompiles.delete(filePath)
+  if (!result.js) {
+    throw new Error('Compilation failed: no JS output')
   }
+
+  // Note: Svelte 5 generates sourcemap objects but doesn't embed them.
+  // We don't write .map files since tests don't need debugging.
+  const jsCodeString = String(result.js.code)
+  const { css } = result
+
+  // Legacy in-memory cache for backward compatibility
+  const stats = await fs.stat(absPath)
+  cache.set(absPath, { js: jsCodeString, css: css ?? null, mtime: stats.mtimeMs })
+
+  // Clean up dedup map
+  pendingSvelteCompiles.delete(filePath)
+
+  return { js: jsCodeString, css: css ?? null }
 }
