@@ -1,4 +1,5 @@
 import path from 'node:path'
+import crypto from 'node:crypto'
 
 import log from '@magic/log'
 import is from '@magic/types'
@@ -7,11 +8,34 @@ import { SVELTE_IMPORT_REGEX } from '../constants.ts'
 import { resolveAndCompileImport } from './resolveAndCompileImport.ts'
 import { traceStart, traceEnd } from './timing.ts'
 
+// Cache for processImports results (key: codeHash:sourceFilePath)
+const processImportsCache = new Map<string, { code: string; result: string }>()
+const MAX_CACHE_SIZE = 200
+
 export const processImports = async (
   code: string,
   sourceFilePath: string,
   importChain: string[] = [],
 ): Promise<string> => {
+  // Skip caching if importChain is non-empty (might depend on circular deps)
+  if (importChain.length === 0) {
+    const cacheKey = `${sourceFilePath}:${crypto.createHash('md5').update(code).digest('hex')}`
+    const cached = processImportsCache.get(cacheKey)
+    if (cached && cached.code === code) {
+      return cached.result
+    }
+    // Evict oldest if cache full
+    if (processImportsCache.size >= MAX_CACHE_SIZE) {
+      const firstKey = processImportsCache.keys().next().value
+      if (firstKey) {
+        processImportsCache.delete(firstKey)
+      }
+    }
+    const result = await processImportsImpl(code, sourceFilePath, importChain)
+    processImportsCache.set(cacheKey, { code, result })
+    return result
+  }
+
   const id = traceStart(`processImports ${path.basename(sourceFilePath)}`)
   try {
     return await processImportsImpl(code, sourceFilePath, importChain)
