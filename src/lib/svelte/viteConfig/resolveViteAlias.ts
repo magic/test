@@ -11,11 +11,38 @@ import { findProjectRoot } from './findProjectRoot.ts'
 import { loadViteAliases } from './loadViteAliases.ts'
 import { parseTsConfig } from './parseTsConfig.ts'
 
+// Cache for resolved aliases (key: importPath:sourceFilePath)
+const aliasCache = new Map<string, string | null>()
+const MAX_CACHE_SIZE = 500
+
 /**
  * Resolve Vite/SvelteKit aliases ($lib, $app, $env, etc.)
  * This is called from compile.ts for non-relative imports
  */
 export const resolveViteAlias = async (
+  importPath: string,
+  sourceFilePath: string,
+): Promise<string | null> => {
+  const cacheKey = `${importPath}:${sourceFilePath}`
+  const cached = aliasCache.get(cacheKey)
+  if (cached !== undefined) {
+    return cached
+  }
+
+  // Evict oldest if cache full
+  if (aliasCache.size >= MAX_CACHE_SIZE) {
+    const firstKey = aliasCache.keys().next().value
+    if (firstKey) {
+      aliasCache.delete(firstKey)
+    }
+  }
+
+  const result = await resolveViteAliasImpl(importPath, sourceFilePath)
+  aliasCache.set(cacheKey, result)
+  return result
+}
+
+const resolveViteAliasImpl = async (
   importPath: string,
   sourceFilePath: string,
 ): Promise<string | null> => {
