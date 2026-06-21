@@ -1,6 +1,7 @@
 import { LRUCache } from '../LRUCache.ts'
 import type { CompileCacheEntry, ImportCacheEntry, BarrelCacheEntry, CssObject } from './types.ts'
 export { LRUCache }
+export { clearCache } from './persistentCache.ts'
 export declare const cache: LRUCache<CompileCacheEntry>
 export declare const importCache: LRUCache<ImportCacheEntry>
 export declare const barrelCache: Map<string, BarrelCacheEntry>

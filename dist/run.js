@@ -1,11 +1,9 @@
-import path from 'node:path'
 import is from '@magic/types'
 import log from '@magic/log'
-import fs from '@magic/fs'
 import { stats, createStore, ERRORS } from './lib/index.js'
 import { runSuite } from './run/suite.js'
 import { printTraceSummary, isTraceEnabled } from './lib/svelte/compile/timing.js'
-const cwd = process.cwd()
+import { clearCache as clearPersistentCache } from './lib/svelte/compile/persistentCache.js'
 /**
  * Aggregate raw test results into the store's results object.
  * This replaces the incremental stats.test() calls to avoid race conditions.
@@ -68,14 +66,7 @@ export let aborted = false
  */
 export const abort = async () => {
   aborted = true
-  const tmpDir = path.join(cwd, 'test', '.tmp')
-  try {
-    if (await fs.exists(tmpDir)) {
-      await fs.rmrf(tmpDir)
-    }
-  } catch {
-    // Ignore cleanup errors during abort
-  }
+  // Persistent cache saves on each write, no need for explicit save on abort
 }
 /**
  * Reset abort flag
@@ -109,7 +100,11 @@ const getShardForTest = (testPath, totalShards) => {
  * @returns {Promise<Error | void>}
  */
 export const run = async (tests, options = {}) => {
-  const { shards = 1, shardId = 0, workers } = options
+  const { shards = 1, shardId = 0, workers, clearCache } = options
+  // Clear persistent cache if requested
+  if (clearCache) {
+    await clearPersistentCache()
+  }
   // Set environment variables for sharding (used by unit.js and t.js)
   if (shards > 1) {
     process.env.MAGIC_TEST_SHARDING_SHARDS = String(shards)
@@ -211,10 +206,7 @@ export const run = async (tests, options = {}) => {
   for (const cleanup of beforeAllCleanup) {
     await cleanup()
   }
-  const tmpDir = path.join(cwd, 'test', '.tmp')
-  if (await fs.exists(tmpDir)) {
-    await fs.rmrf(tmpDir)
-  }
+  // Persistent cache saves on each write, no need for explicit save here
   stats.info(suites, store)
   // Print compile trace summary if enabled
   if (isTraceEnabled()) {

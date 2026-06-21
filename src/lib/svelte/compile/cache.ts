@@ -3,11 +3,15 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { LRUCache } from '../LRUCache.ts'
 
-import { TMP_DIR, CWD } from '../../../constants.ts'
+import { CWD } from '../../../constants.ts'
 import type { CompileCacheEntry, ImportCacheEntry, BarrelCacheEntry, CssObject } from './types.ts'
+import { getCachedCompile, recordCompile } from './persistentCache.ts'
 
 // Export LRUCache for external use
 export { LRUCache }
+
+// Re-export persistent cache functions
+export { clearCache } from './persistentCache.ts'
 
 // Export cache instances for backward compatibility
 export const cache = new LRUCache<CompileCacheEntry>(100)
@@ -133,19 +137,11 @@ export class CacheManager<T> {
       return null
     }
 
-    const relPath = path.relative(CWD, filePath)
-    const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
-    const tmpFileAbs = path.resolve(CWD, tmpFile)
-
-    try {
-      const sourceStats = await fs.stat(filePath)
-      const compiledStats = await fs.stat(tmpFileAbs)
-      if (compiledStats.mtimeMs >= sourceStats.mtimeMs) {
-        const js = await fs.readFile(tmpFileAbs, 'utf-8')
-        return { js, css: null, mtime: sourceStats.mtimeMs }
-      }
-    } catch {
-      // File doesn't exist or stats failed
+    // Try persistent cache (hash-based)
+    const cached = await getCachedCompile(filePath)
+    if (cached) {
+      const stats = await fs.stat(filePath)
+      return { js: cached.js, css: cached.css as CssObject | null, mtime: stats.mtimeMs }
     }
 
     return null
@@ -155,16 +151,8 @@ export class CacheManager<T> {
    * Write compiled result to disk cache
    */
   private async writeDiskCache(filePath: string, js: string): Promise<void> {
-    const relPath = path.relative(CWD, filePath)
-    const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
-    const tmpFileAbs = path.resolve(CWD, tmpFile)
-
-    try {
-      await fs.mkdirp(path.dirname(tmpFileAbs))
-      await fs.writeFile(tmpFileAbs, js)
-    } catch {
-      // Ignore disk cache errors
-    }
+    // Write to persistent cache (hash-based)
+    await recordCompile(filePath, js)
   }
 
   /**

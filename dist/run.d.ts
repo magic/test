@@ -16,6 +16,7 @@ type RunOptions = {
   shards?: number
   shardId?: number
   workers?: number
+  clearCache?: boolean
 }
 /**
  * @typedef {Object} RunOptions

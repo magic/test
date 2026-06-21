@@ -1,4 +1,5 @@
-export const TMP_DIR = 'test/.tmp'
+// Persistent disk cache for compiled Svelte files
+export const TMP_DIR = 'node_modules/.magic-test-cache'
 
 export const CWD = process.cwd()
 

@@ -7,6 +7,7 @@ import ts from 'typescript'
 import log from '@magic/log'
 import { traceStart, traceEnd } from '../../lib/svelte/compile/timing.js'
 import { cacheManager } from '../../lib/svelte/compile/cache.js'
+import { getCacheDir } from '../../lib/svelte/compile/persistentCache.js'
 // Use shared cache manager for all Svelte compilation
 // Helper to get or compile a Svelte file with caching
 const compileSvelteFile = async filePath => {
@@ -25,7 +26,8 @@ const compileSvelteFile = async filePath => {
   // Reconstruct importUrl from tmpFile path (disk cache returns { js, css, mtime })
   if (result?.js) {
     const relPath = path.relative(process.cwd(), filePath)
-    const tmpFile = path.join('test/.tmp', relPath.replace(/\.svelte$/, '.svelte.js'))
+    const cacheDir = getCacheDir()
+    const tmpFile = path.join(cacheDir, 'compiled', relPath.replace(/\.svelte$/, '.js'))
     const tmpFileAbs = path.resolve(process.cwd(), tmpFile)
     const importUrl = pathToFileURL(tmpFileAbs).href
     traceEnd(id, 'cache hit')

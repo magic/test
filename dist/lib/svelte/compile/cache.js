@@ -1,9 +1,12 @@
 import path from 'node:path'
 import fs from '@magic/fs'
 import { LRUCache } from '../LRUCache.js'
-import { TMP_DIR, CWD } from '../../../constants.js'
+import { CWD } from '../../../constants.js'
+import { getCachedCompile, recordCompile } from './persistentCache.js'
 // Export LRUCache for external use
 export { LRUCache }
+// Re-export persistent cache functions
+export { clearCache } from './persistentCache.js'
 // Export cache instances for backward compatibility
 export const cache = new LRUCache(100)
 export const importCache = new LRUCache(100)
@@ -93,18 +96,11 @@ export class CacheManager {
     if (!filePath.endsWith('.svelte')) {
       return null
     }
-    const relPath = path.relative(CWD, filePath)
-    const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
-    const tmpFileAbs = path.resolve(CWD, tmpFile)
-    try {
-      const sourceStats = await fs.stat(filePath)
-      const compiledStats = await fs.stat(tmpFileAbs)
-      if (compiledStats.mtimeMs >= sourceStats.mtimeMs) {
-        const js = await fs.readFile(tmpFileAbs, 'utf-8')
-        return { js, css: null, mtime: sourceStats.mtimeMs }
-      }
-    } catch {
-      // File doesn't exist or stats failed
+    // Try persistent cache (hash-based)
+    const cached = await getCachedCompile(filePath)
+    if (cached) {
+      const stats = await fs.stat(filePath)
+      return { js: cached.js, css: cached.css, mtime: stats.mtimeMs }
     }
     return null
   }
@@ -112,15 +108,8 @@ export class CacheManager {
    * Write compiled result to disk cache
    */
   async writeDiskCache(filePath, js) {
-    const relPath = path.relative(CWD, filePath)
-    const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
-    const tmpFileAbs = path.resolve(CWD, tmpFile)
-    try {
-      await fs.mkdirp(path.dirname(tmpFileAbs))
-      await fs.writeFile(tmpFileAbs, js)
-    } catch {
-      // Ignore disk cache errors
-    }
+    // Write to persistent cache (hash-based)
+    await recordCompile(filePath, js)
   }
   /**
    * Get cache stats

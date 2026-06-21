@@ -1,15 +1,11 @@
-import path from 'node:path'
-
 import is from '@magic/types'
 import log from '@magic/log'
-import fs from '@magic/fs'
 
 import { stats, createStore, ERRORS, Store } from './lib/index.ts'
 import { runSuite } from './run/suite.ts'
 import type { TestSuites, TestCollection, CleanupFunction, TestResult } from './types.ts'
 import { printTraceSummary, isTraceEnabled } from './lib/svelte/compile/timing.ts'
-
-const cwd = process.cwd()
+import { clearCache as clearPersistentCache } from './lib/svelte/compile/persistentCache.ts'
 
 /**
  * Aggregate raw test results into the store's results object.
@@ -83,15 +79,7 @@ export let aborted = false
  */
 export const abort = async () => {
   aborted = true
-
-  const tmpDir = path.join(cwd, 'test', '.tmp')
-  try {
-    if (await fs.exists(tmpDir)) {
-      await fs.rmrf(tmpDir)
-    }
-  } catch {
-    // Ignore cleanup errors during abort
-  }
+  // Persistent cache saves on each write, no need for explicit save on abort
 }
 
 /**
@@ -105,6 +93,7 @@ type RunOptions = {
   shards?: number
   shardId?: number
   workers?: number
+  clearCache?: boolean
 }
 
 /**
@@ -138,7 +127,12 @@ export const run = async (
   tests: TestSuites | (() => TestSuites),
   options: RunOptions = {},
 ): Promise<Error | void> => {
-  const { shards = 1, shardId = 0, workers } = options
+  const { shards = 1, shardId = 0, workers, clearCache } = options
+
+  // Clear persistent cache if requested
+  if (clearCache) {
+    await clearPersistentCache()
+  }
 
   // Set environment variables for sharding (used by unit.js and t.js)
   if (shards > 1) {
@@ -262,10 +256,7 @@ export const run = async (
     await cleanup()
   }
 
-  const tmpDir = path.join(cwd, 'test', '.tmp')
-  if (await fs.exists(tmpDir)) {
-    await fs.rmrf(tmpDir)
-  }
+  // Persistent cache saves on each write, no need for explicit save here
 
   stats.info(suites, store)
 
