@@ -17,6 +17,22 @@ import { resolvePackageExport } from './resolvePackageExport.js'
 import { compileSvelteOnlyExport } from './resolveSvelteOnlyExports.js'
 import { tryStat } from '../../../lib/fs.js'
 import { traceStart, traceEnd } from './timing.js'
+// Deduplication: pending resolve promises by resolved path
+const pendingResolves = new Map()
+// Check if file needs writing (skip if content unchanged)
+const shouldWriteFile = async (filePath, newContent) => {
+  try {
+    const stats = await fs.stat(filePath)
+    const newSize = Buffer.byteLength(newContent, 'utf-8')
+    if (stats.size !== newSize) {
+      return true
+    }
+    const existing = await fs.readFile(filePath, 'utf-8')
+    return existing !== newContent
+  } catch {
+    return true
+  }
+}
 const extractNamedImportsFromCode = (code, spec) => {
   const namedImports = []
   const escapedSpec = spec.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -47,6 +63,31 @@ export const resolveAndCompileImport = async (
   }
 }
 const resolveAndCompileImportImpl = async (
+  importPath,
+  sourceDir,
+  sourceFilePath,
+  importChain = [],
+) => {
+  // Deduplicate concurrent requests for the same import
+  const dedupKey = `${importPath}:${sourceDir}`
+  const pending = pendingResolves.get(dedupKey)
+  if (pending) {
+    return pending
+  }
+  const promise = resolveAndCompileImportImplCore(
+    importPath,
+    sourceDir,
+    sourceFilePath,
+    importChain,
+  )
+  pendingResolves.set(dedupKey, promise)
+  try {
+    return await promise
+  } finally {
+    pendingResolves.delete(dedupKey)
+  }
+}
+const resolveAndCompileImportImplCore = async (
   importPath,
   sourceDir,
   sourceFilePath,
@@ -208,16 +249,25 @@ const resolveAndCompileImportImpl = async (
     }
   }
   if (!(await fs.exists(resolvedPath))) {
-    if (await fs.exists(resolvedPath + '.svelte')) {
-      resolvedPath = resolvedPath + '.svelte'
-    } else if (await fs.exists(path.join(resolvedPath, 'index.svelte'))) {
-      resolvedPath = path.join(resolvedPath, 'index.svelte')
-    } else if (!path.extname(resolvedPath) && !resolvedPath.includes('.')) {
+    // Parallel existence checks
+    const checks = [
+      { path: resolvedPath + '.svelte', result: resolvedPath + '.svelte' },
+      {
+        path: path.join(resolvedPath, 'index.svelte'),
+        result: path.join(resolvedPath, 'index.svelte'),
+      },
+    ]
+    if (!path.extname(resolvedPath) && !resolvedPath.includes('.')) {
       const sourceDirName = path.dirname(sourceFilePath)
       const possiblePath = path.join(sourceDirName, importPath.replace(/^\.\//, ''))
-      if (await fs.exists(possiblePath)) {
-        resolvedPath = possiblePath
-      }
+      checks.push({ path: possiblePath, result: possiblePath })
+    }
+    const results = await Promise.all(
+      checks.map(c => fs.exists(c.path).then(exists => (exists ? c.result : null))),
+    )
+    const found = results.find(r => r !== null)
+    if (found) {
+      resolvedPath = found
     }
   }
   const ext = path.extname(resolvedPath)
@@ -269,8 +319,10 @@ const resolveAndCompileImportImpl = async (
     const processed = await processImports(js, resolvedPath, newChain)
     traceEnd(processId)
     const writeId = traceStart('fs.writeFile')
-    await fs.mkdirp(path.dirname(tmpFile))
-    await fs.writeFile(tmpFile, processed)
+    if (await shouldWriteFile(tmpFile, processed)) {
+      await fs.mkdirp(path.dirname(tmpFile))
+      await fs.writeFile(tmpFile, processed)
+    }
     traceEnd(writeId)
     const stats = await fs.stat(resolvedPath)
     importCache.set(resolvedPath, {

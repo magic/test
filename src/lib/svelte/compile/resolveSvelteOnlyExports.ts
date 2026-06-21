@@ -20,6 +20,11 @@ const pendingWrites = new Map<string, Promise<string>>()
 // Check if file needs writing (skip if content unchanged)
 const shouldWriteFile = async (filePath: string, newContent: string): Promise<boolean> => {
   try {
+    const stats = await fs.stat(filePath)
+    const newSize = Buffer.byteLength(newContent, 'utf-8')
+    if (stats.size !== newSize) {
+      return true
+    }
     const existing = await fs.readFile(filePath, 'utf-8')
     return existing !== newContent
   } catch {

@@ -2,8 +2,18 @@ import is from '@magic/types'
 import path from 'node:path'
 import fs from '@magic/fs'
 import { createRequire } from 'node:module'
+import log from '@magic/log'
 import { packageExportCache } from './packageExportCache.js'
+import { LRUCache } from '../LRUCache.js'
 import { traceStart, traceEnd } from './timing.js'
+// Cache for expensive file scanning operations
+const svelteReExportsCache = new LRUCache(500)
+const exportStarCache = new LRUCache(500)
+// Cache for package resolution paths (nodeModulesPath per package, LRU for memory safety)
+const nodeModulesPathCache = new LRUCache(100)
+// Deduplication for concurrent requests (Map is fine since bounded by concurrency)
+const pendingResolves = new Map()
+// Skip pattern regex (faster than array.some)
 import {
   SVELTE_RUNE_REGEX,
   SVELTE_COMPILED_REGEX,
@@ -12,10 +22,6 @@ import {
   EXPORT_STAR_REGEX,
   EXPORT_NAMED_REGEX,
 } from '../constants.js'
-const SKIP_PATTERNS = ['./', '../', '$app/', '$lib/', '$', '/']
-const isSkipPattern = spec => {
-  return SKIP_PATTERNS.some(p => spec.startsWith(p))
-}
 const getPackageName = spec => {
   const parts = spec.split('/')
   if (spec.startsWith('@')) {
@@ -30,37 +36,25 @@ const getPackageName = spec => {
   }
   return { name, subpath: parts.slice(1).join('/') }
 }
+const pathToFileURL = p => {
+  return new URL(`file://${p}`)
+}
 const tryResolvePath = async (basePath, ...candidates) => {
+  // Build all potential paths upfront (JS + MJS variants)
+  const paths = []
   for (const candidate of candidates) {
-    const fullPath = path.join(basePath, candidate)
-    if (await fs.exists(fullPath)) {
-      return fullPath
-    }
-    // Try with .mjs if .js doesn't exist
+    paths.push(path.join(basePath, candidate))
     if (candidate.endsWith('.js')) {
-      const mjsPath = candidate + '.mjs'
-      const mjsFullPath = path.join(basePath, mjsPath)
-      if (await fs.exists(mjsFullPath)) {
-        return mjsFullPath
-      }
+      paths.push(path.join(basePath, candidate + '.mjs'))
     }
   }
-  return null
+  // Check all in parallel
+  const results = await Promise.all(
+    paths.map(p => fs.exists(p).then(exists => (exists ? p : null))),
+  )
+  return results.find(r => r !== null) ?? null
 }
-// Check if a file is already compiled Svelte output
-const isAlreadyCompiledSvelte = async filePath => {
-  if (!filePath.endsWith('.js') && !filePath.endsWith('.mjs')) {
-    return false
-  }
-  try {
-    const content = await fs.readFile(filePath, 'utf-8')
-    // If file has the Svelte compiler output pattern, it's already compiled
-    return SVELTE_COMPILED_REGEX.test(content)
-  } catch {
-    return false
-  }
-}
-const hasSvelteReExports = async (filePath, visited) => {
+const hasSvelteReExports = async (filePath, visited, _content) => {
   if (!filePath.endsWith('.js') && !filePath.endsWith('.mjs')) {
     return false
   }
@@ -69,60 +63,73 @@ const hasSvelteReExports = async (filePath, visited) => {
     return false
   }
   visited.add(filePath)
-  // If file is already compiled Svelte output, it doesn't need re-compilation
-  // for Svelte-only exports - it's already a valid JS module
-  if (await isAlreadyCompiledSvelte(filePath)) {
+  // Check cache first
+  const cached = svelteReExportsCache.get(filePath)
+  if (cached !== undefined) {
+    return cached
+  }
+  // Read content once, reuse it
+  const content = _content ?? (await fs.readFile(filePath, 'utf-8').catch(() => null))
+  if (!content) {
+    svelteReExportsCache.set(filePath, false)
     return false
   }
-  try {
-    const content = await fs.readFile(filePath, 'utf-8')
-    if (SVELTE_REEXPORT_REGEX.test(content) || SVELTE_DEFAULT_REEXPORT_REGEX.test(content)) {
-      return true
-    }
-    // Only check for runes if not already compiled (runes in compiled output are internal)
-    // Note: We already checked for compiled output above, so this only matches source files
-    if (SVELTE_RUNE_REGEX.test(content)) {
-      return true
-    }
-    const dir = path.dirname(filePath)
-    for (const match of content.matchAll(EXPORT_STAR_REGEX)) {
-      const reexportPath = match[1]
-      if (!reexportPath) {
-        continue
-      }
-      const resolved = path.resolve(dir, reexportPath)
-      if (resolved.endsWith('.svelte') || resolved.endsWith('.svelte.js')) {
-        return true
-      }
-      if (
-        (resolved.endsWith('.js') || resolved.endsWith('.mjs')) &&
-        (await hasSvelteReExports(resolved, visited))
-      ) {
-        return true
-      }
-    }
-    for (const match of content.matchAll(EXPORT_NAMED_REGEX)) {
-      const reexportPath = match[1]
-      if (!reexportPath) {
-        continue
-      }
-      const resolved = path.resolve(dir, reexportPath)
-      if (resolved.endsWith('.svelte.js')) {
-        return true
-      }
-      if (
-        (resolved.endsWith('.js') || resolved.endsWith('.mjs')) &&
-        (await hasSvelteReExports(resolved, visited))
-      ) {
-        return true
-      }
-    }
-    return false
-  } catch {
+  // If file has Svelte compiler output pattern, it's already compiled
+  if (SVELTE_COMPILED_REGEX.test(content)) {
+    svelteReExportsCache.set(filePath, false)
     return false
   }
+  if (SVELTE_REEXPORT_REGEX.test(content) || SVELTE_DEFAULT_REEXPORT_REGEX.test(content)) {
+    svelteReExportsCache.set(filePath, true)
+    return true
+  }
+  if (SVELTE_RUNE_REGEX.test(content)) {
+    svelteReExportsCache.set(filePath, true)
+    return true
+  }
+  const dir = path.dirname(filePath)
+  const exportStarMatches = [...content.matchAll(EXPORT_STAR_REGEX)]
+  const exportNamedMatches = [...content.matchAll(EXPORT_NAMED_REGEX)]
+  for (const match of exportStarMatches) {
+    const reexportPath = match[1]
+    if (!reexportPath) {
+      continue
+    }
+    const resolved = path.resolve(dir, reexportPath)
+    if (resolved.endsWith('.svelte') || resolved.endsWith('.svelte.js')) {
+      svelteReExportsCache.set(filePath, true)
+      return true
+    }
+    if (
+      (resolved.endsWith('.js') || resolved.endsWith('.mjs')) &&
+      (await hasSvelteReExports(resolved, visited))
+    ) {
+      svelteReExportsCache.set(filePath, true)
+      return true
+    }
+  }
+  for (const match of exportNamedMatches) {
+    const reexportPath = match[1]
+    if (!reexportPath) {
+      continue
+    }
+    const resolved = path.resolve(dir, reexportPath)
+    if (resolved.endsWith('.svelte.js')) {
+      svelteReExportsCache.set(filePath, true)
+      return true
+    }
+    if (
+      (resolved.endsWith('.js') || resolved.endsWith('.mjs')) &&
+      (await hasSvelteReExports(resolved, visited))
+    ) {
+      svelteReExportsCache.set(filePath, true)
+      return true
+    }
+  }
+  svelteReExportsCache.set(filePath, false)
+  return false
 }
-const hasExportStarToSvelte = async (filePath, visited) => {
+const hasExportStarToSvelte = async (filePath, visited, _content) => {
   if (!filePath.endsWith('.js') && !filePath.endsWith('.mjs')) {
     return false
   }
@@ -131,34 +138,46 @@ const hasExportStarToSvelte = async (filePath, visited) => {
     return false
   }
   visited.add(filePath)
-  // If file is already compiled Svelte output, it doesn't need re-compilation
-  if (await isAlreadyCompiledSvelte(filePath)) {
+  // Check cache first
+  const cached = exportStarCache.get(filePath)
+  if (cached !== undefined) {
+    return cached
+  }
+  // Read content once, reuse it
+  const content = _content ?? (await fs.readFile(filePath, 'utf-8').catch(() => null))
+  if (!content) {
+    exportStarCache.set(filePath, false)
     return false
   }
-  try {
-    const content = await fs.readFile(filePath, 'utf-8')
-    const dir = path.dirname(filePath)
-    for (const match of content.matchAll(EXPORT_STAR_REGEX)) {
-      const reexportPath = match[1]
-      if (!reexportPath) {
-        continue
-      }
-      const resolved = path.resolve(dir, reexportPath)
-      if (resolved.endsWith('.svelte')) {
+  // If file has Svelte compiler output, it's already compiled
+  if (SVELTE_COMPILED_REGEX.test(content)) {
+    exportStarCache.set(filePath, false)
+    return false
+  }
+  const dir = path.dirname(filePath)
+  const exportStarMatches = [...content.matchAll(EXPORT_STAR_REGEX)]
+  for (const match of exportStarMatches) {
+    const reexportPath = match[1]
+    if (!reexportPath) {
+      continue
+    }
+    const resolved = path.resolve(dir, reexportPath)
+    if (resolved.endsWith('.svelte')) {
+      exportStarCache.set(filePath, true)
+      return true
+    }
+    if (resolved.endsWith('.js') || resolved.endsWith('.mjs')) {
+      if (await hasExportStarToSvelte(resolved, visited)) {
+        exportStarCache.set(filePath, true)
         return true
       }
-      if (resolved.endsWith('.js') || resolved.endsWith('.mjs')) {
-        if (await hasExportStarToSvelte(resolved, visited)) {
-          return true
-        }
-        if (await hasSvelteReExports(resolved)) {
-          return true
-        }
+      if (await hasSvelteReExports(resolved)) {
+        exportStarCache.set(filePath, true)
+        return true
       }
     }
-  } catch {
-    return false
   }
+  exportStarCache.set(filePath, false)
   return false
 }
 const hasOnlySvelteCondition = conditions => {
@@ -167,7 +186,15 @@ const hasOnlySvelteCondition = conditions => {
   return nonSvelteKeys.length === 0 && 'svelte' in conditions
 }
 export const resolvePackageExport = async (pkgSpec, sourceDir) => {
-  if (isSkipPattern(pkgSpec)) {
+  // Fast skip check
+  if (
+    pkgSpec.startsWith('./') ||
+    pkgSpec.startsWith('../') ||
+    pkgSpec.startsWith('$app/') ||
+    pkgSpec.startsWith('$lib/') ||
+    pkgSpec.startsWith('$') ||
+    pkgSpec.startsWith('/')
+  ) {
     return { resolvedPath: null, isSvelteOnly: false }
   }
   const pkgName = getPackageName(pkgSpec)
@@ -176,48 +203,75 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
   }
   const id = traceStart(`resolvePackageExport ${pkgSpec}`)
   const cacheKey = `${pkgSpec}:${sourceDir}`
+  // Check deduplication first
+  const pending = pendingResolves.get(cacheKey)
+  if (pending) {
+    traceEnd(id, 'dedup')
+    return pending
+  }
   const cached = packageExportCache.get(cacheKey)
   if (cached) {
     traceEnd(id, 'cache hit')
     return cached
   }
-  let nodeModulesPath
-  // Use require.resolve with paths from sourceDir to properly resolve packages
-  // from the project that contains the source file, not from process.cwd()
+  const promise = resolvePackageExportImpl(pkgSpec, sourceDir, pkgName, cacheKey)
+  pendingResolves.set(cacheKey, promise)
   try {
-    const require_ = createRequire(pathToFileURL(sourceDir + '/'))
-    const resolved = require_.resolve(pkgName.name)
-    nodeModulesPath = path.dirname(resolved)
-  } catch {
-    nodeModulesPath = path.join(process.cwd(), 'node_modules', pkgName.name)
+    return await promise
+  } finally {
+    pendingResolves.delete(cacheKey)
+  }
+}
+const resolvePackageExportImpl = async (_pkgSpec, sourceDir, pkgName, cacheKey) => {
+  let nodeModulesPath
+  // Use cached nodeModulesPath if available
+  const cachedNodeModules = nodeModulesPathCache.get(pkgName.name)
+  if (cachedNodeModules) {
+    nodeModulesPath = cachedNodeModules
+  } else {
+    // Use require.resolve with paths from sourceDir
+    try {
+      const require_ = createRequire(pathToFileURL(sourceDir + '/'))
+      const resolved = require_.resolve(pkgName.name)
+      nodeModulesPath = path.dirname(resolved)
+    } catch {
+      nodeModulesPath = path.join(process.cwd(), 'node_modules', pkgName.name)
+    }
+    // Cache for future calls
+    nodeModulesPathCache.set(pkgName.name, nodeModulesPath)
   }
   let pkgPath = path.join(nodeModulesPath, 'package.json')
   if (!(await fs.exists(pkgPath))) {
+    // Collect all potential package.json paths up the tree
+    const candidates = []
     let current = nodeModulesPath
     while (current !== path.dirname(current)) {
-      const parentPkg = path.join(current, 'package.json')
-      if (await fs.exists(parentPkg)) {
-        pkgPath = parentPkg
-        nodeModulesPath = current
-        break
-      }
+      candidates.push({ dir: current, pkgPath: path.join(current, 'package.json') })
       current = path.dirname(current)
+    }
+    // Check all paths in parallel
+    const results = await Promise.all(
+      candidates.map(c => fs.exists(c.pkgPath).then(exists => ({ ...c, exists }))),
+    )
+    const found = results.find(r => r.exists)
+    if (found) {
+      pkgPath = found.pkgPath
+      nodeModulesPath = found.dir
     }
   }
   if (!(await fs.exists(pkgPath))) {
-    traceEnd(id)
     return { resolvedPath: null, isSvelteOnly: false }
   }
-  // Duplicate check removed - already verified above
   let pkg
   try {
     pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'))
-  } catch {
-    traceEnd(id)
+  } catch (e) {
+    log.warn('Failed to parse package.json:', pkgPath, e.message)
     return { resolvedPath: null, isSvelteOnly: false }
   }
   const subpath = pkgName.subpath
   const exports = pkg.exports
+  let result = { resolvedPath: null, isSvelteOnly: false }
   if (!exports) {
     const fallbackCandidates = [
       pkg.main,
@@ -227,51 +281,54 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
       'src/index.js',
     ].filter(a => !is.undef(a) && is.str(a))
     const resolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
-    traceEnd(id)
-    return { resolvedPath: resolved, isSvelteOnly: false }
-  }
-  if (is.string(exports)) {
+    result = { resolvedPath: resolved, isSvelteOnly: false }
+  } else if (is.string(exports)) {
     const resolved = await tryResolvePath(nodeModulesPath, exports)
-    traceEnd(id)
-    return { resolvedPath: resolved, isSvelteOnly: false }
-  }
-  if (subpath && is.object(exports) && !Array.isArray(exports)) {
+    result = { resolvedPath: resolved, isSvelteOnly: false }
+  } else if (subpath && is.object(exports) && !Array.isArray(exports)) {
     const subExport = exports[`./${subpath}`] ?? exports[`./${subpath}.js`]
     if (subExport) {
       if (is.string(subExport)) {
         const resolved = await tryResolvePath(nodeModulesPath, subExport)
-        traceEnd(id)
-        return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
-      }
-      if (is.object(subExport) && subExport !== null) {
+        result = { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
+      } else if (is.object(subExport) && subExport !== null) {
         const conditions = subExport
         const hasImport = 'import' in conditions || 'node' in conditions || 'module' in conditions
         if (hasImport) {
-          return { resolvedPath: null, isSvelteOnly: false }
+          result = { resolvedPath: null, isSvelteOnly: false }
+        } else {
+          const sveltePath = conditions.svelte
+          if (sveltePath) {
+            const resolved = await tryResolvePath(nodeModulesPath, sveltePath)
+            result = { resolvedPath: resolved, isSvelteOnly: true }
+          } else {
+            const fallbackCandidates = ['./lib/' + subpath, './' + subpath, subpath]
+            const resolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
+            result = {
+              resolvedPath: resolved,
+              isSvelteOnly: resolved?.endsWith('.svelte') ?? false,
+            }
+          }
         }
-        const sveltePath = conditions.svelte
-        if (sveltePath) {
-          const resolved = await tryResolvePath(nodeModulesPath, sveltePath)
-          return { resolvedPath: resolved, isSvelteOnly: true }
-        }
+      } else {
+        const fallbackCandidates = ['./lib/' + subpath, './' + subpath, subpath]
+        const resolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
+        result = { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
       }
+    } else {
+      const fallbackCandidates = ['./lib/' + subpath, './' + subpath, subpath]
+      const resolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
+      result = { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
     }
-    const fallbackCandidates = ['./lib/' + subpath, './' + subpath, subpath]
-    const resolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
-    traceEnd(id)
-    return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
-  }
-  if (is.object(exports) && exports !== null && !Array.isArray(exports)) {
+  } else if (is.object(exports) && exports !== null && !Array.isArray(exports)) {
     const rootExport = exports['.']
     if (!rootExport) {
       return { resolvedPath: null, isSvelteOnly: false }
     }
     if (is.string(rootExport)) {
       const resolved = await tryResolvePath(nodeModulesPath, rootExport)
-      traceEnd(id)
-      return { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
-    }
-    if (is.object(rootExport) && rootExport !== null) {
+      result = { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
+    } else if (is.object(rootExport) && rootExport !== null) {
       const conditions = rootExport
       const hasNonSvelteCondition = ['import', 'node', 'module', 'require', 'default'].some(
         c => c in conditions && c !== 'svelte' && c !== 'types',
@@ -284,118 +341,129 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
           if (resolved) {
             const svelteReExports = await hasSvelteReExports(resolved)
             if (svelteReExports || (await hasExportStarToSvelte(resolved))) {
-              return { resolvedPath: resolved, isSvelteOnly: true, hasSvelteReExports: true }
+              result = { resolvedPath: resolved, isSvelteOnly: true, hasSvelteReExports: true }
+            } else {
+              const sveltePath = conditions.svelte
+              if (sveltePath) {
+                const resolved2 = await tryResolvePath(nodeModulesPath, sveltePath)
+                if (resolved2) {
+                  const svelteReExports2 = await hasSvelteReExports(resolved2)
+                  if (svelteReExports2 || (await hasExportStarToSvelte(resolved2))) {
+                    result = {
+                      resolvedPath: resolved2,
+                      isSvelteOnly: true,
+                      hasSvelteReExports: true,
+                    }
+                  } else {
+                    result = { resolvedPath: null, isSvelteOnly: false }
+                  }
+                } else {
+                  result = { resolvedPath: null, isSvelteOnly: false }
+                }
+              } else {
+                result = { resolvedPath: null, isSvelteOnly: false }
+              }
             }
+          } else {
+            result = { resolvedPath: null, isSvelteOnly: false }
           }
+        } else {
+          result = { resolvedPath: null, isSvelteOnly: false }
         }
-        // import condition exists but no direct Svelte re-exports found
-        // Check svelte condition before returning false
+      } else {
         const sveltePath = conditions.svelte
         if (sveltePath) {
           const resolved = await tryResolvePath(nodeModulesPath, sveltePath)
           if (resolved) {
-            // Only return isSvelteOnly: true if the svelte condition file actually has Svelte re-exports
-            // This prevents false positives for packages like @systemkollektiv/i18n that have
-            // a svelte condition but don't actually re-export any Svelte components
             const svelteReExports = await hasSvelteReExports(resolved)
-            if (svelteReExports || (await hasExportStarToSvelte(resolved))) {
-              return { resolvedPath: resolved, isSvelteOnly: true, hasSvelteReExports: true }
-            }
-            // svelte condition exists but no Svelte re-exports found
-            // Continue to check subpath exports
-          }
-        }
-      }
-      const sveltePath = conditions.svelte
-      if (sveltePath) {
-        const resolved = await tryResolvePath(nodeModulesPath, sveltePath)
-        if (resolved) {
-          const svelteReExports = await hasSvelteReExports(resolved)
-          if (svelteReExports) {
-            return {
-              resolvedPath: resolved,
-              isSvelteOnly: true,
-              hasSvelteReExports: true,
-              isSvelteOnlyPackage: packageHasOnlySvelteCondition,
-            }
-          }
-          // svelte condition exists but no Svelte re-exports found
-          // If package only has svelte condition (no import/node), still mark it
-          if (packageHasOnlySvelteCondition) {
-            return {
-              resolvedPath: resolved,
-              isSvelteOnly: true,
-              hasSvelteReExports: false,
-              isSvelteOnlyPackage: true,
-            }
-          }
-        }
-        const fallbackCandidates = [
-          pkg.main,
-          pkg.module,
-          './dist/index.js',
-          'index.js',
-          'src/index.js',
-        ].filter(Boolean)
-        const fallbackResolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
-        if (fallbackResolved) {
-          const svelteReExports = await hasSvelteReExports(fallbackResolved)
-          if (svelteReExports) {
-            return {
-              resolvedPath: fallbackResolved,
-              isSvelteOnly: true,
-              hasSvelteReExports: true,
-              isSvelteOnlyPackage: packageHasOnlySvelteCondition,
-            }
-          }
-        }
-        // No Svelte re-exports found in root export conditions
-        // Check subpath exports for Svelte re-exports
-        const pkgExports = pkg.exports
-        const subpathKeys = pkgExports
-          ? Object.keys(pkgExports).filter(
-              k =>
-                k !== '.' &&
-                (k.includes('component') || k.includes('svelte') || k.endsWith('.svelte')),
-            )
-          : []
-        for (const subpathKey of subpathKeys) {
-          const subpathExport = pkgExports?.[subpathKey]
-          const subpathStr = is.string(subpathExport)
-            ? subpathExport
-            : subpathExport?.svelte || subpathExport?.import || subpathExport?.default
-          if (subpathStr) {
-            const subpathResolved = await tryResolvePath(nodeModulesPath, subpathStr)
-            if (subpathResolved) {
-              const svelteReExports = await hasSvelteReExports(subpathResolved)
-              if (svelteReExports) {
-                return {
-                  resolvedPath: subpathResolved,
-                  isSvelteOnly: true,
-                  hasSvelteReExports: true,
+            if (svelteReExports) {
+              result = {
+                resolvedPath: resolved,
+                isSvelteOnly: true,
+                hasSvelteReExports: true,
+                isSvelteOnlyPackage: packageHasOnlySvelteCondition,
+              }
+            } else if (packageHasOnlySvelteCondition) {
+              result = {
+                resolvedPath: resolved,
+                isSvelteOnly: true,
+                hasSvelteReExports: false,
+                isSvelteOnlyPackage: true,
+              }
+            } else {
+              const fallbackCandidates = [
+                pkg.main,
+                pkg.module,
+                './dist/index.js',
+                'index.js',
+                'src/index.js',
+              ].filter(Boolean)
+              const fallbackResolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
+              if (fallbackResolved) {
+                const svelteReExports = await hasSvelteReExports(fallbackResolved)
+                result = {
+                  resolvedPath: fallbackResolved,
+                  isSvelteOnly: svelteReExports,
+                  hasSvelteReExports: svelteReExports,
+                  isSvelteOnlyPackage: packageHasOnlySvelteCondition,
+                }
+              } else {
+                // Check subpath exports
+                const pkgExports = pkg.exports
+                const subpathKeys = pkgExports
+                  ? Object.keys(pkgExports).filter(
+                      k =>
+                        k !== '.' &&
+                        (k.includes('component') || k.includes('svelte') || k.endsWith('.svelte')),
+                    )
+                  : []
+                let found = false
+                for (const subpathKey of subpathKeys) {
+                  const subpathExport = pkgExports?.[subpathKey]
+                  const subpathStr = is.string(subpathExport)
+                    ? subpathExport
+                    : subpathExport?.svelte || subpathExport?.import || subpathExport?.default
+                  if (subpathStr) {
+                    const subpathResolved = await tryResolvePath(nodeModulesPath, subpathStr)
+                    if (subpathResolved) {
+                      const svelteReExports = await hasSvelteReExports(subpathResolved)
+                      if (svelteReExports) {
+                        result = {
+                          resolvedPath: subpathResolved,
+                          isSvelteOnly: true,
+                          hasSvelteReExports: true,
+                        }
+                        found = true
+                        break
+                      }
+                    }
+                  }
+                }
+                if (!found) {
+                  result = { resolvedPath: null, isSvelteOnly: false }
                 }
               }
             }
+          } else {
+            result = { resolvedPath: null, isSvelteOnly: false }
           }
+        } else {
+          const fallbackCandidates = [
+            pkg.main,
+            pkg.module,
+            './dist/index.js',
+            'index.js',
+            'src/index.js',
+          ].filter(Boolean)
+          const fallbackResolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
+          result = { resolvedPath: fallbackResolved ?? null, isSvelteOnly: false }
         }
-        // No Svelte re-exports found anywhere, return false
-        return { resolvedPath: null, isSvelteOnly: false }
       }
-      const fallbackCandidates = [
-        pkg.main,
-        pkg.module,
-        './dist/index.js',
-        'index.js',
-        'src/index.js',
-      ].filter(Boolean)
-      const fallbackResolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
-      traceEnd(id)
-      return { resolvedPath: fallbackResolved ?? null, isSvelteOnly: false }
+    } else {
+      result = { resolvedPath: null, isSvelteOnly: false }
     }
   }
-  traceEnd(id)
-  return { resolvedPath: null, isSvelteOnly: false }
-}
-const pathToFileURL = p => {
-  return new URL(`file://${p}`)
+  // Cache the result
+  packageExportCache.set(cacheKey, result)
+  return result
 }

@@ -1,4 +1,5 @@
-import type { ViteConfig } from '../../../types.ts'
+import type { AliasEntry, ViteConfig } from '../../../types.ts'
+export { type AliasEntry } from '../../../types.ts'
 export declare const configCache: Map<
   string,
   {
@@ -6,9 +7,5 @@ export declare const configCache: Map<
     mtime: number
   }
 >
-export type AliasEntry = {
-  find: string | RegExp
-  replacement: string
-}
 export declare const aliasCache: Map<string, AliasEntry[]>
 export declare const defineCache: Map<string, Record<string, unknown>>

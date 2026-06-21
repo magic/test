@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url'
 import crypto from 'node:crypto'
 import fs from '@magic/fs'
 import { getSvelteCompiler } from '../compiler-cache.js'
-import { compileSvelteWithWrite } from './compileSvelteWithWrite.js'
+import { cacheManager } from './cache.js'
 import { processImports } from './processImports.js'
 import { transformForNode } from './transformForNode.js'
 import { resolvePackageExport } from './resolvePackageExport.js'
@@ -12,6 +12,20 @@ import { CWD } from '../../../constants.js'
 import { SVELTE_RUNE_REGEX } from '../constants.js'
 import { parseFile, extractExports, extractImports } from './astParse.js'
 const pendingWrites = new Map()
+// Check if file needs writing (skip if content unchanged)
+const shouldWriteFile = async (filePath, newContent) => {
+  try {
+    const stats = await fs.stat(filePath)
+    const newSize = Buffer.byteLength(newContent, 'utf-8')
+    if (stats.size !== newSize) {
+      return true
+    }
+    const existing = await fs.readFile(filePath, 'utf-8')
+    return existing !== newContent
+  } catch {
+    return true // File doesn't exist, need to write
+  }
+}
 const resolveRelativeToUrl = async (relativePath, baseDir) => {
   const absolutePath = path.resolve(baseDir, relativePath)
   const extensions = ['', '.ts', '.js', '.mjs']
@@ -41,6 +55,10 @@ export const writeTempFile = async (filePath, code) => {
   // Create promise synchronously before any await to prevent race condition
   const promise = (async () => {
     try {
+      // Skip write if content unchanged
+      if (!(await shouldWriteFile(tempFile, code))) {
+        return tempFile
+      }
       await fs.mkdirp(path.dirname(tempFile))
       await fs.writeFile(tempFile, code)
     } finally {
@@ -89,7 +107,12 @@ export const compileSvelteOnlyExport = async (sveltePath, sourceDir, exportNames
         tmpFileCache.set(sveltePath, tempFile)
         return tempFile
       }
-      const { tmpFile } = await compileSvelteWithWrite(sveltePath)
+      // Use cacheManager for deduplication and caching
+      const { tmpFile } = await cacheManager.getOrCompile(sveltePath, async () => {
+        // Import compileSvelteWithWrite lazily to avoid circular deps
+        const { compileSvelteWithWrite } = await import('./compileSvelteWithWrite.js')
+        return compileSvelteWithWrite(sveltePath)
+      })
       compileCache.set(cacheKey, { js: content, css: null, mtime: Date.now() })
       tmpFileCache.set(sveltePath, tmpFile)
       return tmpFile

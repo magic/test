@@ -7,6 +7,39 @@ import { processImports } from './processImports.js'
 import { compileSvelte } from './compileSvelte.js'
 import { computeRelativePath } from './computeRelativePath.js'
 import { traceStart, traceEnd } from './timing.js'
+// Parallel execution with concurrency limit
+const MAX_CONCURRENT = 5
+async function parallelMap(items, fn, concurrency) {
+  const results = new Array(items.length)
+  const executing = []
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]
+    const promise = fn(item, i).then(result => {
+      results[i] = result
+      executing.splice(executing.indexOf(promise), 1)
+    })
+    executing.push(promise)
+    if (executing.length >= concurrency) {
+      await Promise.race(executing)
+    }
+  }
+  await Promise.all(executing)
+  return results
+}
+// Check if file needs writing (skip if content unchanged)
+const shouldWriteFile = async (filePath, newContent) => {
+  try {
+    const stats = await fs.stat(filePath)
+    const newSize = Buffer.byteLength(newContent, 'utf-8')
+    if (stats.size !== newSize) {
+      return true
+    }
+    const existing = await fs.readFile(filePath, 'utf-8')
+    return existing !== newContent
+  } catch {
+    return true
+  }
+}
 export const compileBarrel = async (filePath, importChain = []) => {
   const id = traceStart(`compileBarrel ${path.basename(filePath)}`)
   try {
@@ -73,25 +106,28 @@ const compileBarrelImpl = async (filePath, currentChain) => {
   if (exports.length === 0) {
     throw new Error(`No Svelte exports found in barrel file: ${filePath}`)
   }
-  const compiledExports = []
-  for (let i = 0; i < exports.length; i++) {
-    const exp = exports[i]
-    if (!exp) {
-      continue
-    }
-    const { name, path: sveltePath, isDefaultReexport } = exp
-    const compileId = traceStart(`compileBarrel.export[${i + 1}/${exports.length}] ${name}`)
-    const { js } = await compileSvelte(sveltePath)
-    const processId = traceStart('processImports')
-    const processed = await processImports(js, sveltePath, currentChain)
-    traceEnd(processId)
-    traceEnd(compileId)
-    const relPath = path.relative(CWD, sveltePath)
-    const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
-    await fs.mkdirp(path.dirname(tmpFile))
-    await fs.writeFile(tmpFile, processed)
-    compiledExports.push({ name, absPath: path.join(CWD, tmpFile), isDefaultReexport })
-  }
+  // Compile exports in parallel with concurrency limit
+  const validExports = exports.filter(e => e !== undefined)
+  const compiledExports = await parallelMap(
+    validExports,
+    async (exp, i) => {
+      const { name, path: sveltePath, isDefaultReexport } = exp
+      const compileId = traceStart(`compileBarrel.export[${i + 1}/${validExports.length}] ${name}`)
+      const { js } = await compileSvelte(sveltePath)
+      const processId = traceStart('processImports')
+      const processed = await processImports(js, sveltePath, currentChain)
+      traceEnd(processId)
+      traceEnd(compileId)
+      const relPath = path.relative(CWD, sveltePath)
+      const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
+      if (await shouldWriteFile(tmpFile, processed)) {
+        await fs.mkdirp(path.dirname(tmpFile))
+        await fs.writeFile(tmpFile, processed)
+      }
+      return { name, absPath: path.join(CWD, tmpFile), isDefaultReexport }
+    },
+    MAX_CONCURRENT,
+  )
   const barrelRelPath = path.relative(CWD, filePath)
   const wrapperFile = path.join(TMP_DIR, barrelRelPath.replace(/\.(ts|js)$/, '.barrel.js'))
   const wrapperAbsPath = path.join(CWD, wrapperFile)
@@ -121,8 +157,10 @@ const compileBarrelImpl = async (filePath, currentChain) => {
     })
     .filter(Boolean)
   const wrapperCode = wrapperExports.join('\n')
-  await fs.mkdirp(path.dirname(wrapperFile))
-  await fs.writeFile(wrapperFile, wrapperCode)
+  if (await shouldWriteFile(wrapperFile, wrapperCode)) {
+    await fs.mkdirp(path.dirname(wrapperFile))
+    await fs.writeFile(wrapperFile, wrapperCode)
+  }
   traceEnd(writeId)
   barrelCache.set(filePath, { exports, wrapperAbsPath })
   return { filePath, js: wrapperCode, wrapperAbsPath }

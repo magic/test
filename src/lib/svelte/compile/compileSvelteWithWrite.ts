@@ -13,6 +13,13 @@ import { traceStart, traceEnd } from './timing.ts'
 // Check if file needs writing (skip if content unchanged)
 const shouldWriteFile = async (filePath: string, newContent: string): Promise<boolean> => {
   try {
+    const stats = await fs.stat(filePath)
+    const newSize = Buffer.byteLength(newContent, 'utf-8')
+    // Different size = definitely need to write
+    if (stats.size !== newSize) {
+      return true
+    }
+    // Same size, verify content
     const existing = await fs.readFile(filePath, 'utf-8')
     return existing !== newContent
   } catch {
