@@ -10,6 +10,16 @@ import { compileSvelte } from './compileSvelte.ts'
 import { processImports } from './processImports.ts'
 import { traceStart, traceEnd } from './timing.ts'
 
+// Check if file needs writing (skip if content unchanged)
+const shouldWriteFile = async (filePath: string, newContent: string): Promise<boolean> => {
+  try {
+    const existing = await fs.readFile(filePath, 'utf-8')
+    return existing !== newContent
+  } catch {
+    return true
+  }
+}
+
 export const compileSvelteWithWrite = async (
   filePath: string,
 ): Promise<{ js: string; css: CssObject | null; tmpFile: string; importUrl: string }> => {
@@ -34,17 +44,17 @@ export const compileSvelteWithWrite = async (
     const transformedCode = transformForNode(code, filePath)
     traceEnd(transformId)
 
-    // Write to temp file
-    await fs.mkdirp(path.dirname(tmpFileAbs))
+    // Write to temp file (skip if unchanged)
     const writeId = traceStart('fs.writeFile')
-    await fs.writeFile(tmpFileAbs, transformedCode)
+    if (await shouldWriteFile(tmpFileAbs, transformedCode)) {
+      await fs.mkdirp(path.dirname(tmpFileAbs))
+      await fs.writeFile(tmpFileAbs, transformedCode)
+    }
     traceEnd(writeId)
 
     return { js: transformedCode, css, tmpFile, importUrl }
   } catch (e) {
     traceEnd(id, `ERROR: ${(e as Error).message}`)
     throw e
-  } finally {
-    // Don't traceEnd here - either returned early (traced) or threw (traced above)
   }
 }

@@ -17,6 +17,16 @@ import type { ExportInfo } from './types.ts'
 
 const pendingWrites = new Map<string, Promise<string>>()
 
+// Check if file needs writing (skip if content unchanged)
+const shouldWriteFile = async (filePath: string, newContent: string): Promise<boolean> => {
+  try {
+    const existing = await fs.readFile(filePath, 'utf-8')
+    return existing !== newContent
+  } catch {
+    return true // File doesn't exist, need to write
+  }
+}
+
 const resolveRelativeToUrl = async (
   relativePath: string,
   baseDir: string,
@@ -52,6 +62,10 @@ export const writeTempFile = async (filePath: string, code: string): Promise<str
   // Create promise synchronously before any await to prevent race condition
   const promise = (async () => {
     try {
+      // Skip write if content unchanged
+      if (!(await shouldWriteFile(tempFile, code))) {
+        return tempFile
+      }
       await fs.mkdirp(path.dirname(tempFile))
       await fs.writeFile(tempFile, code)
     } finally {

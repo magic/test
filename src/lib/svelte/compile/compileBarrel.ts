@@ -10,6 +10,16 @@ import { compileSvelte } from './compileSvelte.ts'
 import { computeRelativePath } from './computeRelativePath.ts'
 import { traceStart, traceEnd } from './timing.ts'
 
+// Check if file needs writing (skip if content unchanged)
+const shouldWriteFile = async (filePath: string, newContent: string): Promise<boolean> => {
+  try {
+    const existing = await fs.readFile(filePath, 'utf-8')
+    return existing !== newContent
+  } catch {
+    return true
+  }
+}
+
 export const compileBarrel = async (
   filePath: string,
   importChain: string[] = [],
@@ -110,8 +120,10 @@ const compileBarrelImpl = async (
     const relPath = path.relative(CWD, sveltePath)
     const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
 
-    await fs.mkdirp(path.dirname(tmpFile))
-    await fs.writeFile(tmpFile, processed)
+    if (await shouldWriteFile(tmpFile, processed)) {
+      await fs.mkdirp(path.dirname(tmpFile))
+      await fs.writeFile(tmpFile, processed)
+    }
 
     compiledExports.push({ name, absPath: path.join(CWD, tmpFile), isDefaultReexport })
   }
@@ -151,8 +163,10 @@ const compileBarrelImpl = async (
 
   const wrapperCode = wrapperExports.join('\n')
 
-  await fs.mkdirp(path.dirname(wrapperFile))
-  await fs.writeFile(wrapperFile, wrapperCode)
+  if (await shouldWriteFile(wrapperFile, wrapperCode)) {
+    await fs.mkdirp(path.dirname(wrapperFile))
+    await fs.writeFile(wrapperFile, wrapperCode)
+  }
   traceEnd(writeId)
 
   barrelCache.set(filePath, { exports, wrapperAbsPath })
