@@ -3,7 +3,11 @@ import {
   testUsesSharedFiles,
   testImportsMutableModuleState,
 } from '../../src/lib/mutableStateCheck.js'
-import type { TestCase } from '../../src/types.js'
+import fs from '@magic/fs'
+import type { TestCase, TestObject, WrappedTest } from '../../src/types.d.js'
+
+// Type for globalThis with index signature
+type GlobalAny = Record<string, unknown> & typeof globalThis
 
 export default [
   // testUsesFixedPorts
@@ -84,7 +88,7 @@ export default [
     fn: () =>
       testUsesSharedFiles({
         beforeAll: () => {
-          fs.readFile('unique.json')
+          void fs.readFile('unique.json')
         },
       }),
     expect: false,
@@ -94,10 +98,10 @@ export default [
     fn: () =>
       testUsesSharedFiles({
         beforeAll: () => {
-          fs.readFile('shared.json')
+          void fs.readFile('shared.json')
         },
         afterAll: () => {
-          fs.readFile('shared.json')
+          void fs.readFile('shared.json')
         },
       }),
     expect: true,
@@ -107,7 +111,7 @@ export default [
     fn: () =>
       testUsesSharedFiles({
         beforeAll: () => {
-          fs.writeFile('shared.json', 'data')
+          void fs.writeFile('shared.json', 'data')
         },
       }),
     expect: false,
@@ -117,7 +121,7 @@ export default [
     fn: () =>
       testUsesSharedFiles({
         beforeAll: () => {
-          globalThis.tempFile = 'temp.json'
+          void (globalThis as GlobalAny).tempFile
         },
       }),
     expect: false,
@@ -135,7 +139,7 @@ export default [
       testImportsMutableModuleState(
         {
           beforeAll: () => {},
-        },
+        } as TestObject,
         '/nonexistent/file.ts',
       ),
     expect: false,
@@ -148,7 +152,7 @@ export default [
           beforeAll: () => {
             // no mutations
           },
-        },
+        } as TestObject,
         '/nonexistent/file.ts',
       ),
     expect: false,
@@ -159,9 +163,10 @@ export default [
       testImportsMutableModuleState(
         {
           beforeAll: () => {
+            const state: Record<string, number> = {}
             state.count = 5
           },
-        },
+        } as TestObject,
         '/nonexistent/file.ts',
       ),
     expect: false,
@@ -172,9 +177,10 @@ export default [
       testImportsMutableModuleState(
         {
           afterAll: () => {
+            const obj: Record<string, unknown> = {}
             delete obj.prop
           },
-        },
+        } as TestObject,
         '/nonexistent/file.ts',
       ),
     expect: false,
@@ -193,7 +199,7 @@ export default [
     info: 'empty array for shared files returns false',
   },
   {
-    fn: () => testImportsMutableModuleState([] as any, '/file.ts'),
+    fn: () => testImportsMutableModuleState([] as WrappedTest[], '/file.ts'),
     expect: false,
     info: 'empty array returns false for mutable state',
   },
@@ -222,10 +228,10 @@ export default [
           {
             name: 'test1',
             fn: () => {
-              fs.writeFile('a.txt')
+              void fs.writeFile('a.txt', '')
             },
             after: () => {
-              fs.writeFile('a.txt')
+              void fs.writeFile('a.txt', '')
             },
           },
         ],
@@ -239,7 +245,7 @@ export default [
     fn: () =>
       testUsesFixedPorts({
         beforeAll: () => {
-          const config = { port: 8080 }
+          const _config = { port: 8080 }
         },
       }),
     expect: true,
@@ -249,7 +255,7 @@ export default [
     fn: () =>
       testUsesFixedPorts({
         beforeAll: () => {
-          globalThis.apiPort = 3000
+          void ((globalThis as GlobalAny).apiPort = 3000)
         },
       }),
     expect: true,
@@ -261,7 +267,7 @@ export default [
     fn: () =>
       testUsesFixedPorts({
         beforeAll: () => {
-          globalThis.appPort = 3000
+          void ((globalThis as GlobalAny).appPort = 3000)
         },
       }),
     expect: true,
@@ -271,7 +277,7 @@ export default [
     fn: () =>
       testUsesFixedPorts({
         beforeAll: () => {
-          globalThis.somePortValue = 8080
+          void ((globalThis as GlobalAny).somePortValue = 8080)
         },
       }),
     expect: true,
@@ -283,10 +289,10 @@ export default [
     fn: () =>
       testUsesSharedFiles({
         beforeAll: () => {
-          fs.stat('shared.json')
+          void fs.stat('shared.json')
         },
         afterAll: () => {
-          fs.unlink('shared.json')
+          void fs.unlink('shared.json')
         },
       }),
     expect: true,
@@ -296,10 +302,10 @@ export default [
     fn: () =>
       testUsesSharedFiles({
         beforeAll: () => {
-          fs.readFile('shared.json')
+          void fs.readFile('shared.json')
         },
         afterAll: () => {
-          fs.writeFile('shared.json', 'data')
+          void fs.writeFile('shared.json', 'data')
         },
       }),
     expect: true,
@@ -309,7 +315,7 @@ export default [
     fn: () =>
       testUsesSharedFiles({
         beforeAll: () => {
-          fs.unlink('shared.json')
+          void fs.unlink('shared.json')
         },
       }),
     expect: false,
@@ -319,7 +325,7 @@ export default [
     fn: () =>
       testUsesSharedFiles({
         beforeAll: () => {
-          fs.appendFile('shared.json', 'data')
+          void fs.appendFile('shared.json', 'data')
         },
       }),
     expect: false,
@@ -329,10 +335,10 @@ export default [
     fn: () =>
       testUsesSharedFiles({
         beforeAll: () => {
-          fs.readFile('a.txt')
+          void fs.readFile('a.txt')
         },
         afterAll: () => {
-          fs.readFile('b.txt')
+          void fs.readFile('b.txt')
         },
       }),
     expect: false,
@@ -343,7 +349,7 @@ export default [
     fn: () =>
       testUsesSharedFiles({
         beforeAll: () => {
-          globalThis.uploadFile = 'data.json'
+          void ((globalThis as GlobalAny).uploadFile = 'data.json')
         },
       }),
     expect: false,

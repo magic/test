@@ -1,10 +1,25 @@
 import { CacheManager } from '../../../../src/lib/svelte/compile/cache.js'
-import type { TestCase } from '../../../../src/types.js'
+import type { TestCase } from '../../../../src/types.d.js'
 
 // TestCache for generic type
 interface TestCache {
   js: string
   css: string | null
+}
+
+// Helper to access private methods for testing
+function getPrivate<T>(cm: CacheManager<T>): {
+  memoryCache: Map<string, unknown>
+  pendingCompiles: Map<string, unknown>
+  isSvelteResult: (result: unknown) => boolean
+} {
+  // Use type assertion to access private members for testing
+  const privateCm = cm as unknown as {
+    memoryCache: Map<string, unknown>
+    pendingCompiles: Map<string, unknown>
+    isSvelteResult: (result: unknown) => boolean
+  }
+  return privateCm
 }
 
 export default [
@@ -35,7 +50,8 @@ export default [
   {
     fn: () => {
       const cm = new CacheManager<TestCache>()
-      return (cm as any).isSvelteResult({ js: 'code' })
+      const priv = getPrivate(cm)
+      return priv.isSvelteResult({ js: 'code' })
     },
     expect: true,
     info: 'isSvelteResult returns true for { js }',
@@ -44,7 +60,8 @@ export default [
   {
     fn: () => {
       const cm = new CacheManager<TestCache>()
-      return (cm as any).isSvelteResult({ js: 'code', css: '.style {}' })
+      const priv = getPrivate(cm)
+      return priv.isSvelteResult({ js: 'code', css: '.style {}' })
     },
     expect: true,
     info: 'isSvelteResult returns true for { js, css }',
@@ -53,7 +70,8 @@ export default [
   {
     fn: () => {
       const cm = new CacheManager<TestCache>()
-      return !(cm as any).isSvelteResult({ css: 'style' })
+      const priv = getPrivate(cm)
+      return !priv.isSvelteResult({ css: 'style' })
     },
     expect: true,
     info: 'isSvelteResult returns false without js',
@@ -62,7 +80,8 @@ export default [
   {
     fn: () => {
       const cm = new CacheManager<TestCache>()
-      return !(cm as any).isSvelteResult(null)
+      const priv = getPrivate(cm)
+      return !priv.isSvelteResult(null)
     },
     expect: true,
     info: 'isSvelteResult returns false for null',
@@ -71,7 +90,8 @@ export default [
   {
     fn: () => {
       const cm = new CacheManager<TestCache>()
-      return !(cm as any).isSvelteResult(undefined)
+      const priv = getPrivate(cm)
+      return !priv.isSvelteResult(undefined)
     },
     expect: true,
     info: 'isSvelteResult returns false for undefined',
@@ -80,7 +100,8 @@ export default [
   {
     fn: () => {
       const cm = new CacheManager<TestCache>()
-      return !(cm as any).isSvelteResult(['code'])
+      const priv = getPrivate(cm)
+      return !priv.isSvelteResult(['code'])
     },
     expect: true,
     info: 'isSvelteResult returns false for array',
@@ -89,7 +110,8 @@ export default [
   {
     fn: () => {
       const cm = new CacheManager<TestCache>()
-      return !(cm as any).isSvelteResult('not an object')
+      const priv = getPrivate(cm)
+      return !priv.isSvelteResult('not an object')
     },
     expect: true,
     info: 'isSvelteResult returns false for string',
@@ -98,7 +120,8 @@ export default [
   {
     fn: () => {
       const cm = new CacheManager<TestCache>()
-      return (cm as any).memoryCache.size === 0
+      const priv = getPrivate(cm)
+      return priv.memoryCache.size === 0
     },
     expect: true,
     info: 'memoryCache is initially empty',
@@ -107,7 +130,8 @@ export default [
   {
     fn: () => {
       const cm = new CacheManager<TestCache>()
-      return (cm as any).pendingCompiles.size === 0
+      const priv = getPrivate(cm)
+      return priv.pendingCompiles.size === 0
     },
     expect: true,
     info: 'pendingCompiles is initially empty',

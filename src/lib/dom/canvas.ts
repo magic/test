@@ -28,15 +28,14 @@ export const createCanvasPolyfill = (): void => {
       return origGetContext!.call(this, type, ...args)
     }
 
-    if (!(this as { _nodeCanvas?: Canvas })._nodeCanvas) {
-      ;(this as { _nodeCanvas?: Canvas })._nodeCanvas = createCanvas(
+    if (!this._nodeCanvas) {
+      this._nodeCanvas = createCanvas(
         this.width || 300,
         this.height || 150,
       )
     }
 
-    const nodeCanvas = (this as { _nodeCanvas?: Canvas })._nodeCanvas!
-    const ctx: any = nodeCanvas.getContext('2d')
+    const ctx: any = this._nodeCanvas.getContext('2d')
 
     const originalDrawImage = ctx.drawImage.bind(ctx)
     const originalToDataURL = ctx.toDataURL?.bind(ctx)
@@ -48,18 +47,18 @@ export const createCanvasPolyfill = (): void => {
         | { _nodeCanvasImage?: unknown; width: number; height: number; src?: string },
       ...drawArgs: unknown[]
     ): void => {
-      if (is.instance(img, Image) || (img as { _nodeCanvasImage?: unknown })._nodeCanvasImage) {
-        const nodeImg = (img as { _nodeCanvasImage?: unknown })._nodeCanvasImage || img
+      if (is.instance(img, Image) || '_nodeCanvasImage' in img && img._nodeCanvasImage) {
+        const nodeImg = is.instance(img, Image) ? img : img._nodeCanvasImage
         return originalDrawImage(
-          nodeImg as Canvas | Image,
-          ...(drawArgs as [Canvas | Image, ...unknown[]]),
+          nodeImg,
+          ...drawArgs,
         )
       }
 
       if (is.instance(img, Canvas)) {
         return originalDrawImage(
-          img as Canvas | Image,
-          ...(drawArgs as [Canvas | Image, ...unknown[]]),
+          img,
+          ...drawArgs,
         )
       }
 
@@ -68,8 +67,8 @@ export const createCanvasPolyfill = (): void => {
         loadImage(imgSrc)
           .then((loadedImg: unknown) => {
             originalDrawImage(
-              loadedImg as Canvas | Image,
-              ...(drawArgs as [Canvas | Image, ...unknown[]]),
+              loadedImg,
+              ...drawArgs,
             )
           })
           .catch(() => {})
@@ -82,12 +81,10 @@ export const createCanvasPolyfill = (): void => {
       )
     }
 
-    const toDataURLFn = (mimeType = 'image/png', quality?: number): string => {
-      return originalToDataURL?.(mimeType, quality) || ''
-    }
+    const toDataURLFn = (mimeType = 'image/png', quality?: number): string => originalToDataURL?.(mimeType, quality) || ''
 
-    ctx.drawImage = drawImageFn as any
-    ctx.toDataURL = toDataURLFn as any
+    ctx.drawImage = drawImageFn
+    ctx.toDataURL = toDataURLFn
 
     return ctx
   }

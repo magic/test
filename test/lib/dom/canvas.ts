@@ -1,5 +1,5 @@
 import { createCanvasPolyfill } from '../../../src/lib/dom/canvas.js'
-import type { TestCase } from '../../../src/types.js'
+import type { TestCase } from '../../../src/types.d.js'
 
 export default [
   // createCanvasPolyfill - called twice should not throw
@@ -43,7 +43,7 @@ export default [
       createCanvasPolyfill()
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
-      return typeof ctx?.toDataURL === 'function'
+      return typeof (ctx as unknown as Record<string, unknown>)?.toDataURL === 'function'
     },
     expect: true,
     info: 'context has toDataURL method',
@@ -54,7 +54,7 @@ export default [
       createCanvasPolyfill()
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
-      return typeof ctx?.drawImage === 'function'
+      return typeof (ctx as unknown as Record<string, unknown>)?.drawImage === 'function'
     },
     expect: true,
     info: 'context has drawImage method',
@@ -89,8 +89,9 @@ export default [
     fn: () => {
       createCanvasPolyfill()
       const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
-      const result = ctx?.toDataURL('image/jpeg', 0.8)
+      const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | null
+      const toDataURL = (ctx as unknown as Record<string, (mime?: string, quality?: number) => string | undefined>)?.toDataURL
+      const result = toDataURL?.call(ctx, 'image/jpeg', 0.8)
       return typeof result === 'string'
     },
     expect: true,
@@ -104,9 +105,10 @@ export default [
       const canvas2 = document.createElement('canvas')
       canvas1.width = 100
       canvas2.width = 200
-      const ctx1 = canvas1.getContext('2d') as any
-      const ctx2 = canvas2.getContext('2d') as any
-      return ctx1 !== ctx2
+      const ctx1 = canvas1.getContext('2d')
+      const ctx2 = canvas2.getContext('2d')
+      // Different canvas elements should have different context instances
+      return ctx1 !== null && ctx2 !== null && ctx1 !== ctx2
     },
     expect: true,
     info: 'different canvases get different contexts',

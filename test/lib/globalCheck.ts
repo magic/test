@@ -3,7 +3,7 @@ import {
   testModifiesGlobals,
   suiteModifiesGlobals,
 } from '../../src/lib/globalCheck.js'
-import type { TestCase } from '../../src/types.js'
+import type { TestCase, TestCollection } from '../../src/types.d.js'
 
 // Helper to access properties without 'any'
 type GlobalAny = Record<string, unknown> & typeof globalThis
@@ -145,7 +145,7 @@ export default [
     fn: () =>
       suiteModifiesGlobals({
         tests: {
-          beforeAll: () => globalThis.x,
+          beforeAll: () => (globalThis as GlobalAny).x,
         },
       }),
     expect: true,
@@ -155,7 +155,7 @@ export default [
     fn: () =>
       suiteModifiesGlobals({
         tests: {
-          afterAll: () => globalThis.x,
+          afterAll: () => (globalThis as GlobalAny).x,
         },
       }),
     expect: true,
@@ -163,7 +163,7 @@ export default [
   },
   // Test for object with tests property that's not objectNative
   {
-    fn: () => suiteModifiesGlobals({ tests: null }),
+    fn: () => suiteModifiesGlobals({ tests: null as unknown as TestCollection }),
     expect: false,
     info: 'suiteModifiesGlobals handles null tests',
   },
