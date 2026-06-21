@@ -255,4 +255,115 @@ export default [
     expect: true,
     info: 'detects globalThis port assignment',
   },
+
+  // Additional patterns for globalThis
+  {
+    fn: () =>
+      testUsesFixedPorts({
+        beforeAll: () => {
+          globalThis.appPort = 3000
+        },
+      }),
+    expect: true,
+    info: 'detects globalThis.appPort pattern',
+  },
+  {
+    fn: () =>
+      testUsesFixedPorts({
+        beforeAll: () => {
+          globalThis.somePortValue = 8080
+        },
+      }),
+    expect: true,
+    info: 'detects globalThis.somethingPort pattern',
+  },
+
+  // Additional fs methods
+  {
+    fn: () =>
+      testUsesSharedFiles({
+        beforeAll: () => {
+          fs.stat('shared.json')
+        },
+        afterAll: () => {
+          fs.unlink('shared.json')
+        },
+      }),
+    expect: true,
+    info: 'detects shared file between stat and unlink',
+  },
+  {
+    fn: () =>
+      testUsesSharedFiles({
+        beforeAll: () => {
+          fs.readFile('shared.json')
+        },
+        afterAll: () => {
+          fs.writeFile('shared.json', 'data')
+        },
+      }),
+    expect: true,
+    info: 'detects shared file between read and write',
+  },
+  {
+    fn: () =>
+      testUsesSharedFiles({
+        beforeAll: () => {
+          fs.unlink('shared.json')
+        },
+      }),
+    expect: false,
+    info: 'fs.unlink alone returns false',
+  },
+  {
+    fn: () =>
+      testUsesSharedFiles({
+        beforeAll: () => {
+          fs.appendFile('shared.json', 'data')
+        },
+      }),
+    expect: false,
+    info: 'fs.appendFile alone returns false',
+  },
+  {
+    fn: () =>
+      testUsesSharedFiles({
+        beforeAll: () => {
+          fs.readFile('a.txt')
+        },
+        afterAll: () => {
+          fs.readFile('b.txt')
+        },
+      }),
+    expect: false,
+    info: 'different files in hooks returns false',
+  },
+  // GlobalThis file patterns should be ignored
+  {
+    fn: () =>
+      testUsesSharedFiles({
+        beforeAll: () => {
+          globalThis.uploadFile = 'data.json'
+        },
+      }),
+    expect: false,
+    info: 'testUsesSharedFiles ignores globalThis.uploadFile pattern',
+  },
+  // testImportsMutableModuleState with .mjs file
+  {
+    fn: () => testImportsMutableModuleState({}, '/nonexistent/file.mjs'),
+    expect: false,
+    info: 'testImportsMutableModuleState with .mjs file returns false',
+  },
+  // Nested object without tests property
+  {
+    fn: () =>
+      testUsesFixedPorts({
+        tests: {
+          name: 'group',
+        },
+      }),
+    expect: false,
+    info: 'testUsesFixedPorts handles object without tests property',
+  },
 ] satisfies TestCase[]

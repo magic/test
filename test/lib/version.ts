@@ -147,4 +147,56 @@ export default [
     expect: (results: Test[]) => results.some(r => r.info?.includes('missing export')),
     info: 'reports missing lib exports',
   },
+  // Test for createLibTest array handling (lines 12-13)
+  {
+    fn: () => {
+      // Test with array spec that maps to multiple tests
+      const libWithArray = {
+        parent: { child1: [], child2: '' },
+      }
+      const specWithArray = {
+        parent: [
+          'object',
+          {
+            child1: 'array',
+            child2: 'string',
+          },
+        ],
+      }
+      const results = version(libWithArray, specWithArray, 'libWithArray')
+      return results.length >= 3 // parent type + child1 + child2
+    },
+    expect: true,
+    info: 'createLibTest handles array spec with multiple children',
+  },
+  // Test for createLibTest array with nested array (lines 12-13)
+  {
+    fn: () => {
+      const libWithNested = {
+        parent: [{ nested: [] }],
+      }
+      const specWithNested = {
+        parent: [
+          'object',
+          {
+            nested: 'array',
+          },
+        ],
+      }
+      return version(libWithNested, specWithNested, 'libWithNested')
+    },
+    expect: (results: Test[]) => results.length >= 2,
+    info: 'createLibTest handles nested array in lib',
+  },
+  // Test for undefined return (line 70)
+  {
+    fn: () => {
+      const lib = { fn: 'string' }
+      const spec = { fn: (v: unknown) => false }
+      const results = version(lib as Record<string, unknown>, spec, 'lib')
+      return results.some(r => r.fn === false)
+    },
+    expect: true,
+    info: 'returns false when function predicate fails',
+  },
 ] satisfies TestCase[]

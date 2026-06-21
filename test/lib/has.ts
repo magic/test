@@ -9,6 +9,7 @@ import {
   includes,
   oneOf,
   matches,
+  at,
 } from '../../src/lib/has.js'
 import type { TestCase } from '../../src/types.js'
 
@@ -458,5 +459,67 @@ export default [
     fn: () => matches(/test/)(null),
     expect: false,
     info: 'matches returns false for null',
+  },
+
+  // has.at tests (lines 82-89)
+  {
+    fn: () => at(0, isStr)(['a', 'b', 'c']),
+    expect: true,
+    info: 'at returns true when index exists and predicate passes',
+  },
+  {
+    fn: () => at(1, isStr)(['a', 2, 'c']),
+    expect: false,
+    info: 'at returns false when index exists but predicate fails',
+  },
+  {
+    fn: () => at(5, isStr)(['a', 'b']),
+    expect: false,
+    info: 'at returns false when index out of bounds',
+  },
+  {
+    fn: () => at(0, isStr)(null),
+    expect: false,
+    info: 'at returns false when result is null (line 83-84)',
+  },
+  {
+    fn: () => at(0, isStr)(undefined),
+    expect: false,
+    info: 'at returns false when result is undefined',
+  },
+  {
+    fn: () => at(0, isStr)('string'),
+    expect: false,
+    info: 'at returns false when result is a string',
+  },
+  {
+    fn: () => at(0, isStr)(123),
+    expect: false,
+    info: 'at returns false when result is a number',
+  },
+  {
+    fn: () => at(0, isStr)({}),
+    expect: false,
+    info: 'at returns false when result is an object',
+  },
+  {
+    fn: () => at(2, isStr)(['a', 'b', 'c']),
+    expect: true,
+    info: 'at works with last index in array',
+  },
+  {
+    fn: () => at(1, 'value')(['a', 'value', 'c']),
+    expect: true,
+    info: 'at accepts literal value check',
+  },
+  {
+    fn: () => at(0, (v: unknown) => v === undefined)([]),
+    expect: true,
+    info: 'at handles undefined values',
+  },
+  {
+    fn: () => at(-1, isStr)(['a', 'b']),
+    expect: false,
+    info: 'at returns false for negative index',
   },
 ] satisfies TestCase[]
