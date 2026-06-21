@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import fs from '@magic/fs'
 import log from '@magic/log'
@@ -149,6 +150,7 @@ export const mount = async (
   }
 
   return runWithContext(ctx, async () => {
+    // Compile and write synchronously before importing
     const { css, importUrl } = await compileSvelteWithWrite(resolvedPath)
 
     let mod

@@ -127,6 +127,7 @@ export const mount = async (filePath, options = {}) => {
     })
   }
   return runWithContext(ctx, async () => {
+    // Compile and write synchronously before importing
     const { css, importUrl } = await compileSvelteWithWrite(resolvedPath)
     let mod
     try {

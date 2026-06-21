@@ -8,6 +8,7 @@ import log from '@magic/log'
 import { traceStart, traceEnd } from '../../lib/svelte/compile/timing.js'
 import { cacheManager } from '../../lib/svelte/compile/cache.js'
 import { getCacheDir } from '../../lib/svelte/compile/persistentCache.js'
+import { writeQueue } from '../../lib/svelte/compile/writeQueue.js'
 // Use shared cache manager for all Svelte compilation
 // Helper to get or compile a Svelte file with caching
 const compileSvelteFile = async filePath => {
@@ -18,9 +19,21 @@ const compileSvelteFile = async filePath => {
       await import('../../lib/svelte/compile/compileSvelteWithWrite.js')
     return compileSvelteWithWrite(filePath)
   })
+  // Build cache status string for tracing
+  const cacheStatus = result?.cacheStatus
+  let traceDetail = 'compiled'
+  if (cacheStatus) {
+    if (cacheStatus.cached) {
+      traceDetail = `cached [${cacheStatus.source || 'memory'}]`
+    } else {
+      traceDetail = 'compiled'
+    }
+  }
   // Handle disk cache results which don't have importUrl
   if (result?.importUrl) {
-    traceEnd(id, 'cache hit')
+    // Eagerly flush this file's write before returning URL
+    await writeQueue.flushPath(result.importUrl.replace('file://', ''))
+    traceEnd(id, traceDetail)
     return result.importUrl
   }
   // Reconstruct importUrl from tmpFile path (disk cache returns { js, css, mtime })
@@ -29,11 +42,13 @@ const compileSvelteFile = async filePath => {
     const cacheDir = getCacheDir()
     const tmpFile = path.join(cacheDir, 'compiled', relPath.replace(/\.svelte$/, '.js'))
     const tmpFileAbs = path.resolve(process.cwd(), tmpFile)
+    // Eagerly flush this file's write before returning URL
+    await writeQueue.flushPath(tmpFileAbs)
     const importUrl = pathToFileURL(tmpFileAbs).href
-    traceEnd(id, 'cache hit')
+    traceEnd(id, traceDetail)
     return importUrl
   }
-  traceEnd(id, 'cache hit')
+  traceEnd(id, traceDetail)
   return undefined
 }
 export const resolve = async (specifier, context, nextResolve) => {
