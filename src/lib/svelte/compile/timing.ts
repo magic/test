@@ -10,6 +10,8 @@ interface TraceEntry {
   duration?: number
   details?: string
   caller?: string
+  cached?: boolean // true if result was from cache
+  cacheSource?: string // 'memory', 'disk', 'promise'
 }
 
 // Cache stats tracking
@@ -99,11 +101,27 @@ export const traceEnd = (id: string, details?: string): number | undefined => {
   entry.duration = duration
   entry.details = details
 
+  // Parse cache status from details
+  // Formats: "cached [memory]", "cache hit", "compiled"
+  if (details?.startsWith('cached') || details === 'cache hit') {
+    entry.cached = true
+    const match = details.match(/\[(\w+)\]/)
+    if (match) {
+      entry.cacheSource = match[1]
+    } else {
+      entry.cacheSource = 'memory'
+    }
+  } else {
+    entry.cached = false
+  }
+
   const time = new Date().toISOString().split('T')[1]?.slice(0, 8) || ''
 
-  // Color based on duration
+  // Color based on duration AND cache status
   let color = c.green
-  if (duration > 100) {
+  if (entry.cached) {
+    color = c.cyan // Cached items are less urgent
+  } else if (duration > 100) {
     color = c.yellow
   }
   if (duration > 500) {
@@ -115,22 +133,20 @@ export const traceEnd = (id: string, details?: string): number | undefined => {
 
   // Add cache indicator
   let cacheIndicator = ''
-  if (details?.includes('cache hit')) {
-    cacheIndicator = ` ${c.green}[HIT]${c.reset}`
+  if (entry.cached) {
+    cacheIndicator = ` ${c.green}[HIT:${entry.cacheSource || '?'}]${c.reset}`
     cacheStats.hits++
-  } else if (details?.includes('cache miss') || details?.includes('compiled')) {
+  } else if (details?.includes('compiled')) {
     cacheIndicator = ` ${c.red}[MISS]${c.reset}`
     cacheStats.misses++
   }
   // Only count for total if this is a cacheable operation
-  if (details?.includes('cache') || details?.includes('compiled')) {
+  if (entry.cached !== undefined) {
     cacheStats.total++
   }
 
-  const detailStr = details && !details.includes('cache') ? ` ${c.dim}(${details})${c.reset}` : ''
-
   log.info(
-    `${c.dim}[${time}]${c.reset} ${color}←${c.reset} ${c.dim}${entry.name}${c.reset} ${color}${duration.toFixed(2)}ms${c.reset}${detailStr}${cacheIndicator}`,
+    `${c.dim}[${time}]${c.reset} ${color}←${c.reset} ${c.dim}${entry.name}${c.reset} ${color}${duration.toFixed(2)}ms${c.reset} ${cacheIndicator}`,
   )
 
   return duration
@@ -244,26 +260,50 @@ export const printTraceSummary = () => {
   }
 
   // Duplicate analysis - show operations that repeat more than once
-  console.log(`  ${c.bold}Duplicate Analysis:${c.reset}\n`)
+  console.log(`  ${c.bold}Duplicate Analysis (per file):${c.reset}\n`)
 
-  const duplicates: { file: string; count: number }[] = []
+  interface FileStats {
+    file: string
+    total: number
+    cached: number
+    compiled: number
+  }
+  const fileStats = new Map<string, FileStats>()
+
   for (const [_name, group] of sorted) {
-    const files = getUniqueFiles(group.entries)
-    for (const [file, count] of files) {
-      if (count > 1) {
-        duplicates.push({ file, count })
+    for (const entry of group.entries) {
+      if (entry.component) {
+        const existing = fileStats.get(entry.component) || {
+          file: entry.component,
+          total: 0,
+          cached: 0,
+          compiled: 0,
+        }
+        existing.total++
+        if (entry.cached) {
+          existing.cached++
+        } else if (entry.details?.includes('compiled')) {
+          existing.compiled++
+        }
+        fileStats.set(entry.component, existing)
       }
     }
   }
 
+  // Filter to files with multiple compilations
+  const duplicates: FileStats[] = []
+  for (const stats of fileStats.values()) {
+    if (stats.total > 1) {
+      duplicates.push(stats)
+    }
+  }
+
   if (duplicates.length > 0) {
-    duplicates.sort((a, b) => b.count - a.count)
-    for (const { file, count } of duplicates.slice(0, 10)) {
-      if (count > 1) {
-        console.log(
-          `  ${c.yellow}${file}${c.reset}: compiled ${count}x ${c.dim}(should be 1)${c.reset}`,
-        )
-      }
+    duplicates.sort((a, b) => b.total - a.total)
+    for (const { file, total, cached, compiled } of duplicates.slice(0, 10)) {
+      const cachedStr = cached > 0 ? ` ${c.green}${cached} cached${c.reset}` : ''
+      const compiledStr = compiled > 0 ? ` ${c.red}${compiled} compiled${c.reset}` : ''
+      console.log(`  ${c.yellow}${file}${c.reset}: ${total}x (${cachedStr}${compiledStr})`)
     }
   } else {
     console.log(`  ${c.green}No duplicate compilations detected ✓${c.reset}`)
@@ -286,6 +326,8 @@ export const getTraceSummary = () => {
     component: e.component,
     duration: e.duration,
     details: e.details,
+    cached: e.cached,
+    cacheSource: e.cacheSource,
   }))
 }
 

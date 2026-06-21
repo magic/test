@@ -16,10 +16,14 @@ export declare const getTraceSummary: () => {
   component: string | undefined
   duration: number | undefined
   details: string | undefined
+  cached: boolean | undefined
+  cacheSource: string | undefined
 }[]
 export declare const getTraceData: () => {
   name: string
   component: string | undefined
   duration: number | undefined
   details: string | undefined
+  cached: boolean | undefined
+  cacheSource: string | undefined
 }[]

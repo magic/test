@@ -28,6 +28,7 @@ export class CacheManager {
   misses = 0
   /**
    * Get cached result or compile with deduplication
+   * Returns result with cache status attached
    */
   async getOrCompile(filePath, compileFn) {
     const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
@@ -35,7 +36,8 @@ export class CacheManager {
     const pending = this.pendingCompiles.get(absPath)
     if (pending) {
       this.hits++
-      return pending
+      const result = await pending
+      return { ...result, cacheStatus: { cached: true, source: 'promise' } }
     }
     // Check memory cache
     const cached = this.memoryCache.get(absPath)
@@ -44,7 +46,7 @@ export class CacheManager {
         const stats = await fs.stat(absPath)
         if (stats.mtimeMs === cached.mtime) {
           this.hits++
-          return cached.data
+          return { ...cached.data, cacheStatus: { cached: true, source: 'memory' } }
         }
       } catch {
         // File might not exist
@@ -56,7 +58,7 @@ export class CacheManager {
       this.hits++
       const data = diskCached
       this.memoryCache.set(absPath, { data, mtime: diskCached.mtime })
-      return data
+      return { ...data, cacheStatus: { cached: true, source: 'disk' } }
     }
     // Need to compile
     this.misses++
@@ -81,7 +83,8 @@ export class CacheManager {
       }
     })()
     this.pendingCompiles.set(absPath, compilePromise)
-    return compilePromise
+    const result = await compilePromise
+    return { ...result, cacheStatus: { cached: false, source: null } }
   }
   /**
    * Type guard to check if result is a Svelte compilation result

@@ -55,15 +55,17 @@ export class CacheManager<T> {
 
   /**
    * Get cached result or compile with deduplication
+   * Returns result with cache status attached
    */
-  async getOrCompile(filePath: string, compileFn: () => Promise<T>): Promise<T> {
+  async getOrCompile(filePath: string, compileFn: () => Promise<T>): Promise<CachedResult<T>> {
     const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
 
     // Check promise dedup first
     const pending = this.pendingCompiles.get(absPath)
     if (pending) {
       this.hits++
-      return pending
+      const result = await pending
+      return { ...result, cacheStatus: { cached: true, source: 'promise' } }
     }
 
     // Check memory cache
@@ -73,7 +75,7 @@ export class CacheManager<T> {
         const stats = await fs.stat(absPath)
         if (stats.mtimeMs === cached.mtime) {
           this.hits++
-          return cached.data
+          return { ...cached.data, cacheStatus: { cached: true, source: 'memory' } }
         }
       } catch {
         // File might not exist
@@ -86,7 +88,7 @@ export class CacheManager<T> {
       this.hits++
       const data = diskCached as T
       this.memoryCache.set(absPath, { data, mtime: diskCached.mtime })
-      return data
+      return { ...data, cacheStatus: { cached: true, source: 'disk' } }
     }
 
     // Need to compile
@@ -117,7 +119,8 @@ export class CacheManager<T> {
     })()
 
     this.pendingCompiles.set(absPath, compilePromise)
-    return compilePromise
+    const result = await compilePromise
+    return { ...result, cacheStatus: { cached: false, source: null } }
   }
 
   /**
@@ -174,6 +177,15 @@ export class CacheManager<T> {
     this.misses = 0
   }
 }
+
+// Cache status for tracing
+export type CacheStatus = {
+  cached: boolean
+  source: 'memory' | 'disk' | 'promise' | null
+}
+
+// Result wrapper that includes cache status
+export type CachedResult<T> = T & { cacheStatus?: CacheStatus }
 
 // Global cache manager instance with specific result type
 export type SvelteCompileResult = {

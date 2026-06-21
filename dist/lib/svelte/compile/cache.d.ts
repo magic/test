@@ -42,8 +42,9 @@ export declare class CacheManager<T> {
   misses: number
   /**
    * Get cached result or compile with deduplication
+   * Returns result with cache status attached
    */
-  getOrCompile(filePath: string, compileFn: () => Promise<T>): Promise<T>
+  getOrCompile(filePath: string, compileFn: () => Promise<T>): Promise<CachedResult<T>>
   /**
    * Type guard to check if result is a Svelte compilation result
    */
@@ -68,6 +69,13 @@ export declare class CacheManager<T> {
    * Reset all caches
    */
   reset(): void
+}
+export type CacheStatus = {
+  cached: boolean
+  source: 'memory' | 'disk' | 'promise' | null
+}
+export type CachedResult<T> = T & {
+  cacheStatus?: CacheStatus
 }
 export type SvelteCompileResult = {
   js: string
