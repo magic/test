@@ -37,14 +37,6 @@ export class NetworkError extends Error {
     this.responseCause = cause
   }
 }
-export const isResponseError = error => {
-  return (
-    is.instance(error, JsonParseError) ||
-    is.instance(error, HttpStatusError) ||
-    is.instance(error, SizeLimitError) ||
-    is.instance(error, NetworkError)
-  )
-}
 /**
  * Handles an HTTP response, collecting data and resolving or rejecting a promise.
  * Automatically parses JSON responses based on content-type header.

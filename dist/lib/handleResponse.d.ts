@@ -22,8 +22,6 @@ export declare class NetworkError extends Error {
   responseCause?: unknown
   constructor(message: string, cause?: unknown)
 }
-export type ResponseError = JsonParseError | HttpStatusError | SizeLimitError | NetworkError
-export declare const isResponseError: (error: unknown) => error is ResponseError
 /**
  * Handles an HTTP response, collecting data and resolving or rejecting a promise.
  * Automatically parses JSON responses based on content-type header.

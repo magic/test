@@ -42,17 +42,6 @@ export class NetworkError extends Error {
   }
 }
 
-export type ResponseError = JsonParseError | HttpStatusError | SizeLimitError | NetworkError
-
-export const isResponseError = (error: unknown): error is ResponseError => {
-  return (
-    is.instance(error, JsonParseError) ||
-    is.instance(error, HttpStatusError) ||
-    is.instance(error, SizeLimitError) ||
-    is.instance(error, NetworkError)
-  )
-}
-
 /**
  * Handles an HTTP response, collecting data and resolving or rejecting a promise.
  * Automatically parses JSON responses based on content-type header.
