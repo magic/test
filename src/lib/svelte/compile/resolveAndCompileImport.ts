@@ -71,7 +71,12 @@ const resolveAndCompileImportImpl = async (
     return pending
   }
 
-  const promise = resolveAndCompileImportImplCore(importPath, sourceDir, sourceFilePath, importChain)
+  const promise = resolveAndCompileImportImplCore(
+    importPath,
+    sourceDir,
+    sourceFilePath,
+    importChain,
+  )
   pendingResolves.set(dedupKey, promise)
   try {
     return await promise

@@ -34,8 +34,6 @@ export interface PackageExportResolve {
   isSvelteOnlyPackage?: boolean
 }
 
-
-
 const getPackageName = (spec: string): { name: string; subpath: string } | null => {
   const parts = spec.split('/')
   if (spec.startsWith('@')) {
@@ -68,7 +66,9 @@ const tryResolvePath = async (
     }
   }
   // Check all in parallel
-  const results = await Promise.all(paths.map(p => fs.exists(p).then(exists => (exists ? p : null))))
+  const results = await Promise.all(
+    paths.map(p => fs.exists(p).then(exists => (exists ? p : null))),
+  )
   return results.find(r => r !== null) ?? null
 }
 
@@ -93,7 +93,7 @@ const hasSvelteReExports = async (
   }
 
   // Read content once, reuse it
-  const content = _content ?? await fs.readFile(filePath, 'utf-8').catch(() => null)
+  const content = _content ?? (await fs.readFile(filePath, 'utf-8').catch(() => null))
   if (!content) {
     svelteReExportsCache.set(filePath, false)
     return false
@@ -120,7 +120,9 @@ const hasSvelteReExports = async (
 
   for (const match of exportStarMatches) {
     const reexportPath = match[1]
-    if (!reexportPath) {continue}
+    if (!reexportPath) {
+      continue
+    }
     const resolved = path.resolve(dir, reexportPath)
     if (resolved.endsWith('.svelte') || resolved.endsWith('.svelte.js')) {
       svelteReExportsCache.set(filePath, true)
@@ -137,7 +139,9 @@ const hasSvelteReExports = async (
 
   for (const match of exportNamedMatches) {
     const reexportPath = match[1]
-    if (!reexportPath) {continue}
+    if (!reexportPath) {
+      continue
+    }
     const resolved = path.resolve(dir, reexportPath)
     if (resolved.endsWith('.svelte.js')) {
       svelteReExportsCache.set(filePath, true)
@@ -177,7 +181,7 @@ const hasExportStarToSvelte = async (
   }
 
   // Read content once, reuse it
-  const content = _content ?? await fs.readFile(filePath, 'utf-8').catch(() => null)
+  const content = _content ?? (await fs.readFile(filePath, 'utf-8').catch(() => null))
   if (!content) {
     exportStarCache.set(filePath, false)
     return false
@@ -194,7 +198,9 @@ const hasExportStarToSvelte = async (
 
   for (const match of exportStarMatches) {
     const reexportPath = match[1]
-    if (!reexportPath) {continue}
+    if (!reexportPath) {
+      continue
+    }
     const resolved = path.resolve(dir, reexportPath)
 
     if (resolved.endsWith('.svelte')) {
@@ -305,7 +311,9 @@ const resolvePackageExportImpl = async (
       current = path.dirname(current)
     }
     // Check all paths in parallel
-    const results = await Promise.all(candidates.map(c => fs.exists(c.pkgPath).then(exists => ({ ...c, exists }))))
+    const results = await Promise.all(
+      candidates.map(c => fs.exists(c.pkgPath).then(exists => ({ ...c, exists }))),
+    )
     const found = results.find(r => r.exists)
     if (found) {
       pkgPath = found.pkgPath
@@ -364,7 +372,10 @@ const resolvePackageExportImpl = async (
           } else {
             const fallbackCandidates = ['./lib/' + subpath, './' + subpath, subpath]
             const resolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
-            result = { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
+            result = {
+              resolvedPath: resolved,
+              isSvelteOnly: resolved?.endsWith('.svelte') ?? false,
+            }
           }
         }
       } else {
@@ -410,7 +421,11 @@ const resolvePackageExportImpl = async (
                 if (resolved2) {
                   const svelteReExports2 = await hasSvelteReExports(resolved2)
                   if (svelteReExports2 || (await hasExportStarToSvelte(resolved2))) {
-                    result = { resolvedPath: resolved2, isSvelteOnly: true, hasSvelteReExports: true }
+                    result = {
+                      resolvedPath: resolved2,
+                      isSvelteOnly: true,
+                      hasSvelteReExports: true,
+                    }
                   } else {
                     result = { resolvedPath: null, isSvelteOnly: false }
                   }
