@@ -1,8 +1,8 @@
 import path from 'node:path'
 import fs from '@magic/fs'
 
-import { barrelCache, pendingSvelteExports } from './cache.ts'
-import { traceStart, traceEnd } from './timing.ts'
+import { barrelCache, pendingSvelteExports } from '../../caches/cache.ts'
+import { traceStart, traceEnd } from '../../trace/timing.ts'
 
 export const getSvelteExports = async (
   filePath: string,

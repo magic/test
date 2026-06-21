@@ -1,5 +1,5 @@
 import log from '@magic/log'
-import { cacheManager } from './cache.ts'
+import { cacheManager } from '../caches/cache.ts'
 
 // Performance trace entry
 interface TraceEntry {

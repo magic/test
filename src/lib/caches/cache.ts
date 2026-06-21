@@ -1,10 +1,15 @@
 import path from 'node:path'
 
 import fs from '@magic/fs'
-import { LRUCache } from '../LRUCache.ts'
+import { LRUCache } from './LRUCache.ts'
 
-import { CWD } from '../../../constants.ts'
-import type { CompileCacheEntry, ImportCacheEntry, BarrelCacheEntry, CssObject } from './types.ts'
+import { CWD } from '../../constants.ts'
+import type {
+  CompileCacheEntry,
+  ImportCacheEntry,
+  BarrelCacheEntry,
+  CssObject,
+} from '../../types.ts'
 import { getCachedCompile, recordCompile } from './persistentCache.ts'
 
 // Export LRUCache for external use

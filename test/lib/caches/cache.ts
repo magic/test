@@ -1,5 +1,5 @@
-import { CacheManager } from '../../../../src/lib/svelte/compile/cache.js'
-import type { TestCase } from '../../../../src/types.js'
+import { CacheManager } from '../../../src/lib/caches/cache.js'
+import type { TestCase } from '../../../src/types.js'
 
 // TestCache for generic type
 interface TestCache {

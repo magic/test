@@ -4,8 +4,8 @@ import log from '@magic/log'
 import { stats, createStore, ERRORS, Store } from './lib/index.ts'
 import { runSuite } from './run/suite.ts'
 import type { TestSuites, TestCollection, CleanupFunction, TestResult } from './types.ts'
-import { printTraceSummary, isTraceEnabled } from './lib/svelte/compile/timing.ts'
-import { clearCache as clearPersistentCache } from './lib/svelte/compile/persistentCache.ts'
+import { printTraceSummary, isTraceEnabled } from './lib/trace/timing.ts'
+import { clearCache as clearPersistentCache } from './lib/caches/persistentCache.ts'
 
 /**
  * Aggregate raw test results into the store's results object.

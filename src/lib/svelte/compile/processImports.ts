@@ -6,7 +6,7 @@ import is from '@magic/types'
 
 import { SVELTE_IMPORT_REGEX } from '../constants.ts'
 import { resolveAndCompileImport } from './resolveAndCompileImport.ts'
-import { traceStart, traceEnd } from './timing.ts'
+import { traceStart, traceEnd } from '../../trace/timing.ts'
 import { parallelMap, MAX_CONCURRENT } from './parallelMap.ts'
 
 // Cache for processImports results (key: codeHash:sourceFilePath)

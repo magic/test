@@ -1,4 +1,4 @@
-import { LRUCache } from '../../../src/lib/svelte/LRUCache.js'
+import { LRUCache } from '../../../src/lib/caches/LRUCache.js'
 
 export default [
   {

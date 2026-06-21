@@ -5,7 +5,7 @@ import fs from '@magic/fs'
 
 import { resolveAlias, resolveViteAlias } from '../viteConfig/index.ts'
 
-import { importCache } from './cache.ts'
+import { importCache } from '../../caches/cache.ts'
 import { CACHE_DIR, CWD } from '../../../constants.ts'
 import { acquireLock } from './acquireLock.ts'
 import { isSvelteFile } from './isSvelteFile.ts'
@@ -22,9 +22,9 @@ import { compileBarrel } from './compileBarrel.ts'
 import { resolvePackageExport } from './resolvePackageExport.ts'
 import { compileSvelteOnlyExport } from './resolveSvelteOnlyExports.ts'
 import { tryStat } from '../../../lib/fs.ts'
-import { traceStart, traceEnd } from './timing.ts'
+import { traceStart, traceEnd } from '../../trace/timing.ts'
 import { writeQueue } from './writeQueue.ts'
-import { existsCached } from './pathCache.ts'
+import { existsCached } from '../../caches/pathCache.ts'
 
 // Deduplication: pending resolve promises by resolved path
 const pendingResolves = new Map<string, Promise<ResolveAndCompileResult>>()

@@ -7,7 +7,7 @@ import type { CssObject } from './types.ts'
 import { transformForNode } from './transformForNode.ts'
 import { compileSvelte } from './compileSvelte.ts'
 import { processImports } from './processImports.ts'
-import { traceStart, traceEnd } from './timing.ts'
+import { traceStart, traceEnd } from '../../trace/timing.ts'
 
 export const compileSvelteWithWrite = async (
   filePath: string,

@@ -5,7 +5,7 @@ import fs from '@magic/fs'
 import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.ts'
 import { getSvelteCompiler } from '../compiler-cache.ts'
 
-import { cache, pendingSvelteCompiles } from './cache.ts'
+import { cache, pendingSvelteCompiles } from '../../caches/cache.ts'
 import { CWD } from '../../../constants.ts'
 import type { CssObject } from './types.ts'
 

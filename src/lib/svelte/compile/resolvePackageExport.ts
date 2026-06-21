@@ -3,10 +3,10 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { createRequire } from 'node:module'
 import log from '@magic/log'
-import { packageExportCache } from './packageExportCache.ts'
-import { LRUCache } from '../LRUCache.ts'
-import { traceStart, traceEnd } from './timing.ts'
-import { existsCached } from './pathCache.ts'
+import { packageExportCache } from '../../caches/packageExportCache.ts'
+import { LRUCache } from '../../caches/LRUCache.ts'
+import { traceStart, traceEnd } from '../../trace/timing.ts'
+import { existsCached } from '../../caches/pathCache.ts'
 
 // Cache for expensive file scanning operations
 const svelteReExportsCache = new LRUCache<boolean>(500)

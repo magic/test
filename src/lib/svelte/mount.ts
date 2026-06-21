@@ -1,18 +1,16 @@
 import { createRequire } from 'node:module'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
 
+import type { SvelteComponent } from 'svelte'
 import fs from '@magic/fs'
 import log from '@magic/log'
 import is from '@magic/types'
 
 import { compileSvelteWithWrite } from './compile/index.ts'
-import type { CssObject } from './compile/types.ts'
 import { initDOM, getDocument, getWindow } from '../../lib/dom/index.ts'
-import type { ComponentProps } from '../../types.ts'
+import type { CssObject, ComponentProps } from '../../types.ts'
 import { createContext, runWithContext } from './shims/$app/state.ts'
 import { detectSvelteKitImports, needsSvelteKitContext } from './detect-sveltekit-imports.ts'
-import type { SvelteComponent } from 'svelte'
 
 let svelteMount: (component: unknown, options: unknown) => SvelteComponent
 
