@@ -24,6 +24,9 @@ import { compileSvelteOnlyExport } from './resolveSvelteOnlyExports.ts'
 import { tryStat } from '../../../lib/fs.ts'
 import { traceStart, traceEnd } from './timing.ts'
 
+// Deduplication: pending resolve promises by resolved path
+const pendingResolves = new Map<string, Promise<ResolveAndCompileResult>>()
+
 const extractNamedImportsFromCode = (code: string, spec: string): string[] => {
   const namedImports: string[] = []
   const escapedSpec = spec.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -56,6 +59,28 @@ export const resolveAndCompileImport = async (
 }
 
 const resolveAndCompileImportImpl = async (
+  importPath: string,
+  sourceDir: string,
+  sourceFilePath: string,
+  importChain: string[] = [],
+): Promise<ResolveAndCompileResult> => {
+  // Deduplicate concurrent requests for the same import
+  const dedupKey = `${importPath}:${sourceDir}`
+  const pending = pendingResolves.get(dedupKey)
+  if (pending) {
+    return pending
+  }
+
+  const promise = resolveAndCompileImportImplCore(importPath, sourceDir, sourceFilePath, importChain)
+  pendingResolves.set(dedupKey, promise)
+  try {
+    return await promise
+  } finally {
+    pendingResolves.delete(dedupKey)
+  }
+}
+
+const resolveAndCompileImportImplCore = async (
   importPath: string,
   sourceDir: string,
   sourceFilePath: string,

@@ -3,7 +3,12 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { createRequire } from 'node:module'
 import { packageExportCache } from './packageExportCache.ts'
+import { LRUCache } from '../LRUCache.ts'
 import { traceStart, traceEnd } from './timing.ts'
+
+// Cache for expensive file scanning operations
+const svelteReExportsCache = new LRUCache<boolean>(500)
+const exportStarCache = new LRUCache<boolean>(500)
 import {
   SVELTE_RUNE_REGEX,
   SVELTE_COMPILED_REGEX,
@@ -76,6 +81,14 @@ const isAlreadyCompiledSvelte = async (filePath: string): Promise<boolean> => {
   }
 }
 
+const getFileContent = async (filePath: string): Promise<string | null> => {
+  try {
+    return await fs.readFile(filePath, 'utf-8')
+  } catch {
+    return null
+  }
+}
+
 const hasSvelteReExports = async (filePath: string, visited?: Set<string>): Promise<boolean> => {
   if (!filePath.endsWith('.js') && !filePath.endsWith('.mjs')) {
     return false
@@ -86,59 +99,74 @@ const hasSvelteReExports = async (filePath: string, visited?: Set<string>): Prom
   }
   visited.add(filePath)
 
+  // Check cache first
+  const cached = svelteReExportsCache.get(filePath)
+  if (cached !== undefined) {
+    return cached
+  }
+
   // If file is already compiled Svelte output, it doesn't need re-compilation
   // for Svelte-only exports - it's already a valid JS module
   if (await isAlreadyCompiledSvelte(filePath)) {
+    svelteReExportsCache.set(filePath, false)
     return false
   }
 
-  try {
-    const content = await fs.readFile(filePath, 'utf-8')
-    if (SVELTE_REEXPORT_REGEX.test(content) || SVELTE_DEFAULT_REEXPORT_REGEX.test(content)) {
-      return true
-    }
-    // Only check for runes if not already compiled (runes in compiled output are internal)
-    // Note: We already checked for compiled output above, so this only matches source files
-    if (SVELTE_RUNE_REGEX.test(content)) {
-      return true
-    }
-    const dir = path.dirname(filePath)
-    for (const match of content.matchAll(EXPORT_STAR_REGEX)) {
-      const reexportPath = match[1]
-      if (!reexportPath) {
-        continue
-      }
-      const resolved = path.resolve(dir, reexportPath)
-      if (resolved.endsWith('.svelte') || resolved.endsWith('.svelte.js')) {
-        return true
-      }
-      if (
-        (resolved.endsWith('.js') || resolved.endsWith('.mjs')) &&
-        (await hasSvelteReExports(resolved, visited))
-      ) {
-        return true
-      }
-    }
-    for (const match of content.matchAll(EXPORT_NAMED_REGEX)) {
-      const reexportPath = match[1]
-      if (!reexportPath) {
-        continue
-      }
-      const resolved = path.resolve(dir, reexportPath)
-      if (resolved.endsWith('.svelte.js')) {
-        return true
-      }
-      if (
-        (resolved.endsWith('.js') || resolved.endsWith('.mjs')) &&
-        (await hasSvelteReExports(resolved, visited))
-      ) {
-        return true
-      }
-    }
-    return false
-  } catch {
+  const content = await getFileContent(filePath)
+  if (!content) {
+    svelteReExportsCache.set(filePath, false)
     return false
   }
+
+  if (SVELTE_REEXPORT_REGEX.test(content) || SVELTE_DEFAULT_REEXPORT_REGEX.test(content)) {
+    svelteReExportsCache.set(filePath, true)
+    return true
+  }
+  // Only check for runes if not already compiled (runes in compiled output are internal)
+  // Note: We already checked for compiled output above, so this only matches source files
+  if (SVELTE_RUNE_REGEX.test(content)) {
+    svelteReExportsCache.set(filePath, true)
+    return true
+  }
+  const dir = path.dirname(filePath)
+  for (const match of content.matchAll(EXPORT_STAR_REGEX)) {
+    const reexportPath = match[1]
+    if (!reexportPath) {
+      continue
+    }
+    const resolved = path.resolve(dir, reexportPath)
+    if (resolved.endsWith('.svelte') || resolved.endsWith('.svelte.js')) {
+      svelteReExportsCache.set(filePath, true)
+      return true
+    }
+    if (
+      (resolved.endsWith('.js') || resolved.endsWith('.mjs')) &&
+      (await hasSvelteReExports(resolved, visited))
+    ) {
+      svelteReExportsCache.set(filePath, true)
+      return true
+    }
+  }
+  for (const match of content.matchAll(EXPORT_NAMED_REGEX)) {
+    const reexportPath = match[1]
+    if (!reexportPath) {
+      continue
+    }
+    const resolved = path.resolve(dir, reexportPath)
+    if (resolved.endsWith('.svelte.js')) {
+      svelteReExportsCache.set(filePath, true)
+      return true
+    }
+    if (
+      (resolved.endsWith('.js') || resolved.endsWith('.mjs')) &&
+      (await hasSvelteReExports(resolved, visited))
+    ) {
+      svelteReExportsCache.set(filePath, true)
+      return true
+    }
+  }
+  svelteReExportsCache.set(filePath, false)
+  return false
 }
 
 const hasExportStarToSvelte = async (filePath: string, visited?: Set<string>): Promise<boolean> => {
@@ -151,39 +179,51 @@ const hasExportStarToSvelte = async (filePath: string, visited?: Set<string>): P
   }
   visited.add(filePath)
 
+  // Check cache first
+  const cached = exportStarCache.get(filePath)
+  if (cached !== undefined) {
+    return cached
+  }
+
   // If file is already compiled Svelte output, it doesn't need re-compilation
   if (await isAlreadyCompiledSvelte(filePath)) {
+    exportStarCache.set(filePath, false)
     return false
   }
 
-  try {
-    const content = await fs.readFile(filePath, 'utf-8')
-    const dir = path.dirname(filePath)
+  const content = await getFileContent(filePath)
+  if (!content) {
+    exportStarCache.set(filePath, false)
+    return false
+  }
 
-    for (const match of content.matchAll(EXPORT_STAR_REGEX)) {
-      const reexportPath = match[1]
-      if (!reexportPath) {
-        continue
-      }
+  const dir = path.dirname(filePath)
 
-      const resolved = path.resolve(dir, reexportPath)
+  for (const match of content.matchAll(EXPORT_STAR_REGEX)) {
+    const reexportPath = match[1]
+    if (!reexportPath) {
+      continue
+    }
 
-      if (resolved.endsWith('.svelte')) {
+    const resolved = path.resolve(dir, reexportPath)
+
+    if (resolved.endsWith('.svelte')) {
+      exportStarCache.set(filePath, true)
+      return true
+    }
+
+    if (resolved.endsWith('.js') || resolved.endsWith('.mjs')) {
+      if (await hasExportStarToSvelte(resolved, visited)) {
+        exportStarCache.set(filePath, true)
         return true
       }
-
-      if (resolved.endsWith('.js') || resolved.endsWith('.mjs')) {
-        if (await hasExportStarToSvelte(resolved, visited)) {
-          return true
-        }
-        if (await hasSvelteReExports(resolved)) {
-          return true
-        }
+      if (await hasSvelteReExports(resolved)) {
+        exportStarCache.set(filePath, true)
+        return true
       }
     }
-  } catch {
-    return false
   }
+  exportStarCache.set(filePath, false)
   return false
 }
 

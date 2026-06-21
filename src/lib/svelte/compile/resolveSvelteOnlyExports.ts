@@ -5,7 +5,7 @@ import crypto from 'node:crypto'
 import fs from '@magic/fs'
 
 import { getSvelteCompiler } from '../compiler-cache.ts'
-import { compileSvelteWithWrite } from './compileSvelteWithWrite.ts'
+import { cacheManager } from './cache.ts'
 import { processImports } from './processImports.ts'
 import { transformForNode } from './transformForNode.ts'
 import { resolvePackageExport, type PackageExportResolve } from './resolvePackageExport.ts'
@@ -113,7 +113,12 @@ export const compileSvelteOnlyExport = async (
         return tempFile
       }
 
-      const { tmpFile } = await compileSvelteWithWrite(sveltePath)
+      // Use cacheManager for deduplication and caching
+      const { tmpFile } = await cacheManager.getOrCompile(sveltePath, async () => {
+        // Import compileSvelteWithWrite lazily to avoid circular deps
+        const { compileSvelteWithWrite } = await import('./compileSvelteWithWrite.js')
+        return compileSvelteWithWrite(sveltePath)
+      })
       compileCache.set(cacheKey, { js: content, css: null, mtime: Date.now() })
       tmpFileCache.set(sveltePath, tmpFile)
       return tmpFile
