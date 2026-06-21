@@ -25,7 +25,7 @@ export const info = (suites, store, useLogging = true) => {
     const result = results[name] || { all: 0, pass: 0 }
     const { pass, all } = result
     const percentage = all > 0 ? (pass / all) * 100 : 0
-    if ((useLogging && env.isVerbose()) || percentage < 100) {
+    if (useLogging && (env.isVerbose() || percentage < 100)) {
       log.info('\n')
       log.info(`--- ${name}, Pass: ${pass}/${all} ${printPercent(percentage)}% ${duration}`)
       log.info('')
@@ -58,7 +58,7 @@ export const info = (suites, store, useLogging = true) => {
         }
       }
     })
-    if ((useLogging && env.isVerbose()) || percentage < 100) {
+    if (useLogging && (env.isVerbose() || percentage < 100)) {
       log.info('--------------------------')
     }
   })
