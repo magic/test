@@ -48,7 +48,6 @@ const resolveImpl = async (specifier, context, nextResolve) => {
     if (specifier.endsWith('.js') && specifier.startsWith('file://')) {
       const tsUrl = specifier.replace(/\.js$/, '.ts')
       const tsPath = tsUrl.replace('file://', '')
-      const jsPath = specifier.replace('file://', '')
       if (await fs.exists(tsPath)) {
         return { url: tsUrl, shortCircuit: true }
       }

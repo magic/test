@@ -14,6 +14,15 @@ export const define = (target, key, value) => {
 }
 export const initGlobals = () => {
   if (window && document) {
+    // Re-set Event globals to ensure happy-dom's Event is used
+    // (Node.js native Event may have overwritten it)
+    define(globalThis, 'Event', window.Event)
+    define(globalThis, 'CustomEvent', window.CustomEvent)
+    define(globalThis, 'MouseEvent', window.MouseEvent)
+    define(globalThis, 'KeyboardEvent', window.KeyboardEvent)
+    define(globalThis, 'InputEvent', window.InputEvent)
+    define(globalThis, 'TouchEvent', window.TouchEvent)
+    define(globalThis, 'PointerEvent', window.PointerEvent)
     return {
       window,
       document,
