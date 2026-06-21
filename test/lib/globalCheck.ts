@@ -139,4 +139,32 @@ export default [
     expect: true,
     info: 'detects optional chaining on globalThis',
   },
+  // Test recursive suiteModifiesGlobals path (lines 49-50)
+  // Note: recursion only happens when tests.tests is an object, not an array
+  {
+    fn: () =>
+      suiteModifiesGlobals({
+        tests: {
+          beforeAll: () => globalThis.x,
+        },
+      }),
+    expect: true,
+    info: 'suiteModifiesGlobals detects globals in nested tests.beforeAll',
+  },
+  {
+    fn: () =>
+      suiteModifiesGlobals({
+        tests: {
+          afterAll: () => globalThis.x,
+        },
+      }),
+    expect: true,
+    info: 'suiteModifiesGlobals detects globals in nested tests.afterAll',
+  },
+  // Test for object with tests property that's not objectNative
+  {
+    fn: () => suiteModifiesGlobals({ tests: null }),
+    expect: false,
+    info: 'suiteModifiesGlobals handles null tests',
+  },
 ] satisfies TestCase[]

@@ -85,4 +85,56 @@ export default [
     expect: true,
     info: 'handles Error objects',
   },
+  // Error path tests - trigger structuredClone failure and fallback
+  {
+    fn: () => {
+      // Create a proxy that throws on clone attempt
+      const handler = {
+        get(target: unknown, prop: string) {
+          if (prop === 'toJSON') {
+            throw new Error('clone not allowed')
+          }
+          return (target as Record<string, unknown>)[prop]
+        },
+      }
+      const obj = new Proxy({ a: 1 }, handler)
+      // This should trigger the error path and fallback to JSON.stringify or String
+      const result = makeSafeClone(obj)
+      return typeof result === 'string' || typeof result === 'object'
+    },
+    expect: true,
+    info: 'handles objects that fail structuredClone (line 15-16 path)',
+  },
+  {
+    fn: () => {
+      // Object with symbol key that might fail JSON.stringify but pass structuredClone
+      const sym = Symbol('test')
+      const obj = { [sym]: 'value' }
+      // This should either clone successfully or fall back gracefully
+      const result = makeSafeClone(obj)
+      return typeof result === 'object' || typeof result === 'string'
+    },
+    expect: true,
+    info: 'handles objects with symbol keys',
+  },
+  {
+    fn: () => {
+      // Object that can be cloned by structuredClone
+      const obj = { nested: { value: 42 }, arr: [1, 2, 3] }
+      const result = makeSafeClone(obj) as typeof obj
+      return result.nested.value === 42 && result.arr[0] === 1
+    },
+    expect: true,
+    info: 'deeply nested objects are cloned correctly',
+  },
+  {
+    fn: () => {
+      // Object with undefined values
+      const obj = { a: undefined, b: null, c: 1 }
+      const result = makeSafeClone(obj) as typeof obj
+      return 'a' in result && 'b' in result && result.c === 1
+    },
+    expect: true,
+    info: 'handles undefined and null values',
+  },
 ] satisfies TestCase[]

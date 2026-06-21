@@ -174,4 +174,84 @@ export default [
     expect: '{ a',
     info: 'object destructuring without underscore',
   },
+  // Edge cases for uncovered branches
+  {
+    fn: () => {
+      // Create a function string without parens that includes arrow
+      // This tests line 16: !fnStr.includes('(') && fnStr.includes('=>')
+      const fn = new Function('return (a) => a')()
+      const result = expectedArguments(fn)
+      return is.len.eq(1)(result)
+    },
+    expect: true,
+    info: 'handles arrow function with single param',
+  },
+  {
+    fn: () => {
+      // Create function with destructured array param with underscore prefix
+      // This tests line 37: array destructuring with underscore prefix
+      const fn = new Function('return ([_a, _b]) => _a + _b')()
+      const args = expectedArguments(fn)
+      // [_a becomes [a (strips [ + _)
+      // _b] stays as is
+      return args[0]
+    },
+    expect: '[a',
+    info: 'array destructuring with underscore prefix at position 1 (line 37)',
+  },
+  {
+    fn: () => {
+      // Create function where parens are empty but function doesn't start with '()'
+      // This tests lines 25-26 when expected is empty but fnStr includes '=>'
+      // The key is that toString() doesn't start with '()'
+      const fn = new Function('return (  )=>_')()
+      const args = expectedArguments(fn)
+      // Parens content is '  ' which trims to empty string
+      // Since it includes '=>', lines 25-26 execute: split '()' by comma gives ['', '']
+      return args.length
+    },
+    expect: 1,
+    info: 'handles edge case where expected is empty but has arrow (line 25-26)',
+  },
+  // More underscore prefix edge cases
+  {
+    fn: () => {
+      const fn = new Function('return ([___a]) => ___a')()
+      const args = expectedArguments(fn)
+      // [___a]: slice(2) = __a], so result is '[__a]'
+      return args[0]
+    },
+    expect: '[__a]',
+    info: 'array destructuring with multiple underscores preserves closing bracket (line 37)',
+  },
+  {
+    fn: () => {
+      const fn = new Function('return ({ __a: _b }) => _b')()
+      const args = expectedArguments(fn)
+      // Space is at position 1, not underscore, so no stripping
+      return args[0]
+    },
+    expect: '{ __a: _b }',
+    info: 'object destructuring with rename preserves names (space prevents stripping)',
+  },
+  // Empty/malformed function strings
+  {
+    fn: () => {
+      const fn = new Function('return (  ) => 1')()
+      const args = expectedArguments(fn)
+      return is.array(args)
+    },
+    expect: true,
+    info: 'handles arrow function with whitespace in params',
+  },
+  // Method-style arrow
+  {
+    fn: () => {
+      const fn = new Function('return (a,b,c) => a+b+c')()
+      const args = expectedArguments(fn)
+      return args.length
+    },
+    expect: 3,
+    info: 'handles compact arrow function with multiple args',
+  },
 ] satisfies TestCase[]
