@@ -13,6 +13,7 @@ const getEffectiveLimit = override => {
   return Math.max(1, os.availableParallelism() - 2)
 }
 export const WORKER_LIMIT = getEffectiveLimit()
+export const getEffectiveWorkerLimit = getEffectiveLimit
 export const getWorkerPool = limit => {
   const effectiveLimit = getEffectiveLimit(limit)
   return createWorkerPool(effectiveLimit)

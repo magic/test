@@ -15,6 +15,7 @@ const getEffectiveLimit = (override?: number): number => {
 }
 
 export const WORKER_LIMIT = getEffectiveLimit()
+export const getEffectiveWorkerLimit = getEffectiveLimit
 
 export const getWorkerPool = (limit?: number) => {
   const effectiveLimit = getEffectiveLimit(limit)
