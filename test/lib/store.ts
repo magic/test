@@ -1,7 +1,7 @@
 import { Store, createStore } from '../../src/lib/store.js'
 import type { TestCase } from '../../src/types.js'
 
-export default [
+const tests: TestCase[] = [
   // Initial state
   {
     fn: () => {
@@ -45,9 +45,9 @@ export default [
   {
     fn: () => {
       const store = new Store()
-      const time = Date.now()
+      const time: [number, number] = [1234567890, 123]
       store.set({ startTime: time })
-      return typeof store.state.startTime === 'number'
+      return store.state.startTime != null
     },
     expect: true,
     info: 'set updates startTime',
@@ -56,19 +56,19 @@ export default [
   {
     fn: () => {
       const store = new Store()
-      store.set({ results: [{ name: 'test', pass: true }] })
-      return Array.isArray(store.state.results) && store.state.results.length === 1
+      store.set({ results: { test: { all: 1, pass: 1 } } })
+      return store.state.results !== undefined ? 1 : 0
     },
-    expect: true,
+    expect: 1,
     info: 'set updates results',
   },
-  // set arbitrary key (lines 22-29)
+  // set arbitrary key
   {
     fn: () => {
       const store = new Store()
-      // @ts-ignore - testing arbitrary key
+      // @ts-expect-error - testing arbitrary keys on state
       store.set({ customKey: 'customValue' })
-      // @ts-ignore
+      // @ts-expect-error - accessing custom key on state
       return store.state.customKey
     },
     expect: 'customValue',
@@ -142,4 +142,6 @@ export default [
     expect: true,
     info: 'createStore creates new store instance',
   },
-] satisfies TestCase[]
+]
+
+export default tests

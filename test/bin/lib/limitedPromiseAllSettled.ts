@@ -4,20 +4,20 @@ import type { TestCase } from '../../../src/types.js'
 export default [
   // Empty array
   {
-    fn: async () => limitedPromiseAllSettled([], 2, async x => x),
+    fn: async () => limitedPromiseAllSettled([], 2, async _x => _x),
     expect: [],
     info: 'empty array returns empty results',
   },
   // Single item
   {
-    fn: async () => limitedPromiseAllSettled([1], 2, async x => x),
+    fn: async () => limitedPromiseAllSettled([1], 2, async _x => _x),
     expect: [{ status: 'fulfilled', value: 1 }],
     info: 'single item resolves correctly',
   },
   // Multiple items resolve in order
   {
     fn: async () => {
-      const results = await limitedPromiseAllSettled([1, 2, 3], 3, async x => x)
+      const results = await limitedPromiseAllSettled([1, 2, 3], 3, async _x => _x)
       return results.map(r => (r.status === 'fulfilled' ? r.value : r.reason))
     },
     expect: [1, 2, 3],
@@ -26,10 +26,10 @@ export default [
   // Rejections captured
   {
     fn: async () => {
-      const results = await limitedPromiseAllSettled([1], 2, async x => {
+      const results = await limitedPromiseAllSettled([1], 2, async _x => {
         throw new Error('fail')
       })
-      return results[0].status
+      return results[0]!.status
     },
     expect: 'rejected',
     info: 'rejections are captured with rejected status',
@@ -37,8 +37,8 @@ export default [
   // Fulfilled values captured
   {
     fn: async () => {
-      const results = await limitedPromiseAllSettled(['ok'], 2, async x => x)
-      return results[0].status
+      const results = await limitedPromiseAllSettled(['ok'], 2, async _x => _x)
+      return results[0]!.status
     },
     expect: 'fulfilled',
     info: 'fulfilled values captured with fulfilled status',
@@ -66,7 +66,7 @@ export default [
         count--
         return count
       }
-      const results = await limitedPromiseAllSettled([1, 2, 3, 4], 3, maxConcurrent)
+      const _results = await limitedPromiseAllSettled([1, 2, 3, 4], 3, maxConcurrent)
       // Some should have seen count > 1 (concurrent)
       return count
     },
@@ -76,7 +76,7 @@ export default [
   // Index parameter passed correctly
   {
     fn: async () => {
-      const results = await limitedPromiseAllSettled(['a', 'b', 'c'], 3, async (x, idx) => idx)
+      const results = await limitedPromiseAllSettled(['a', 'b', 'c'], 3, async (_x, idx) => idx)
       return results.map(r => (r.status === 'fulfilled' ? r.value : -1))
     },
     expect: [0, 1, 2],
@@ -88,7 +88,7 @@ export default [
       const results = await limitedPromiseAllSettled([1], 2, async () => {
         throw new Error('test error')
       })
-      return results[0].reason instanceof Error
+      return results[0]!.reason instanceof Error
     },
     expect: true,
     info: 'function throws - error captured',
@@ -99,7 +99,7 @@ export default [
       const results = await limitedPromiseAllSettled([1], 2, async () => {
         return Promise.reject(new Error('rejected'))
       })
-      return results[0].status
+      return results[0]!.status
     },
     expect: 'rejected',
     info: 'function returns rejected promise - captured',
@@ -108,13 +108,15 @@ export default [
   {
     fn: async () => {
       const results = await limitedPromiseAllSettled([1, 2, 3], 3, async x => {
-        if (x === 2) throw new Error('fail 2')
+        if (x === 2) {
+          throw new Error('fail 2')
+        }
         return x
       })
       return {
-        r0: results[0].status,
-        r1: results[1].status,
-        r2: results[2].status,
+        r0: results[0]!.status,
+        r1: results[1]!.status,
+        r2: results[2]!.status,
       }
     },
     expect: { r0: 'fulfilled', r1: 'rejected', r2: 'fulfilled' },
@@ -123,7 +125,7 @@ export default [
   // Limit > items processes all immediately
   {
     fn: async () => {
-      const results = await limitedPromiseAllSettled([1, 2], 10, async x => x)
+      const results = await limitedPromiseAllSettled([1, 2], 10, async _x => _x)
       return results.every(r => r.status === 'fulfilled')
     },
     expect: true,

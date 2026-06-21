@@ -2,7 +2,7 @@ import { stringify } from '../../src/lib/stringify.js'
 import type { TestCase } from '../../src/types.ts'
 
 // Store original env
-const originalArgv = [...process.argv]
+const _originalArgv = [...process.argv]
 const originalEnv = { ...process.env }
 
 const withArgv = (args: string[], fn: () => unknown) => {

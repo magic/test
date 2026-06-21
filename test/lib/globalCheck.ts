@@ -5,6 +5,9 @@ import {
 } from '../../src/lib/globalCheck.js'
 import type { TestCase } from '../../src/types.js'
 
+// Helper to access properties without 'any'
+type GlobalAny = Record<string, unknown> & typeof globalThis
+
 export default [
   // functionModifiesGlobals
   {
@@ -13,22 +16,22 @@ export default [
     info: 'returns false for plain function',
   },
   {
-    fn: () => functionModifiesGlobals(() => globalThis.x),
+    fn: () => functionModifiesGlobals(() => (globalThis as GlobalAny).x),
     expect: true,
     info: 'detects globalThis access',
   },
   {
-    fn: () => functionModifiesGlobals(() => window.x),
+    fn: () => functionModifiesGlobals(() => (window as unknown as GlobalAny).x),
     expect: true,
     info: 'detects window access',
   },
   {
-    fn: () => functionModifiesGlobals(() => global.x),
+    fn: () => functionModifiesGlobals(() => (global as unknown as GlobalAny).x),
     expect: true,
     info: 'detects global access',
   },
   {
-    fn: () => functionModifiesGlobals(() => self.x),
+    fn: () => functionModifiesGlobals(() => (self as unknown as GlobalAny).x),
     expect: true,
     info: 'detects self access',
   },
@@ -59,22 +62,32 @@ export default [
     info: 'testModifiesGlobals returns false for clean test',
   },
   {
-    fn: () => testModifiesGlobals({ fn: () => globalThis.x }),
+    fn: () => testModifiesGlobals({ fn: () => (globalThis as GlobalAny).x }),
     expect: true,
     info: 'testModifiesGlobals detects fn modifying globals',
   },
   {
-    fn: () => testModifiesGlobals({ before: () => window.x }),
+    fn: () =>
+      testModifiesGlobals({
+        before: () => {
+          void (window as unknown as GlobalAny).x
+        },
+      }),
     expect: true,
     info: 'testModifiesGlobals detects before modifying globals',
   },
   {
-    fn: () => testModifiesGlobals({ after: () => global.x }),
+    fn: () =>
+      testModifiesGlobals({
+        after: () => {
+          void (global as unknown as GlobalAny).x
+        },
+      }),
     expect: true,
     info: 'testModifiesGlobals detects after modifying globals',
   },
   {
-    fn: () => testModifiesGlobals({ expect: () => self.x }),
+    fn: () => testModifiesGlobals({ expect: () => (self as unknown as GlobalAny).x }),
     expect: true,
     info: 'testModifiesGlobals detects expect modifying globals',
   },
@@ -85,7 +98,7 @@ export default [
     info: 'suiteModifiesGlobals returns false for clean suite',
   },
   {
-    fn: () => suiteModifiesGlobals([{ fn: () => globalThis.x }]),
+    fn: () => suiteModifiesGlobals([{ fn: () => (globalThis as GlobalAny).x }]),
     expect: true,
     info: 'suiteModifiesGlobals detects fn modifying globals in array',
   },
@@ -95,28 +108,34 @@ export default [
     info: 'suiteModifiesGlobals returns false for clean object suite',
   },
   {
-    fn: () => suiteModifiesGlobals({ beforeAll: () => window.x }),
+    fn: () => suiteModifiesGlobals({ beforeAll: () => (window as unknown as GlobalAny).x }),
     expect: true,
     info: 'suiteModifiesGlobals detects beforeAll modifying globals',
   },
   {
-    fn: () => suiteModifiesGlobals({ afterAll: () => global.x }),
+    fn: () => suiteModifiesGlobals({ afterAll: () => (global as unknown as GlobalAny).x }),
     expect: true,
     info: 'suiteModifiesGlobals detects afterAll modifying globals',
   },
   {
-    fn: () => suiteModifiesGlobals({ beforeAll: () => window.x, tests: { nested: true } }),
+    fn: () =>
+      suiteModifiesGlobals({
+        beforeAll: () => {
+          void (window as unknown as GlobalAny).x
+        },
+        tests: { nested: true } as never,
+      }),
     expect: true,
     info: 'suiteModifiesGlobals detects beforeAll modifying globals with nested tests',
   },
   // Edge cases
   {
-    fn: () => functionModifiesGlobals(() => globalThis['x']),
+    fn: () => functionModifiesGlobals(() => (globalThis as GlobalAny)['x']),
     expect: true,
     info: 'detects bracket notation globalThis access',
   },
   {
-    fn: () => functionModifiesGlobals(() => globalThis.process?.env),
+    fn: () => functionModifiesGlobals(() => (globalThis as GlobalAny).process?.env),
     expect: true,
     info: 'detects optional chaining on globalThis',
   },
