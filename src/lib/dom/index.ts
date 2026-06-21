@@ -8,13 +8,13 @@ export {
   type CustomWindow,
 } from './types.ts'
 
-export { imageCache, parsePngDimensions, createImagePolyfill } from './image.ts'
+export { parsePngDimensions, createImagePolyfill } from './image.ts'
 
 export { createCanvasPolyfill } from './canvas.ts'
 
-import { define, initGlobals } from './globals.ts'
+import { initGlobals } from './globals.ts'
 
-export { define, initGlobals }
+export { initGlobals }
 
 export const initDOM = (): { window: Window; document: Document } => {
   return initGlobals()

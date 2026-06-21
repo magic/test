@@ -1,5 +1,4 @@
 import { loadImage } from 'canvas'
-export const imageCache = new Map()
 export const parsePngDimensions = dataUrl => {
   try {
     const base64 = dataUrl.split(',')[1]

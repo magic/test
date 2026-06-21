@@ -1,7 +1,7 @@
-export { imageCache, parsePngDimensions, createImagePolyfill } from './image.js'
+export { parsePngDimensions, createImagePolyfill } from './image.js'
 export { createCanvasPolyfill } from './canvas.js'
-import { define, initGlobals } from './globals.js'
-export { define, initGlobals }
+import { initGlobals } from './globals.js'
+export { initGlobals }
 export const initDOM = () => {
   return initGlobals()
 }

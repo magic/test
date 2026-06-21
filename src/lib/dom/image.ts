@@ -4,8 +4,6 @@ import { loadImage } from 'canvas'
 
 import type { ImageInstance, ImageConstructor } from './types.ts'
 
-export const imageCache = new Map<string, unknown>()
-
 export const parsePngDimensions = (dataUrl: string): { width: number; height: number } => {
   try {
     const base64 = dataUrl.split(',')[1]
