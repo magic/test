@@ -1,6 +1,4 @@
 import { LRUCache } from '../LRUCache.ts'
-export interface PackageExportResolve {
-  resolvedPath: string | null
-  isSvelteOnly: boolean
-}
+import type { PackageExportResolve } from './resolvePackageExport.ts'
+export { type PackageExportResolve } from './resolvePackageExport.ts'
 export declare const packageExportCache: LRUCache<PackageExportResolve>

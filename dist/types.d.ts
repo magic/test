@@ -1,4 +1,4 @@
-import { Store } from './lib/store.ts'
+import type { Store } from './lib/store.ts'
 export type TestContext = {
   target: HTMLElement
   component: Record<string, unknown>
@@ -362,4 +362,29 @@ export type TestCase =
       component?: string | [string, Record<string, unknown>]
       props?: Record<string, unknown>
     })
+/**
+ * CSS output from Svelte compilation.
+ */
+export interface CssObject {
+  code: string
+  map?: unknown
+  hasGlobal?: boolean
+}
+/**
+ * Result of resolving and compiling an import.
+ */
+export type ResolveAndCompileResult =
+  | {
+      filePath: string
+      js: string
+      url: string | null
+      skipProcessing: true
+      isSvelteOnlyPackage?: boolean
+    }
+  | {
+      filePath: string
+      js: string
+      url: string
+      isSvelteOnlyPackage?: boolean
+    }
 export {}

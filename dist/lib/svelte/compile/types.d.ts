@@ -1,12 +1,12 @@
 import type { SourceMap } from 'magic-string'
-export interface CssObject {
-  code: string
+import type { CssObject } from '../../../types.ts'
+export type { CssObject, ResolveAndCompileResult } from '../../../types.ts'
+export interface CssObjectInternal extends CssObject {
   map?: SourceMap
-  hasGlobal?: boolean
 }
 export interface CompileCacheEntry {
   js: string
-  css: CssObject | null
+  css: CssObjectInternal | null
   mtime: number
 }
 export interface ImportCacheEntry {
@@ -31,17 +31,3 @@ export interface ExportInfo {
   isBatch: boolean
   originalText?: string
 }
-export type ResolveAndCompileResult =
-  | {
-      filePath: string
-      js: string
-      url: string | null
-      skipProcessing: true
-      isSvelteOnlyPackage?: boolean
-    }
-  | {
-      filePath: string
-      js: string
-      url: string
-      isSvelteOnlyPackage?: boolean
-    }
