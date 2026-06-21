@@ -12,6 +12,7 @@ import { CWD, CACHE_DIR } from '../../../constants.js'
 import { SVELTE_RUNE_REGEX } from '../constants.js'
 import { parseFile, extractExports, extractImports } from './astParse.js'
 import { writeQueue } from './writeQueue.js'
+import { existsCached } from './pathCache.js'
 const pendingWrites = new Map()
 // Check if file needs writing (skip if content unchanged)
 const shouldWriteFile = async (filePath, newContent) => {
@@ -32,7 +33,7 @@ const resolveRelativeToUrl = async (relativePath, baseDir) => {
   const extensions = ['', '.ts', '.js', '.mjs']
   for (const ext of extensions) {
     const withExt = absolutePath + ext
-    if (await fs.exists(withExt)) {
+    if (await existsCached(withExt)) {
       return pathToFileURL(withExt).href
     }
   }
@@ -74,9 +75,9 @@ const tmpFileCache = new Map()
 const compiling = new Map()
 export const compileSvelteOnlyExport = async (sveltePath, sourceDir, exportNames) => {
   if (!sveltePath.endsWith('.js') && !sveltePath.endsWith('.mjs')) {
-    if (!(await fs.exists(sveltePath))) {
+    if (!(await existsCached(sveltePath))) {
       const svelteJsPath = sveltePath + '.js'
-      if (await fs.exists(svelteJsPath)) {
+      if (await existsCached(svelteJsPath)) {
         sveltePath = svelteJsPath
       }
     }
@@ -185,7 +186,7 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
       }
     } else if (firstExp.isBatch && firstExp.source?.endsWith('.js')) {
       const absolutePath = path.resolve(jsDir, firstExp.source)
-      if (await fs.exists(absolutePath)) {
+      if (await existsCached(absolutePath)) {
         const reexportContent = await fs.readFile(absolutePath, 'utf-8')
         const processedReexport = await handleJsWithSvelteReexports(
           reexportContent,
@@ -249,7 +250,7 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
       }
     } else if (firstExp.source?.endsWith('.js')) {
       const absolutePath = path.resolve(jsDir, firstExp.source)
-      if (await fs.exists(absolutePath)) {
+      if (await existsCached(absolutePath)) {
         const reexportContent = await fs.readFile(absolutePath, 'utf-8')
         let processedReexport
         let tempFile

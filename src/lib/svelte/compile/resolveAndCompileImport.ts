@@ -24,6 +24,7 @@ import { compileSvelteOnlyExport } from './resolveSvelteOnlyExports.ts'
 import { tryStat } from '../../../lib/fs.ts'
 import { traceStart, traceEnd } from './timing.ts'
 import { writeQueue } from './writeQueue.ts'
+import { existsCached } from './pathCache.ts'
 
 // Deduplication: pending resolve promises by resolved path
 const pendingResolves = new Map<string, Promise<ResolveAndCompileResult>>()
@@ -111,7 +112,7 @@ const resolveAndCompileImportImplCore = async (
 
   if (importPath === 'svelte') {
     const svelteClient = path.resolve(CWD, 'node_modules/svelte/src/index-client.js')
-    if (await fs.exists(svelteClient)) {
+    if (await existsCached(svelteClient)) {
       const sourceTmpFile = getTempFilePath(sourceFilePath)
       const fromDir = path.dirname(sourceTmpFile)
       const relativePath = computeRelativePath(fromDir, svelteClient)
@@ -202,7 +203,7 @@ const resolveAndCompileImportImplCore = async (
           const root = CWD
           while (current && current !== path.dirname(current)) {
             const pkgPath = path.join(current, 'package.json')
-            if (await fs.exists(pkgPath)) {
+            if (await existsCached(pkgPath)) {
               return current
             }
             current = path.dirname(current)
@@ -234,7 +235,7 @@ const resolveAndCompileImportImplCore = async (
     const extensions = ['.ts', '.js', '.svelte', '/index.ts', '/index.js', '/index.svelte']
     for (const ext of extensions) {
       const withExt = resolvedPath + ext
-      if (await fs.exists(withExt)) {
+      if (await existsCached(withExt)) {
         resolvedPath = withExt
         break
       }
@@ -242,13 +243,13 @@ const resolveAndCompileImportImplCore = async (
     traceEnd(extId)
   } else if (resolvedPath.endsWith('.js')) {
     const tsPath = resolvedPath.slice(0, -3) + '.ts'
-    if (await fs.exists(tsPath)) {
+    if (await existsCached(tsPath)) {
       resolvedPath = tsPath
     }
   } else if (resolvedPath.endsWith('.svelte')) {
-    if (!(await fs.exists(resolvedPath))) {
+    if (!(await existsCached(resolvedPath))) {
       const svelteJsPath = resolvedPath + '.js'
-      if (await fs.exists(svelteJsPath)) {
+      if (await existsCached(svelteJsPath)) {
         resolvedPath = svelteJsPath
       }
     }
@@ -260,18 +261,18 @@ const resolveAndCompileImportImplCore = async (
     const possibleFile = path.join(resolvedPath, importFileName)
 
     const withSvelte = possibleFile.endsWith('.svelte') ? possibleFile : possibleFile + '.svelte'
-    if (await fs.exists(withSvelte)) {
+    if (await existsCached(withSvelte)) {
       resolvedPath = withSvelte
     } else if (importPath.includes('/')) {
       const fileName = importPath.split('/').pop() ?? ''
       const directCandidate = path.join(resolvedPath, fileName)
-      if (await fs.exists(directCandidate)) {
+      if (await existsCached(directCandidate)) {
         resolvedPath = directCandidate
       }
     }
   }
 
-  if (!(await fs.exists(resolvedPath))) {
+  if (!(await existsCached(resolvedPath))) {
     // Parallel existence checks
     const checks = [
       { path: resolvedPath + '.svelte', result: resolvedPath + '.svelte' },

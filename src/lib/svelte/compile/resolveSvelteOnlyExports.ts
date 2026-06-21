@@ -14,6 +14,7 @@ import { CWD, CACHE_DIR } from '../../../constants.ts'
 import { SVELTE_RUNE_REGEX } from '../constants.ts'
 import { parseFile, extractExports, extractImports } from './astParse.ts'
 import { writeQueue } from './writeQueue.ts'
+import { existsCached } from './pathCache.ts'
 import type { ExportInfo } from './types.ts'
 
 const pendingWrites = new Map<string, Promise<string>>()
@@ -41,7 +42,7 @@ const resolveRelativeToUrl = async (
   const extensions = ['', '.ts', '.js', '.mjs']
   for (const ext of extensions) {
     const withExt = absolutePath + ext
-    if (await fs.exists(withExt)) {
+    if (await existsCached(withExt)) {
       return pathToFileURL(withExt).href
     }
   }
@@ -94,9 +95,9 @@ export const compileSvelteOnlyExport = async (
   exportNames?: string[],
 ): Promise<string> => {
   if (!sveltePath.endsWith('.js') && !sveltePath.endsWith('.mjs')) {
-    if (!(await fs.exists(sveltePath))) {
+    if (!(await existsCached(sveltePath))) {
       const svelteJsPath = sveltePath + '.js'
-      if (await fs.exists(svelteJsPath)) {
+      if (await existsCached(svelteJsPath)) {
         sveltePath = svelteJsPath
       }
     }
@@ -223,7 +224,7 @@ const handleJsWithSvelteReexports = async (
       }
     } else if (firstExp.isBatch && firstExp.source?.endsWith('.js')) {
       const absolutePath = path.resolve(jsDir, firstExp.source)
-      if (await fs.exists(absolutePath)) {
+      if (await existsCached(absolutePath)) {
         const reexportContent = await fs.readFile(absolutePath, 'utf-8')
         const processedReexport = await handleJsWithSvelteReexports(
           reexportContent,
@@ -289,7 +290,7 @@ const handleJsWithSvelteReexports = async (
       }
     } else if (firstExp.source?.endsWith('.js')) {
       const absolutePath = path.resolve(jsDir, firstExp.source)
-      if (await fs.exists(absolutePath)) {
+      if (await existsCached(absolutePath)) {
         const reexportContent = await fs.readFile(absolutePath, 'utf-8')
         let processedReexport: string
         let tempFile: string

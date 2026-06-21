@@ -6,6 +6,7 @@ import log from '@magic/log'
 import { packageExportCache } from './packageExportCache.js'
 import { LRUCache } from '../LRUCache.js'
 import { traceStart, traceEnd } from './timing.js'
+import { existsCached } from './pathCache.js'
 // Cache for expensive file scanning operations
 const svelteReExportsCache = new LRUCache(500)
 const exportStarCache = new LRUCache(500)
@@ -241,7 +242,7 @@ const resolvePackageExportImpl = async (_pkgSpec, sourceDir, pkgName, cacheKey) 
     nodeModulesPathCache.set(pkgName.name, nodeModulesPath)
   }
   let pkgPath = path.join(nodeModulesPath, 'package.json')
-  if (!(await fs.exists(pkgPath))) {
+  if (!(await existsCached(pkgPath))) {
     // Collect all potential package.json paths up the tree
     const candidates = []
     let current = nodeModulesPath
@@ -251,7 +252,7 @@ const resolvePackageExportImpl = async (_pkgSpec, sourceDir, pkgName, cacheKey) 
     }
     // Check all paths in parallel
     const results = await Promise.all(
-      candidates.map(c => fs.exists(c.pkgPath).then(exists => ({ ...c, exists }))),
+      candidates.map(c => existsCached(c.pkgPath).then(exists => ({ ...c, exists }))),
     )
     const found = results.find(r => r.exists)
     if (found) {
@@ -259,7 +260,7 @@ const resolvePackageExportImpl = async (_pkgSpec, sourceDir, pkgName, cacheKey) 
       nodeModulesPath = found.dir
     }
   }
-  if (!(await fs.exists(pkgPath))) {
+  if (!(await existsCached(pkgPath))) {
     return { resolvedPath: null, isSvelteOnly: false }
   }
   let pkg
