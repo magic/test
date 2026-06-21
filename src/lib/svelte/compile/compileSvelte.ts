@@ -6,7 +6,7 @@ import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.t
 import { getSvelteCompiler } from '../compiler-cache.ts'
 
 import { cache, pendingSvelteCompiles } from './cache.ts'
-import { TMP_DIR, CWD } from '../../../constants.ts'
+import { CACHE_DIR, CWD } from '../../../constants.ts'
 import { cleanTempFiles } from './cleanTempFiles.ts'
 import { acquireLock } from './acquireLock.ts'
 import type { CssObject } from './types.ts'
@@ -33,7 +33,7 @@ export const compileSvelte = async (filePath: string): Promise<CompileSvelteRetu
 
   const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
   const relPath = path.relative(CWD, absPath)
-  const mapFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.map'))
+  const mapFile = path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.map'))
 
   const release = await acquireLock(mapFile)
 

@@ -1,9 +1,9 @@
 import path from 'node:path'
 
-import { TMP_DIR, CWD } from '../../../constants.ts'
+import { CACHE_DIR, CWD } from '../../../constants.ts'
 
 export const getTempFilePath = (sourceFilePath: string): string => {
   const rel = path.relative(CWD, sourceFilePath)
-  const tmpFile = path.join(TMP_DIR, rel.replace(/\.svelte$/, '.svelte.js'))
+  const tmpFile = path.join(CACHE_DIR, rel.replace(/\.svelte$/, '.svelte.js'))
   return tmpFile
 }

@@ -3,7 +3,7 @@ import path from 'node:path'
 import fs from '@magic/fs'
 
 import { barrelCache, processingBarrels, pendingBarrelCompiles } from './cache.ts'
-import { TMP_DIR, CWD } from '../../../constants.ts'
+import { CACHE_DIR, CWD } from '../../../constants.ts'
 import { getSvelteExports } from './getSvelteExports.ts'
 import { processImports } from './processImports.ts'
 import { compileSvelte } from './compileSvelte.ts'
@@ -150,7 +150,7 @@ const compileBarrelImpl = async (
       traceEnd(compileId)
 
       const relPath = path.relative(CWD, sveltePath)
-      const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
+      const tmpFile = path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
       const tmpFileAbs = path.join(CWD, tmpFile)
 
       if (await shouldWriteFile(tmpFileAbs, processed)) {
@@ -163,7 +163,7 @@ const compileBarrelImpl = async (
   )
 
   const barrelRelPath = path.relative(CWD, filePath)
-  const wrapperFile = path.join(TMP_DIR, barrelRelPath.replace(/\.(ts|js)$/, '.barrel.js'))
+  const wrapperFile = path.join(CACHE_DIR, barrelRelPath.replace(/\.(ts|js)$/, '.barrel.js'))
   const wrapperAbsPath = path.join(CWD, wrapperFile)
   const wrapperTmpDir = path.dirname(wrapperAbsPath)
 

@@ -8,7 +8,7 @@ import { processImports } from './processImports.js'
 import { transformForNode } from './transformForNode.js'
 import { resolvePackageExport } from './resolvePackageExport.js'
 import { cache as compileCache } from './cache.js'
-import { CWD, TMP_DIR } from '../../../constants.js'
+import { CWD, CACHE_DIR } from '../../../constants.js'
 import { SVELTE_RUNE_REGEX } from '../constants.js'
 import { parseFile, extractExports, extractImports } from './astParse.js'
 import { writeQueue } from './writeQueue.js'
@@ -42,10 +42,10 @@ export const writeTempFile = async (filePath, code) => {
   let tempFile
   if (filePath.includes('node_modules')) {
     const relFromNodeModules = filePath.split('node_modules/').pop() || ''
-    tempFile = path.join(CWD, TMP_DIR, 'node_modules_processed', relFromNodeModules)
+    tempFile = path.join(CWD, CACHE_DIR, 'node_modules_processed', relFromNodeModules)
   } else {
     const relPath = path.relative(CWD, filePath)
-    tempFile = path.join(CWD, TMP_DIR, relPath + '.mjs')
+    tempFile = path.join(CWD, CACHE_DIR, relPath + '.mjs')
   }
   // Check for existing pending write first
   const existing = pendingWrites.get(tempFile)

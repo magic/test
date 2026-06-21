@@ -6,7 +6,7 @@ import fs from '@magic/fs'
 import { resolveAlias, resolveViteAlias } from '../viteConfig/index.ts'
 
 import { importCache } from './cache.ts'
-import { TMP_DIR, CWD } from '../../../constants.ts'
+import { CACHE_DIR, CWD } from '../../../constants.ts'
 import { acquireLock } from './acquireLock.ts'
 import { isSvelteFile } from './isSvelteFile.ts'
 import { getSvelteExports } from './getSvelteExports.ts'
@@ -325,7 +325,7 @@ const resolveAndCompileImportImplCore = async (
   }
 
   const relPath = path.relative(CWD, resolvedPath)
-  const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
+  const tmpFile = path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
   const tmpFileAbs = path.join(CWD, tmpFile)
 
   const release = await acquireLock(tmpFile)

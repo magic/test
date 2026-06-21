@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import fs from '@magic/fs'
-import { TMP_DIR, CWD } from '../../../constants.js'
+import { CACHE_DIR, CWD } from '../../../constants.js'
 import { transformForNode } from './transformForNode.js'
 import { compileSvelte } from './compileSvelte.js'
 import { processImports } from './processImports.js'
@@ -30,7 +30,7 @@ export const compileSvelteWithWrite = async filePath => {
     const { js, css } = await compileSvelte(filePath)
     const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
     const relPath = path.relative(CWD, resolvedPath)
-    const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
+    const tmpFile = path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
     const tmpFileAbs = path.resolve(CWD, tmpFile)
     const importUrl = pathToFileURL(tmpFileAbs).href
     // Transform imports (resolves $app/*, $lib/*, etc.)

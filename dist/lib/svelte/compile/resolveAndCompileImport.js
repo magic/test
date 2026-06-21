@@ -2,7 +2,7 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { resolveAlias, resolveViteAlias } from '../viteConfig/index.js'
 import { importCache } from './cache.js'
-import { TMP_DIR, CWD } from '../../../constants.js'
+import { CACHE_DIR, CWD } from '../../../constants.js'
 import { acquireLock } from './acquireLock.js'
 import { isSvelteFile } from './isSvelteFile.js'
 import { getSvelteExports } from './getSvelteExports.js'
@@ -298,7 +298,7 @@ const resolveAndCompileImportImplCore = async (
     return { filePath: resolvedPath, js: '', url: relativePath }
   }
   const relPath = path.relative(CWD, resolvedPath)
-  const tmpFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
+  const tmpFile = path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
   const tmpFileAbs = path.join(CWD, tmpFile)
   const release = await acquireLock(tmpFile)
   try {

@@ -17,10 +17,21 @@ interface CacheManifest {
   sources: Record<string, SourceEntry>
 }
 
-// Compute SHA-256 hash of file content
+// In-memory caches for performance
+let manifestCache: CacheManifest | null = null
+const hashCache = new Map<string, string>()
+
+// Compute SHA-256 hash of file content (with caching)
 async function hashFile(filePath: string): Promise<string> {
+  const cached = hashCache.get(filePath)
+  if (cached) {
+    return cached
+  }
+
   const content = await fs.readFile(filePath, 'utf-8')
-  return crypto.createHash('sha256').update(content).digest('hex')
+  const hash = crypto.createHash('sha256').update(content).digest('hex')
+  hashCache.set(filePath, hash)
+  return hash
 }
 
 // Get relative cache path for a source file
@@ -30,9 +41,14 @@ function getCachePath(sourcePath: string): string {
 }
 
 export async function loadManifest(): Promise<CacheManifest | null> {
+  if (manifestCache) {
+    return manifestCache
+  }
+
   try {
     const data = await fs.readFile(MANIFEST_FILE, 'utf-8')
-    return JSON.parse(data)
+    manifestCache = JSON.parse(data)
+    return manifestCache
   } catch {
     return null
   }
@@ -64,7 +80,7 @@ export async function getCachedCompile(
     return null
   }
 
-  // Compute current hash
+  // Compute and cache hash
   const currentHash = await hashFile(sourcePath)
 
   // Check if hash matches
@@ -102,8 +118,10 @@ export async function recordCompile(sourcePath: string, compiledJs: string): Pro
       svelteVersion,
       sources: {},
     }
+    manifestCache = manifest
   }
 
+  // mtime is used for tracking, not for invalidation (hash is authoritative)
   const stats = await fs.stat(sourcePath)
   const hash = await hashFile(sourcePath)
 
@@ -115,7 +133,7 @@ export async function recordCompile(sourcePath: string, compiledJs: string): Pro
   // Update manifest
   manifest.sources[sourcePath] = { mtime: stats.mtimeMs, hash }
 
-  // Save manifest to disk immediately
+  // Save manifest to disk
   await saveManifest(manifest)
 }
 
@@ -125,6 +143,8 @@ export async function clearCache(): Promise<void> {
   } catch {
     // Ignore
   }
+  manifestCache = null
+  hashCache.clear()
 }
 
 export function getCacheDir(): string {

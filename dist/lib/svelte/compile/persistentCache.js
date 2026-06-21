@@ -4,10 +4,19 @@ import crypto from 'node:crypto'
 const CACHE_DIR = 'node_modules/.magic-test-cache'
 const COMPILED_DIR = path.join(CACHE_DIR, 'compiled')
 const MANIFEST_FILE = path.join(CACHE_DIR, 'manifest.json')
-// Compute SHA-256 hash of file content
+// In-memory caches for performance
+let manifestCache = null
+const hashCache = new Map()
+// Compute SHA-256 hash of file content (with caching)
 async function hashFile(filePath) {
+  const cached = hashCache.get(filePath)
+  if (cached) {
+    return cached
+  }
   const content = await fs.readFile(filePath, 'utf-8')
-  return crypto.createHash('sha256').update(content).digest('hex')
+  const hash = crypto.createHash('sha256').update(content).digest('hex')
+  hashCache.set(filePath, hash)
+  return hash
 }
 // Get relative cache path for a source file
 function getCachePath(sourcePath) {
@@ -15,9 +24,13 @@ function getCachePath(sourcePath) {
   return path.join(COMPILED_DIR, rel)
 }
 export async function loadManifest() {
+  if (manifestCache) {
+    return manifestCache
+  }
   try {
     const data = await fs.readFile(MANIFEST_FILE, 'utf-8')
-    return JSON.parse(data)
+    manifestCache = JSON.parse(data)
+    return manifestCache
   } catch {
     return null
   }
@@ -43,7 +56,7 @@ export async function getCachedCompile(sourcePath) {
   if (!entry) {
     return null
   }
-  // Compute current hash
+  // Compute and cache hash
   const currentHash = await hashFile(sourcePath)
   // Check if hash matches
   if (currentHash !== entry.hash) {
@@ -75,7 +88,9 @@ export async function recordCompile(sourcePath, compiledJs) {
       svelteVersion,
       sources: {},
     }
+    manifestCache = manifest
   }
+  // mtime is used for tracking, not for invalidation (hash is authoritative)
   const stats = await fs.stat(sourcePath)
   const hash = await hashFile(sourcePath)
   // Save compiled file
@@ -84,7 +99,7 @@ export async function recordCompile(sourcePath, compiledJs) {
   await fs.writeFile(compiledPath, compiledJs)
   // Update manifest
   manifest.sources[sourcePath] = { mtime: stats.mtimeMs, hash }
-  // Save manifest to disk immediately
+  // Save manifest to disk
   await saveManifest(manifest)
 }
 export async function clearCache() {
@@ -93,6 +108,8 @@ export async function clearCache() {
   } catch {
     // Ignore
   }
+  manifestCache = null
+  hashCache.clear()
 }
 export function getCacheDir() {
   return CACHE_DIR

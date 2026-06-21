@@ -3,7 +3,7 @@ import fs from '@magic/fs'
 import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.js'
 import { getSvelteCompiler } from '../compiler-cache.js'
 import { cache, pendingSvelteCompiles } from './cache.js'
-import { TMP_DIR, CWD } from '../../../constants.js'
+import { CACHE_DIR, CWD } from '../../../constants.js'
 import { cleanTempFiles } from './cleanTempFiles.js'
 import { acquireLock } from './acquireLock.js'
 /**
@@ -20,7 +20,7 @@ export const compileSvelte = async filePath => {
   await cleanTempFiles()
   const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
   const relPath = path.relative(CWD, absPath)
-  const mapFile = path.join(TMP_DIR, relPath.replace(/\.svelte$/, '.svelte.map'))
+  const mapFile = path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.map'))
   const release = await acquireLock(mapFile)
   try {
     const source = await fs.readFile(absPath, 'utf-8')
