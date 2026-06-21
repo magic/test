@@ -29,10 +29,7 @@ export const createCanvasPolyfill = (): void => {
     }
 
     if (!this._nodeCanvas) {
-      this._nodeCanvas = createCanvas(
-        this.width || 300,
-        this.height || 150,
-      )
+      this._nodeCanvas = createCanvas(this.width || 300, this.height || 150)
     }
 
     const ctx: any = this._nodeCanvas.getContext('2d')
@@ -47,29 +44,20 @@ export const createCanvasPolyfill = (): void => {
         | { _nodeCanvasImage?: unknown; width: number; height: number; src?: string },
       ...drawArgs: unknown[]
     ): void => {
-      if (is.instance(img, Image) || '_nodeCanvasImage' in img && img._nodeCanvasImage) {
+      if (is.instance(img, Image) || ('_nodeCanvasImage' in img && img._nodeCanvasImage)) {
         const nodeImg = is.instance(img, Image) ? img : img._nodeCanvasImage
-        return originalDrawImage(
-          nodeImg,
-          ...drawArgs,
-        )
+        return originalDrawImage(nodeImg, ...drawArgs)
       }
 
       if (is.instance(img, Canvas)) {
-        return originalDrawImage(
-          img,
-          ...drawArgs,
-        )
+        return originalDrawImage(img, ...drawArgs)
       }
 
       const imgSrc = (img as { src?: string }).src
       if (is.string(imgSrc) && imgSrc.startsWith('data:image')) {
         loadImage(imgSrc)
           .then((loadedImg: unknown) => {
-            originalDrawImage(
-              loadedImg,
-              ...drawArgs,
-            )
+            originalDrawImage(loadedImg, ...drawArgs)
           })
           .catch(() => {})
         return
@@ -81,7 +69,8 @@ export const createCanvasPolyfill = (): void => {
       )
     }
 
-    const toDataURLFn = (mimeType = 'image/png', quality?: number): string => originalToDataURL?.(mimeType, quality) || ''
+    const toDataURLFn = (mimeType = 'image/png', quality?: number): string =>
+      originalToDataURL?.(mimeType, quality) || ''
 
     ctx.drawImage = drawImageFn
     ctx.toDataURL = toDataURLFn

@@ -90,7 +90,9 @@ export default [
       createCanvasPolyfill()
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | null
-      const toDataURL = (ctx as unknown as Record<string, (mime?: string, quality?: number) => string | undefined>)?.toDataURL
+      const toDataURL = (
+        ctx as unknown as Record<string, (mime?: string, quality?: number) => string | undefined>
+      )?.toDataURL
       const result = toDataURL?.call(ctx, 'image/jpeg', 0.8)
       return typeof result === 'string'
     },
