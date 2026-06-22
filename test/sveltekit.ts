@@ -77,8 +77,8 @@ export default [
           props: { triggerGoto: true },
         },
       )
-      await flushSyncSvelte()
-      await tick()
+      // Navigation callbacks are async, wait for them to fully complete
+      await new Promise(r => setTimeout(r, 20))
       const logs = html(target).match(/<span class="logs">([^<]*)<\/span>/)?.[1]
       await unmount()
       return logs
@@ -288,7 +288,7 @@ export default [
         },
       )
       await flushSyncSvelte()
-      await new Promise(r => setTimeout(r, 10))
+      await tick()
       const result = html(target)
       await unmount()
       return result.includes('invalidate')
@@ -306,7 +306,7 @@ export default [
         },
       )
       await flushSyncSvelte()
-      await new Promise(r => setTimeout(r, 10))
+      await tick()
       const result = html(target)
       await unmount()
       return result.includes('preload')

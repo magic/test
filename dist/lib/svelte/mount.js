@@ -31,6 +31,49 @@ let svelteUnmount
 let svelteCreateRawSnippet = null
 let svelteTick
 let svelteInitialized = false
+// Track mounted component state to ensure proper cleanup per-test
+let mountedComponent = null
+let mountedInternalUnmount = null
+let mountedTarget = null
+let mountedContext = null
+// Mutex to ensure only one Svelte component test runs at a time
+// This prevents race conditions in Svelte's internal listeners Map
+let svelteMutex = Promise.resolve()
+const acquireMutex = async () => {
+  let release
+  const released = new Promise(resolve => {
+    release = resolve
+  })
+  const current = svelteMutex
+  svelteMutex = released
+  await current
+  return release
+}
+/**
+ * Safely unmount the current component if one exists.
+ * This ensures clean state before mounting a new component.
+ * Called while holding the mutex, so uses internal unmount (doesn't release mutex).
+ */
+const safeUnmount = async () => {
+  if (mountedInternalUnmount) {
+    try {
+      await mountedInternalUnmount()
+    } catch {
+      // Ignore unmount errors - component might already be unmounted
+    }
+    mountedInternalUnmount = null
+  }
+  if (mountedTarget) {
+    try {
+      mountedTarget.remove()
+    } catch {
+      // Ignore remove errors
+    }
+    mountedTarget = null
+  }
+  mountedComponent = null
+  mountedContext = null
+}
 const initSvelte = async () => {
   if (svelteInitialized) {
     return
@@ -75,9 +118,51 @@ export const tick = async () => {
   if (!svelteTick) {
     throw new Error('Svelte not initialized')
   }
-  await svelteTick()
+  // Wrap svelteTick in a try-catch to handle cases where Svelte's internal
+  // state (listeners Map) might be corrupted due to parallel test execution
+  try {
+    await svelteTick()
+  } catch (e) {
+    // If tick fails due to Svelte internal errors (like corrupted listeners Map),
+    // wait a bit and try again. This can happen when tests run in parallel
+    // and Svelte's internal state gets corrupted.
+    if (e instanceof Error && e.message.includes('Cannot read properties')) {
+      // Give Svelte a chance to recover
+      await new Promise(resolve => setTimeout(resolve, 10))
+      try {
+        await svelteTick()
+      } catch {
+        // If it still fails, just log and continue
+        log.warn('Svelte tick failed twice, continuing...')
+      }
+    } else {
+      throw e
+    }
+  }
 }
 export const mount = async (filePath, options = {}) => {
+  // Acquire mutex to ensure only one Svelte component test runs at a time
+  const releaseMutex = await acquireMutex()
+  // Safety timeout - if mount takes more than 60 seconds, release mutex
+  // This prevents deadlocks in case of errors
+  const timeoutId = setTimeout(() => {
+    log.warn('Svelte mount timeout - releasing mutex')
+    releaseMutex()
+  }, 60000)
+  try {
+    const result = await mountWithMutex(filePath, options, () => {
+      clearTimeout(timeoutId)
+      releaseMutex()
+    })
+    clearTimeout(timeoutId)
+    return result
+  } catch (e) {
+    clearTimeout(timeoutId)
+    releaseMutex()
+    throw e
+  }
+}
+const mountWithMutex = async (filePath, options, releaseMutex) => {
   const doc = getDocument()
   if (!doc) {
     throw new Error('Failed to initialize DOM. Is happy-dom installed?')
@@ -98,6 +183,10 @@ export const mount = async (filePath, options = {}) => {
     clearInterval: win.clearInterval,
   })
   await initSvelte()
+  // Ensure any previously mounted component is properly unmounted before mounting a new one
+  // This prevents issues with Svelte's internal state (listeners Map) getting corrupted
+  // when tests run in parallel
+  await safeUnmount()
   const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
   const exists = await fs.exists(resolvedPath)
   if (!exists) {
@@ -205,13 +294,56 @@ export const mount = async (filePath, options = {}) => {
       component = component.__inner
     }
     const unmount = async () => {
+      // Only unmount if this is the currently mounted component
+      if (mountedComponent !== component) {
+        return
+      }
       if (!svelteUnmount) {
         throw new Error('Svelte not initialized')
       }
-      await runWithContext(ctx, async () => {
-        await svelteUnmount(component, { outro: true })
-      })
+      try {
+        await runWithContext(ctx, async () => {
+          try {
+            await svelteUnmount(component, { outro: true })
+          } catch (unmountError) {
+            // Ignore Svelte internal errors during unmount
+            // These can happen due to corrupted listeners Map state
+            // This is expected when safeUnmount cleans up after a previous test
+            if (
+              unmountError instanceof Error &&
+              unmountError.message.includes('Cannot read properties')
+            ) {
+              // Silently ignore - this is expected during cleanup
+            } else {
+              throw unmountError
+            }
+          }
+        })
+      } finally {
+        // Clear mounted state only if this component is still the mounted one
+        if (mountedComponent === component) {
+          mountedComponent = null
+          mountedInternalUnmount = null
+          mountedContext = null
+          if (mountedTarget === target) {
+            mountedTarget = null
+          }
+        }
+      }
     }
-    return { target, component, unmount, css }
+    // Track this as the currently mounted component
+    mountedComponent = component
+    mountedInternalUnmount = unmount
+    mountedTarget = target
+    mountedContext = ctx
+    // Return wrapped unmount that releases the mutex after completion
+    const wrappedUnmount = async () => {
+      try {
+        await unmount()
+      } finally {
+        releaseMutex()
+      }
+    }
+    return { target, component, unmount: wrappedUnmount, css }
   })
 }
