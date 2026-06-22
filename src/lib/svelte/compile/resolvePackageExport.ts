@@ -266,7 +266,7 @@ export const resolvePackageExport = async (
     return pending
   }
 
-  const promise = resolvePackageExportImpl(pkgSpec, sourceDir, pkgName, cacheKey)
+  const promise = resolvePackageExportImpl(pkgSpec, sourceDir, pkgName)
   pendingPromises.set(cacheKey, promise)
   try {
     const result = await promise
@@ -281,7 +281,6 @@ const resolvePackageExportImpl = async (
   _pkgSpec: string,
   sourceDir: string,
   pkgName: { name: string; subpath: string },
-  cacheKey: string,
 ): Promise<PackageExportResolve> => {
   let nodeModulesPath: string
 

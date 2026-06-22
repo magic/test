@@ -1,43 +1,28 @@
 import is from '@magic/types'
+import { walkTests } from './analysis/testWalker.js'
 const GLOBAL_MODIFICATION_RE = /(?:globalThis|window|global|self|process\.env)/
 export const functionModifiesGlobals = fn => {
   if (!is.fn(fn)) {
     return false
   }
-  const str = fn.toString()
-  if (GLOBAL_MODIFICATION_RE.test(str)) {
-    return true
-  }
-  return false
+  return GLOBAL_MODIFICATION_RE.test(fn.toString())
 }
 export const testModifiesGlobals = test => {
-  if (functionModifiesGlobals(test.before)) {
-    return true
-  }
-  if (functionModifiesGlobals(test.after)) {
-    return true
-  }
-  if (functionModifiesGlobals(test.fn)) {
-    return true
-  }
-  if (functionModifiesGlobals(test.expect)) {
-    return true
-  }
-  return false
+  return [test.before, test.after, test.fn, test.expect].some(functionModifiesGlobals)
 }
 export const suiteModifiesGlobals = tests => {
-  if (is.array(tests)) {
-    return tests.some(test => testModifiesGlobals(test))
-  } else if (is.objectNative(tests)) {
-    if (functionModifiesGlobals(tests.beforeAll)) {
+  return walkTests(tests, test => {
+    if (
+      functionModifiesGlobals(test.before) ||
+      functionModifiesGlobals(test.after) ||
+      functionModifiesGlobals(test.fn)
+    ) {
       return true
     }
-    if (functionModifiesGlobals(tests.afterAll)) {
+    // Also check suite-level hooks
+    if (functionModifiesGlobals(test.beforeAll) || functionModifiesGlobals(test.afterAll)) {
       return true
     }
-    if (tests.tests && is.objectNative(tests.tests)) {
-      return suiteModifiesGlobals(tests.tests)
-    }
-  }
-  return false
+    return false
+  })
 }

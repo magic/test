@@ -17,10 +17,6 @@ export { suiteNeedsIsolation } from './suiteNeedsIsolation.ts'
 
 export { testModifiesGlobals, suiteModifiesGlobals } from './globalCheck.ts'
 
-export {
-  testImportsMutableModuleState,
-  testUsesFixedPorts,
-  testUsesSharedFiles,
-} from './mutableStateCheck.ts'
+export * from './analysis/index.ts'
 
 export { ERRORS, ERROR_MESSAGES, createError } from './errors.ts'

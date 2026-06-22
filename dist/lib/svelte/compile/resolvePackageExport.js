@@ -214,7 +214,7 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
     traceEnd(id, 'dedup')
     return pending
   }
-  const promise = resolvePackageExportImpl(pkgSpec, sourceDir, pkgName, cacheKey)
+  const promise = resolvePackageExportImpl(pkgSpec, sourceDir, pkgName)
   pendingPromises.set(cacheKey, promise)
   try {
     const result = await promise
@@ -224,7 +224,7 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
     pendingPromises.delete(cacheKey)
   }
 }
-const resolvePackageExportImpl = async (_pkgSpec, sourceDir, pkgName, cacheKey) => {
+const resolvePackageExportImpl = async (_pkgSpec, sourceDir, pkgName) => {
   let nodeModulesPath
   // Use cached nodeModulesPath if available
   const cachedNodeModules = nodeModulesPathCache.get(pkgName.name)

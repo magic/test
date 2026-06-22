@@ -1,33 +1,20 @@
 import is from '@magic/types'
+import { walkTests } from './analysis/testWalker.ts'
 import type { TestCollection } from '../types.ts'
 
 /**
  * Check if any test in the suite needs isolation (has before/after hooks OR modifies globals)
  */
 export const suiteNeedsIsolation = (tests: TestCollection): boolean => {
-  if (is.array(tests)) {
-    return tests.some(test => is.function(test.before) || is.function(test.after))
-  } else if (is.objectNative(tests)) {
-    if (!is.objectNative(tests)) {
-      return false
-    }
-
+  return walkTests(tests, test => {
     if (
-      is.function(tests.before) ||
-      is.function(tests.after) ||
-      is.function(tests.beforeEach) ||
-      is.function(tests.beforeAll) ||
-      is.function(tests.afterAll)
+      is.function(test.before) ||
+      is.function(test.after) ||
+      is.function(test.beforeEach) ||
+      is.function(test.afterEach)
     ) {
       return true
     }
-    if (tests.tests && is.objectNative(tests.tests)) {
-      return suiteNeedsIsolation(tests.tests)
-    }
-    if (tests.nested && is.objectNative(tests.nested)) {
-      return suiteNeedsIsolation(tests.nested)
-    }
-  }
-
-  return false
+    return false
+  })
 }
