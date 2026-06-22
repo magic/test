@@ -26,7 +26,6 @@ let svelteInitialized = false
 let mountedComponent: SvelteComponent | null = null
 let mountedInternalUnmount: (() => Promise<void>) | null = null
 let mountedTarget: HTMLElement | null = null
-let mountedContext: ReturnType<typeof createContext> | null = null
 
 // Mutex to ensure only one Svelte component test runs at a time
 // This prevents race conditions in Svelte's internal listeners Map
@@ -66,7 +65,6 @@ const safeUnmount = async (): Promise<void> => {
     mountedTarget = null
   }
   mountedComponent = null
-  mountedContext = null
 }
 
 const initSvelte = async () => {
@@ -374,7 +372,6 @@ const mountWithMutex = async (
         if (mountedComponent === component) {
           mountedComponent = null
           mountedInternalUnmount = null
-          mountedContext = null
           if (mountedTarget === target) {
             mountedTarget = null
           }
@@ -386,7 +383,6 @@ const mountWithMutex = async (
     mountedComponent = component
     mountedInternalUnmount = unmount
     mountedTarget = target
-    mountedContext = ctx
 
     // Return wrapped unmount that releases the mutex after completion
     const wrappedUnmount = async () => {
