@@ -7,15 +7,14 @@ import { getCachedCompile, recordCompile } from './persistentCache.js'
 export { LRUCache }
 // Re-export persistent cache functions
 export { clearCache } from './persistentCache.js'
-// Export cache instances for backward compatibility
+// Unified LRU caches
 export const cache = new LRUCache(100)
 export const importCache = new LRUCache(100)
-export const barrelCache = new Map()
-export const processingBarrels = new Set()
-// Promise-based deduplication maps
-export const pendingBarrelCompiles = new Map()
-export const pendingSvelteCompiles = new Map()
-export const pendingSvelteExports = new Map()
+export const packageExportCache = new LRUCache(200)
+export const barrelCache = new LRUCache(100)
+// Unified promise deduplication map
+// Keys prefixed: 'barrel:', 'svelte:', 'exports:', 'pkg:', 'resolve:'
+export const pendingPromises = new Map()
 /**
  * Centralized cache manager for Svelte compilation
  * Handles: promise dedup, memory cache, disk cache

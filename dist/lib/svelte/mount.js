@@ -35,7 +35,6 @@ let svelteInitialized = false
 let mountedComponent = null
 let mountedInternalUnmount = null
 let mountedTarget = null
-let mountedContext = null
 // Mutex to ensure only one Svelte component test runs at a time
 // This prevents race conditions in Svelte's internal listeners Map
 let svelteMutex = Promise.resolve()
@@ -72,7 +71,6 @@ const safeUnmount = async () => {
     mountedTarget = null
   }
   mountedComponent = null
-  mountedContext = null
 }
 const initSvelte = async () => {
   if (svelteInitialized) {
@@ -324,7 +322,6 @@ const mountWithMutex = async (filePath, options, releaseMutex) => {
         if (mountedComponent === component) {
           mountedComponent = null
           mountedInternalUnmount = null
-          mountedContext = null
           if (mountedTarget === target) {
             mountedTarget = null
           }
@@ -335,7 +332,6 @@ const mountWithMutex = async (filePath, options, releaseMutex) => {
     mountedComponent = component
     mountedInternalUnmount = unmount
     mountedTarget = target
-    mountedContext = ctx
     // Return wrapped unmount that releases the mutex after completion
     const wrappedUnmount = async () => {
       try {

@@ -7,35 +7,17 @@ import type {
 } from '../../types.ts'
 export { LRUCache }
 export { clearCache } from './persistentCache.ts'
+export interface PackageExportResolveEntry {
+  resolvedPath: string | null
+  isSvelteOnly: boolean
+  hasSvelteReExports?: boolean
+  isSvelteOnlyPackage?: boolean
+}
 export declare const cache: LRUCache<CompileCacheEntry>
 export declare const importCache: LRUCache<ImportCacheEntry>
-export declare const barrelCache: Map<string, BarrelCacheEntry>
-export declare const processingBarrels: Set<string>
-export declare const pendingBarrelCompiles: Map<
-  string,
-  Promise<{
-    filePath: string
-    js: string
-    wrapperAbsPath: string
-  }>
->
-export declare const pendingSvelteCompiles: Map<
-  string,
-  Promise<{
-    js: string
-    css: CssObject | null
-  }>
->
-export declare const pendingSvelteExports: Map<
-  string,
-  Promise<
-    {
-      name: string
-      path: string
-      isDefaultReexport?: boolean
-    }[]
-  >
->
+export declare const packageExportCache: LRUCache<PackageExportResolveEntry>
+export declare const barrelCache: LRUCache<BarrelCacheEntry>
+export declare const pendingPromises: Map<string, Promise<unknown>>
 /**
  * Centralized cache manager for Svelte compilation
  * Handles: promise dedup, memory cache, disk cache

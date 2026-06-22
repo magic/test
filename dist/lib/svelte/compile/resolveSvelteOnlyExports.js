@@ -7,6 +7,7 @@ import { cacheManager } from '../../caches/cache.js'
 import { processImports } from './processImports.js'
 import { transformForNode } from './transformForNode.js'
 import { resolvePackageExport } from './resolvePackageExport.js'
+import { LRUCache } from '../../caches/LRUCache.js'
 import { cache as compileCache } from '../../caches/cache.js'
 import { CWD, CACHE_DIR } from '../../../constants.js'
 import { SVELTE_RUNE_REGEX } from '../constants.js'
@@ -54,7 +55,7 @@ export const writeTempFile = async (filePath, code) => {
   pendingWrites.set(tempFile, promise)
   return promise
 }
-const tmpFileCache = new Map()
+const tmpFileCache = new LRUCache(100)
 const compiling = new Map()
 export const compileSvelteOnlyExport = async (sveltePath, sourceDir, exportNames) => {
   if (!sveltePath.endsWith('.js') && !sveltePath.endsWith('.mjs')) {

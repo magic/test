@@ -1,11 +1,11 @@
 import path from 'node:path'
 import fs from '@magic/fs'
-import { barrelCache, pendingSvelteExports } from '../../caches/cache.js'
+import { barrelCache, pendingPromises } from '../../caches/cache.js'
 import { traceStart, traceEnd } from '../../trace/timing.js'
 export const getSvelteExports = async filePath => {
   const id = traceStart(`getSvelteExports ${path.basename(filePath)}`)
   // Check if another process is already getting exports for this file
-  const pending = pendingSvelteExports.get(filePath)
+  const pending = pendingPromises.get(`exports:${filePath}`)
   if (pending) {
     traceEnd(id, 'waiting for pending')
     const result = await pending
@@ -22,10 +22,10 @@ export const getSvelteExports = async filePath => {
     try {
       return await getSvelteExportsImpl(filePath)
     } finally {
-      pendingSvelteExports.delete(filePath)
+      pendingPromises.delete(`exports:${filePath}`)
     }
   })()
-  pendingSvelteExports.set(filePath, exportsPromise)
+  pendingPromises.set(`exports:${filePath}`, exportsPromise)
   const result = await exportsPromise
   traceEnd(id)
   return result

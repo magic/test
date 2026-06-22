@@ -1,12 +1,13 @@
 import fs from '@magic/fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import { LRUCache } from './LRUCache.js'
 const CACHE_DIR = 'node_modules/.magic-test-cache'
 const COMPILED_DIR = path.join(CACHE_DIR, 'compiled')
 const MANIFEST_FILE = path.join(CACHE_DIR, 'manifest.json')
 // In-memory caches for performance
 let manifestCache = null
-const hashCache = new Map()
+const hashCache = new LRUCache(500)
 // Compute SHA-256 hash of file content (with caching)
 async function hashFile(filePath) {
   const cached = hashCache.get(filePath)

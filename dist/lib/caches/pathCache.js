@@ -1,16 +1,7 @@
+import { LRUCache } from './LRUCache.js'
 import fs from '@magic/fs'
-// Cache for file stats (includes existence check)
-const statsCache = new Map()
-const MAX_CACHE_SIZE = 1000
-// Evict oldest entries when cache gets too large
-const evictIfNeeded = () => {
-  if (statsCache.size >= MAX_CACHE_SIZE) {
-    const firstKey = statsCache.keys().next().value
-    if (firstKey) {
-      statsCache.delete(firstKey)
-    }
-  }
-}
+// LRU cache for file stats (includes existence check)
+const statsCache = new LRUCache(1000)
 export async function statCached(filePath) {
   const cached = statsCache.get(filePath)
   if (cached) {
@@ -20,12 +11,10 @@ export async function statCached(filePath) {
     const stats = await fs.stat(filePath)
     const result = { exists: true, mtime: stats.mtimeMs, size: stats.size }
     statsCache.set(filePath, result)
-    evictIfNeeded()
     return result
   } catch {
     const result = { exists: false }
     statsCache.set(filePath, result)
-    evictIfNeeded()
     return result
   }
 }

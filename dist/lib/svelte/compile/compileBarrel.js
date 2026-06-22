@@ -1,6 +1,6 @@
 import path from 'node:path'
 import fs from '@magic/fs'
-import { barrelCache, processingBarrels, pendingBarrelCompiles } from '../../caches/cache.js'
+import { barrelCache, pendingPromises } from '../../caches/cache.js'
 import { traceStart, traceEnd } from '../../trace/timing.js'
 import { CACHE_DIR, CWD } from '../../../constants.js'
 import { getSvelteExports } from './getSvelteExports.js'
@@ -36,7 +36,7 @@ export const compileBarrel = async (filePath, importChain = []) => {
         // File was deleted, continue to recompile
       }
     }
-    const pending = pendingBarrelCompiles.get(filePath)
+    const pending = pendingPromises.get(`barrel:${filePath}`)
     if (pending) {
       traceEnd(id, 'waiting for pending')
       const result = await pending
@@ -46,21 +46,19 @@ export const compileBarrel = async (filePath, importChain = []) => {
         return { filePath, js, wrapperAbsPath: result.wrapperAbsPath }
       } catch {
         // File doesn't exist, continue to recompile
-        pendingBarrelCompiles.delete(filePath)
+        pendingPromises.delete(`barrel:${filePath}`)
       }
     }
     const currentChain = [...importChain, filePath]
-    processingBarrels.add(filePath)
     // Create promise and store it for other callers to await
     const compilePromise = (async () => {
       try {
         return await compileBarrelImpl(filePath, currentChain)
       } finally {
-        processingBarrels.delete(filePath)
-        pendingBarrelCompiles.delete(filePath)
+        pendingPromises.delete(`barrel:${filePath}`)
       }
     })()
-    pendingBarrelCompiles.set(filePath, compilePromise)
+    pendingPromises.set(`barrel:${filePath}`, compilePromise)
     const result = await compilePromise
     traceEnd(id)
     return result

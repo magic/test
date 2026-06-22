@@ -1,9 +1,5 @@
-export interface PackageExportResolve {
-  resolvedPath: string | null
-  isSvelteOnly: boolean
-  hasSvelteReExports?: boolean
-  isSvelteOnlyPackage?: boolean
-}
+import { type PackageExportResolveEntry } from '../../caches/cache.ts'
+export type PackageExportResolve = PackageExportResolveEntry
 export declare const resolvePackageExport: (
   pkgSpec: string,
   sourceDir: string,
