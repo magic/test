@@ -9,6 +9,7 @@ import { cacheManager } from '../../caches/cache.ts'
 import { processImports } from './processImports.ts'
 import { transformForNode } from './transformForNode.ts'
 import { resolvePackageExport, type PackageExportResolve } from './resolvePackageExport.ts'
+import { LRUCache } from '../../caches/LRUCache.ts'
 import { cache as compileCache } from '../../caches/cache.ts'
 import { CWD, CACHE_DIR } from '../../../constants.ts'
 import { SVELTE_RUNE_REGEX } from '../constants.ts'
@@ -67,7 +68,7 @@ export const writeTempFile = async (filePath: string, code: string): Promise<str
   return promise
 }
 
-const tmpFileCache = new Map<string, string>()
+const tmpFileCache = new LRUCache<string>(100)
 
 const compiling = new Map<string, Promise<string>>()
 

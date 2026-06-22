@@ -4,14 +4,14 @@ import crypto from 'node:crypto'
 import log from '@magic/log'
 import is from '@magic/types'
 
+import { LRUCache } from '../../caches/LRUCache.ts'
 import { SVELTE_IMPORT_REGEX } from '../constants.ts'
 import { resolveAndCompileImport } from './resolveAndCompileImport.ts'
 import { traceStart, traceEnd } from '../../trace/timing.ts'
 import { parallelMap, MAX_CONCURRENT } from './parallelMap.ts'
 
 // Cache for processImports results (key: codeHash:sourceFilePath)
-const processImportsCache = new Map<string, { code: string; result: string }>()
-const MAX_CACHE_SIZE = 200
+const processImportsCache = new LRUCache<{ code: string; result: string }>(200)
 
 export const processImports = async (
   code: string,
@@ -24,13 +24,6 @@ export const processImports = async (
     const cached = processImportsCache.get(cacheKey)
     if (cached && cached.code === code) {
       return cached.result
-    }
-    // Evict oldest if cache full
-    if (processImportsCache.size >= MAX_CACHE_SIZE) {
-      const firstKey = processImportsCache.keys().next().value
-      if (firstKey) {
-        processImportsCache.delete(firstKey)
-      }
     }
     const result = await processImportsImpl(code, sourceFilePath, importChain)
     processImportsCache.set(cacheKey, { code, result })

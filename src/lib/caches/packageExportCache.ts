@@ -1,4 +1,2 @@
-import { LRUCache } from './LRUCache.ts'
-import type { PackageExportResolve } from '../svelte/compile/resolvePackageExport.ts'
-
-export const packageExportCache = new LRUCache<PackageExportResolve>(200)
+// Re-export package export cache from centralized cache.ts
+export { packageExportCache } from './cache.ts'

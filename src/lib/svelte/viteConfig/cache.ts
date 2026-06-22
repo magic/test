@@ -1,7 +1,9 @@
+import { LRUCache } from '../../caches/LRUCache.ts'
 import type { AliasEntry, ViteConfig } from '../../../types.ts'
 
 export { type AliasEntry } from '../../../types.ts'
 
-export const configCache = new Map<string, { config: ViteConfig; mtime: number }>()
-export const aliasCache = new Map<string, AliasEntry[]>()
-export const defineCache = new Map<string, Record<string, unknown>>()
+export const configCache = new LRUCache<{ config: ViteConfig; mtime: number }>(200)
+export const aliasCache = new LRUCache<AliasEntry[]>(200)
+export const defineCache = new LRUCache<Record<string, unknown>>(200)
+export const resolvedAliasCache = new LRUCache<string | null>(500)

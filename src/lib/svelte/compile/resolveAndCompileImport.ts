@@ -5,7 +5,7 @@ import fs from '@magic/fs'
 
 import { resolveAlias, resolveViteAlias } from '../viteConfig/index.ts'
 
-import { importCache } from '../../caches/cache.ts'
+import { importCache, pendingPromises } from '../../caches/cache.ts'
 import { CACHE_DIR, CWD } from '../../../constants.ts'
 import { acquireLock } from './acquireLock.ts'
 import { isSvelteFile } from './isSvelteFile.ts'
@@ -25,9 +25,6 @@ import { tryStat } from '../../../lib/fs.ts'
 import { traceStart, traceEnd } from '../../trace/timing.ts'
 import { writeQueue } from './writeQueue.ts'
 import { existsCached } from '../../caches/pathCache.ts'
-
-// Deduplication: pending resolve promises by resolved path
-const pendingResolves = new Map<string, Promise<ResolveAndCompileResult>>()
 
 const extractNamedImportsFromCode = (code: string, spec: string): string[] => {
   const namedImports: string[] = []
@@ -66,9 +63,9 @@ const resolveAndCompileImportImpl = async (
   sourceFilePath: string,
   importChain: string[] = [],
 ): Promise<ResolveAndCompileResult> => {
-  // Deduplicate concurrent requests for the same import
-  const dedupKey = `${importPath}:${sourceDir}`
-  const pending = pendingResolves.get(dedupKey)
+  // Deduplicate concurrent requests using shared pendingPromises map
+  const dedupKey = `resolve:${importPath}:${sourceDir}`
+  const pending = pendingPromises.get(dedupKey) as Promise<ResolveAndCompileResult> | undefined
   if (pending) {
     return pending
   }
@@ -79,11 +76,11 @@ const resolveAndCompileImportImpl = async (
     sourceFilePath,
     importChain,
   )
-  pendingResolves.set(dedupKey, promise)
+  pendingPromises.set(dedupKey, promise)
   try {
     return await promise
   } finally {
-    pendingResolves.delete(dedupKey)
+    pendingPromises.delete(dedupKey)
   }
 }
 

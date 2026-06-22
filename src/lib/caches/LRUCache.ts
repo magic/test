@@ -33,6 +33,14 @@ export class LRUCache<T> {
     this.cache.set(key, value)
   }
 
+  delete(key: string): boolean {
+    return this.cache.delete(key)
+  }
+
+  has(key: string): boolean {
+    return this.cache.has(key)
+  }
+
   clear(): void {
     this.cache.clear()
   }

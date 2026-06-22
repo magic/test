@@ -18,25 +18,23 @@ export { LRUCache }
 // Re-export persistent cache functions
 export { clearCache } from './persistentCache.ts'
 
-// Export cache instances for backward compatibility
+// Shared cache entry type for package exports
+export interface PackageExportResolveEntry {
+  resolvedPath: string | null
+  isSvelteOnly: boolean
+  hasSvelteReExports?: boolean
+  isSvelteOnlyPackage?: boolean
+}
+
+// Unified LRU caches
 export const cache = new LRUCache<CompileCacheEntry>(100)
 export const importCache = new LRUCache<ImportCacheEntry>(100)
-export const barrelCache = new Map<string, BarrelCacheEntry>()
-export const processingBarrels = new Set<string>()
+export const packageExportCache = new LRUCache<PackageExportResolveEntry>(200)
+export const barrelCache = new LRUCache<BarrelCacheEntry>(100)
 
-// Promise-based deduplication maps
-export const pendingBarrelCompiles = new Map<
-  string,
-  Promise<{ filePath: string; js: string; wrapperAbsPath: string }>
->()
-export const pendingSvelteCompiles = new Map<
-  string,
-  Promise<{ js: string; css: CssObject | null }>
->()
-export const pendingSvelteExports = new Map<
-  string,
-  Promise<{ name: string; path: string; isDefaultReexport?: boolean }[]>
->()
+// Unified promise deduplication map
+// Keys prefixed: 'barrel:', 'svelte:', 'exports:', 'pkg:', 'resolve:'
+export const pendingPromises = new Map<string, Promise<unknown>>()
 
 /**
  * Generic cache entry type

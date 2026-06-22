@@ -1,7 +1,9 @@
 import fs from '@magic/fs'
 import path from 'node:path'
 
-const projectRootCache = new Map<string, string>()
+import { LRUCache } from '../../caches/LRUCache.ts'
+
+const projectRootCache = new LRUCache<string>(100)
 
 export const findProjectRoot = async (sourceDir: string): Promise<string> => {
   const cached = projectRootCache.get(sourceDir)

@@ -3,20 +3,21 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { createRequire } from 'node:module'
 import log from '@magic/log'
-import { packageExportCache } from '../../caches/packageExportCache.ts'
 import { LRUCache } from '../../caches/LRUCache.ts'
 import { traceStart, traceEnd } from '../../trace/timing.ts'
 import { existsCached } from '../../caches/pathCache.ts'
+import {
+  pendingPromises,
+  packageExportCache,
+  type PackageExportResolveEntry,
+} from '../../caches/cache.ts'
 
-// Cache for expensive file scanning operations
-const svelteReExportsCache = new LRUCache<boolean>(500)
-const exportStarCache = new LRUCache<boolean>(500)
+// Combined LRU cache for file scanning operations (boolean results)
+// Keys prefixed: 'reexports:' or 'exportstar:'
+const fileScanCache = new LRUCache<boolean>(500)
 
 // Cache for package resolution paths (nodeModulesPath per package, LRU for memory safety)
 const nodeModulesPathCache = new LRUCache<string>(100)
-
-// Deduplication for concurrent requests (Map is fine since bounded by concurrency)
-const pendingResolves = new Map<string, Promise<PackageExportResolve>>()
 
 // Skip pattern regex (faster than array.some)
 import {
@@ -28,12 +29,8 @@ import {
   EXPORT_NAMED_REGEX,
 } from '../constants.ts'
 
-export interface PackageExportResolve {
-  resolvedPath: string | null
-  isSvelteOnly: boolean
-  hasSvelteReExports?: boolean
-  isSvelteOnlyPackage?: boolean
-}
+// Re-export for backward compatibility
+export type PackageExportResolve = PackageExportResolveEntry
 
 const getPackageName = (spec: string): { name: string; subpath: string } | null => {
   const parts = spec.split('/')
@@ -88,7 +85,7 @@ const hasSvelteReExports = async (
   visited.add(filePath)
 
   // Check cache first
-  const cached = svelteReExportsCache.get(filePath)
+  const cached = fileScanCache.get(`reexports:${filePath}`)
   if (cached !== undefined) {
     return cached
   }
@@ -96,22 +93,22 @@ const hasSvelteReExports = async (
   // Read content once, reuse it
   const content = _content ?? (await fs.readFile(filePath, 'utf-8').catch(() => null))
   if (!content) {
-    svelteReExportsCache.set(filePath, false)
+    fileScanCache.set(`reexports:${filePath}`, false)
     return false
   }
 
   // If file has Svelte compiler output pattern, it's already compiled
   if (SVELTE_COMPILED_REGEX.test(content)) {
-    svelteReExportsCache.set(filePath, false)
+    fileScanCache.set(`reexports:${filePath}`, false)
     return false
   }
 
   if (SVELTE_REEXPORT_REGEX.test(content) || SVELTE_DEFAULT_REEXPORT_REGEX.test(content)) {
-    svelteReExportsCache.set(filePath, true)
+    fileScanCache.set(`reexports:${filePath}`, true)
     return true
   }
   if (SVELTE_RUNE_REGEX.test(content)) {
-    svelteReExportsCache.set(filePath, true)
+    fileScanCache.set(`reexports:${filePath}`, true)
     return true
   }
 
@@ -126,14 +123,14 @@ const hasSvelteReExports = async (
     }
     const resolved = path.resolve(dir, reexportPath)
     if (resolved.endsWith('.svelte') || resolved.endsWith('.svelte.js')) {
-      svelteReExportsCache.set(filePath, true)
+      fileScanCache.set(`reexports:${filePath}`, true)
       return true
     }
     if (
       (resolved.endsWith('.js') || resolved.endsWith('.mjs')) &&
       (await hasSvelteReExports(resolved, visited))
     ) {
-      svelteReExportsCache.set(filePath, true)
+      fileScanCache.set(`reexports:${filePath}`, true)
       return true
     }
   }
@@ -145,19 +142,19 @@ const hasSvelteReExports = async (
     }
     const resolved = path.resolve(dir, reexportPath)
     if (resolved.endsWith('.svelte.js')) {
-      svelteReExportsCache.set(filePath, true)
+      fileScanCache.set(`reexports:${filePath}`, true)
       return true
     }
     if (
       (resolved.endsWith('.js') || resolved.endsWith('.mjs')) &&
       (await hasSvelteReExports(resolved, visited))
     ) {
-      svelteReExportsCache.set(filePath, true)
+      fileScanCache.set(`reexports:${filePath}`, true)
       return true
     }
   }
 
-  svelteReExportsCache.set(filePath, false)
+  fileScanCache.set(`reexports:${filePath}`, false)
   return false
 }
 
@@ -176,7 +173,7 @@ const hasExportStarToSvelte = async (
   visited.add(filePath)
 
   // Check cache first
-  const cached = exportStarCache.get(filePath)
+  const cached = fileScanCache.get(`exportstar:${filePath}`)
   if (cached !== undefined) {
     return cached
   }
@@ -184,13 +181,13 @@ const hasExportStarToSvelte = async (
   // Read content once, reuse it
   const content = _content ?? (await fs.readFile(filePath, 'utf-8').catch(() => null))
   if (!content) {
-    exportStarCache.set(filePath, false)
+    fileScanCache.set(`exportstar:${filePath}`, false)
     return false
   }
 
   // If file has Svelte compiler output, it's already compiled
   if (SVELTE_COMPILED_REGEX.test(content)) {
-    exportStarCache.set(filePath, false)
+    fileScanCache.set(`exportstar:${filePath}`, false)
     return false
   }
 
@@ -205,23 +202,23 @@ const hasExportStarToSvelte = async (
     const resolved = path.resolve(dir, reexportPath)
 
     if (resolved.endsWith('.svelte')) {
-      exportStarCache.set(filePath, true)
+      fileScanCache.set(`exportstar:${filePath}`, true)
       return true
     }
 
     if (resolved.endsWith('.js') || resolved.endsWith('.mjs')) {
       if (await hasExportStarToSvelte(resolved, visited)) {
-        exportStarCache.set(filePath, true)
+        fileScanCache.set(`exportstar:${filePath}`, true)
         return true
       }
       if (await hasSvelteReExports(resolved)) {
-        exportStarCache.set(filePath, true)
+        fileScanCache.set(`exportstar:${filePath}`, true)
         return true
       }
     }
   }
 
-  exportStarCache.set(filePath, false)
+  fileScanCache.set(`exportstar:${filePath}`, false)
   return false
 }
 
@@ -253,27 +250,30 @@ export const resolvePackageExport = async (
   }
 
   const id = traceStart(`resolvePackageExport ${pkgSpec}`)
-  const cacheKey = `${pkgSpec}:${sourceDir}`
+  const cacheKey = `pkg:${pkgSpec}:${sourceDir}`
 
-  // Check deduplication first
-  const pending = pendingResolves.get(cacheKey)
-  if (pending) {
-    traceEnd(id, 'dedup')
-    return pending
-  }
-
-  const cached = packageExportCache.get(cacheKey)
+  // Check cache first
+  const cached = packageExportCache.get(cacheKey) as PackageExportResolve | undefined
   if (cached) {
     traceEnd(id, 'cache hit')
     return cached
   }
 
+  // Check deduplication (using shared pendingPromises)
+  const pending = pendingPromises.get(cacheKey) as Promise<PackageExportResolve> | undefined
+  if (pending) {
+    traceEnd(id, 'dedup')
+    return pending
+  }
+
   const promise = resolvePackageExportImpl(pkgSpec, sourceDir, pkgName, cacheKey)
-  pendingResolves.set(cacheKey, promise)
+  pendingPromises.set(cacheKey, promise)
   try {
-    return await promise
+    const result = await promise
+    packageExportCache.set(cacheKey, result)
+    return result
   } finally {
-    pendingResolves.delete(cacheKey)
+    pendingPromises.delete(cacheKey)
   }
 }
 
@@ -541,7 +541,5 @@ const resolvePackageExportImpl = async (
     }
   }
 
-  // Cache the result
-  packageExportCache.set(cacheKey, result)
   return result
 }

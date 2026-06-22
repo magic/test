@@ -1,5 +1,6 @@
 import { getParser } from '../ast-cache.ts'
 import { getSvelteCompiler } from '../compiler-cache.ts'
+import { LRUCache } from '../../caches/LRUCache.ts'
 import type { TSESTree } from '@typescript-eslint/types'
 import crypto from 'node:crypto'
 import type { ExportInfo } from './types.ts'
@@ -13,32 +14,8 @@ export type FileInfo = {
 
 const MAX_AST_CACHE_SIZE = 500
 
-// Custom cache functions since LRUCache normalizes keys
-const cacheMap = new Map<string, FileInfo>()
-
-const getCache = (key: string): FileInfo | undefined => {
-  const value = cacheMap.get(key)
-  if (value) {
-    // Move to end (LRU)
-    cacheMap.delete(key)
-    cacheMap.set(key, value)
-  }
-  return value
-}
-
-const setCache = (key: string, value: FileInfo): void => {
-  if (cacheMap.has(key)) {
-    cacheMap.delete(key)
-  } else if (cacheMap.size >= MAX_AST_CACHE_SIZE) {
-    const firstKey = cacheMap.keys().next().value
-    if (firstKey) {
-      cacheMap.delete(firstKey)
-    }
-  }
-  cacheMap.set(key, value)
-}
-
-const astCache = { get: getCache, set: setCache, clear: () => cacheMap.clear() }
+// Use LRUCache for consistent cache behavior
+const astCache = new LRUCache<FileInfo>(MAX_AST_CACHE_SIZE)
 
 export const clearAstCache = () => astCache.clear()
 
@@ -86,7 +63,7 @@ const extractScriptFromSvelte = async (source: string): Promise<string> => {
 
 const parseFile = async (code: string, filePath: string): Promise<FileInfo> => {
   const cacheKey = getCacheKey(code, filePath)
-  const cached = getCache(cacheKey)
+  const cached = astCache.get(cacheKey)
   if (cached) {
     return cached
   }
@@ -102,7 +79,7 @@ const parseFile = async (code: string, filePath: string): Promise<FileInfo> => {
   })
 
   const result: FileInfo = { code: codeToParse, ast, filePath }
-  setCache(cacheKey, result)
+  astCache.set(cacheKey, result)
   return result
 }
 
