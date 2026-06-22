@@ -1,7 +1,7 @@
 import path from 'node:path'
 import fs from '@magic/fs'
 import { resolveAlias, resolveViteAlias } from '../viteConfig/index.js'
-import { importCache } from './cache.js'
+import { importCache } from '../../caches/cache.js'
 import { CACHE_DIR, CWD } from '../../../constants.js'
 import { acquireLock } from './acquireLock.js'
 import { isSvelteFile } from './isSvelteFile.js'
@@ -16,9 +16,9 @@ import { compileBarrel } from './compileBarrel.js'
 import { resolvePackageExport } from './resolvePackageExport.js'
 import { compileSvelteOnlyExport } from './resolveSvelteOnlyExports.js'
 import { tryStat } from '../../../lib/fs.js'
-import { traceStart, traceEnd } from './timing.js'
+import { traceStart, traceEnd } from '../../trace/timing.js'
 import { writeQueue } from './writeQueue.js'
-import { existsCached } from './pathCache.js'
+import { existsCached } from '../../caches/pathCache.js'
 // Deduplication: pending resolve promises by resolved path
 const pendingResolves = new Map()
 const extractNamedImportsFromCode = (code, spec) => {

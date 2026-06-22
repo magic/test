@@ -1,6 +1,5 @@
 export { compileSvelte } from './compileSvelte.ts'
 export { compileSvelteWithWrite } from './compileSvelteWithWrite.ts'
-export { CacheManager, cacheManager } from './cache.ts'
 export {
   traceStart,
   traceEnd,
@@ -13,4 +12,4 @@ export {
   resetTraces,
   getTraceData,
   getTraceSummary,
-} from './timing.ts'
+} from '../../trace/timing.ts'

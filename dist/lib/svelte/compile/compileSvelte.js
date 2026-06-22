@@ -2,7 +2,7 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.js'
 import { getSvelteCompiler } from '../compiler-cache.js'
-import { cache, pendingSvelteCompiles } from './cache.js'
+import { cache, pendingSvelteCompiles } from '../../caches/cache.js'
 import { CWD } from '../../../constants.js'
 /**
  * Pure compilation function - caching handled by CacheManager in tsLoader

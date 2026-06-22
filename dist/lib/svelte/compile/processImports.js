@@ -4,7 +4,7 @@ import log from '@magic/log'
 import is from '@magic/types'
 import { SVELTE_IMPORT_REGEX } from '../constants.js'
 import { resolveAndCompileImport } from './resolveAndCompileImport.js'
-import { traceStart, traceEnd } from './timing.js'
+import { traceStart, traceEnd } from '../../trace/timing.js'
 import { parallelMap, MAX_CONCURRENT } from './parallelMap.js'
 // Cache for processImports results (key: codeHash:sourceFilePath)
 const processImportsCache = new Map()

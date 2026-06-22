@@ -5,7 +5,7 @@ import { CACHE_DIR, CWD } from '../../../constants.js'
 import { transformForNode } from './transformForNode.js'
 import { compileSvelte } from './compileSvelte.js'
 import { processImports } from './processImports.js'
-import { traceStart, traceEnd } from './timing.js'
+import { traceStart, traceEnd } from '../../trace/timing.js'
 export const compileSvelteWithWrite = async filePath => {
   const id = traceStart(`compileSvelteWithWrite ${path.basename(filePath)}`)
   try {

@@ -5,9 +5,9 @@ import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.j
 import is from '@magic/types'
 import ts from 'typescript'
 import log from '@magic/log'
-import { traceStart, traceEnd } from '../../lib/svelte/compile/timing.js'
-import { cacheManager } from '../../lib/svelte/compile/cache.js'
-import { getCacheDir } from '../../lib/svelte/compile/persistentCache.js'
+import { traceStart, traceEnd } from '../../lib/trace/timing.js'
+import { cacheManager } from '../../lib/caches/cache.js'
+import { getCacheDir } from '../../lib/caches/persistentCache.js'
 import { writeQueue } from '../../lib/svelte/compile/writeQueue.js'
 // Use shared cache manager for all Svelte compilation
 // Helper to get or compile a Svelte file with caching

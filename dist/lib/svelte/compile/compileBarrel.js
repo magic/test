@@ -1,13 +1,12 @@
 import path from 'node:path'
 import fs from '@magic/fs'
-import { mkdir, writeFile } from 'node:fs/promises'
-import { barrelCache, processingBarrels, pendingBarrelCompiles } from './cache.js'
+import { barrelCache, processingBarrels, pendingBarrelCompiles } from '../../caches/cache.js'
+import { traceStart, traceEnd } from '../../trace/timing.js'
 import { CACHE_DIR, CWD } from '../../../constants.js'
 import { getSvelteExports } from './getSvelteExports.js'
 import { processImports } from './processImports.js'
 import { compileSvelte } from './compileSvelte.js'
 import { computeRelativePath } from './computeRelativePath.js'
-import { traceStart, traceEnd } from './timing.js'
 import { parallelMap, MAX_CONCURRENT } from './parallelMap.js'
 export const compileBarrel = async (filePath, importChain = []) => {
   const id = traceStart(`compileBarrel ${path.basename(filePath)}`)
@@ -138,8 +137,8 @@ const compileBarrelImpl = async (filePath, currentChain) => {
   filesToWrite.push({ path: wrapperAbsPath, content: wrapperCode })
   // Write all files in parallel, creating directories once
   const dirsToCreate = new Set(filesToWrite.map(f => path.dirname(f.path)))
-  await Promise.all([...dirsToCreate].map(d => mkdir(d, { recursive: true })))
-  await Promise.all(filesToWrite.map(f => writeFile(f.path, f.content)))
+  await Promise.all([...dirsToCreate].map(d => fs.mkdir(d, { recursive: true })))
+  await Promise.all(filesToWrite.map(f => fs.writeFile(f.path, f.content)))
   traceEnd(writeId)
   barrelCache.set(filePath, { exports, wrapperAbsPath })
   return { filePath, js: wrapperCode, wrapperAbsPath }

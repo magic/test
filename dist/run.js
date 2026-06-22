@@ -2,8 +2,8 @@ import is from '@magic/types'
 import log from '@magic/log'
 import { stats, createStore, ERRORS } from './lib/index.js'
 import { runSuite } from './run/suite.js'
-import { printTraceSummary, isTraceEnabled } from './lib/svelte/compile/timing.js'
-import { clearCache as clearPersistentCache } from './lib/svelte/compile/persistentCache.js'
+import { printTraceSummary, isTraceEnabled } from './lib/trace/timing.js'
+import { clearCache as clearPersistentCache } from './lib/caches/persistentCache.js'
 /**
  * Aggregate raw test results into the store's results object.
  * This replaces the incremental stats.test() calls to avoid race conditions.
