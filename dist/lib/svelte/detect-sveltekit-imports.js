@@ -1,31 +1,34 @@
+import { extractImportsSync } from './compile/astParse.js'
 /**
  * Detect if a compiled Svelte component uses $app/* imports.
  */
 export const detectSvelteKitImports = async compiledCode => {
-  // Simple regex search for import from "$app/"
-  const appImportRegex = /import\s+[^;]*\s+from\s+['"]\$app\/([^'"]+)['"]/g
+  // Use AST-based import extraction
+  const imports = extractImportsSync(compiledCode)
   const result = {
     appState: false,
     appNavigation: false,
     appPaths: false,
     appEnvironment: false,
   }
-  let match
-  while ((match = appImportRegex.exec(compiledCode)) !== null) {
-    const module = match[1] // e.g., "state", "navigation", "paths", "environment"
-    switch (module) {
-      case 'state':
-        result.appState = true
-        break
-      case 'navigation':
-        result.appNavigation = true
-        break
-      case 'paths':
-        result.appPaths = true
-        break
-      case 'environment':
-        result.appEnvironment = true
-        break
+  for (const imp of imports) {
+    if (imp.source.startsWith('$app/')) {
+      // Extract module name from "$app/module"
+      const module = imp.source.slice(5) // Remove "$app/" prefix
+      switch (module) {
+        case 'state':
+          result.appState = true
+          break
+        case 'navigation':
+          result.appNavigation = true
+          break
+        case 'paths':
+          result.appPaths = true
+          break
+        case 'environment':
+          result.appEnvironment = true
+          break
+      }
     }
   }
   return result

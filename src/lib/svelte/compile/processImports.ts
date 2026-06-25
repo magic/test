@@ -5,7 +5,7 @@ import log from '@magic/log'
 import is from '@magic/types'
 
 import { LRUCache } from '../../caches/LRUCache.ts'
-import { SVELTE_IMPORT_REGEX } from '../constants.ts'
+import { extractImportsSync } from './astParse.ts'
 import { resolveAndCompileImport } from './resolveAndCompileImport.ts'
 import { traceStart, traceEnd } from '../../trace/timing.ts'
 import { parallelMap, MAX_CONCURRENT } from './parallelMap.ts'
@@ -45,32 +45,18 @@ const processImportsImpl = async (
 ): Promise<string> => {
   let processedCode = code
   const sourceDir = path.dirname(sourceFilePath)
-  const imports: { imported: string; path: string; full: string }[] = []
 
-  let match
-  const regex = new RegExp(SVELTE_IMPORT_REGEX.source, 'g')
-  while ((match = regex.exec(code)) !== null) {
-    if (match[1] && match[2] && match[0]) {
-      const matchStart = match.index
-      let inBlockComment = false
-      for (let i = 0; i < matchStart; i++) {
-        if (code[i] === '/' && code[i + 1] === '*') {
-          inBlockComment = true
-        } else if (code[i] === '*' && code[i + 1] === '/') {
-          inBlockComment = false
-        }
-      }
-      if (inBlockComment) {
-        continue
-      }
-      const lineStart = code.lastIndexOf('\n', matchStart) + 1
-      const lineBeforeMatch = code.slice(lineStart, matchStart)
-      if (lineBeforeMatch.includes('//')) {
-        continue
-      }
-      imports.push({ imported: match[1], path: match[2], full: match[0] })
-    }
-  }
+  // Use AST-based import extraction (handles comments automatically)
+  const astImports = extractImportsSync(code)
+  const imports = astImports
+    .filter(imp => imp.type === 'static' || imp.type === 'namespace')
+    .map(imp => ({
+      imported: imp.specifiers,
+      path: imp.source,
+      full: imp.originalText,
+      start: imp.start,
+      end: imp.end,
+    }))
 
   const importCount = imports.length
 
@@ -80,7 +66,7 @@ const processImportsImpl = async (
   const results = await parallelMap(
     imports.map((item, i) => ({ item, index: i })),
     async ({ item, index }) => {
-      const { imported, path: importPath } = item
+      const { imported, path: importPath, start, end } = item
       const resolveId = traceStart(
         `resolve.import[${index + 1}/${importCount}] ${importPath.split('/').pop() || importPath}`,
       )
@@ -92,7 +78,7 @@ const processImportsImpl = async (
           chainWithCurrent,
         )
         traceEnd(resolveId)
-        return { imported, importPath, result }
+        return { imported, importPath, start, end, result }
       } catch (e) {
         traceEnd(resolveId, 'ERROR')
         const message = is.error(e) ? e.message : String(e)
@@ -104,32 +90,29 @@ const processImportsImpl = async (
   )
 
   // Apply replacements in order (sequential to avoid conflicts)
-  for (const { imported, importPath, result } of results) {
+  // Sort by start position descending so replacements don't affect later positions
+  const sortedResults = results.sort((a, b) => b.start - a.start)
+
+  for (const { imported, start, end, result } of sortedResults) {
     // Handle circular imports - remove the import statement since the module will
     // export itself. The import would create a circular dependency anyway.
     const normalizedSource = path.resolve(sourceFilePath)
     const normalizedResult = path.resolve(result.filePath)
     if (normalizedSource === normalizedResult) {
-      // Self-referencing import - remove it entirely
-      const importRegex = new RegExp(
-        `import\\s+${imported.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+from\\s+['\"]${importPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['\"]`,
-        'g',
-      )
-      processedCode = processedCode.replace(
-        importRegex,
-        `/* Circular self-reference: ${imported} will be exported by this module */`,
-      )
+      // Self-referencing import - remove it entirely using AST position
+      processedCode =
+        processedCode.slice(0, start) +
+        `/* Circular self-reference: ${imported} will be exported by this module */` +
+        processedCode.slice(end)
       continue
     }
 
     if ('skipProcessing' in result && result.skipProcessing) {
       const isSvelteOnlyPackage = 'isSvelteOnlyPackage' in result && result.isSvelteOnlyPackage
       if (isSvelteOnlyPackage) {
-        const importRegex = new RegExp(
-          `import\\s+${imported.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+from\\s+['\"]${importPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['\"]`,
-          'g',
-        )
-        processedCode = processedCode.replace(importRegex, `const ${imported} = {}`)
+        // Use AST position for direct replacement
+        processedCode =
+          processedCode.slice(0, start) + `const ${imported} = {}` + processedCode.slice(end)
       }
       continue
     }
@@ -138,11 +121,10 @@ const processImportsImpl = async (
     if (!url) {
       continue
     }
-    const importRegex = new RegExp(
-      `import\\s+${imported.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+from\\s+['\"]${importPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['\"]`,
-      'g',
-    )
-    processedCode = processedCode.replace(importRegex, `import ${imported} from '${url}'`)
+
+    // Use AST position for direct replacement - no regex needed
+    const newImportStatement = `import ${imported} from '${url}'`
+    processedCode = processedCode.slice(0, start) + newImportStatement + processedCode.slice(end)
   }
 
   return processedCode

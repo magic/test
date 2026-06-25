@@ -9,6 +9,7 @@ import { traceStart, traceEnd } from '../../lib/trace/timing.ts'
 import { cacheManager } from '../../lib/caches/cache.ts'
 import { getCacheDir } from '../../lib/caches/persistentCache.ts'
 import { writeQueue } from '../../lib/svelte/compile/writeQueue.ts'
+import { hasSvelteRunes } from '../../lib/svelte/compile/astParse.ts'
 
 // Use shared cache manager for all Svelte compilation
 // Helper to get or compile a Svelte file with caching
@@ -131,7 +132,7 @@ const resolveImpl = async (
       const resolvedPath = path.resolve(parentDir, specifier)
       if (await fs.exists(resolvedPath)) {
         const source = await fs.readFile(resolvedPath, 'utf-8')
-        const hasRune = /\$(?:state|derived|effect|props|bindable)\b/.test(source)
+        const hasRune = hasSvelteRunes(source)
         if (hasRune) {
           try {
             const { compileModule } = await import('svelte/compiler')

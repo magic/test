@@ -25,24 +25,12 @@ import { tryStat } from '../../../lib/fs.ts'
 import { traceStart, traceEnd } from '../../trace/timing.ts'
 import { writeQueue } from './writeQueue.ts'
 import { existsCached } from '../../caches/pathCache.ts'
-
+import { extractImportsSync } from './astParse.ts'
 const extractNamedImportsFromCode = (code: string, spec: string): string[] => {
-  const namedImports: string[] = []
-  const escapedSpec = spec.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const importRe = new RegExp(`import\\s+\\{([^}]+)\\}\\s+from\\s+['"\`]${escapedSpec}['"\`]`, 'g')
-  for (const match of code.matchAll(importRe)) {
-    if (match[1]) {
-      const names = match[1].split(',').map(n => {
-        const trimmed = n.trim()
-        const asParts = trimmed.split(' as ')
-        return asParts.length > 1 && asParts[1] ? asParts[1] : trimmed
-      })
-      namedImports.push(...names.filter(Boolean))
-    }
-  }
-  return namedImports
+  const imports = extractImportsSync(code)
+  const imp = imports.find(i => i.source === spec)
+  return imp?.localNames ?? []
 }
-
 export const resolveAndCompileImport = async (
   importPath: string,
   sourceDir: string,

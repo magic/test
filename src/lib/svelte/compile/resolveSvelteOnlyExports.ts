@@ -12,7 +12,7 @@ import { resolvePackageExport, type PackageExportResolve } from './resolvePackag
 import { LRUCache } from '../../caches/LRUCache.ts'
 import { cache as compileCache } from '../../caches/cache.ts'
 import { CWD, CACHE_DIR } from '../../../constants.ts'
-import { SVELTE_RUNE_REGEX } from '../constants.ts'
+import { hasSvelteRunes } from './astParse.ts'
 import { parseFile, extractExports, extractImports } from './astParse.ts'
 import { writeQueue } from './writeQueue.ts'
 import { existsCached } from '../../caches/pathCache.ts'
@@ -300,7 +300,7 @@ const handleJsWithSvelteReexports = async (
         let tempFile: string
         let tempUrl: string
 
-        if (SVELTE_RUNE_REGEX.test(reexportContent)) {
+        if (hasSvelteRunes(reexportContent)) {
           try {
             const { compileModule } = await getSvelteCompiler()
             const result = compileModule(reexportContent, { filename: absolutePath })
@@ -380,7 +380,7 @@ const handleJsWithSvelteReexports = async (
         if (absoluteUrl && (absolutePath.endsWith('.js') || absolutePath.endsWith('.mjs'))) {
           const depContent = await fs.readFile(absolutePath, 'utf-8')
           let contentToWrite = depContent
-          if (SVELTE_RUNE_REGEX.test(depContent)) {
+          if (hasSvelteRunes(depContent)) {
             try {
               const { compileModule } = await getSvelteCompiler()
               const result = compileModule(depContent, { filename: absolutePath })

@@ -14,13 +14,12 @@ const fileScanCache = new LRUCache(500)
 const nodeModulesPathCache = new LRUCache(100)
 // Skip pattern regex (faster than array.some)
 import {
-  SVELTE_RUNE_REGEX,
-  SVELTE_COMPILED_REGEX,
-  SVELTE_REEXPORT_REGEX,
-  SVELTE_DEFAULT_REEXPORT_REGEX,
-  EXPORT_STAR_REGEX,
-  EXPORT_NAMED_REGEX,
-} from '../constants.js'
+  hasSvelteRunes,
+  isSvelteCompiled,
+  hasSvelteReexports,
+  getExportStarTargets,
+  getExportNamedTargets,
+} from './astParse.js'
 const getPackageName = spec => {
   const parts = spec.split('/')
   if (spec.startsWith('@')) {
@@ -74,26 +73,23 @@ const hasSvelteReExports = async (filePath, visited, _content) => {
     return false
   }
   // If file has Svelte compiler output pattern, it's already compiled
-  if (SVELTE_COMPILED_REGEX.test(content)) {
+  if (isSvelteCompiled(content)) {
     fileScanCache.set(`reexports:${filePath}`, false)
     return false
   }
-  if (SVELTE_REEXPORT_REGEX.test(content) || SVELTE_DEFAULT_REEXPORT_REGEX.test(content)) {
+  // Check for direct re-exports from .svelte files using AST
+  if (hasSvelteReexports(content)) {
     fileScanCache.set(`reexports:${filePath}`, true)
     return true
   }
-  if (SVELTE_RUNE_REGEX.test(content)) {
+  if (hasSvelteRunes(content)) {
     fileScanCache.set(`reexports:${filePath}`, true)
     return true
   }
   const dir = path.dirname(filePath)
-  const exportStarMatches = [...content.matchAll(EXPORT_STAR_REGEX)]
-  const exportNamedMatches = [...content.matchAll(EXPORT_NAMED_REGEX)]
-  for (const match of exportStarMatches) {
-    const reexportPath = match[1]
-    if (!reexportPath) {
-      continue
-    }
+  // Check export * from targets
+  const exportStarTargets = getExportStarTargets(content)
+  for (const reexportPath of exportStarTargets) {
     const resolved = path.resolve(dir, reexportPath)
     if (resolved.endsWith('.svelte') || resolved.endsWith('.svelte.js')) {
       fileScanCache.set(`reexports:${filePath}`, true)
@@ -107,11 +103,9 @@ const hasSvelteReExports = async (filePath, visited, _content) => {
       return true
     }
   }
-  for (const match of exportNamedMatches) {
-    const reexportPath = match[1]
-    if (!reexportPath) {
-      continue
-    }
+  // Check export { x } from targets
+  const exportNamedTargets = getExportNamedTargets(content)
+  for (const reexportPath of exportNamedTargets) {
     const resolved = path.resolve(dir, reexportPath)
     if (resolved.endsWith('.svelte.js')) {
       fileScanCache.set(`reexports:${filePath}`, true)
@@ -149,17 +143,13 @@ const hasExportStarToSvelte = async (filePath, visited, _content) => {
     return false
   }
   // If file has Svelte compiler output, it's already compiled
-  if (SVELTE_COMPILED_REGEX.test(content)) {
+  if (isSvelteCompiled(content)) {
     fileScanCache.set(`exportstar:${filePath}`, false)
     return false
   }
   const dir = path.dirname(filePath)
-  const exportStarMatches = [...content.matchAll(EXPORT_STAR_REGEX)]
-  for (const match of exportStarMatches) {
-    const reexportPath = match[1]
-    if (!reexportPath) {
-      continue
-    }
+  const exportStarTargets = getExportStarTargets(content)
+  for (const reexportPath of exportStarTargets) {
     const resolved = path.resolve(dir, reexportPath)
     if (resolved.endsWith('.svelte')) {
       fileScanCache.set(`exportstar:${filePath}`, true)
