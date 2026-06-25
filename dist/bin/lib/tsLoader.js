@@ -40,7 +40,7 @@ const compileSvelteFile = async filePath => {
   if (result?.js) {
     const relPath = path.relative(process.cwd(), filePath)
     const cacheDir = getCacheDir()
-    const tmpFile = path.join(cacheDir, 'compiled', relPath.replace(/\.svelte$/, '.js'))
+    const tmpFile = path.join(cacheDir, relPath.replace(/\.svelte$/, '.svelte.js'))
     const tmpFileAbs = path.resolve(process.cwd(), tmpFile)
     // Eagerly flush this file's write before returning URL
     await writeQueue.flushPath(tmpFileAbs)

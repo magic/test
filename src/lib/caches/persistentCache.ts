@@ -5,7 +5,7 @@ import crypto from 'node:crypto'
 import { LRUCache } from './LRUCache.ts'
 
 const CACHE_DIR = 'node_modules/.magic-test-cache'
-const COMPILED_DIR = path.join(CACHE_DIR, 'compiled')
+// Use CACHE_DIR directly for cache paths
 const MANIFEST_FILE = path.join(CACHE_DIR, 'manifest.json')
 
 interface SourceEntry {
@@ -38,8 +38,8 @@ async function hashFile(filePath: string): Promise<string> {
 
 // Get relative cache path for a source file
 function getCachePath(sourcePath: string): string {
-  const rel = path.relative(process.cwd(), sourcePath).replace(/\.svelte$/, '.js')
-  return path.join(COMPILED_DIR, rel)
+  const rel = path.relative(process.cwd(), sourcePath).replace(/\.svelte$/, '.svelte.js')
+  return path.join(CACHE_DIR, rel)
 }
 
 export async function loadManifest(): Promise<CacheManifest | null> {

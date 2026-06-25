@@ -32,26 +32,27 @@ const getShardConfig = () => {
 }
 
 const init = async () => {
-  await maybeInjectMagic()
-
-  // Reset state between runs to prevent stale cache issues
-  resetVisitedDirs()
-
-  const tests = await readRecursive()
-
-  if (!tests) {
-    log.error('NO tests specified')
-    return
-  }
-
-  const { shards, shardId, workers } = getShardConfig()
-
   try {
+    await maybeInjectMagic()
+
+    // Reset state between runs to prevent stale cache issues
+    resetVisitedDirs()
+
+    const tests = await readRecursive()
+
+    if (!tests) {
+      log.error('NO tests specified')
+      return
+    }
+
+    const { shards, shardId, workers } = getShardConfig()
+
     await run(tests, { shards, shardId, workers })
-  } catch (e: unknown) {
+  } catch (e) {
     const err = e as CustomError
     err.code = 'E_MAGIC_TEST'
     log.error(err)
+    process.exit(1)
   }
 }
 

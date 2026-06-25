@@ -75,6 +75,8 @@ const processImportsImpl = async (
   const importCount = imports.length
 
   // Parallelize import resolution
+  // Add current sourceFilePath to chain to detect circular imports
+  const chainWithCurrent = [...importChain, sourceFilePath]
   const results = await parallelMap(
     imports.map((item, i) => ({ item, index: i })),
     async ({ item, index }) => {
@@ -87,7 +89,7 @@ const processImportsImpl = async (
           importPath,
           sourceDir,
           sourceFilePath,
-          importChain,
+          chainWithCurrent,
         )
         traceEnd(resolveId)
         return { imported, importPath, result }
@@ -103,11 +105,28 @@ const processImportsImpl = async (
 
   // Apply replacements in order (sequential to avoid conflicts)
   for (const { imported, importPath, result } of results) {
+    // Handle circular imports - remove the import statement since the module will
+    // export itself. The import would create a circular dependency anyway.
+    const normalizedSource = path.resolve(sourceFilePath)
+    const normalizedResult = path.resolve(result.filePath)
+    if (normalizedSource === normalizedResult) {
+      // Self-referencing import - remove it entirely
+      const importRegex = new RegExp(
+        `import\\s+${imported.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+from\\s+['\"]${importPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['\"]`,
+        'g',
+      )
+      processedCode = processedCode.replace(
+        importRegex,
+        `/* Circular self-reference: ${imported} will be exported by this module */`,
+      )
+      continue
+    }
+
     if ('skipProcessing' in result && result.skipProcessing) {
       const isSvelteOnlyPackage = 'isSvelteOnlyPackage' in result && result.isSvelteOnlyPackage
       if (isSvelteOnlyPackage) {
         const importRegex = new RegExp(
-          `import\\s+${imported.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+from\\s+['"]${importPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`,
+          `import\\s+${imported.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+from\\s+['\"]${importPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['\"]`,
           'g',
         )
         processedCode = processedCode.replace(importRegex, `const ${imported} = {}`)
@@ -120,7 +139,7 @@ const processImportsImpl = async (
       continue
     }
     const importRegex = new RegExp(
-      `import\\s+${imported.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+from\\s+['"]${importPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`,
+      `import\\s+${imported.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+from\\s+['\"]${importPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['\"]`,
       'g',
     )
     processedCode = processedCode.replace(importRegex, `import ${imported} from '${url}'`)

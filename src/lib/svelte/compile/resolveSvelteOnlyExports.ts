@@ -117,11 +117,22 @@ export const compileSvelteOnlyExport = async (
       }
 
       // Use cacheManager for deduplication and caching
-      const { tmpFile } = await cacheManager.getOrCompile(sveltePath, async () => {
+      const cacheResult = await cacheManager.getOrCompile(sveltePath, async () => {
         // Import compileSvelteWithWrite lazily to avoid circular deps
         const { compileSvelteWithWrite } = await import('./compileSvelteWithWrite.js')
         return compileSvelteWithWrite(sveltePath)
       })
+      // cacheResult may be disk cache which only has { js, css, mtime } without tmpFile
+      // Reconstruct tmpFile path the same way compileSvelteWithWrite does
+      const tmpFile =
+        cacheResult.tmpFile ??
+        (() => {
+          const resolvedPath = path.isAbsolute(sveltePath)
+            ? sveltePath
+            : path.resolve(CWD, sveltePath)
+          const relPath = path.relative(CWD, resolvedPath)
+          return path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
+        })()
       compileCache.set(cacheKey, { js: content, css: null, mtime: Date.now() })
       tmpFileCache.set(sveltePath, tmpFile)
       return tmpFile
@@ -154,11 +165,21 @@ const handleJsWithSvelteReexports = async (
 
   let jsDir = path.dirname(jsFilePath)
   if (jsFilePath.includes('node_modules_processed')) {
-    const parts = jsFilePath.split('node_modules_processed/')
-    if (parts.length === 2 && parts[1]) {
-      const relFromProcessed = parts[1]
+    // Handle paths like .magic-test-cache/node_modules_processed/package/path
+    // by stripping the cache prefix and reconstructing the original node_modules path
+    const cachePrefix = path.join(CWD, CACHE_DIR, 'node_modules_processed')
+    if (jsFilePath.startsWith(cachePrefix)) {
+      const relFromProcessed = jsFilePath.slice(cachePrefix.length + 1) // +1 for trailing slash
       jsDir = path.join(CWD, 'node_modules', relFromProcessed)
       jsDir = path.dirname(jsDir)
+    } else {
+      // Fallback for older path format
+      const parts = jsFilePath.split('node_modules_processed/')
+      if (parts.length === 2 && parts[1]) {
+        const relFromProcessed = parts[1]
+        jsDir = path.join(CWD, 'node_modules', relFromProcessed)
+        jsDir = path.dirname(jsDir)
+      }
     }
   }
 

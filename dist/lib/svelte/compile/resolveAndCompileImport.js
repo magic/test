@@ -55,7 +55,9 @@ const resolveAndCompileImportImpl = async (
   importChain = [],
 ) => {
   // Deduplicate concurrent requests using shared pendingPromises map
-  const dedupKey = `resolve:${importPath}:${sourceDir}`
+  // Include sourceFilePath in dedup key to prevent deadlock when the same file
+  // is being resolved from different import contexts (e.g., self-import)
+  const dedupKey = `resolve:${importPath}:${sourceDir}:${sourceFilePath}`
   const pending = pendingPromises.get(dedupKey)
   if (pending) {
     return pending
@@ -271,16 +273,28 @@ const resolveAndCompileImportImplCore = async (
     traceEnd(barrelId)
   }
   if (!isSvelteFile(resolvedPath)) {
-    const sourceTmpFile = getTempFilePath(sourceFilePath)
-    const fromDir = path.dirname(sourceTmpFile)
-    const relativePath = computeRelativePath(fromDir, resolvedPath)
-    return { filePath: resolvedPath, js: '', url: relativePath }
+    // Use absolute file:// URL for non-Svelte imports to avoid broken relative paths
+    // that go through node_modules/.magic-test-cache/
+    const absoluteUrl = pathToFileURL(resolvedPath).href
+    return { filePath: resolvedPath, js: '', url: absoluteUrl }
   }
-  if (importChain.includes(resolvedPath)) {
-    const sourceTmpFile = getTempFilePath(sourceFilePath)
-    const fromDir = path.dirname(sourceTmpFile)
-    const relativePath = computeRelativePath(fromDir, resolvedPath)
-    return { filePath: resolvedPath, js: '', url: relativePath }
+  // Normalize both resolvedPath and chain paths for comparison
+  // The resolvedPath is absolute, but chain entries may be relative
+  const normalizedResolved = path.resolve(resolvedPath)
+  // Also normalize sourceFilePath for comparison (it may be relative)
+  const normalizedSource = path.resolve(sourceFilePath)
+  // Check if the import resolves to the same file that's doing the importing (circular self-reference)
+  // OR if it's in the ancestor chain (already being processed)
+  const isCircular =
+    normalizedResolved === normalizedSource ||
+    importChain.some(chainPath => {
+      const normalizedChain = path.resolve(chainPath)
+      return normalizedResolved === normalizedChain
+    })
+  if (isCircular) {
+    // Use absolute file:// URL for circular imports to avoid broken relative paths
+    const absoluteUrl = pathToFileURL(resolvedPath).href
+    return { filePath: resolvedPath, js: '', url: absoluteUrl }
   }
   const relPath = path.relative(CWD, resolvedPath)
   const tmpFile = path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
@@ -306,6 +320,7 @@ const resolveAndCompileImportImplCore = async (
     traceEnd(processId)
     const writeId = traceStart('fs.writeFile')
     await writeQueue.write(tmpFile, processed)
+    await writeQueue.flushPath(tmpFile)
     traceEnd(writeId)
     const stats = await fs.stat(resolvedPath)
     importCache.set(resolvedPath, {

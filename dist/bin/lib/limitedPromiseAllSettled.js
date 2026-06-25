@@ -3,7 +3,11 @@ export const limitedPromiseAllSettled = async (items, limit, fn) => {
   const running = []
   const processItem = async (item, index) => {
     try {
-      const value = await fn(item, index)
+      // Add 10 second timeout per item to prevent indefinite hangs
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error(`Task timeout for: ${item}`)), 10000)
+      })
+      const value = await Promise.race([fn(item, index), timeoutPromise])
       results[index] = { status: 'fulfilled', value: value }
     } catch (reason) {
       results[index] = { status: 'rejected', reason }

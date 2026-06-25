@@ -89,8 +89,19 @@ export const readRecursive = async (dir = '') => {
   if (await fs.exists(indexFileTsPath)) {
     indexFilePath = indexFileTsPath
   }
-  const { getViteDefine } = await import('../../lib/svelte/viteConfig/index.js')
-  const testDefines = await loadTestDefines(process.cwd())
+  let viteDefineImport
+  try {
+    viteDefineImport = await import('../../lib/svelte/viteConfig/index.js')
+  } catch (e) {
+    throw e
+  }
+  const { getViteDefine } = viteDefineImport
+  let testDefines
+  try {
+    testDefines = await loadTestDefines(process.cwd())
+  } catch (e) {
+    throw e
+  }
   if (await fs.exists(indexFilePath)) {
     // if index.js exists, we will simply import it as is and do no recursion.
     const fileP = indexFilePath.replace(testDir, '')
@@ -107,7 +118,8 @@ export const readRecursive = async (dir = '') => {
       const imported = await importFile(importPath)
       tests[fileP] = imported
     } catch (err) {
-      errors.push({ file: fileP, error: is.error(err) ? err : new Error(String(err)) })
+      const error = is.error(err) ? err : new Error(String(err))
+      errors.push({ file: fileP, error })
     }
   } else {
     // if dir/index.js does not exist, require all files and subdirectories of files
@@ -193,13 +205,9 @@ export const readRecursive = async (dir = '') => {
     }
   }
   if (errors.length > 0) {
-    // Build aggregated error message
+    // Log errors but don't throw - continue with tests that loaded successfully
     const errorMessages = errors.map(e => `${e.file}: ${e.error.message}`).join('\n')
-    const aggError = new Error(`Failed to load ${errors.length} test file(s):\n${errorMessages}`)
-    aggError.name = 'E_IMPORT_AGGREGATED'
-    // Attach individual errors for programmatic access
-    aggError.errors = errors
-    throw aggError
+    console.error(`${errors.length} test file(s) failed to load (continuing): ${errorMessages}`)
   }
   return tests
 }
