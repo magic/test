@@ -1,10 +1,9 @@
-import is from '@magic/types'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import { findConfigFile } from './findConfigFile.ts'
 
 import { aliasCache, type AliasEntry } from './cache.ts'
-import { parseViteConfig } from './parseViteConfig.ts'
 import { normalizeAlias } from './normalizeAlias.ts'
 import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.ts'
 
@@ -23,15 +22,14 @@ export const loadViteAliases = async (rootDir: string): Promise<AliasEntry[]> =>
   }
 
   try {
-    const config = await parseViteConfig(configPath)
+    const configUrl = pathToFileURL(configPath).href
+    const config = (await import(configUrl)).default ?? (await import(configUrl))
     const configDir = path.dirname(configPath)
     const resolveConfig = config.resolve as Record<string, unknown> | undefined
     const aliases = normalizeAlias(resolveConfig?.alias, configDir)
     aliasCache.set(cacheKey, aliases)
     return aliases
-  } catch (e) {
-    const message = is.error(e) ? e.message : String(e)
-    console.warn(`[svelte-alias] Failed to parse vite.config: ${message}`)
+  } catch {
     return []
   }
 }

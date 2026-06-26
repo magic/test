@@ -1,11 +1,12 @@
 import path from 'node:path'
 import fs from '@magic/fs'
+import { CACHE_DIR } from '../../../../src/constants.js'
 
 import { loadViteAliases } from '../../../../src/lib/svelte/viteConfig/loadViteAliases.js'
 import { aliasCache, configCache } from '../../../../src/lib/svelte/viteConfig/cache.js'
 import is from '@magic/types'
 
-const TEST_ROOT = path.join(process.cwd(), 'test', '.tmp', 'viteConfig', 'loadViteAliases')
+const TEST_ROOT = path.join(CACHE_DIR, 'viteConfig', 'loadViteAliases')
 
 export default {
   beforeAll: async () => {
@@ -49,9 +50,9 @@ export default {
         await fs.writeFile(
           configPath,
           `
-            export default defineConfig({
+            export default {
               resolve: { alias: { find: '@', replacement: './src' } }
-            })
+            }
           `,
         )
         const result = await loadViteAliases(TEST_ROOT)

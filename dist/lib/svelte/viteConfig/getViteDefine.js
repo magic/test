@@ -1,11 +1,42 @@
+var __rewriteRelativeImportExtension =
+  (this && this.__rewriteRelativeImportExtension) ||
+  function (path, preserveJsx) {
+    if (typeof path === 'string' && /^\.\.?\//.test(path)) {
+      return path.replace(
+        /\.(tsx)$|((?:\.d)?)((?:\.[^./]+?)?)\.([cm]?)ts$/i,
+        function (m, tsx, d, ext, cm) {
+          return tsx
+            ? preserveJsx
+              ? '.jsx'
+              : '.js'
+            : d && (!ext || !cm)
+              ? m
+              : d + ext + '.' + cm.toLowerCase() + 'js'
+        },
+      )
+    }
+    return path
+  }
 import path from 'node:path'
 import { findProjectRoot } from './findProjectRoot.js'
-import { loadViteDefine } from './loadViteDefine.js'
+import { findConfigFile } from './findConfigFile.js'
+import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
+import is from '@magic/types'
 /**
  * Get vite define variables for a source file
  */
 export const getViteDefine = async sourceFilePath => {
   const sourceDir = path.dirname(sourceFilePath)
   const rootDir = await findProjectRoot(sourceDir)
-  return await loadViteDefine(rootDir)
+  const configPath = await findConfigFile(rootDir, VITE_CONFIG_NAMES)
+  if (configPath) {
+    try {
+      const config = await import(__rewriteRelativeImportExtension(configPath))
+      return config.define
+    } catch (e) {
+      const message = is.error(e) ? e.message : String(e)
+      console.warn(`[svelte-alias] Failed to parse vite.config define: ${message}`)
+    }
+  }
+  return {}
 }

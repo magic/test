@@ -1,8 +1,26 @@
+var __rewriteRelativeImportExtension =
+  (this && this.__rewriteRelativeImportExtension) ||
+  function (path, preserveJsx) {
+    if (typeof path === 'string' && /^\.\.?\//.test(path)) {
+      return path.replace(
+        /\.(tsx)$|((?:\.d)?)((?:\.[^./]+?)?)\.([cm]?)ts$/i,
+        function (m, tsx, d, ext, cm) {
+          return tsx
+            ? preserveJsx
+              ? '.jsx'
+              : '.js'
+            : d && (!ext || !cm)
+              ? m
+              : d + ext + '.' + cm.toLowerCase() + 'js'
+        },
+      )
+    }
+    return path
+  }
 import is from '@magic/types'
 import path from 'node:path'
 import { findConfigFile } from './findConfigFile.js'
 import { aliasCache } from './cache.js'
-import { parseViteConfig } from './parseViteConfig.js'
 import { normalizeAlias } from './normalizeAlias.js'
 import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
 export const loadViteAliases = async rootDir => {
@@ -17,7 +35,7 @@ export const loadViteAliases = async rootDir => {
     return []
   }
   try {
-    const config = await parseViteConfig(configPath)
+    const config = await import(__rewriteRelativeImportExtension(configPath))
     const configDir = path.dirname(configPath)
     const resolveConfig = config.resolve
     const aliases = normalizeAlias(resolveConfig?.alias, configDir)
