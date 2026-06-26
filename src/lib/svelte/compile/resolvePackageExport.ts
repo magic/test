@@ -341,7 +341,7 @@ const resolvePackageExportImpl = async (
   } else if (is.string(exports)) {
     const resolved = await tryResolvePath(nodeModulesPath, exports)
     result = { resolvedPath: resolved, isSvelteOnly: false }
-  } else if (subpath && is.object(exports) && !Array.isArray(exports)) {
+  } else if (subpath && is.object(exports) && !is.array(exports)) {
     const subExport =
       exports[`./${subpath}` as keyof typeof exports] ??
       exports[`./${subpath}.js` as keyof typeof exports]
@@ -378,7 +378,7 @@ const resolvePackageExportImpl = async (
       const resolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
       result = { resolvedPath: resolved, isSvelteOnly: resolved?.endsWith('.svelte') ?? false }
     }
-  } else if (is.object(exports) && exports !== null && !Array.isArray(exports)) {
+  } else if (is.objectNative(exports)) {
     const rootExport = (exports as Record<string, unknown>)['.']
     if (!rootExport) {
       return { resolvedPath: null, isSvelteOnly: false }

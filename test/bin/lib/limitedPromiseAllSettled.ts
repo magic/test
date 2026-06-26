@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import { limitedPromiseAllSettled } from '../../../src/bin/lib/limitedPromiseAllSettled.js'
 import type { TestCase } from '../../../src/types.js'
 
@@ -88,9 +89,9 @@ export default [
       const results = await limitedPromiseAllSettled([1], 2, async () => {
         throw new Error('test error')
       })
-      return results[0]!.reason instanceof Error
+      return results[0]!.reason
     },
-    expect: true,
+    expect: is.error,
     info: 'function throws - error captured',
   },
   // Function returns rejected promise

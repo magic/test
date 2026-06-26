@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import { get, post, http } from '../../src/lib/http.js'
 import type { TestCase } from '../../src/types.js'
 
@@ -122,20 +123,20 @@ export default [
     fn: () =>
       withEnv({ MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED: 'false' }, () => {
         // This just verifies the env is being read
-        return process.env.MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED === 'false'
+        return process.env.MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED
       }),
-    expect: true,
+    expect: 'false',
     info: 'reads MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED env var',
   },
   // http object structure
   {
-    fn: () => typeof http.get === 'function',
-    expect: true,
+    fn: () => http.get,
+    expect: is.function,
     info: 'http.get is a function',
   },
   {
-    fn: () => typeof http.post === 'function',
-    expect: true,
+    fn: () => http.post,
+    expect: is.function,
     info: 'http.post is a function',
   },
 ] satisfies TestCase[]

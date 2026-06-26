@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import { makeSafeClone } from '../../../src/run/lib/makeSafeClone.js'
 import type { TestCase } from '../../../src/types.js'
 
@@ -56,31 +57,32 @@ export default [
   {
     fn: () => {
       const result = makeSafeClone(() => {})
-      return typeof result === 'function'
+      return result
     },
-    expect: true,
+    expect: is.function,
     info: 'returns function as-is for non-isolated fn',
   },
   {
     fn: () => {
       const result = makeSafeClone(function named() {})
-      return typeof result === 'function'
+      return result
     },
-    expect: true,
+    expect: is.function,
     info: 'returns function as-is for named function',
   },
   {
     fn: () => {
       const result = makeSafeClone(Symbol.iterator)
-      return typeof result === 'symbol'
+      return result
     },
-    expect: true,
+    expect: is.symbol,
     info: 'returns symbol as-is for well-known symbol',
   },
   {
     fn: () => {
       const err = new Error('test error')
-      return typeof makeSafeClone(err) === 'object' || typeof makeSafeClone(err) === 'string'
+      const clone = makeSafeClone(err)
+      return is.object(clone) || is.string(clone)
     },
     expect: true,
     info: 'handles Error objects',
@@ -100,7 +102,7 @@ export default [
       const obj = new Proxy({ a: 1 }, handler)
       // This should trigger the error path and fallback to JSON.stringify or String
       const result = makeSafeClone(obj)
-      return typeof result === 'string' || typeof result === 'object'
+      return is.string(result) || is.object(result)
     },
     expect: true,
     info: 'handles objects that fail structuredClone (line 15-16 path)',
@@ -112,7 +114,7 @@ export default [
       const obj = { [sym]: 'value' }
       // This should either clone successfully or fall back gracefully
       const result = makeSafeClone(obj)
-      return typeof result === 'object' || typeof result === 'string'
+      return is.string(result) || is.object(result)
     },
     expect: true,
     info: 'handles objects with symbol keys',
@@ -131,8 +133,8 @@ export default [
     fn: () => {
       // Object with undefined values
       const obj = { a: undefined, b: null, c: 1 }
-      const result = makeSafeClone(obj) as typeof obj
-      return 'a' in result && 'b' in result && result.c === 1
+      const result = makeSafeClone(obj)
+      return is.objectNative(result) && 'a' in result && 'b' in result && result.c === 1
     },
     expect: true,
     info: 'handles undefined and null values',

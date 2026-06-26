@@ -211,7 +211,7 @@ export class Isolation {
       return (value as unknown as { slice(): unknown }).slice() as T
     }
 
-    if (value instanceof ArrayBuffer) {
+    if (is.instance(value, ArrayBuffer)) {
       return value.slice() as T
     }
 

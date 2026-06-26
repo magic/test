@@ -51,7 +51,7 @@ const extractScriptFromSvelte = async (source: string): Promise<string> => {
         return
       }
       const c = content as { body?: unknown[] }
-      if (c.body && Array.isArray(c.body)) {
+      if (c.body && is.array(c.body)) {
         for (const node of c.body) {
           if (node && is.object(node) && 'start' in node && 'end' in node) {
             const n = node as { start: number; end: number }
@@ -94,7 +94,7 @@ const analyzeCodeSync = (code: string): CodeAnalysis => {
         const spec = nsSpec as TSESTree.ImportNamespaceSpecifier
         if (spec.local.name === '$') {
           const source = imp.source as TSESTree.Literal
-          if (typeof source.value === 'string' && source.value.startsWith('svelte/internal')) {
+          if (is.string(source.value) && source.value.startsWith('svelte/internal')) {
             isCompiled = true
           }
         }
@@ -131,12 +131,12 @@ const analyzeCodeSync = (code: string): CodeAnalysis => {
           continue
         }
         const val = (node as unknown as Record<string, unknown>)[key]
-        if (val && typeof val === 'object') {
-          if ('type' in (val as object)) {
+        if (val && is.object(val)) {
+          if ('type' in val) {
             checkNode(val as TSESTree.Node)
-          } else if (Array.isArray(val)) {
+          } else if (is.array(val)) {
             for (const item of val) {
-              if (item && typeof item === 'object' && 'type' in (item as object)) {
+              if (item && is.object(item) && 'type' in (item as object)) {
                 checkNode(item as TSESTree.Node)
               }
             }
@@ -407,7 +407,7 @@ const findImportExpressions = (
       const val = (n as unknown as Record<string, unknown>)[key]
       if (val && is.object(val) && 'type' in (val as object)) {
         walk(val as TSESTree.Node)
-      } else if (Array.isArray(val)) {
+      } else if (is.array(val)) {
         for (const item of val) {
           if (item && is.object(item) && 'type' in (item as object)) {
             walk(item as TSESTree.Node)
@@ -646,7 +646,7 @@ export const getSvelteReexports = (code: string): SvelteReexportInfo[] => {
     for (const node of ast.body) {
       if (node.type === 'ExportNamedDeclaration' && node.source) {
         const source = node.source as TSESTree.Literal
-        if (typeof source.value === 'string' && source.value.endsWith('.svelte')) {
+        if (is.string(source.value) && source.value.endsWith('.svelte')) {
           reexports.push({
             source: source.value,
             originalText: code.slice(node.range[0], node.range[1]),
@@ -656,7 +656,7 @@ export const getSvelteReexports = (code: string): SvelteReexportInfo[] => {
         // export default from './Foo.svelte' - TSExportAssignment is handled separately
       } else if (node.type === 'ExportAllDeclaration' && node.source) {
         const source = node.source as TSESTree.Literal
-        if (typeof source.value === 'string' && source.value.endsWith('.svelte')) {
+        if (is.string(source.value) && source.value.endsWith('.svelte')) {
           reexports.push({
             source: source.value,
             originalText: code.slice(node.range[0], node.range[1]),
@@ -696,7 +696,7 @@ export const getExportStarTargets = (code: string): string[] => {
     for (const node of ast.body) {
       if (node.type === 'ExportAllDeclaration' && node.source) {
         const source = node.source as TSESTree.Literal
-        if (typeof source.value === 'string') {
+        if (is.string(source.value)) {
           targets.push(source.value)
         }
       }
@@ -733,7 +733,7 @@ export const getExportNamedTargets = (code: string): string[] => {
     for (const node of ast.body) {
       if (node.type === 'ExportNamedDeclaration' && node.source) {
         const source = node.source as TSESTree.Literal
-        if (typeof source.value === 'string') {
+        if (is.string(source.value)) {
           targets.push(source.value)
         }
       }

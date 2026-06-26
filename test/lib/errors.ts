@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import { ERRORS, ERROR_MESSAGES, createError } from '../../src/lib/errors.js'
 import type { TestCase } from '../../src/types.js'
 
@@ -20,8 +21,8 @@ export default [
   },
   // ERROR_MESSAGES
   {
-    fn: () => typeof ERROR_MESSAGES.E_EMPTY_SUITE,
-    expect: 'function',
+    fn: () => ERROR_MESSAGES.E_EMPTY_SUITE,
+    expect: is.function,
     info: 'E_EMPTY_SUITE is a function',
   },
   {
@@ -33,9 +34,9 @@ export default [
   {
     fn: () => {
       const err = createError('E_TEST', 'Test error message')
-      return err instanceof Error
+      return err
     },
-    expect: true,
+    expect: is.error,
     info: 'createError returns instanceof Error',
   },
   {

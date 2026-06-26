@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import { Store, createStore } from '../../src/lib/store.js'
 import type { TestCase } from '../../src/types.js'
 
@@ -6,9 +7,9 @@ const tests: TestCase[] = [
   {
     fn: () => {
       const store = new Store()
-      return typeof store.state === 'object' && store.state !== null
+      return store.state
     },
-    expect: true,
+    expect: is.objectNative,
     info: 'store initializes with state object',
   },
   // set suites
@@ -47,7 +48,7 @@ const tests: TestCase[] = [
       const store = new Store()
       const time: [number, number] = [1234567890, 123]
       store.set({ startTime: time })
-      return store.state.startTime != null
+      return store.state.startTime !== null
     },
     expect: true,
     info: 'set updates startTime',
@@ -78,9 +79,9 @@ const tests: TestCase[] = [
   {
     fn: () => {
       const store = new Store()
-      return typeof store.get()
+      return store.get()
     },
-    expect: 'object',
+    expect: is.object,
     info: 'get() without key returns full state',
   },
   // get by key
@@ -137,9 +138,9 @@ const tests: TestCase[] = [
   {
     fn: () => {
       const store = createStore()
-      return typeof store.state === 'object'
+      return store.state
     },
-    expect: true,
+    expect: is.object,
     info: 'createStore creates new store instance',
   },
 ]

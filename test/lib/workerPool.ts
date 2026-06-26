@@ -1,11 +1,12 @@
+import is from '@magic/types'
 import { getWorkerPool, WORKER_LIMIT } from '../../src/lib/workerPool.js'
 import type { TestCase } from '../../src/types.js'
 
 export default [
   // WORKER_LIMIT export
   {
-    fn: () => typeof WORKER_LIMIT === 'number',
-    expect: true,
+    fn: () => WORKER_LIMIT,
+    expect: is.number,
     info: 'WORKER_LIMIT is a number',
   },
   {
@@ -17,9 +18,9 @@ export default [
   {
     fn: () => {
       const pool = getWorkerPool(2)
-      return typeof pool === 'function'
+      return pool
     },
-    expect: true,
+    expect: is.function,
     info: 'getWorkerPool returns a function',
   },
   // Concurrent execution
@@ -108,18 +109,18 @@ export default [
   {
     fn: () => {
       const pool = getWorkerPool(5)
-      return typeof pool
+      return pool
     },
-    expect: 'function',
+    expect: is.function,
     info: 'pool is callable function',
   },
   // getWorkerPool without limit uses default
   {
     fn: () => {
       const pool = getWorkerPool()
-      return typeof pool
+      return pool
     },
-    expect: 'function',
+    expect: is.function,
     info: 'getWorkerPool works without explicit limit',
   },
   // Task returns promise that resolves

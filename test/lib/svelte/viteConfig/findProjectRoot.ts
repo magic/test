@@ -3,8 +3,8 @@ import { findProjectRoot } from '../../../../src/lib/svelte/viteConfig/findProje
 
 export default [
   {
-    fn: () => typeof findProjectRoot === 'function',
-    expect: true,
+    fn: () => findProjectRoot,
+    expect: is.function,
     info: 'is a function',
   },
   {

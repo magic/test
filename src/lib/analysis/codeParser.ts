@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import { parse } from '@typescript-eslint/parser'
 import type { TSESTree } from '@typescript-eslint/types'
 
@@ -112,7 +113,7 @@ export const mutatesImportedState = (code: string, importNames: string[]): boole
             if (checkNode(val as TSESTree.Node)) {
               return true
             }
-          } else if (Array.isArray(val)) {
+          } else if (is.array(val)) {
             for (const item of val) {
               if (item && typeof item === 'object' && 'type' in (item as object)) {
                 if (checkNode(item as TSESTree.Node)) {

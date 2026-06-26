@@ -1,9 +1,10 @@
+import is from '@magic/types'
 import { parseViteConfig } from '../../../../src/lib/svelte/viteConfig/parseViteConfig.js'
 
 export default [
   {
-    fn: () => typeof parseViteConfig === 'function',
-    expect: true,
+    fn: () => parseViteConfig,
+    expect: is.function,
     info: 'is a function',
   },
 ]

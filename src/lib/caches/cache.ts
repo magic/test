@@ -11,6 +11,7 @@ import type {
   CssObject,
 } from '../../types.ts'
 import { getCachedCompile, recordCompile } from './persistentCache.ts'
+import is from '@magic/types'
 
 // Export LRUCache for external use
 export { LRUCache }
@@ -130,7 +131,7 @@ export class CacheManager<T> {
    * Type guard to check if result is a Svelte compilation result
    */
   private isSvelteResult(result: unknown): result is { js: string; css: CssObject | null } {
-    return typeof result === 'object' && result !== null && 'js' in result
+    return is.objectNative(result) && 'js' in result
   }
 
   /**

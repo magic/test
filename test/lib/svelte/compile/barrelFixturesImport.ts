@@ -86,17 +86,17 @@ export default [
     info: 'TypeExports.svelte.js has expected exports',
   },
   {
-    fn: () => typeof defaultExportHtml === 'string' && defaultExportHtml.length > 0,
+    fn: () => is.string(defaultExportHtml) && defaultExportHtml.length > 0,
     expect: true,
     info: 'DefaultExport.svelte renders to html',
   },
   {
-    fn: () => typeof testComponentHtml === 'string' && testComponentHtml.length > 0,
+    fn: () => is.string(testComponentHtml) && testComponentHtml.length > 0,
     expect: true,
     info: 'TestComponent.svelte renders to html',
   },
   {
-    fn: () => typeof titleComponentHtml === 'string' && titleComponentHtml.length > 0,
+    fn: () => is.string(titleComponentHtml) && titleComponentHtml.length > 0,
     expect: true,
     info: 'TitleComponent.svelte renders to html',
   },

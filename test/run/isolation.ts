@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import { isolation } from '../../src/run/isolation.js'
 import type { TestCase } from '../../src/types.js'
 
@@ -114,9 +115,9 @@ export default [
       }
       const obj = new TestClass()
       const cloned = isolation.deepClone(obj)
-      return typeof cloned.method === 'function'
+      return cloned.method
     },
-    expect: true,
+    expect: is.function,
   },
   {
     name: 'isolation deepClone returns Error unchanged',

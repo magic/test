@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import { createCanvasPolyfill } from '../../../src/lib/dom/canvas.js'
 import type { TestCase } from '../../../src/types.js'
 
@@ -43,9 +44,9 @@ export default [
       createCanvasPolyfill()
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
-      return typeof (ctx as unknown as Record<string, unknown>)?.toDataURL === 'function'
+      return (ctx as unknown as Record<string, unknown>)?.toDataURL
     },
-    expect: true,
+    expect: is.function,
     info: 'context has toDataURL method',
   },
   // drawImage exists on context
@@ -54,9 +55,9 @@ export default [
       createCanvasPolyfill()
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
-      return typeof (ctx as unknown as Record<string, unknown>)?.drawImage === 'function'
+      return (ctx as unknown as Record<string, unknown>)?.drawImage
     },
-    expect: true,
+    expect: is.function,
     info: 'context has drawImage method',
   },
   // fillRect works
@@ -94,9 +95,9 @@ export default [
         ctx as unknown as Record<string, (mime?: string, quality?: number) => string | undefined>
       )?.toDataURL
       const result = toDataURL?.call(ctx, 'image/jpeg', 0.8)
-      return typeof result === 'string'
+      return result
     },
-    expect: true,
+    expect: is.string,
     info: 'toDataURL returns string (may be empty if no impl)',
   },
   // Multiple canvases get independent contexts

@@ -2,6 +2,7 @@ import log from '@magic/log'
 import { runSuite } from '../../src/run/suite.js'
 import { createStore } from '../../src/lib/store.js'
 import type { TestCase } from '../../src/types.js'
+import is from '@magic/types'
 
 export default [
   {
@@ -201,9 +202,9 @@ export default [
         tests: [{ fn: () => true, expect: true, name: '', pkg: '', parent: '' }],
         store,
       })
-      return result && typeof result.duration === 'string'
+      return result?.duration
     },
-    expect: true,
+    expect: is.string,
   },
   {
     name: 'runSuite handles nested deeply nested object exports',

@@ -447,7 +447,7 @@ export const runSuite = async (props: SuiteInput): Promise<Suite | undefined> =>
 
     return suite
   } catch (e: unknown) {
-    if (e instanceof Error && hasErrorCode(e)) {
+    if (is.error(e) && hasErrorCode(e)) {
       if (e.code && e.code === ERRORS.E_EMPTY_SUITE) {
         log.error(e.code, e.message)
       } else if (e.code) {

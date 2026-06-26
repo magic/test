@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import {
   property,
   properties,
@@ -13,63 +14,60 @@ import {
 } from '../../src/lib/has.js'
 import type { TestCase } from '../../src/types.js'
 
-const isStr = (v: unknown): boolean => typeof v === 'string'
-const isNum = (v: unknown): boolean => typeof v === 'number'
-
 export default [
   {
-    fn: () => property('a', isStr)({ a: 'hello' }),
+    fn: () => property('a', is.string)({ a: 'hello' }),
     expect: true,
     info: 'property returns true when key exists and predicate passes',
   },
   {
-    fn: () => property('a', isStr)({ a: 123 }),
+    fn: () => property('a', is.string)({ a: 123 }),
     expect: false,
     info: 'property returns false when key exists but predicate fails',
   },
   {
-    fn: () => property('a', isStr)({}),
+    fn: () => property('a', is.string)({}),
     expect: false,
     info: 'property returns false when key does not exist',
   },
   {
-    fn: () => property('a', isStr)(null),
+    fn: () => property('a', is.string)(null),
     expect: false,
     info: 'property returns false when result is null',
   },
   {
-    fn: () => property('a', isStr)(undefined),
+    fn: () => property('a', is.string)(undefined),
     expect: false,
     info: 'property returns false when result is undefined',
   },
   {
-    fn: () => property('a', isStr)('string'),
+    fn: () => property('a', is.string)('string'),
     expect: false,
     info: 'property returns false when result is a string',
   },
   {
-    fn: () => property('a', isStr)(123),
+    fn: () => property('a', is.string)(123),
     expect: false,
     info: 'property returns false when result is a number',
   },
   {
-    fn: () => property('a', isStr)(true),
+    fn: () => property('a', is.string)(true),
     expect: false,
     info: 'property returns false when result is a boolean',
   },
 
   {
-    fn: () => properties({ a: isStr, b: isNum })({ a: 'hello', b: 123 }),
+    fn: () => properties({ a: is.string, b: is.number })({ a: 'hello', b: 123 }),
     expect: true,
     info: 'properties returns true when all keys exist and predicates pass',
   },
   {
-    fn: () => properties({ a: isStr, b: isNum })({ a: 'hello', b: 'wrong' }),
+    fn: () => properties({ a: is.string, b: is.number })({ a: 'hello', b: 'wrong' }),
     expect: false,
     info: 'properties returns false when one predicate fails',
   },
   {
-    fn: () => properties({ a: isStr, b: isNum })({ a: 'hello' }),
+    fn: () => properties({ a: is.string, b: is.number })({ a: 'hello' }),
     expect: false,
     info: 'properties returns false when key does not exist',
   },
@@ -89,7 +87,7 @@ export default [
     info: 'properties returns false when result is a string',
   },
   {
-    fn: () => properties({ a: isStr })({ a: 'hello' }),
+    fn: () => properties({ a: is.string })({ a: 'hello' }),
     expect: true,
     info: 'properties works with single key spec',
   },
@@ -100,27 +98,27 @@ export default [
   },
 
   {
-    fn: () => any({ a: isStr, b: isNum })({ a: 'hello' }),
+    fn: () => any({ a: is.string, b: is.number })({ a: 'hello' }),
     expect: true,
     info: 'any returns true when one key matches',
   },
   {
-    fn: () => any({ a: isStr, b: isNum })({ a: 'hello', b: 123 }),
+    fn: () => any({ a: is.string, b: is.number })({ a: 'hello', b: 123 }),
     expect: true,
     info: 'any returns true when multiple keys match',
   },
   {
-    fn: () => any({ a: isStr, b: isNum })({ a: 1, c: 2 }),
+    fn: () => any({ a: is.string, b: is.number })({ a: 1, c: 2 }),
     expect: false,
     info: 'any returns false when no keys match predicates',
   },
   {
-    fn: () => any({ a: isStr, b: isNum })({ a: 'hello', b: 'wrong' }),
+    fn: () => any({ a: is.string, b: is.number })({ a: 'hello', b: 'wrong' }),
     expect: true,
     info: 'any returns true when at least one key matches',
   },
   {
-    fn: () => any({ a: isStr })({}),
+    fn: () => any({ a: is.string })({}),
     expect: false,
     info: 'any returns false when no keys exist',
   },
@@ -130,68 +128,68 @@ export default [
     info: 'any returns false for empty spec',
   },
   {
-    fn: () => any({ a: isStr })(null),
+    fn: () => any({ a: is.string })(null),
     expect: false,
     info: 'any returns false when result is null',
   },
   {
-    fn: () => any({ a: isStr })('string'),
+    fn: () => any({ a: is.string })('string'),
     expect: false,
     info: 'any returns false when result is a string',
   },
 
   {
-    fn: () => nested('a.b', isStr)({ a: { b: 'hello' } }),
+    fn: () => nested('a.b', is.string)({ a: { b: 'hello' } }),
     expect: true,
     info: 'nested returns true when path exists and predicate passes',
   },
   {
-    fn: () => nested('a.b', isStr)({ a: { b: 123 } }),
+    fn: () => nested('a.b', is.string)({ a: { b: 123 } }),
     expect: false,
     info: 'nested returns false when path exists but predicate fails',
   },
   {
-    fn: () => nested('a.b.c', isStr)({ a: { b: { c: 'deep' } } }),
+    fn: () => nested('a.b.c', is.string)({ a: { b: { c: 'deep' } } }),
     expect: true,
     info: 'nested works with deep paths',
   },
   {
-    fn: () => nested('a.b', isStr)({ a: {} }),
+    fn: () => nested('a.b', is.string)({ a: {} }),
     expect: false,
     info: 'nested returns false when path partially exists',
   },
   {
-    fn: () => nested('a.b', isStr)({}),
+    fn: () => nested('a.b', is.string)({}),
     expect: false,
     info: 'nested returns false when path does not exist',
   },
   {
-    fn: () => nested('a', isStr)({ a: 'hello' }),
+    fn: () => nested('a', is.string)({ a: 'hello' }),
     expect: true,
     info: 'nested works with single key path',
   },
   {
-    fn: () => nested('a.b', isStr)(null),
+    fn: () => nested('a.b', is.string)(null),
     expect: false,
     info: 'nested returns false when result is null',
   },
   {
-    fn: () => nested('a.b', isStr)(undefined),
+    fn: () => nested('a.b', is.string)(undefined),
     expect: false,
     info: 'nested returns false when result is undefined',
   },
   {
-    fn: () => nested('a.b', isStr)('string'),
+    fn: () => nested('a.b', is.string)('string'),
     expect: false,
     info: 'nested returns false when result is a string',
   },
   {
-    fn: () => nested('a.b', isStr)({ a: null }),
+    fn: () => nested('a.b', is.string)({ a: null }),
     expect: false,
     info: 'nested returns false when path contains null',
   },
   {
-    fn: () => nested('a.b', isStr)({ a: 1 }),
+    fn: () => nested('a.b', is.string)({ a: 1 }),
     expect: false,
     info: 'nested returns false when path contains non-object',
   },
@@ -328,12 +326,12 @@ export default [
 
   // Mixed predicates and literals
   {
-    fn: () => properties({ a: isStr, b: 5 })({ a: 'test', b: 5 }),
+    fn: () => properties({ a: is.string, b: 5 })({ a: 'test', b: 5 }),
     expect: true,
     info: 'properties works with mixed predicates and literals',
   },
   {
-    fn: () => properties({ a: isStr, b: 5 })({ a: 'test', b: 6 }),
+    fn: () => properties({ a: is.string, b: 5 })({ a: 'test', b: 6 }),
     expect: false,
     info: 'properties fails when mixed literal does not match',
   },
@@ -463,47 +461,47 @@ export default [
 
   // has.at tests (lines 82-89)
   {
-    fn: () => at(0, isStr)(['a', 'b', 'c']),
+    fn: () => at(0, is.string)(['a', 'b', 'c']),
     expect: true,
     info: 'at returns true when index exists and predicate passes',
   },
   {
-    fn: () => at(1, isStr)(['a', 2, 'c']),
+    fn: () => at(1, is.string)(['a', 2, 'c']),
     expect: false,
     info: 'at returns false when index exists but predicate fails',
   },
   {
-    fn: () => at(5, isStr)(['a', 'b']),
+    fn: () => at(5, is.string)(['a', 'b']),
     expect: false,
     info: 'at returns false when index out of bounds',
   },
   {
-    fn: () => at(0, isStr)(null),
+    fn: () => at(0, is.string)(null),
     expect: false,
     info: 'at returns false when result is null (line 83-84)',
   },
   {
-    fn: () => at(0, isStr)(undefined),
+    fn: () => at(0, is.string)(undefined),
     expect: false,
     info: 'at returns false when result is undefined',
   },
   {
-    fn: () => at(0, isStr)('string'),
+    fn: () => at(0, is.string)('string'),
     expect: false,
     info: 'at returns false when result is a string',
   },
   {
-    fn: () => at(0, isStr)(123),
+    fn: () => at(0, is.string)(123),
     expect: false,
     info: 'at returns false when result is a number',
   },
   {
-    fn: () => at(0, isStr)({}),
+    fn: () => at(0, is.string)({}),
     expect: false,
     info: 'at returns false when result is an object',
   },
   {
-    fn: () => at(2, isStr)(['a', 'b', 'c']),
+    fn: () => at(2, is.string)(['a', 'b', 'c']),
     expect: true,
     info: 'at works with last index in array',
   },
@@ -518,7 +516,7 @@ export default [
     info: 'at handles undefined values',
   },
   {
-    fn: () => at(-1, isStr)(['a', 'b']),
+    fn: () => at(-1, is.string)(['a', 'b']),
     expect: false,
     info: 'at returns false for negative index',
   },

@@ -55,7 +55,7 @@ export default {
           `,
         )
         const result = await loadViteAliases(TEST_ROOT)
-        return Array.isArray(result) && result.length === 1
+        return is.array(result) && result.length === 1
       },
       expect: true,
       info: 'loads aliases from config',

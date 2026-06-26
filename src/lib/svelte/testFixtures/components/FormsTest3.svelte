@@ -1,5 +1,6 @@
 <script lang="ts">
   import { applyAction, enhance } from '$app/forms'
+  import is from '@magic/types'
 
   let enhanceResult = $state<any>(null)
 
@@ -13,7 +14,7 @@
 
 <div class="forms3">
   <span class="enhance-destroy">{enhanceResult?.destroy ? 'has-destroy' : 'no-destroy'}</span>
-  <span class="applyaction-promise"
-    >{applyActionPromise instanceof Promise ? 'is-promise' : 'not-promise'}</span
-  >
+  <span class="applyaction-promise">
+    {is.instance(applyActionPromise, Promise) ? 'is-promise' : 'not-promise'}
+  </span>
 </div>

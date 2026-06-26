@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import { cleanError } from '../../src/lib/cleanError.js'
 import type { TestCase } from '../../src/types.js'
 
@@ -41,7 +42,7 @@ export default [
       const err = new Error('test error')
       return cleanError(err)
     },
-    expect: (result: unknown) => Array.isArray(result) && result.length >= 1,
+    expect: (result: unknown) => is.array(result) && result.length >= 1,
     info: 'returns array for standard error',
   },
   // Error with stack but no file part (uncovered branch line 20)
@@ -58,7 +59,7 @@ export default [
     fn: () => {
       const err = { stack: 'Error: msg\n    file.js:10' }
       const result = cleanError(err)
-      return Array.isArray(result) && result.length === 2
+      return is.array(result) && result.length === 2
     },
     expect: true,
     info: 'handles unusual spacing in stack',
@@ -69,7 +70,7 @@ export default [
       const err = new Error('multi\nline\nerror')
       return cleanError(err)
     },
-    expect: (result: unknown) => Array.isArray(result),
+    expect: (result: unknown) => is.array(result),
     info: 'handles multiline error message',
   },
   // Error with empty message
@@ -78,7 +79,7 @@ export default [
       const err = new Error('')
       return cleanError(err)
     },
-    expect: (result: unknown) => Array.isArray(result),
+    expect: (result: unknown) => is.array(result),
     info: 'handles empty error message',
   },
   // Object with empty string stack returns object (not array)
@@ -86,9 +87,9 @@ export default [
     fn: () => {
       const err = { stack: '' }
       const result = cleanError(err)
-      return typeof result === 'object' && !Array.isArray(result)
+      return result
     },
-    expect: true,
+    expect: is.objectNative,
     info: 'returns object as-is when stack is empty string',
   },
   // Object with only file in stack (no message)
@@ -97,7 +98,7 @@ export default [
       const err = { stack: '\n    at Object.<anonymous> (/path/file.js:1:1)' }
       return cleanError(err)
     },
-    expect: (result: unknown) => Array.isArray(result),
+    expect: is.array,
     info: 'handles stack with only file location',
   },
 ] satisfies TestCase[]
