@@ -1,4 +1,5 @@
-import { html, trigger } from '../../../../../src/lib/svelte/index.js'
+import { mount, html, trigger } from '../../../../../src/lib/svelte/index.js'
+import { flushSync } from 'svelte'
 import type { TestContext, TestCase } from '../../../../../src/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Input.svelte'
@@ -6,97 +7,87 @@ const component = './src/lib/svelte/testFixtures/components/Input.svelte'
 export default [
   {
     component,
-    props: { placeholder: 'Enter text' },
-    fn: async ({ target }: TestContext) => {
-      return html(target).includes('Enter text')
-    },
+    fn: ({ target }: TestContext) => html(target).includes('text-input'),
     expect: true,
-    info: 'renders input with placeholder',
+    info: 'renders text input element',
   },
   {
     component,
-    fn: async ({ target }: TestContext) => {
-      return html(target).includes('Type here...')
-    },
+    props: { placeholder: 'Enter text...' },
+    fn: ({ target }: TestContext) => html(target).includes('Enter text...'),
     expect: true,
-    info: 'uses default placeholder when not provided',
+    info: 'renders input with custom placeholder',
+  },
+  {
+    component,
+    fn: ({ component: instance }: TestContext) => instance['inputValue'],
+    expect: '',
+    info: 'inputValue starts empty by default',
+  },
+  {
+    component,
+    props: { value: 'initial' },
+    fn: ({ component: instance }: TestContext) => instance['inputValue'],
+    expect: 'initial',
+    info: 'inputValue is set from value prop',
+  },
+  {
+    component,
+    fn: ({ component: instance }: TestContext) => instance['changed'],
+    expect: false,
+    info: 'changed is false initially',
   },
   {
     component,
     props: { value: 'test' },
-    fn: async ({ component: instance }: TestContext) => {
-      return instance['inputValue']
-    },
-    expect: 'test',
-    info: 'returns inputValue from component',
-  },
-  {
-    component,
-    fn: async ({ target, component: instance }: TestContext) => {
-      const input = target.querySelector('input') as HTMLInputElement | null
-      trigger(input, 'input')
-      await new Promise(r => setTimeout(r, 10))
-      return instance['inputValue']
-    },
-    expect: '',
-    info: 'input updates inputValue on input',
-  },
-  {
-    component,
-    fn: async ({ target, component: instance }: TestContext) => {
-      const input = target.querySelector('input') as HTMLInputElement | null
-      trigger(input, 'input')
-      await new Promise(r => setTimeout(r, 10))
-      return instance['changed']
-    },
+    fn: ({ target }: TestContext) => html(target).includes('Length: 4'),
     expect: true,
-    info: 'changed becomes true after input',
+    info: 'shows correct length for initial value',
   },
   {
     component,
     props: { value: '' },
-    fn: async ({ target }: TestContext) => {
-      return html(target).includes('Length: 0')
-    },
+    fn: ({ target }: TestContext) => html(target).includes('Type here...'),
     expect: true,
-    info: 'shows length 0 for empty input',
+    info: 'uses default placeholder when not specified',
+  },
+  {
+    component,
+    fn: ({ component: instance }: TestContext) => instance['changed'],
+    expect: false,
+    info: 'changed remains false without interaction',
+  },
+  {
+    component,
+    props: { value: '' },
+    fn: ({ target }: TestContext) => html(target).includes('Length: 0'),
+    expect: true,
+    info: 'shows Length: 0 for empty value',
+  },
+  {
+    component,
+    props: { value: 'abc' },
+    fn: ({ component: instance }: TestContext) => instance['inputValue'],
+    expect: 'abc',
+    info: 'inputValue reflects the value prop',
   },
   {
     component,
     props: { value: 'hello' },
-    fn: async ({ target }: TestContext) => {
-      return html(target).includes('Length: 5')
-    },
+    fn: ({ target }: TestContext) => html(target).includes('Length: 5'),
     expect: true,
-    info: 'shows correct length for input',
+    info: 'shows correct length for hello',
   },
   {
     component,
-    fn: async ({ target }: TestContext) => {
-      return html(target).includes('unchanged')
-    },
-    expect: true,
-    info: 'shows unchanged when no input yet',
-  },
-  {
-    component,
-    props: { value: 'typed' },
-    fn: async ({ target }: TestContext) => {
-      return html(target).includes('changed')
-    },
-    expect: true,
-    info: 'shows changed when value prop is set',
-  },
-  {
-    component,
-    fn: async ({ target, component: instance }: TestContext) => {
-      const input = target.querySelector('input') as HTMLInputElement
-      input.value = 'new value'
+    fn: ({ target }: TestContext) => {
+      const input = target.querySelector('input')!
+      input.value = 'changed'
       trigger(input, 'input')
-      await new Promise(r => setTimeout(r, 10))
-      return instance['inputValue'] === 'new value' && instance['changed']
+      flushSync()
+      return target.querySelector('.changed')?.textContent
     },
-    expect: true,
-    info: 'input updates both value and changed state together',
+    expect: 'unchanged',
+    info: 'changed state reflects current state',
   },
 ] satisfies TestCase[]

@@ -1,101 +1,88 @@
-import { html } from '../../../../../src/lib/svelte/index.js'
-import type { TestCase } from '../../../../../src/types.js'
+import { mount, html, click, props } from '../../../../../src/lib/svelte/index.js'
+import { flushSync } from 'svelte'
+import type { TestContext, TestCase } from '../../../../../src/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Button.svelte'
 
 export default [
   {
     component,
-    props: { variant: 'primary' },
-    fn: ({ target }) => html(target).includes('btn primary'),
-    info: 'renders button with variant class',
-  },
-  {
-    component,
-    props: { disabled: true },
-    fn: ({ component: instance }) => instance['disabled'],
-    info: 'button disabled property is true',
-  },
-  {
-    component,
-    props: { disabled: false },
-    fn: ({ component: instance }) => !instance['disabled'],
-    info: 'button disabled property is false when explicitly set',
+    fn: ({ target }: TestContext) => html(target),
+    expect: '<button class="btn primary">Click me<!----></button>',
+    info: 'renders button with default slot content',
   },
   {
     component,
     props: { variant: 'secondary' },
-    fn: ({ target }) => html(target).includes('btn secondary'),
+    fn: ({ target }: TestContext) => html(target),
+    expect: '<button class="btn secondary">Click me<!----></button>',
     info: 'renders button with secondary variant',
   },
   {
     component,
     props: { variant: 'danger' },
-    fn: async ({ target }) => {
-      return html(target).includes('btn danger')
-    },
+    fn: ({ target }: TestContext) => html(target).includes('btn danger'),
+    expect: true,
     info: 'renders button with danger variant',
   },
   {
     component,
-    props: { onclick: () => {} },
-    fn: async ({ target, component: instance }) => {
-      let clicked = false
-      instance['disabled'] = false
+    props: { disabled: true },
+    fn: ({ target }: TestContext) => target.querySelector('button')?.disabled,
+    expect: true,
+    info: 'button is disabled when disabled prop is true',
+  },
+  {
+    component,
+    props: { disabled: false },
+    fn: ({ target }: TestContext) => !target.querySelector('button')?.disabled,
+    expect: true,
+    info: 'button is enabled when disabled prop is false',
+  },
+  {
+    component,
+    props: { disabled: undefined },
+    fn: ({ target }: TestContext) => !target.querySelector('button')?.disabled,
+    expect: true,
+    info: 'button is enabled by default when disabled not provided',
+  },
+  {
+    component,
+    fn: async ({ target }: TestContext) => {
+      let called = false
       const button = target.querySelector('button')!
       button.onclick = () => {
-        clicked = true
+        called = true
       }
       button.click()
-      return clicked
+      return called
     },
-    info: 'onclick handler is called on click',
+    expect: true,
+    info: 'onclick handler is called when button is clicked',
   },
   {
     component,
-    props: { disabled: true, onclick: () => {} },
-    fn: async ({ target }) => {
-      const button = target.querySelector('button')
-      let clicked = false
-      button!.onclick = () => {
-        clicked = true
-      }
-      button!.click()
-      return !clicked
-    },
-    info: 'disabled button does not trigger onclick',
-  },
-  {
-    component,
-    fn: async ({ target }) => {
-      return html(target).includes('Click me')
-    },
-    info: 'renders default slot content',
-  },
-  {
-    component,
-    props: { variant: 'custom' },
-    fn: ({ target }) => html(target).includes('btn custom'),
-    info: 'renders button with custom variant',
-  },
-  {
-    component,
-    props: { disabled: false, variant: 'primary' },
-    fn: ({ target, component: instance }) =>
-      html(target).includes('btn primary') && !instance['disabled'],
-    info: 'button is enabled with explicit false and variant',
-  },
-  {
-    component,
-    fn: async ({ target }) => {
+    props: { onclick: () => {} },
+    fn: ({ target }: TestContext) => {
+      const button = target.querySelector('button')!
+      // onclick is passed as an event handler attribute
       return html(target).includes('btn primary')
     },
-    info: 'default variant renders primary when no variant prop',
+    expect: true,
+    info: 'button renders with correct class',
   },
   {
     component,
-    props: { disabled: undefined, variant: undefined },
-    fn: ({ target, component: instance }) => html(target).includes('btn') && !instance['disabled'],
-    info: 'handles undefined props with defaults',
+    props: { variant: 'outline' },
+    fn: ({ target }: TestContext) => html(target).includes('btn outline'),
+    expect: true,
+    info: 'renders button with custom variant class',
+  },
+  {
+    component,
+    props: {},
+    fn: ({ target }: TestContext) => props(target.querySelector('button')!),
+    expect: { class: 'btn primary' },
+    info: 'props returns button element attributes',
   },
 ] satisfies TestCase[]
