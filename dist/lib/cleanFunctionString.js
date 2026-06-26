@@ -19,8 +19,20 @@ export const cleanFunctionString = fn => {
   if (is.number(fn) || is.boolean(fn)) {
     return `${fn}`
   }
-  if (is.function(fn.toString)) {
+  if (is.function(fn)) {
     let str = fn.toString()
+    for (const [pattern, replacement] of CLEAN_PATTERNS) {
+      str = str.replace(pattern, replacement)
+    }
+    return str
+  }
+  if (is.object(fn)) {
+    let str
+    try {
+      str = fn.toString()
+    } catch {
+      return JSON.stringify(fn)
+    }
     for (const [pattern, replacement] of CLEAN_PATTERNS) {
       str = str.replace(pattern, replacement)
     }

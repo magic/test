@@ -198,7 +198,11 @@ export class Isolation {
     }
     if (ArrayBuffer.isView(value)) {
       // TypedArray - cast via unknown to access slice
-      return value.slice()
+      try {
+        return value.slice()
+      } catch {
+        return value
+      }
     }
     if (is.instance(value, ArrayBuffer)) {
       return value.slice()
@@ -379,22 +383,22 @@ export class Isolation {
    * Uses cache for O(1) repeated lookups
    */
   _reviveKeyFromString(keyStr) {
-    if (keyStr.startsWith('Symbol(')) {
-      // Check cache first
-      const cached = this.symbolCache.get(keyStr)
-      if (cached) {
-        return cached
-      }
-      // Build cache if not present
-      const syms = Object.getOwnPropertySymbols(globalThis)
-      for (const s of syms) {
-        const symStr = String(s)
-        this.symbolCache.set(symStr, s)
-        if (symStr === keyStr) {
-          return s
-        }
-      }
+    if (!keyStr.startsWith('Symbol(')) {
       return keyStr
+    }
+    // Check cache first
+    const cached = this.symbolCache.get(keyStr)
+    if (cached) {
+      return cached
+    }
+    // Build cache and find match
+    const syms = Object.getOwnPropertySymbols(globalThis)
+    for (const s of syms) {
+      const symStr = String(s)
+      this.symbolCache.set(symStr, s)
+      if (symStr === keyStr) {
+        return s
+      }
     }
     return keyStr
   }
@@ -440,18 +444,11 @@ export class Isolation {
   /**
    * Run a test in a worker thread for true isolation
    */
-  executeInWorker(options) {
+  /**
+   * Create a worker promise with shared error/signal handling
+   */
+  _createWorkerPromise(worker, transform, rejectOnNonZero = false) {
     return new Promise((resolve, reject) => {
-      const worker = new Worker(new URL('./worker.js', import.meta.url), {
-        workerData: {
-          testFileUrl: options.testFileUrl,
-          testIndex: options.testIndex,
-          testPkg: options.testPkg,
-          testParent: options.testParent,
-          testName: options.testName,
-          suiteSnapshot: options.suiteSnapshot,
-        },
-      })
       this.activeWorkers.add(worker)
       let settled = false
       const cleanup = () => {
@@ -459,26 +456,20 @@ export class Isolation {
         worker.terminate()
       }
       worker.on('message', result => {
-        if (settled) {
-          return
-        }
+        if (settled) return
         settled = true
         cleanup()
-        resolve(result)
+        resolve(transform(result))
       })
       worker.on('error', err => {
-        if (settled) {
-          return
-        }
+        if (settled) return
         settled = true
         cleanup()
         reject(err)
       })
       worker.on('exit', code => {
-        if (settled) {
-          return
-        }
-        if (code !== 0) {
+        if (settled) return
+        if (code !== 0 && rejectOnNonZero) {
           settled = true
           cleanup()
           reject(new Error(`Worker exited with code ${code}`))
@@ -486,55 +477,35 @@ export class Isolation {
       })
     })
   }
+  executeInWorker(options) {
+    const worker = new Worker(new URL('./worker.js', import.meta.url), {
+      workerData: {
+        testFileUrl: options.testFileUrl,
+        testIndex: options.testIndex,
+        testPkg: options.testPkg,
+        testParent: options.testParent,
+        testName: options.testName,
+        suiteSnapshot: options.suiteSnapshot,
+      },
+    })
+    return this._createWorkerPromise(worker, r => r, true)
+  }
   /**
    * Run multiple tests in a single worker for better performance
    */
   executeBatchInWorker(options) {
-    return new Promise((resolve, reject) => {
-      const worker = new Worker(new URL('./worker.js', import.meta.url), {
-        workerData: {
-          testFileUrl: options.testFileUrl,
-          testIndices: options.testIndices,
-          testPkg: options.testPkg,
-          testParent: options.testParent,
-          testNames: options.testNames,
-          suiteSnapshot: options.suiteSnapshot,
-          batchMode: true,
-        },
-      })
-      this.activeWorkers.add(worker)
-      let settled = false
-      const cleanup = () => {
-        this.activeWorkers.delete(worker)
-        worker.terminate()
-      }
-      worker.on('message', result => {
-        if (settled) {
-          return
-        }
-        settled = true
-        cleanup()
-        resolve(result)
-      })
-      worker.on('error', err => {
-        if (settled) {
-          return
-        }
-        settled = true
-        cleanup()
-        reject(err)
-      })
-      worker.on('exit', code => {
-        if (settled) {
-          return
-        }
-        if (code !== 0) {
-          settled = true
-          cleanup()
-          reject(new Error(`Worker exited with code ${code}`))
-        }
-      })
+    const worker = new Worker(new URL('./worker.js', import.meta.url), {
+      workerData: {
+        testFileUrl: options.testFileUrl,
+        testIndices: options.testIndices,
+        testPkg: options.testPkg,
+        testParent: options.testParent,
+        testNames: options.testNames,
+        suiteSnapshot: options.suiteSnapshot,
+        batchMode: true,
+      },
     })
+    return this._createWorkerPromise(worker, r => r, false)
   }
 }
 /**

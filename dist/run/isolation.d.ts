@@ -36,6 +36,10 @@ export declare class Isolation {
   /**
    * Run a test in a worker thread for true isolation
    */
+  /**
+   * Create a worker promise with shared error/signal handling
+   */
+  private _createWorkerPromise
   executeInWorker(options: {
     testFileUrl: string
     testIndex: number

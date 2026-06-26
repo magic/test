@@ -3,6 +3,9 @@
  */
 export const withTimeout = (promise, timeoutMs, testKey) => {
   if (!timeoutMs || timeoutMs <= 0) {
+    if (Number.isNaN(timeoutMs)) {
+      throw new Error(`Invalid timeout value: ${timeoutMs}`)
+    }
     return promise
   }
   return Promise.race([

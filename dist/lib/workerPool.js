@@ -6,9 +6,9 @@ const getEffectiveLimit = override => {
   }
   const envLimit = process.env.MAGIC_TEST_WORKERS
   if (envLimit) {
-    const parsed = parseInt(envLimit, 10)
-    if (!isNaN(parsed)) {
-      return Math.max(1, parsed)
+    const parsed = Number(envLimit)
+    if (!Number.isNaN(parsed)) {
+      return Math.max(1, Math.floor(parsed))
     }
   }
   return Math.max(1, os.availableParallelism() - 2)
