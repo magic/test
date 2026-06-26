@@ -12,6 +12,7 @@ import type { CssObject } from './types.ts'
 export interface CompileSvelteReturn {
   js: string
   css: CssObject | null
+  map?: string
 }
 
 /**
@@ -48,16 +49,17 @@ export const compileSvelte = async (filePath: string): Promise<CompileSvelteRetu
       throw new Error('Compilation failed: no JS output')
     }
 
-    // Note: Svelte 5 generates sourcemap objects but doesn't embed them.
-    // We don't write .map files since tests don't need debugging.
     const jsCodeString = String(result.js.code)
     const { css } = result
+
+    // Generate source map string for coverage remapping
+    const mapString = result.js.map ? JSON.stringify(result.js.map) : undefined
 
     // Legacy in-memory cache for backward compatibility
     const stats = await fs.stat(absPath)
     cache.set(absPath, { js: jsCodeString, css: css ?? null, mtime: stats.mtimeMs })
 
-    return { js: jsCodeString, css: css ?? null }
+    return { js: jsCodeString, css: css ?? null, map: mapString }
   })()
 
   pendingPromises.set(`svelte:${filePath}`, compilePromise)

@@ -75,6 +75,12 @@ const run = async () => {
   const { shards, shardId, errorLength, timeout, workers } = res.args
   const include = is.array(includeArgs) ? includeArgs : [includeArgs]
   const exclude = is.array(excludeArgs) ? excludeArgs : [excludeArgs]
+  // Enable Node.js source map capture for c8 coverage remapping
+  process.env.NODE_OPTIONS = (process.env.NODE_OPTIONS || '')
+    .split(' ')
+    .filter(Boolean)
+    .concat(['--enable-source-maps'])
+    .join(' ')
   if (!isProd) {
     exclude.forEach(ex => {
       argv = ['--exclude', ex, ...argv]
@@ -117,6 +123,7 @@ const run = async () => {
     cmd = path.join(cwd, 'node_modules', '.bin', c8Cmd)
     argv = [
       '--all',
+      '--source-maps',
       '--extension',
       '.js',
       '--extension',
