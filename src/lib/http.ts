@@ -8,7 +8,7 @@ import is from '@magic/types'
 type BodyObject = Record<string, unknown>
 type RequestBody = string | BodyObject
 
-interface HttpOptions {
+export interface HttpOptions {
   timeout?: number
   rejectUnauthorized?: boolean
   maxSize?: number
