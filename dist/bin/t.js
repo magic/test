@@ -82,7 +82,7 @@ const run = async () => {
       argv = ['--exclude', ex, ...argv]
     })
     include.forEach(inc => {
-      argv = ['--include', inc, ...argv]
+      argv = ['--src', inc, ...argv]
     })
   }
   // Set shard environment variables

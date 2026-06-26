@@ -102,7 +102,7 @@ const run = async () => {
     })
 
     include.forEach(inc => {
-      argv = ['--include', inc, ...argv]
+      argv = ['--src', inc, ...argv]
     })
   }
 
