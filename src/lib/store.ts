@@ -1,7 +1,7 @@
 import is from '@magic/types'
 import type { State } from '../types.ts'
 
-const defaultState = {
+const defaultState: State = {
   suites: {},
   stats: {
     all: 0,
@@ -9,7 +9,7 @@ const defaultState = {
     fail: 0,
   },
   pkg: '',
-} as const
+}
 
 export class Store {
   state: State = { ...defaultState } as State
