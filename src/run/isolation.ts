@@ -511,21 +511,27 @@ export class Isolation {
       }
 
       worker.on('message', result => {
-        if (settled) return
+        if (settled) {
+          return
+        }
         settled = true
         cleanup()
         resolve(transform(result))
       })
 
       worker.on('error', err => {
-        if (settled) return
+        if (settled) {
+          return
+        }
         settled = true
         cleanup()
         reject(err)
       })
 
       worker.on('exit', code => {
-        if (settled) return
+        if (settled) {
+          return
+        }
         if (code !== 0 && rejectOnNonZero) {
           settled = true
           cleanup()

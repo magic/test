@@ -15,23 +15,6 @@ export interface HttpOptions {
   requestOptions?: nodeHttp.RequestOptions & nodeHttps.RequestOptions
 }
 
-type ResponseHandler = (res: nodeHttp.IncomingMessage) => void
-
-/**
- * Determine if SSL certificate should be rejected.
- * Defaults to true (secure) unless MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED=false
- */
-const shouldRejectUnauthorized = (): boolean => {
-  const env = process.env.MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED
-  if (is.undefined(env) || env === 'true' || env === '1') {
-    return true
-  }
-  if (env === 'false' || env === '0') {
-    return false
-  }
-  return true // default secure
-}
-
 /**
  * Validate and parse a URL, returning the parsed URL and HTTPS flag.
  */
@@ -59,46 +42,18 @@ const parseUrl = (url: string): { parsedUrl: URL; isHttps: boolean } => {
 }
 
 /**
- * Make an HTTP/HTTPS request with a callback for the response handler.
+ * Determine if SSL certificate should be rejected.
+ * Defaults to true (secure) unless MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED=false
  */
-const makeRequest = (
-  url: string,
-  options: HttpOptions,
-  onResponse: ResponseHandler,
-): Promise<unknown> => {
-  const { parsedUrl, isHttps } = parseUrl(url)
-  const connector = isHttps ? nodeHttps : nodeHttp
-  const timeout = options.timeout || 30000
-  const rejectUnauthorized = options.rejectUnauthorized ?? shouldRejectUnauthorized()
-  const maxSize = options.maxSize
-
-  return new Promise((resolve, reject) => {
-    try {
-      const requestOptions: nodeHttp.RequestOptions = {
-        hostname: parsedUrl.hostname,
-        port: parsedUrl.port,
-        path: parsedUrl.pathname,
-        ...options.requestOptions,
-      }
-
-      if (isHttps) {
-        Object.assign(requestOptions, { rejectUnauthorized })
-      }
-
-      const request = connector.request(requestOptions, res =>
-        handleResponse(res, resolve, reject, url, maxSize),
-      )
-
-      request.setTimeout(timeout, () => {
-        request.abort()
-        reject(new Error(`Request timeout: ${url} (${timeout}ms)`))
-      })
-
-      request.on('error', reject)
-    } catch (e) {
-      reject(e)
-    }
-  })
+const shouldRejectUnauthorized = (): boolean => {
+  const env = process.env.MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED
+  if (is.undefined(env) || env === 'true' || env === '1') {
+    return true
+  }
+  if (env === 'false' || env === '0') {
+    return false
+  }
+  return true // default secure
 }
 
 /**
