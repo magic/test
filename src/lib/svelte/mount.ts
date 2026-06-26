@@ -156,12 +156,12 @@ export const mount = async (
   // Acquire mutex to ensure only one Svelte component test runs at a time
   const releaseMutex = await acquireMutex()
 
-  // Safety timeout - if mount takes more than 60 seconds, release mutex
+  // Safety timeout - if mount takes more than 10 seconds, release mutex
   // This prevents deadlocks in case of errors
   const timeoutId = setTimeout(() => {
     log.warn('Svelte mount timeout - releasing mutex')
     releaseMutex()
-  }, 60000)
+  }, 10000)
 
   try {
     const result = await mountWithMutex(filePath, options, () => {
