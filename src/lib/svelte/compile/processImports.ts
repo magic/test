@@ -94,16 +94,16 @@ const processImportsImpl = async (
   const sortedResults = results.sort((a, b) => b.start - a.start)
 
   for (const { imported, start, end, result } of sortedResults) {
-    // Handle circular imports - remove the import statement since the module will
-    // export itself. The import would create a circular dependency anyway.
+    // Handle circular imports - keep the import statement for self-referencing.
+    // Removing the import breaks self-references because Svelte compilers rename exports
+    // (e.g., RenderJSX -> RenderJSX_1) but internal code still references the original name.
+    // Node.js handles circular imports fine when the module is already loaded.
+    // We just need to skip processing to avoid breaking the self-reference.
     const normalizedSource = path.resolve(sourceFilePath)
     const normalizedResult = path.resolve(result.filePath)
     if (normalizedSource === normalizedResult) {
-      // Self-referencing import - remove it entirely using AST position
-      processedCode =
-        processedCode.slice(0, start) +
-        `/* Circular self-reference: ${imported} will be exported by this module */` +
-        processedCode.slice(end)
+      // Self-referencing import - skip processing, keep the import as-is
+      // so internal calls to the imported name work correctly
       continue
     }
 
