@@ -1,4 +1,3 @@
-import { getParser } from '../ast-cache.ts'
 import { getSvelteCompiler } from '../compiler-cache.ts'
 import { LRUCache } from '../../caches/LRUCache.ts'
 import type { TSESTree } from '@typescript-eslint/types'
@@ -545,7 +544,6 @@ export const extractImportsSync = (code: string): SimpleImport[] => {
           }
           // Default imports don't get braces, named imports do
           // Mix default + named: default comes first, no braces for defaults
-          const allImports = [...defaultImports, ...namedImports]
           if (namedImports.length > 0 && defaultImports.length > 0) {
             // Mixed: import default, { named } from
             specifiers = `{ ${namedImports.join(', ')} }`

@@ -30,13 +30,6 @@ const isImportResult = (obj: unknown): obj is ImportResult => {
   )
 }
 
-/**
- * Error with attached individual errors for aggregated failures.
- */
-interface AggregatedImportError extends Error {
-  errors: Array<{ file: string; error: Error }>
-}
-
 const CONCURRENCY_LIMIT = 50
 
 const importFile = async (filePath: string): Promise<unknown> => {
@@ -101,20 +94,9 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
     indexFilePath = indexFileTsPath
   }
 
-  let viteDefineImport
-  try {
-    viteDefineImport = await import('../../lib/svelte/viteConfig/index.ts')
-  } catch (e) {
-    throw e
-  }
-  const { getViteDefine } = viteDefineImport
+  const { getViteDefine } = await import('../../lib/svelte/viteConfig/index.ts')
 
-  let testDefines
-  try {
-    testDefines = await loadTestDefines(process.cwd())
-  } catch (e) {
-    throw e
-  }
+  const testDefines = await loadTestDefines(process.cwd())
 
   if (await fs.exists(indexFilePath)) {
     // if index.js exists, we will simply import it as is and do no recursion.
