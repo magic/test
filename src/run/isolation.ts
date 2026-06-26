@@ -209,17 +209,17 @@ export class Isolation {
       return out as T
     }
 
+    if (is.instance(value, ArrayBuffer)) {
+      return value.slice() as T
+    }
+
     if (ArrayBuffer.isView(value)) {
-      // TypedArray - cast via unknown to access slice
+      // TypedArray - copy via slice, DataView has no slice so skip
       try {
         return (value as unknown as { slice(): unknown }).slice() as T
       } catch {
         return value as T
       }
-    }
-
-    if (is.instance(value, ArrayBuffer)) {
-      return value.slice() as T
     }
 
     if (is.error(value)) {

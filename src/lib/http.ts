@@ -70,7 +70,6 @@ export const get = (url: string, options: HttpOptions = {}): Promise<unknown> =>
   const { parsedUrl, isHttps } = parseUrl(url)
   const connector = isHttps ? nodeHttps : nodeHttp
   const timeout = options.timeout || 30000
-  const rejectUnauthorized = options.rejectUnauthorized ?? shouldRejectUnauthorized()
   const maxSize = options.maxSize
 
   return new Promise((resolve, reject) => {
@@ -82,6 +81,7 @@ export const get = (url: string, options: HttpOptions = {}): Promise<unknown> =>
       }
 
       if (isHttps) {
+        const rejectUnauthorized = options.rejectUnauthorized ?? shouldRejectUnauthorized()
         Object.assign(requestOptions, { rejectUnauthorized })
       }
 
