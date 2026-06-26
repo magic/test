@@ -752,6 +752,19 @@ export default [
 - Raw string returns for non-JSON responses
 - `rejectUnauthorized: false` for self-signed certificates
 
+**HttpOptions:**
+
+```javascript
+import type { HttpOptions } from '@magic/test'
+```
+
+| Option               | Type             | Default | Description                                                         |
+| -------------------- | ---------------- | ------- | ------------------------------------------------------------------- |
+| `timeout`            | `number`         | `30000` | Request timeout in milliseconds                                     |
+| `rejectUnauthorized` | `boolean`        | `true`  | Reject self-signed certs (set `false` for testing with local certs) |
+| `maxSize`            | `number`         | -       | Maximum response size in bytes                                      |
+| `requestOptions`     | `RequestOptions` | -       | Additional request options                                          |
+
 ###### <a name="lib-trycatch"></a> tryCatch
 
 allows to catch and test functions without bubbling the errors up into the runtime
