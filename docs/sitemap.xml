@@ -6,15 +6,64 @@
 >
 
 <url>
-  <loc>https:/magic.github.io/test/</loc>
-  <lastmod>2026-04-15</lastmod>
+  <loc>https://magic.github.io/test/</loc>
+  <lastmod>2026-06-26</lastmod>
   <changefreq>weekly</changefreq>
   <priority>0.5</priority>
 </url>
 
 <url>
-  <loc>https:/magic.github.io/test/404/</loc>
-  <lastmod>2026-04-15</lastmod>
+  <loc>https://magic.github.io/test/404/</loc>
+  <lastmod>2026-06-26</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.5</priority>
+</url>
+
+<url>
+  <loc>https://magic.github.io/test/changelog/</loc>
+  <lastmod>2026-06-26</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.5</priority>
+</url>
+
+<url>
+  <loc>https://magic.github.io/test/cli/</loc>
+  <lastmod>2026-06-26</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.5</priority>
+</url>
+
+<url>
+  <loc>https://magic.github.io/test/error-codes/</loc>
+  <lastmod>2026-06-26</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.5</priority>
+</url>
+
+<url>
+  <loc>https://magic.github.io/test/lib/</loc>
+  <lastmod>2026-06-26</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.5</priority>
+</url>
+
+<url>
+  <loc>https://magic.github.io/test/svelte/</loc>
+  <lastmod>2026-06-26</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.5</priority>
+</url>
+
+<url>
+  <loc>https://magic.github.io/test/test-isolation/</loc>
+  <lastmod>2026-06-26</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.5</priority>
+</url>
+
+<url>
+  <loc>https://magic.github.io/test/writing-tests/</loc>
+  <lastmod>2026-06-26</lastmod>
   <changefreq>weekly</changefreq>
   <priority>0.5</priority>
 </url>
