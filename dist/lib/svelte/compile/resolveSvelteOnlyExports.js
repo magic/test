@@ -46,6 +46,9 @@ export const writeTempFile = async (filePath, code) => {
   const promise = (async () => {
     try {
       await writeQueue.write(tempFile, code)
+      // Flush immediately to guarantee file exists before returning.
+      // Without this, batched writes may not be flushed until batch is full or timeout.
+      await writeQueue.flushPath(tempFile)
     } finally {
       pendingWrites.delete(tempFile)
     }
