@@ -64,14 +64,6 @@ incredibly fast.
   - [svelte (experimental!)](#lib-svelte)
 - [svelte kit mocks](#lib-sveltekit-mocks)
   - [createStaticPage](#lib-sveltekit-static)
-- [Native Node.js Test Runner](#native-runner)
-  - [Usage](#native-usage)
-  - [Using in External Libraries](#native-external)
-  - [Features](#native-features)
-  - [Differences from Custom Runner](#native-differences)
-  - [Test Isolation](#test-isolation)
-  - [\_\_isolate](#test-isolate)
-  - [Error Codes](#error-codes)
 - [Cli / Js Api Usage](#usage)
   - [js api](#usage-js)
   - [cli](#usage-cli)
@@ -80,6 +72,8 @@ incredibly fast.
   - [Performance Tips](#performance-tips)
   - [Verbose Output](#verbose-output)
   - [Common Pitfalls](#common-pitfalls)
+- [Test Isolation](#test-isolation)
+  - [__isolate](#test-isolate)
 
 #### <a name="install"></a>getting started
 
@@ -1285,72 +1279,8 @@ export default [
 ]
 ```
 
-#### <a name="native-runner"></a>Native Node.js Test Runner
 
-@magic/test includes a native Node.js test runner using `--test`.
-
-##### <a name="native-usage"></a>Usage
-
-```bash
-# Run tests using Node.js native test runner
-npm run test:native
-```
-
-Add to your `package.json`:
-
-```json
-{
-  "scripts": {
-    "test": "t -p",
-    "test:native": "node --test src/bin/node-test-runner.js"
-  }
-}
-```
-
-##### <a name="native-external"></a>Using in External Libraries
-
-To use the native test runner in your own library that depends on @magic/test:
-
-1. **Copy the runner file** to your project:
-
-```bash
-# Copy node-test-runner.js to your project
-cp node_modules/@magic/test/src/bin/node-test-runner.js src/
-```
-
-2. **Update the paths** in the runner if needed (it uses relative paths to find the test directory)
-
-3. **Add the script** to your package.json:
-
-```json
-{
-  "scripts": {
-    "test": "t -p",
-    "test:native": "node --test src/bin/node-test-runner.js"
-  }
-}
-```
-
-##### <a name="native-features"></a>Features
-
-The native runner supports all the same features as the custom runner:
-
-- Test file discovery (`.js`, `.mjs`, `.ts`)
-- File-based hooks (`beforeAll.js`, `afterAll.js`)
-- Svelte component testing
-- All assertion types
-- Global magic modules
-
-##### <a name="native-differences"></a>Differences from Custom Runner
-
-| Feature        | Custom Runner        | Native Runner             |
-| -------------- | -------------------- | ------------------------- |
-| Test discovery | Custom glob patterns | Node.js `--test` patterns |
-| Output format  | Colored CLI output   | Node.js test format       |
-| Hooks          | Full support         | Full support              |
-| Coverage       | Via c8               | Not available             |
-
-##### <a name="test-isolation"></a>Test Isolation
+## <a name="test-isolation"></a>Test Isolation
 
 @magic/test supports test isolation to prevent tests from affecting each other. Tests in the same suite can share state, but you can isolate them:
 
@@ -1373,7 +1303,7 @@ export default [
 
 By default, tests in the same file share global state. To enable strict isolation where each test gets a fresh environment:
 
-###### <a name="test-isolate"></a>\_\_isolate
+### <a name="test-isolate"></a>\_\_isolate
 
 ```javascript
 // This runs each test in isolation with fresh globals
@@ -1601,13 +1531,6 @@ MAGIC_TEST_WORKERS=2 t -p
 ```
 
 By default, @magic/test auto-detects CPU count and spawns `max(1, CPUs - 2)` workers to keep 2 threads free for the system.
-
-**Run tests in parallel with native runner:**
-
-```bash
-# Native runner uses Node.js built-in test runner
-npm run test:native
-```
 
 **Minimize async overhead:**
 
