@@ -159,8 +159,8 @@ export class Isolation {
       return value
     }
 
-    if (seen.has(value)) {
-      return seen.get(value) as T
+    if (seen.has(value as object)) {
+      return seen.get(value as object) as T
     }
 
     if (is.arr(value)) {
@@ -185,7 +185,7 @@ export class Isolation {
 
     if (is.set(value)) {
       const out = new Set()
-      seen.set(value, out)
+      seen.set(value as object, out)
       for (const v of value) {
         const cloned = this.deepClone(v, seen)
         // Skip functions
@@ -197,7 +197,7 @@ export class Isolation {
     }
     if (is.map(value)) {
       const out = new Map()
-      seen.set(value, out)
+      seen.set(value as object, out)
       for (const [k, v] of value) {
         const clonedK = this.deepClone(k, seen)
         const clonedV = this.deepClone(v, seen)
@@ -211,7 +211,11 @@ export class Isolation {
 
     if (ArrayBuffer.isView(value)) {
       // TypedArray - cast via unknown to access slice
-      return (value as unknown as { slice(): unknown }).slice() as T
+      try {
+        return (value as unknown as { slice(): unknown }).slice() as T
+      } catch {
+        return value as T
+      }
     }
 
     if (is.instance(value, ArrayBuffer)) {
@@ -227,7 +231,7 @@ export class Isolation {
 
     const proto = Object.getPrototypeOf(value)
     const copy = Object.create(proto) as Record<string, unknown>
-    seen.set(value, copy)
+    seen.set(value as object, copy)
 
     const allKeys = [
       ...Object.getOwnPropertyNames(value),
@@ -421,23 +425,24 @@ export class Isolation {
    * Uses cache for O(1) repeated lookups
    */
   _reviveKeyFromString(keyStr: string): string | symbol {
-    if (keyStr.startsWith('Symbol(')) {
-      // Check cache first
-      const cached = this.symbolCache.get(keyStr)
-      if (cached) {
-        return cached
-      }
-
-      // Build cache if not present
-      const syms = Object.getOwnPropertySymbols(globalThis)
-      for (const s of syms) {
-        const symStr = String(s)
-        this.symbolCache.set(symStr, s)
-        if (symStr === keyStr) {
-          return s
-        }
-      }
+    if (!keyStr.startsWith('Symbol(')) {
       return keyStr
+    }
+
+    // Check cache first
+    const cached = this.symbolCache.get(keyStr)
+    if (cached) {
+      return cached
+    }
+
+    // Build cache and find match
+    const syms = Object.getOwnPropertySymbols(globalThis)
+    for (const s of syms) {
+      const symStr = String(s)
+      this.symbolCache.set(symStr, s)
+      if (symStr === keyStr) {
+        return s
+      }
     }
     return keyStr
   }
@@ -488,6 +493,48 @@ export class Isolation {
   /**
    * Run a test in a worker thread for true isolation
    */
+  /**
+   * Create a worker promise with shared error/signal handling
+   */
+  private _createWorkerPromise<T>(
+    worker: Worker,
+    transform: (result: unknown) => T,
+    rejectOnNonZero: boolean = false,
+  ): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this.activeWorkers.add(worker)
+
+      let settled = false
+      const cleanup = () => {
+        this.activeWorkers.delete(worker)
+        worker.terminate()
+      }
+
+      worker.on('message', result => {
+        if (settled) return
+        settled = true
+        cleanup()
+        resolve(transform(result))
+      })
+
+      worker.on('error', err => {
+        if (settled) return
+        settled = true
+        cleanup()
+        reject(err)
+      })
+
+      worker.on('exit', code => {
+        if (settled) return
+        if (code !== 0 && rejectOnNonZero) {
+          settled = true
+          cleanup()
+          reject(new Error(`Worker exited with code ${code}`))
+        }
+      })
+    })
+  }
+
   executeInWorker(options: {
     testFileUrl: string
     testIndex: number
@@ -496,52 +543,18 @@ export class Isolation {
     testName: string
     suiteSnapshot?: Snapshot
   }): Promise<TestResult> {
-    return new Promise((resolve, reject) => {
-      const worker = new Worker(new URL('./worker.js', import.meta.url), {
-        workerData: {
-          testFileUrl: options.testFileUrl,
-          testIndex: options.testIndex,
-          testPkg: options.testPkg,
-          testParent: options.testParent,
-          testName: options.testName,
-          suiteSnapshot: options.suiteSnapshot,
-        },
-      })
-
-      this.activeWorkers.add(worker)
-
-      let settled = false
-      const cleanup = () => {
-        this.activeWorkers.delete(worker)
-        worker.terminate()
-      }
-      worker.on('message', result => {
-        if (settled) {
-          return
-        }
-        settled = true
-        cleanup()
-        resolve(result as TestResult)
-      })
-      worker.on('error', err => {
-        if (settled) {
-          return
-        }
-        settled = true
-        cleanup()
-        reject(err)
-      })
-      worker.on('exit', code => {
-        if (settled) {
-          return
-        }
-        if (code !== 0) {
-          settled = true
-          cleanup()
-          reject(new Error(`Worker exited with code ${code}`))
-        }
-      })
+    const worker = new Worker(new URL('./worker.js', import.meta.url), {
+      workerData: {
+        testFileUrl: options.testFileUrl,
+        testIndex: options.testIndex,
+        testPkg: options.testPkg,
+        testParent: options.testParent,
+        testName: options.testName,
+        suiteSnapshot: options.suiteSnapshot,
+      },
     })
+
+    return this._createWorkerPromise(worker, r => r as TestResult, true)
   }
 
   /**
@@ -555,53 +568,19 @@ export class Isolation {
     testNames: string[]
     suiteSnapshot?: Snapshot
   }): Promise<TestResult[]> {
-    return new Promise((resolve, reject) => {
-      const worker = new Worker(new URL('./worker.js', import.meta.url), {
-        workerData: {
-          testFileUrl: options.testFileUrl,
-          testIndices: options.testIndices,
-          testPkg: options.testPkg,
-          testParent: options.testParent,
-          testNames: options.testNames,
-          suiteSnapshot: options.suiteSnapshot,
-          batchMode: true,
-        },
-      })
-
-      this.activeWorkers.add(worker)
-
-      let settled = false
-      const cleanup = () => {
-        this.activeWorkers.delete(worker)
-        worker.terminate()
-      }
-      worker.on('message', result => {
-        if (settled) {
-          return
-        }
-        settled = true
-        cleanup()
-        resolve(result as TestResult[])
-      })
-      worker.on('error', err => {
-        if (settled) {
-          return
-        }
-        settled = true
-        cleanup()
-        reject(err)
-      })
-      worker.on('exit', code => {
-        if (settled) {
-          return
-        }
-        if (code !== 0) {
-          settled = true
-          cleanup()
-          reject(new Error(`Worker exited with code ${code}`))
-        }
-      })
+    const worker = new Worker(new URL('./worker.js', import.meta.url), {
+      workerData: {
+        testFileUrl: options.testFileUrl,
+        testIndices: options.testIndices,
+        testPkg: options.testPkg,
+        testParent: options.testParent,
+        testNames: options.testNames,
+        suiteSnapshot: options.suiteSnapshot,
+        batchMode: true,
+      },
     })
+
+    return this._createWorkerPromise(worker, r => r as TestResult[], false)
   }
 }
 

@@ -15,6 +15,8 @@ export interface HttpOptions {
   requestOptions?: nodeHttp.RequestOptions & nodeHttps.RequestOptions
 }
 
+type ResponseHandler = (res: nodeHttp.IncomingMessage) => void
+
 /**
  * Determine if SSL certificate should be rejected.
  * Defaults to true (secure) unless MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED=false
@@ -31,16 +33,9 @@ const shouldRejectUnauthorized = (): boolean => {
 }
 
 /**
- * Perform an HTTP GET request.
- * Automatically handles both HTTP and HTTPS protocols based on URL.
- *
- *
- * const data = await get('https://api.example.com/data')
- * console.log(data) // Parsed JSON or raw string
- *
- * const data = await get('https://self-signed.badssl.com', { rejectUnauthorized: false })
+ * Validate and parse a URL, returning the parsed URL and HTTPS flag.
  */
-export const get = (url: string, options: HttpOptions = {}): Promise<unknown> => {
+const parseUrl = (url: string): { parsedUrl: URL; isHttps: boolean } => {
   if (!url || !is.string(url)) {
     throw new Error(`Invalid URL: ${url}`)
   }
@@ -60,7 +55,18 @@ export const get = (url: string, options: HttpOptions = {}): Promise<unknown> =>
     )
   }
 
-  const isHttps = parsedUrl.protocol === 'https:'
+  return { parsedUrl, isHttps: parsedUrl.protocol === 'https:' }
+}
+
+/**
+ * Make an HTTP/HTTPS request with a callback for the response handler.
+ */
+const makeRequest = (
+  url: string,
+  options: HttpOptions,
+  onResponse: ResponseHandler,
+): Promise<unknown> => {
+  const { parsedUrl, isHttps } = parseUrl(url)
   const connector = isHttps ? nodeHttps : nodeHttp
   const timeout = options.timeout || 30000
   const rejectUnauthorized = options.rejectUnauthorized ?? shouldRejectUnauthorized()
@@ -68,25 +74,72 @@ export const get = (url: string, options: HttpOptions = {}): Promise<unknown> =>
 
   return new Promise((resolve, reject) => {
     try {
-      if (isHttps) {
-        const request = connector.get(url, { rejectUnauthorized }, res =>
-          handleResponse(res, resolve, reject, url, maxSize),
-        )
-        request.setTimeout(timeout, () => {
-          request.abort()
-          reject(new Error(`Request timeout: ${url} (${timeout}ms)`))
-        })
-        request.on('error', reject)
-      } else {
-        const request = connector.get(url, res =>
-          handleResponse(res, resolve, reject, url, maxSize),
-        )
-        request.setTimeout(timeout, () => {
-          request.abort()
-          reject(new Error(`Request timeout: ${url} (${timeout}ms)`))
-        })
-        request.on('error', reject)
+      const requestOptions: nodeHttp.RequestOptions = {
+        hostname: parsedUrl.hostname,
+        port: parsedUrl.port,
+        path: parsedUrl.pathname,
+        ...options.requestOptions,
       }
+
+      if (isHttps) {
+        Object.assign(requestOptions, { rejectUnauthorized })
+      }
+
+      const request = connector.request(requestOptions, res =>
+        handleResponse(res, resolve, reject, url, maxSize),
+      )
+
+      request.setTimeout(timeout, () => {
+        request.abort()
+        reject(new Error(`Request timeout: ${url} (${timeout}ms)`))
+      })
+
+      request.on('error', reject)
+    } catch (e) {
+      reject(e)
+    }
+  })
+}
+
+/**
+ * Perform an HTTP GET request.
+ * Automatically handles both HTTP and HTTPS protocols based on URL.
+ *
+ *
+ * const data = await get('https://api.example.com/data')
+ * console.log(data) // Parsed JSON or raw string
+ *
+ * const data = await get('https://self-signed.badssl.com', { rejectUnauthorized: false })
+ */
+export const get = (url: string, options: HttpOptions = {}): Promise<unknown> => {
+  const { parsedUrl, isHttps } = parseUrl(url)
+  const connector = isHttps ? nodeHttps : nodeHttp
+  const timeout = options.timeout || 30000
+  const rejectUnauthorized = options.rejectUnauthorized ?? shouldRejectUnauthorized()
+  const maxSize = options.maxSize
+
+  return new Promise((resolve, reject) => {
+    try {
+      const requestOptions: nodeHttp.RequestOptions = {
+        hostname: parsedUrl.hostname,
+        port: parsedUrl.port,
+        path: parsedUrl.pathname,
+      }
+
+      if (isHttps) {
+        Object.assign(requestOptions, { rejectUnauthorized })
+      }
+
+      const request = connector.request(requestOptions, res =>
+        handleResponse(res, resolve, reject, url, maxSize),
+      )
+
+      request.setTimeout(timeout, () => {
+        request.abort()
+        reject(new Error(`Request timeout: ${url} (${timeout}ms)`))
+      })
+
+      request.on('error', reject)
     } catch (e) {
       reject(e)
     }
@@ -110,35 +163,13 @@ export const post = (
   body: RequestBody = '',
   options: HttpOptions = {},
 ): Promise<unknown> => {
-  if (!url || !is.string(url)) {
-    throw new Error(`Invalid URL: ${url}`)
-  }
-
-  let urlObject: URL
-  try {
-    urlObject = new URL(url)
-  } catch {
-    throw new Error(
-      `Invalid URL format: "${url}". URL must be a valid absolute URL (e.g., https://example.com)`,
-    )
-  }
-
-  if (!['http:', 'https:'].includes(urlObject.protocol)) {
-    throw new Error(
-      `Unsupported protocol: "${urlObject.protocol}". Only http and https are supported.`,
-    )
-  }
-
-  const isHttps = urlObject.protocol === 'https:'
+  const { parsedUrl, isHttps } = parseUrl(url)
   const connector = isHttps ? nodeHttps : nodeHttp
-
-  const { hostname, port, pathname } = urlObject
-
-  const headers: Record<string, string | number> = {}
-
   const timeout = options.timeout || 30000
   const rejectUnauthorized = options.rejectUnauthorized ?? shouldRejectUnauthorized()
   const maxSize = options.maxSize
+
+  const headers: Record<string, string | number> = {}
 
   let postData = ''
   if (body) {
@@ -149,15 +180,17 @@ export const post = (
 
   return new Promise((resolve, reject) => {
     try {
-      const baseOptions = {
-        hostname,
-        port,
-        path: pathname,
+      const requestOptions: nodeHttp.RequestOptions = {
+        hostname: parsedUrl.hostname,
+        port: parsedUrl.port,
+        path: parsedUrl.pathname,
         method: 'POST',
         headers,
       }
 
-      const requestOptions = isHttps ? { ...baseOptions, rejectUnauthorized } : baseOptions
+      if (isHttps) {
+        Object.assign(requestOptions, { rejectUnauthorized })
+      }
 
       const request = connector.request(requestOptions, res =>
         handleResponse(res, resolve, reject, url, maxSize),
