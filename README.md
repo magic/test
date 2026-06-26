@@ -73,7 +73,7 @@ incredibly fast.
   - [Verbose Output](#verbose-output)
   - [Common Pitfalls](#common-pitfalls)
 - [Test Isolation](#test-isolation)
-  - [__isolate](#test-isolate)
+  - [\_\_isolate](#test-isolate)
 
 #### <a name="install"></a>getting started
 
@@ -1278,7 +1278,6 @@ export default [
   },
 ]
 ```
-
 
 ## <a name="test-isolation"></a>Test Isolation
 
