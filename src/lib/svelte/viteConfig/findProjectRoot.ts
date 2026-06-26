@@ -13,10 +13,6 @@ export const findProjectRoot = async (sourceDir: string): Promise<string> => {
 
   const root = process.cwd()
 
-  if (sourceDir.includes('node_modules')) {
-    return root
-  }
-
   let current = sourceDir
 
   while (current && current !== path.dirname(current)) {

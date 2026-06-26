@@ -238,11 +238,17 @@ const mountWithMutex = async (filePath, options, releaseMutex) => {
     const processProps = propsToProcess => {
       const processed = {}
       for (const [key, value] of Object.entries(propsToProcess)) {
-        // Only convert explicit snippet-like objects: { render: fn } or { render: "string" }
-        // Don't auto-convert strings or functions - that breaks normal props like href, value, etc.
+        // Only convert plain objects with render: string or render: fn
+        // Skip if already a proper Svelte 5 snippet (render is a function)
         if (is.object(value) && value !== null && !is.array(value)) {
-          if ('render' in value && !is.fn(value)) {
+          if ('render' in value) {
             const renderValue = value.render
+            // If render is already a function, it's a proper snippet - pass through unchanged
+            if (is.fn(renderValue)) {
+              processed[key] = value
+              continue
+            }
+            // Otherwise, convert render: string to render: () => string
             const renderFn = is.str(renderValue) ? () => renderValue : renderValue
             processed[key] = renderFn
             continue

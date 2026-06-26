@@ -4,8 +4,8 @@ import crypto from 'node:crypto'
 
 import { LRUCache } from './LRUCache.ts'
 
-const CACHE_DIR = 'node_modules/.magic-test-cache'
-// Use CACHE_DIR directly for cache paths
+import { CACHE_DIR } from '../../constants.ts'
+
 const MANIFEST_FILE = path.join(CACHE_DIR, 'manifest.json')
 
 interface SourceEntry {

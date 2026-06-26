@@ -1,9 +1,10 @@
 import path from 'node:path'
 import fs from '@magic/fs'
+import { CACHE_DIR } from '../../../../src/constants.js'
 import { findConfigFile } from '../../../../src/lib/svelte/viteConfig/findConfigFile.js'
 import { VITE_CONFIG_NAMES } from '../../../../src/lib/svelte/viteConfig/VITE_CONFIG_NAMES.js'
 
-const TEST_ROOT = path.join(process.cwd(), 'test', '.tmp', 'viteConfig', 'findConfigFile')
+const TEST_ROOT = path.join(CACHE_DIR, 'viteConfig', 'findConfigFile')
 
 const run1Dir = path.join(TEST_ROOT, 'run1')
 const run2Dir = path.join(TEST_ROOT, 'run2')
