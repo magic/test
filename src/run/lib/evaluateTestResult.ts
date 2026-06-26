@@ -33,15 +33,19 @@ export const evaluateTestResult = async (
   }
 
   if (!pass) {
-    if (is.undefined(exp)) {
-      pass = exp === res
-    } else if (exp === true) {
+    // Handle explicit boolean expectations first
+    if (exp === true) {
       pass = res === true
     } else if (exp === false) {
       pass = res === false
+    } else if (is.undefined(exp) || is.null(exp)) {
+      // null/undefined expectations must match exactly (function returned falsy)
+      pass = exp === res
     } else if (is.string(exp) || is.number(exp)) {
+      // Primitives: strict equality
       pass = exp === res
     } else if (is.sameType(exp, res)) {
+      // Complex types: deep equality
       pass = is.deep.equal(exp, res)
     }
   }
