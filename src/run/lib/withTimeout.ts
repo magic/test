@@ -6,10 +6,7 @@ export const withTimeout = <T>(
   timeoutMs: number,
   testKey: string,
 ): Promise<T> => {
-  if (!timeoutMs || timeoutMs <= 0) {
-    if (Number.isNaN(timeoutMs)) {
-      throw new Error(`Invalid timeout value: ${timeoutMs}`)
-    }
+  if (!timeoutMs || timeoutMs <= 0 || Number.isNaN(timeoutMs)) {
     return promise
   }
 

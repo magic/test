@@ -165,7 +165,7 @@ export class Isolation {
 
     if (is.arr(value)) {
       const copy: unknown[] = []
-      seen.set(value, copy)
+      seen.set(value as object, copy)
       for (const v of value) {
         const cloned = this.deepClone(v, seen)
         // Skip functions; they cannot be transferred to workers

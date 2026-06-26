@@ -2,10 +2,7 @@
  * Wrap a promise with a timeout using Promise.race
  */
 export const withTimeout = (promise, timeoutMs, testKey) => {
-  if (!timeoutMs || timeoutMs <= 0) {
-    if (Number.isNaN(timeoutMs)) {
-      throw new Error(`Invalid timeout value: ${timeoutMs}`)
-    }
+  if (!timeoutMs || timeoutMs <= 0 || Number.isNaN(timeoutMs)) {
     return promise
   }
   return Promise.race([
