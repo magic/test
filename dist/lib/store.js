@@ -14,34 +14,8 @@ export class Store {
    * Set values in the store state
    */
   set(val) {
-    if (val.suites) {
-      this.state.suites = { ...this.state.suites, ...val.suites }
-    }
-    if (val.stats) {
-      this.state.stats = val.stats
-    }
-    if (val.pkg !== undefined) {
-      this.state.pkg = val.pkg
-    }
-    if (val.startTime !== undefined) {
-      this.state.startTime = val.startTime
-    }
-    if (val.results !== undefined) {
-      this.state.results = val.results
-    }
-    // Allow setting arbitrary keys on state
-    const keys = Object.keys(val)
-    for (const key of keys) {
-      if (
-        key !== 'suites' &&
-        key !== 'stats' &&
-        key !== 'pkg' &&
-        key !== 'startTime' &&
-        key !== 'results'
-      ) {
-        this.state[key] = val[key]
-      }
-    }
+    // Merge entire state object for efficiency
+    this.state = { ...this.state, ...val }
   }
   /**
    * Implementation of get method.

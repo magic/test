@@ -1,3 +1,4 @@
+import is from '@magic/types'
 import { parse } from '@typescript-eslint/parser'
 const getSpecifierName = spec => {
   if (spec.type === 'ImportNamespaceSpecifier') {
@@ -91,7 +92,7 @@ export const mutatesImportedState = (code, importNames) => {
             if (checkNode(val)) {
               return true
             }
-          } else if (Array.isArray(val)) {
+          } else if (is.array(val)) {
             for (const item of val) {
               if (item && typeof item === 'object' && 'type' in item) {
                 if (checkNode(item)) {

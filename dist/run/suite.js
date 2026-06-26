@@ -184,13 +184,13 @@ const runTestObject = async (testsObj, name, parent, pkg, store, rawResults = []
     return result ? [result] : []
   }
   // Check if this is a test object with a tests array (e.g., { beforeAll, tests: [...] })
-  // In this case, we need to run the hooks and then run the tests directly
+  // Note: handleSuiteHooks is called in runSuite, not here, to avoid double execution
   if (is.arr(testsObj.tests)) {
     const testArray = testsObj.tests
     const needsIsolation = suiteNeedsIsolation(testArray)
     const hasBeforeAll = suiteHasBeforeAllOrAfterAll(testsObj)
     const modifiesGlobals = suiteModifiesGlobals(testsObj)
-    const { afterAllCleanup } = await handleSuiteHooks(testsObj)
+    // Hooks are handled in runSuite.executeSuite - removed duplicate call here
     // Compute test file URL for worker
     const testFileUrl = pathToFileURL(path.join(process.cwd(), 'test', pkg)).href
     // Determine if workers needed
@@ -221,17 +221,8 @@ const runTestObject = async (testsObj, name, parent, pkg, store, rawResults = []
       suiteSnapshot,
       testsObj,
     )
-    // Run afterAll cleanup
-    if (is.function(afterAllCleanup)) {
-      const cleanupResult = afterAllCleanup()
-      if (cleanupResult && is.promise(cleanupResult)) {
-        await cleanupResult
-      }
-    }
-    // Run afterAll hook
-    if (is.objectNative(testsObj) && is.function(testsObj.afterAll)) {
-      await testsObj.afterAll()
-    }
+    // Note: afterAllCleanup and afterAll hooks are handled in runSuite.executeSuite
+    // to ensure single execution point
     return results
   }
   const entries = Object.entries(testsObj).filter(
@@ -371,7 +362,7 @@ export const runSuite = async props => {
     }
     return suite
   } catch (e) {
-    if (e instanceof Error && hasErrorCode(e)) {
+    if (is.error(e) && hasErrorCode(e)) {
       if (e.code && e.code === ERRORS.E_EMPTY_SUITE) {
         log.error(e.code, e.message)
       } else if (e.code) {

@@ -24,7 +24,7 @@ const extractScriptFromSvelte = async source => {
         return
       }
       const c = content
-      if (c.body && Array.isArray(c.body)) {
+      if (c.body && is.array(c.body)) {
         for (const node of c.body) {
           if (node && is.object(node) && 'start' in node && 'end' in node) {
             const n = node
@@ -61,7 +61,7 @@ const analyzeCodeSync = code => {
         const spec = nsSpec
         if (spec.local.name === '$') {
           const source = imp.source
-          if (typeof source.value === 'string' && source.value.startsWith('svelte/internal')) {
+          if (is.string(source.value) && source.value.startsWith('svelte/internal')) {
             isCompiled = true
           }
         }
@@ -96,12 +96,12 @@ const analyzeCodeSync = code => {
           continue
         }
         const val = node[key]
-        if (val && typeof val === 'object') {
+        if (val && is.object(val)) {
           if ('type' in val) {
             checkNode(val)
-          } else if (Array.isArray(val)) {
+          } else if (is.array(val)) {
             for (const item of val) {
-              if (item && typeof item === 'object' && 'type' in item) {
+              if (item && is.object(item) && 'type' in item) {
                 checkNode(item)
               }
             }
@@ -314,7 +314,7 @@ const findImportExpressions = (node, code) => {
       const val = n[key]
       if (val && is.object(val) && 'type' in val) {
         walk(val)
-      } else if (Array.isArray(val)) {
+      } else if (is.array(val)) {
         for (const item of val) {
           if (item && is.object(item) && 'type' in item) {
             walk(item)
@@ -416,7 +416,6 @@ export const extractImportsSync = code => {
           }
           // Default imports don't get braces, named imports do
           // Mix default + named: default comes first, no braces for defaults
-          const allImports = [...defaultImports, ...namedImports]
           if (namedImports.length > 0 && defaultImports.length > 0) {
             // Mixed: import default, { named } from
             specifiers = `{ ${namedImports.join(', ')} }`
@@ -504,7 +503,7 @@ export const getSvelteReexports = code => {
     for (const node of ast.body) {
       if (node.type === 'ExportNamedDeclaration' && node.source) {
         const source = node.source
-        if (typeof source.value === 'string' && source.value.endsWith('.svelte')) {
+        if (is.string(source.value) && source.value.endsWith('.svelte')) {
           reexports.push({
             source: source.value,
             originalText: code.slice(node.range[0], node.range[1]),
@@ -514,7 +513,7 @@ export const getSvelteReexports = code => {
         // export default from './Foo.svelte' - TSExportAssignment is handled separately
       } else if (node.type === 'ExportAllDeclaration' && node.source) {
         const source = node.source
-        if (typeof source.value === 'string' && source.value.endsWith('.svelte')) {
+        if (is.string(source.value) && source.value.endsWith('.svelte')) {
           reexports.push({
             source: source.value,
             originalText: code.slice(node.range[0], node.range[1]),
@@ -549,7 +548,7 @@ export const getExportStarTargets = code => {
     for (const node of ast.body) {
       if (node.type === 'ExportAllDeclaration' && node.source) {
         const source = node.source
-        if (typeof source.value === 'string') {
+        if (is.string(source.value)) {
           targets.push(source.value)
         }
       }
@@ -581,7 +580,7 @@ export const getExportNamedTargets = code => {
     for (const node of ast.body) {
       if (node.type === 'ExportNamedDeclaration' && node.source) {
         const source = node.source
-        if (typeof source.value === 'string') {
+        if (is.string(source.value)) {
           targets.push(source.value)
         }
       }

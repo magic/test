@@ -124,7 +124,7 @@ export const tick = async () => {
     // If tick fails due to Svelte internal errors (like corrupted listeners Map),
     // wait a bit and try again. This can happen when tests run in parallel
     // and Svelte's internal state gets corrupted.
-    if (e instanceof Error && e.message.includes('Cannot read properties')) {
+    if (is.instance(e, Error) && e.message.includes('Cannot read properties')) {
       // Give Svelte a chance to recover
       await new Promise(resolve => setTimeout(resolve, 10))
       try {
@@ -141,12 +141,12 @@ export const tick = async () => {
 export const mount = async (filePath, options = {}) => {
   // Acquire mutex to ensure only one Svelte component test runs at a time
   const releaseMutex = await acquireMutex()
-  // Safety timeout - if mount takes more than 60 seconds, release mutex
+  // Safety timeout - if mount takes more than 10 seconds, release mutex
   // This prevents deadlocks in case of errors
   const timeoutId = setTimeout(() => {
     log.warn('Svelte mount timeout - releasing mutex')
     releaseMutex()
-  }, 60000)
+  }, 10000)
   try {
     const result = await mountWithMutex(filePath, options, () => {
       clearTimeout(timeoutId)
@@ -270,7 +270,7 @@ const mountWithMutex = async (filePath, options, releaseMutex) => {
       })
     } catch (mountError) {
       if (
-        mountError instanceof Error &&
+        is.instance(mountError, Error) &&
         mountError.message.includes('can only be used during component initialisation')
       ) {
         throw new Error(
@@ -308,7 +308,7 @@ const mountWithMutex = async (filePath, options, releaseMutex) => {
             // These can happen due to corrupted listeners Map state
             // This is expected when safeUnmount cleans up after a previous test
             if (
-              unmountError instanceof Error &&
+              is.instance(unmountError, Error) &&
               unmountError.message.includes('Cannot read properties')
             ) {
               // Silently ignore - this is expected during cleanup

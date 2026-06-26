@@ -4,6 +4,7 @@
 /**
  * Creates an argument handler that filters out `undefined` and `null` values,
  * and either returns a single argument or an array of arguments to the wrapped function.
+ * Pre-allocates array with length hint for better performance.
  */
 export declare const argHandler: (
   r: (arg: unknown | undefined) => void,

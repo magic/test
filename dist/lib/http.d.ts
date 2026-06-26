@@ -2,7 +2,7 @@ import nodeHttp from 'node:http'
 import nodeHttps from 'node:https'
 type BodyObject = Record<string, unknown>
 type RequestBody = string | BodyObject
-interface HttpOptions {
+export interface HttpOptions {
   timeout?: number
   rejectUnauthorized?: boolean
   maxSize?: number

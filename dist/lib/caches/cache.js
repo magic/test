@@ -3,6 +3,7 @@ import fs from '@magic/fs'
 import { LRUCache } from './LRUCache.js'
 import { CWD } from '../../constants.js'
 import { getCachedCompile, recordCompile } from './persistentCache.js'
+import is from '@magic/types'
 // Export LRUCache for external use
 export { LRUCache }
 // Re-export persistent cache functions
@@ -89,7 +90,7 @@ export class CacheManager {
    * Type guard to check if result is a Svelte compilation result
    */
   isSvelteResult(result) {
-    return typeof result === 'object' && result !== null && 'js' in result
+    return is.objectNative(result) && 'js' in result
   }
   /**
    * Check disk cache for a compiled Svelte file

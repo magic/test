@@ -1,5 +1,5 @@
 /**
- * Wrap a promise with a timeout
+ * Wrap a promise with a timeout using Promise.race
  */
 export declare const withTimeout: <T>(
   promise: Promise<T>,

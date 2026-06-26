@@ -1,4 +1,5 @@
 import os from 'node:os'
+const MAX_QUEUE_SIZE = 1000
 const getEffectiveLimit = override => {
   if (override !== undefined) {
     return Math.max(1, override)
@@ -32,6 +33,10 @@ const createWorkerPool = limit => {
     if (running < limit) {
       running++
       return fn().finally(release)
+    }
+    // Reject if queue is full to prevent unbounded memory growth
+    if (waitQueue.length >= MAX_QUEUE_SIZE) {
+      return Promise.reject(new Error(`Worker pool queue full (${MAX_QUEUE_SIZE} pending tasks)`))
     }
     return new Promise(resolve => {
       waitQueue.push(() => {

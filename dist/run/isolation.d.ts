@@ -3,6 +3,7 @@ export declare class Isolation {
   private snapshots
   private suiteSnapshots
   private activeWorkers
+  private symbolCache
   constructor()
   /**
    * Terminate all active workers. Call this on shutdown.
@@ -23,10 +24,11 @@ export declare class Isolation {
   restoreSnapshot(testKey: string): void
   /**
    * helper to map stringified symbol keys back to Symbol if needed
+   * Uses cache for O(1) repeated lookups
    */
   _reviveKeyFromString(keyStr: string): string | symbol
   /**
-   * shouldCaptureProperty unchanged but include symbol type check
+   * shouldCaptureProperty: O(1) lookup using Set.has()
    */
   shouldCaptureProperty(prop: string | symbol): boolean
   executeSuiteIsolated<T>(suiteKey: string, fn: () => Promise<T>): Promise<T>

@@ -89,19 +89,8 @@ export const readRecursive = async (dir = '') => {
   if (await fs.exists(indexFileTsPath)) {
     indexFilePath = indexFileTsPath
   }
-  let viteDefineImport
-  try {
-    viteDefineImport = await import('../../lib/svelte/viteConfig/index.js')
-  } catch (e) {
-    throw e
-  }
-  const { getViteDefine } = viteDefineImport
-  let testDefines
-  try {
-    testDefines = await loadTestDefines(process.cwd())
-  } catch (e) {
-    throw e
-  }
+  const { getViteDefine } = await import('../../lib/svelte/viteConfig/index.js')
+  const testDefines = await loadTestDefines(process.cwd())
   if (await fs.exists(indexFilePath)) {
     // if index.js exists, we will simply import it as is and do no recursion.
     const fileP = indexFilePath.replace(testDir, '')

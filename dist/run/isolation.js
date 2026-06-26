@@ -1,6 +1,7 @@
 import { Worker } from 'node:worker_threads'
 import is from '@magic/types'
-const skipProps = [
+// Use Set for O(1) lookup instead of O(n) array includes
+const skipProps = new Set([
   // Node/CommonJS built-ins
   'console',
   'process',
@@ -123,15 +124,17 @@ const skipProps = [
   'btoa',
   'fetch',
   'DOMException',
-]
+])
 export class Isolation {
   snapshots
   suiteSnapshots
   activeWorkers
+  symbolCache
   constructor() {
     this.snapshots = new Map()
     this.suiteSnapshots = new Map()
     this.activeWorkers = new Set()
+    this.symbolCache = new Map()
   }
   /**
    * Terminate all active workers. Call this on shutdown.
@@ -197,7 +200,7 @@ export class Isolation {
       // TypedArray - cast via unknown to access slice
       return value.slice()
     }
-    if (value instanceof ArrayBuffer) {
+    if (is.instance(value, ArrayBuffer)) {
       return value.slice()
     }
     if (is.error(value)) {
@@ -373,12 +376,21 @@ export class Isolation {
   }
   /**
    * helper to map stringified symbol keys back to Symbol if needed
+   * Uses cache for O(1) repeated lookups
    */
   _reviveKeyFromString(keyStr) {
     if (keyStr.startsWith('Symbol(')) {
+      // Check cache first
+      const cached = this.symbolCache.get(keyStr)
+      if (cached) {
+        return cached
+      }
+      // Build cache if not present
       const syms = Object.getOwnPropertySymbols(globalThis)
       for (const s of syms) {
-        if (String(s) === keyStr) {
+        const symStr = String(s)
+        this.symbolCache.set(symStr, s)
+        if (symStr === keyStr) {
           return s
         }
       }
@@ -387,11 +399,11 @@ export class Isolation {
     return keyStr
   }
   /**
-   * shouldCaptureProperty unchanged but include symbol type check
+   * shouldCaptureProperty: O(1) lookup using Set.has()
    */
   shouldCaptureProperty(prop) {
     const name = is.symbol(prop) ? String(prop) : prop
-    if (skipProps.includes(name)) {
+    if (skipProps.has(name)) {
       return false
     }
     const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
