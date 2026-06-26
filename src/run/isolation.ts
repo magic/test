@@ -4,7 +4,8 @@ import is from '@magic/types'
 
 import type { Snapshot, PropertyDescriptorRecord, TestResult } from '../types.ts'
 
-const skipProps = [
+// Use Set for O(1) lookup instead of O(n) array includes
+const skipProps = new Set([
   // Node/CommonJS built-ins
   'console',
   'process',
@@ -127,17 +128,19 @@ const skipProps = [
   'btoa',
   'fetch',
   'DOMException',
-]
+])
 
 export class Isolation {
   private snapshots: Map<string, Snapshot>
   private suiteSnapshots: Map<string, Snapshot>
   private activeWorkers: Set<Worker>
+  private symbolCache: Map<string, symbol>
 
   constructor() {
     this.snapshots = new Map()
     this.suiteSnapshots = new Map()
     this.activeWorkers = new Set()
+    this.symbolCache = new Map()
   }
 
   /**
@@ -415,12 +418,22 @@ export class Isolation {
 
   /**
    * helper to map stringified symbol keys back to Symbol if needed
+   * Uses cache for O(1) repeated lookups
    */
   _reviveKeyFromString(keyStr: string): string | symbol {
     if (keyStr.startsWith('Symbol(')) {
+      // Check cache first
+      const cached = this.symbolCache.get(keyStr)
+      if (cached) {
+        return cached
+      }
+
+      // Build cache if not present
       const syms = Object.getOwnPropertySymbols(globalThis)
       for (const s of syms) {
-        if (String(s) === keyStr) {
+        const symStr = String(s)
+        this.symbolCache.set(symStr, s)
+        if (symStr === keyStr) {
           return s
         }
       }
@@ -430,11 +443,11 @@ export class Isolation {
   }
 
   /**
-   * shouldCaptureProperty unchanged but include symbol type check
+   * shouldCaptureProperty: O(1) lookup using Set.has()
    */
   shouldCaptureProperty(prop: string | symbol): boolean {
     const name = is.symbol(prop) ? String(prop) : prop
-    if (skipProps.includes(name)) {
+    if (skipProps.has(name)) {
       return false
     }
 
