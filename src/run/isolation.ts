@@ -339,22 +339,20 @@ export class Isolation {
     this.restoreSnapshotFromMap(this.suiteSnapshots, suiteKey)
   }
 
-  restoreSnapshotFromMap(snapshotMap: Map<string, Snapshot>, key: string): void {
-    const snapshot = snapshotMap.get(key)
-    if (!snapshot) {
-      return
-    }
-
+  /**
+   * Restore properties from a snapshot to globalThis.
+   * Handles symbol keys, accessor properties, and falls back to direct assignment.
+   */
+  private restoreProperties(snapshot: Snapshot): void {
     const currentNames = [
       ...Object.getOwnPropertyNames(globalThis),
       ...Object.getOwnPropertySymbols(globalThis),
     ] as (string | symbol)[]
     const snapshotNames = new Set(Object.keys(snapshot.props))
 
+    // Delete properties not in snapshot
     for (const prop of currentNames) {
-      if (!this.shouldCaptureProperty(prop)) {
-        continue
-      }
+      if (!this.shouldCaptureProperty(prop)) {continue}
       if (!snapshotNames.has(String(prop))) {
         try {
           const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
@@ -367,14 +365,12 @@ export class Isolation {
       }
     }
 
+    // Restore properties from snapshot
     for (const keyStr in snapshot.props) {
-      if (!Object.prototype.hasOwnProperty.call(snapshot.props, keyStr)) {
-        continue
-      }
+      if (!Object.prototype.hasOwnProperty.call(snapshot.props, keyStr)) {continue}
       const stored = snapshot.props[keyStr]
-      if (!stored) {
-        continue
-      }
+      if (!stored) {continue}
+
       const prop = this._reviveKeyFromString(keyStr)
       try {
         const desc: PropertyDescriptor = {
@@ -385,12 +381,8 @@ export class Isolation {
           desc.writable = !!stored.writable
           desc.value = stored.value
         } else {
-          if (stored.get) {
-            desc.get = stored.get
-          }
-          if (stored.set) {
-            desc.set = stored.set
-          }
+          if (stored.get) {desc.get = stored.get}
+          if (stored.set) {desc.set = stored.set}
         }
         Object.defineProperty(globalThis, prop as string, desc)
       } catch {
@@ -403,7 +395,13 @@ export class Isolation {
         }
       }
     }
+  }
 
+  restoreSnapshotFromMap(snapshotMap: Map<string, Snapshot>, key: string): void {
+    const snapshot = snapshotMap.get(key)
+    if (!snapshot) {return}
+
+    this.restoreProperties(snapshot)
     snapshotMap.delete(key)
   }
 
@@ -596,68 +594,8 @@ export class Isolation {
  * Standalone version for use in worker threads.
  */
 export const restoreFromSnapshot = (snapshot: Snapshot | null | undefined): void => {
-  if (!snapshot) {
-    return
-  }
-
-  const currentNames = [
-    ...Object.getOwnPropertyNames(globalThis),
-    ...Object.getOwnPropertySymbols(globalThis),
-  ] as (string | symbol)[]
-  const snapshotNames = new Set(Object.keys(snapshot.props))
-
-  for (const prop of currentNames) {
-    if (!isolation.shouldCaptureProperty(prop)) {
-      continue
-    }
-    if (!snapshotNames.has(String(prop))) {
-      try {
-        const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
-        if (desc && desc.configurable !== false) {
-          delete (globalThis as Record<string | symbol, unknown>)[prop]
-        }
-      } catch {
-        // ignore
-      }
-    }
-  }
-
-  for (const keyStr in snapshot.props) {
-    if (!Object.prototype.hasOwnProperty.call(snapshot.props, keyStr)) {
-      continue
-    }
-    const stored = snapshot.props[keyStr]
-    if (!stored) {
-      continue
-    }
-    const prop = isolation._reviveKeyFromString(keyStr)
-    try {
-      const desc: PropertyDescriptor = {
-        configurable: !!stored.configurable,
-        enumerable: !!stored.enumerable,
-      }
-      if ('value' in stored) {
-        desc.writable = !!stored.writable
-        desc.value = stored.value
-      } else {
-        if (stored.get) {
-          desc.get = stored.get
-        }
-        if (stored.set) {
-          desc.set = stored.set
-        }
-      }
-      Object.defineProperty(globalThis, prop as string, desc)
-    } catch {
-      try {
-        if ('value' in stored && stored.value !== undefined) {
-          ;(globalThis as Record<string | symbol, unknown>)[prop] = stored.value
-        }
-      } catch {
-        // ignore
-      }
-    }
-  }
+  if (!snapshot) {return}
+  isolation.restoreProperties(snapshot)
 }
 
 export const isolation = new Isolation()
