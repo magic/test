@@ -352,7 +352,9 @@ export class Isolation {
 
     // Delete properties not in snapshot
     for (const prop of currentNames) {
-      if (!this.shouldCaptureProperty(prop)) {continue}
+      if (!this.shouldCaptureProperty(prop)) {
+        continue
+      }
       if (!snapshotNames.has(String(prop))) {
         try {
           const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
@@ -367,9 +369,13 @@ export class Isolation {
 
     // Restore properties from snapshot
     for (const keyStr in snapshot.props) {
-      if (!Object.prototype.hasOwnProperty.call(snapshot.props, keyStr)) {continue}
+      if (!Object.prototype.hasOwnProperty.call(snapshot.props, keyStr)) {
+        continue
+      }
       const stored = snapshot.props[keyStr]
-      if (!stored) {continue}
+      if (!stored) {
+        continue
+      }
 
       const prop = this._reviveKeyFromString(keyStr)
       try {
@@ -381,8 +387,12 @@ export class Isolation {
           desc.writable = !!stored.writable
           desc.value = stored.value
         } else {
-          if (stored.get) {desc.get = stored.get}
-          if (stored.set) {desc.set = stored.set}
+          if (stored.get) {
+            desc.get = stored.get
+          }
+          if (stored.set) {
+            desc.set = stored.set
+          }
         }
         Object.defineProperty(globalThis, prop as string, desc)
       } catch {
@@ -399,7 +409,9 @@ export class Isolation {
 
   restoreSnapshotFromMap(snapshotMap: Map<string, Snapshot>, key: string): void {
     const snapshot = snapshotMap.get(key)
-    if (!snapshot) {return}
+    if (!snapshot) {
+      return
+    }
 
     this.restoreProperties(snapshot)
     snapshotMap.delete(key)
@@ -594,7 +606,9 @@ export class Isolation {
  * Standalone version for use in worker threads.
  */
 export const restoreFromSnapshot = (snapshot: Snapshot | null | undefined): void => {
-  if (!snapshot) {return}
+  if (!snapshot) {
+    return
+  }
   isolation.restoreProperties(snapshot)
 }
 
