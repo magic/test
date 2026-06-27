@@ -56,7 +56,7 @@ const defaultSuite = {
 /**
  * Wrap a test with suite metadata
  */
-const wrapTest = (t: WrappedTest, name: string, parent: string, pkg: string): WrappedTest => ({
+const wrapTest = (t: Test, name: string, parent: string, pkg: string): WrappedTest => ({
   ...t,
   name,
   parent,

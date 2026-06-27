@@ -39,6 +39,15 @@ const defaultSuite = {
   tests: [],
 }
 /**
+ * Wrap a test with suite metadata
+ */
+const wrapTest = (t, name, parent, pkg) => ({
+  ...t,
+  name,
+  parent,
+  pkg,
+})
+/**
  * Run an array of tests
  */
 const runTestArray = async (
@@ -60,12 +69,7 @@ const runTestArray = async (
     const testsWithHooks = []
     const testsWithoutHooks = []
     tests.forEach((t, i) => {
-      const test = {
-        ...t,
-        name,
-        parent,
-        pkg,
-      }
+      const test = wrapTest(t, name, parent, pkg)
       if (testNeedsIsolation(test, suiteObj)) {
         testsWithHooks.push({ test: test, index: i })
       } else {
@@ -139,12 +143,7 @@ const runTestArray = async (
   if (needsIsolation && (suiteObj?.beforeEach || suiteObj?.afterEach)) {
     const results = []
     for (const t of tests) {
-      const test = {
-        ...t,
-        name,
-        parent,
-        pkg,
-      }
+      const test = wrapTest(t, name, parent, pkg)
       if (suiteObj && is.function(suiteObj.beforeEach)) {
         await suiteObj.beforeEach()
       }
@@ -158,15 +157,7 @@ const runTestArray = async (
     }
     return results
   }
-  const promises = tests.map(t => {
-    const test = {
-      ...t,
-      name,
-      parent,
-      pkg,
-    }
-    return runTest(test, store, rawResults)
-  })
+  const promises = tests.map(t => runTest(wrapTest(t, name, parent, pkg), store, rawResults))
   const resolved = await Promise.all(promises)
   return resolved.filter(r => !!r)
 }
@@ -338,9 +329,7 @@ export const runSuite = async props => {
       }
       // Then run afterAll hook
       if (is.objectNative(tests) && is.function(tests.afterAll)) {
-        if (is.fn(tests.afterAll)) {
-          await tests.afterAll()
-        }
+        await tests.afterAll()
       }
       return suite
     }
