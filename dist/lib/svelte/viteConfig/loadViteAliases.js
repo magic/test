@@ -17,8 +17,8 @@ var __rewriteRelativeImportExtension =
     }
     return path
   }
-import is from '@magic/types'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { findConfigFile } from './findConfigFile.js'
 import { aliasCache } from './cache.js'
 import { normalizeAlias } from './normalizeAlias.js'
@@ -35,15 +35,16 @@ export const loadViteAliases = async rootDir => {
     return []
   }
   try {
-    const config = await import(__rewriteRelativeImportExtension(configPath))
+    const configUrl = pathToFileURL(configPath).href
+    const config =
+      (await import(__rewriteRelativeImportExtension(configUrl))).default ??
+      (await import(__rewriteRelativeImportExtension(configUrl)))
     const configDir = path.dirname(configPath)
     const resolveConfig = config.resolve
     const aliases = normalizeAlias(resolveConfig?.alias, configDir)
     aliasCache.set(cacheKey, aliases)
     return aliases
-  } catch (e) {
-    const message = is.error(e) ? e.message : String(e)
-    console.warn(`[svelte-alias] Failed to parse vite.config: ${message}`)
+  } catch {
     return []
   }
 }

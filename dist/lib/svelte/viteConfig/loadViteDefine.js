@@ -17,7 +17,7 @@ var __rewriteRelativeImportExtension =
     }
     return path
   }
-import is from '@magic/types'
+import { pathToFileURL } from 'node:url'
 import { findConfigFile } from './findConfigFile.js'
 import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
 import { defineCache } from './cache.js'
@@ -31,11 +31,13 @@ export const loadViteDefine = async rootDir => {
   let defineConfig
   if (configPath) {
     try {
-      const config = await import(__rewriteRelativeImportExtension(configPath))
+      const configUrl = pathToFileURL(configPath).href
+      const config =
+        (await import(__rewriteRelativeImportExtension(configUrl))).default ??
+        (await import(__rewriteRelativeImportExtension(configUrl)))
       defineConfig = config.define
-    } catch (e) {
-      const message = is.error(e) ? e.message : String(e)
-      console.warn(`[svelte-alias] Failed to parse vite.config define: ${message}`)
+    } catch {
+      // config not available or parse error - return empty
     }
   }
   defineCache.set(cacheKey, defineConfig || {})

@@ -12,7 +12,6 @@ export interface HttpOptions {
  * Perform an HTTP GET request.
  * Automatically handles both HTTP and HTTPS protocols based on URL.
  *
- *
  * const data = await get('https://api.example.com/data')
  * console.log(data) // Parsed JSON or raw string
  *
@@ -23,7 +22,6 @@ export declare const get: (url: string, options?: HttpOptions) => Promise<unknow
  * Perform an HTTP POST request with optional JSON body.
  * Automatically handles both HTTP and HTTPS protocols based on URL.
  * Sets appropriate Content-Type and Content-Length headers for JSON.
- *
  *
  * const result = await post('https://api.example.com/users', { name: 'John' })
  *

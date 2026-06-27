@@ -18,10 +18,10 @@ var __rewriteRelativeImportExtension =
     return path
   }
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { findProjectRoot } from './findProjectRoot.js'
 import { findConfigFile } from './findConfigFile.js'
 import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
-import is from '@magic/types'
 /**
  * Get vite define variables for a source file
  */
@@ -31,11 +31,13 @@ export const getViteDefine = async sourceFilePath => {
   const configPath = await findConfigFile(rootDir, VITE_CONFIG_NAMES)
   if (configPath) {
     try {
-      const config = await import(__rewriteRelativeImportExtension(configPath))
-      return config.define
-    } catch (e) {
-      const message = is.error(e) ? e.message : String(e)
-      console.warn(`[svelte-alias] Failed to parse vite.config define: ${message}`)
+      const configUrl = pathToFileURL(configPath).href
+      const config =
+        (await import(__rewriteRelativeImportExtension(configUrl))).default ??
+        (await import(__rewriteRelativeImportExtension(configUrl)))
+      return config.define ?? {}
+    } catch {
+      // config not available or parse error - return empty
     }
   }
   return {}

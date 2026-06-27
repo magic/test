@@ -44,35 +44,21 @@ export const testImportsMutableModuleState = async (tests, testFilePath) => {
     return false
   })
 }
+const hasFixedPort = hook => {
+  if (!hook) {
+    return false
+  }
+  const ports = getPortPatterns(hook.toString())
+  return ports.some(p => p !== '.listen(0')
+}
 export const testUsesFixedPorts = tests => {
   return walkTests(tests, test => {
-    // Check suite-level hooks
-    if (test.beforeAll) {
-      const ports = getPortPatterns(test.beforeAll.toString())
-      if (ports.some(p => p !== '.listen(0')) {
-        return true
-      }
-    }
-    if (test.afterAll) {
-      const ports = getPortPatterns(test.afterAll.toString())
-      if (ports.some(p => p !== '.listen(0')) {
-        return true
-      }
-    }
-    // Check test-level hooks
-    if (test.before) {
-      const ports = getPortPatterns(test.before.toString())
-      if (ports.some(p => p !== '.listen(0')) {
-        return true
-      }
-    }
-    if (test.after) {
-      const ports = getPortPatterns(test.after.toString())
-      if (ports.some(p => p !== '.listen(0')) {
-        return true
-      }
-    }
-    return false
+    return (
+      hasFixedPort(test.beforeAll) ||
+      hasFixedPort(test.afterAll) ||
+      hasFixedPort(test.before) ||
+      hasFixedPort(test.after)
+    )
   })
 }
 export const testUsesSharedFiles = tests => {

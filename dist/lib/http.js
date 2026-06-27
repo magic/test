@@ -39,77 +39,19 @@ const shouldRejectUnauthorized = () => {
   }
   return true // default secure
 }
-/**
- * Perform an HTTP GET request.
- * Automatically handles both HTTP and HTTPS protocols based on URL.
- *
- *
- * const data = await get('https://api.example.com/data')
- * console.log(data) // Parsed JSON or raw string
- *
- * const data = await get('https://self-signed.badssl.com', { rejectUnauthorized: false })
- */
-export const get = (url, options = {}) => {
-  const { parsedUrl, isHttps } = parseUrl(url)
-  const connector = isHttps ? nodeHttps : nodeHttp
-  const timeout = options.timeout || 30000
-  const maxSize = options.maxSize
-  return new Promise((resolve, reject) => {
-    try {
-      const requestOptions = {
-        hostname: parsedUrl.hostname,
-        port: parsedUrl.port,
-        path: parsedUrl.pathname,
-      }
-      if (isHttps) {
-        const rejectUnauthorized = options.rejectUnauthorized ?? shouldRejectUnauthorized()
-        Object.assign(requestOptions, { rejectUnauthorized })
-      }
-      const request = connector.request(requestOptions, res =>
-        handleResponse(res, resolve, reject, url, maxSize),
-      )
-      request.setTimeout(timeout, () => {
-        request.abort()
-        reject(new Error(`Request timeout: ${url} (${timeout}ms)`))
-      })
-      request.on('error', reject)
-    } catch (e) {
-      reject(e)
-    }
-  })
-}
-/**
- * Perform an HTTP POST request with optional JSON body.
- * Automatically handles both HTTP and HTTPS protocols based on URL.
- * Sets appropriate Content-Type and Content-Length headers for JSON.
- *
- *
- * const result = await post('https://api.example.com/users', { name: 'John' })
- *
- * const result = await post('http://localhost:3000/data', 'raw string')
- *
- * const result = await post('https://self-signed.badssl.com', { data: 'test' }, { rejectUnauthorized: false })
- */
-export const post = (url, body = '', options = {}) => {
+const makeRequest = (url, options, { method = 'GET', headers = {}, body } = {}) => {
   const { parsedUrl, isHttps } = parseUrl(url)
   const connector = isHttps ? nodeHttps : nodeHttp
   const timeout = options.timeout || 30000
   const rejectUnauthorized = options.rejectUnauthorized ?? shouldRejectUnauthorized()
   const maxSize = options.maxSize
-  const headers = {}
-  let postData = ''
-  if (body) {
-    postData = is.str(body) ? body : JSON.stringify(body)
-    headers['Content-Length'] = Buffer.byteLength(postData)
-    headers['Content-Type'] = 'application/json'
-  }
   return new Promise((resolve, reject) => {
     try {
       const requestOptions = {
         hostname: parsedUrl.hostname,
         port: parsedUrl.port,
         path: parsedUrl.pathname,
-        method: 'POST',
+        method,
         headers,
       }
       if (isHttps) {
@@ -123,14 +65,47 @@ export const post = (url, body = '', options = {}) => {
         reject(new Error(`Request timeout: ${url} (${timeout}ms)`))
       })
       request.on('error', reject)
-      if (postData) {
-        request.write(postData)
+      if (body) {
+        request.write(body)
       }
       request.end()
     } catch (e) {
       reject(e)
     }
   })
+}
+/**
+ * Perform an HTTP GET request.
+ * Automatically handles both HTTP and HTTPS protocols based on URL.
+ *
+ * const data = await get('https://api.example.com/data')
+ * console.log(data) // Parsed JSON or raw string
+ *
+ * const data = await get('https://self-signed.badssl.com', { rejectUnauthorized: false })
+ */
+export const get = (url, options = {}) => {
+  return makeRequest(url, options)
+}
+/**
+ * Perform an HTTP POST request with optional JSON body.
+ * Automatically handles both HTTP and HTTPS protocols based on URL.
+ * Sets appropriate Content-Type and Content-Length headers for JSON.
+ *
+ * const result = await post('https://api.example.com/users', { name: 'John' })
+ *
+ * const result = await post('http://localhost:3000/data', 'raw string')
+ *
+ * const result = await post('https://self-signed.badssl.com', { data: 'test' }, { rejectUnauthorized: false })
+ */
+export const post = (url, body = '', options = {}) => {
+  const headers = {}
+  let postData = ''
+  if (body) {
+    postData = is.str(body) ? body : JSON.stringify(body)
+    headers['Content-Length'] = Buffer.byteLength(postData)
+    headers['Content-Type'] = 'application/json'
+  }
+  return makeRequest(url, options, { method: 'POST', headers, body: postData })
 }
 /**
  * HTTP utility object with get and post methods.
