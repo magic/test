@@ -17,15 +17,12 @@ export const makeSafeClone = value => {
     structuredClone(value)
     return value
   } catch {
-    // Fallback: convert to a string representation (or keep undefined/null)
-    if (value === undefined || value === null) {
-      return value
-    }
+    // Fallback: primitives pass through, objects get stringified
     if (
+      value instanceof BigInt ||
       is.string(value) ||
       is.number(value) ||
       is.boolean(value) ||
-      value instanceof BigInt ||
       is.symbol(value)
     ) {
       return value

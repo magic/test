@@ -20,7 +20,7 @@ export const makeSafeClone = (value: unknown): unknown => {
   } catch {
     // Fallback: primitives pass through, objects get stringified
     if (
-       value instanceof BigInt ||
+      value instanceof BigInt ||
       is.string(value) ||
       is.number(value) ||
       is.boolean(value) ||
