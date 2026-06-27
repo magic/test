@@ -8,9 +8,6 @@ export const findProjectRoot = async sourceDir => {
     return cached
   }
   const root = process.cwd()
-  if (sourceDir.includes('node_modules')) {
-    return root
-  }
   let current = sourceDir
   while (current && current !== path.dirname(current)) {
     const pkgPath = path.join(current, 'package.json')

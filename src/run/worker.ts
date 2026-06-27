@@ -2,7 +2,7 @@ import { parentPort, workerData } from 'node:worker_threads'
 
 import is from '@magic/types'
 
-import { cleanError, getTestKey } from '../lib/index.ts'
+import { cleanError } from '../lib/index.ts'
 import { restoreFromSnapshot } from './isolation.ts'
 import { createFailResult } from './lib/index.ts'
 import type { TestResult, WrappedTest } from '../types.ts'
@@ -17,8 +17,8 @@ type SuiteSetup = {
 }
 
 const setupSuite = async (suiteSnapshot?: unknown): Promise<SuiteSetup> => {
-  if (suiteSnapshot) {
-    restoreFromSnapshot(suiteSnapshot)
+  if (suiteSnapshot && typeof suiteSnapshot === 'object' && 'props' in suiteSnapshot) {
+    restoreFromSnapshot(suiteSnapshot as import('../types.ts').Snapshot)
   }
   const tests = await importFileInWorker(workerData.testFileUrl)
 

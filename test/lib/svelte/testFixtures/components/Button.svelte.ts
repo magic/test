@@ -1,5 +1,4 @@
-import { mount, html, click, props } from '../../../../../src/lib/svelte/index.js'
-import { flushSync } from 'svelte'
+import { html, props } from '../../../../../src/lib/svelte/index.js'
 import type { TestContext, TestCase } from '../../../../../src/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Button.svelte'
@@ -50,11 +49,11 @@ export default [
     component,
     fn: async ({ target }: TestContext) => {
       let called = false
-      const button = target.querySelector('button')!
-      button.onclick = () => {
+      const _button = target.querySelector('button')!
+      _button.onclick = () => {
         called = true
       }
-      button.click()
+      _button.click()
       return called
     },
     expect: true,
@@ -64,7 +63,7 @@ export default [
     component,
     props: { onclick: () => {} },
     fn: ({ target }: TestContext) => {
-      const button = target.querySelector('button')!
+      const _button = target.querySelector('button')!
       // onclick is passed as an event handler attribute
       return html(target).includes('btn primary')
     },

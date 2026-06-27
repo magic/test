@@ -1,56 +1,62 @@
-import { mount, html, click } from '../../../../../src/lib/svelte/index.js'
 import { flushSync } from 'svelte'
 import type { TestContext, TestCase } from '../../../../../src/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Derived.svelte'
 
+type ComponentInstance = {
+  count: number
+  doubleCount: number
+  isEmpty: boolean
+  isLarge: boolean
+}
+
 export default [
   {
     component,
     props: { items: [] },
-    fn: ({ component: instance }: TestContext) => instance['count'],
+    fn: ({ component: instance }: TestContext) => (instance as ComponentInstance)['count'],
     expect: 0,
     info: 'count starts at 0 with empty items',
   },
   {
     component,
     props: { items: [] },
-    fn: ({ component: instance }: TestContext) => instance['doubleCount'],
+    fn: ({ component: instance }: TestContext) => (instance as ComponentInstance)['doubleCount'],
     expect: 0,
     info: 'doubleCount is 0 when count is 0',
   },
   {
     component,
     props: { items: [] },
-    fn: ({ component: instance }: TestContext) => instance['isEmpty'],
+    fn: ({ component: instance }: TestContext) => (instance as ComponentInstance)['isEmpty'],
     expect: true,
     info: 'isEmpty is true when items is empty',
   },
   {
     component,
     props: { items: [] },
-    fn: ({ component: instance }: TestContext) => instance['isLarge'],
+    fn: ({ component: instance }: TestContext) => (instance as ComponentInstance)['isLarge'],
     expect: false,
     info: 'isLarge is false when items is empty',
   },
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: ({ component: instance }: TestContext) => instance['count'],
+    fn: ({ component: instance }: TestContext) => (instance as ComponentInstance)['count'],
     expect: 3,
     info: 'count reflects items length',
   },
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: ({ component: instance }: TestContext) => instance['doubleCount'],
+    fn: ({ component: instance }: TestContext) => (instance as ComponentInstance)['doubleCount'],
     expect: 6,
     info: 'doubleCount is items length * 2',
   },
   {
     component,
     props: { items: [1, 2, 3] },
-    fn: ({ component: instance }: TestContext) => instance['isEmpty'],
+    fn: ({ component: instance }: TestContext) => (instance as ComponentInstance)['isEmpty'],
     expect: false,
     info: 'isEmpty is false when items exist',
   },
@@ -61,7 +67,7 @@ export default [
       const addBtn = target.querySelector('.add')!
       addBtn.click()
       flushSync()
-      return (instance as any)['count']
+      return (instance as ComponentInstance)['count']
     },
     expect: 2,
     info: 'clicking add increments count via component state',
@@ -93,14 +99,14 @@ export default [
   {
     component,
     props: { items: [1, 2, 3, 4, 5, 6] },
-    fn: ({ component: instance }: TestContext) => instance['isLarge'],
+    fn: ({ component: instance }: TestContext) => (instance as ComponentInstance)['isLarge'],
     expect: true,
     info: 'isLarge is true when items > 5',
   },
   {
     component,
     props: { items: [1, 2, 3, 4, 5] },
-    fn: ({ component: instance }: TestContext) => instance['isLarge'],
+    fn: ({ component: instance }: TestContext) => (instance as ComponentInstance)['isLarge'],
     expect: false,
     info: 'isLarge is false when items = 5',
   },

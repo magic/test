@@ -1,9 +1,60 @@
 import { parentPort, workerData } from 'node:worker_threads'
 import is from '@magic/types'
-import { cleanError, getTestKey } from '../lib/index.js'
+import { cleanError } from '../lib/index.js'
 import { restoreFromSnapshot } from './isolation.js'
+import { createFailResult } from './lib/index.js'
 import { runSingleTestFromFileInWorker, importFileInWorker, makeSafeClone } from './lib/index.js'
 import '../bin/lib/registerLoader.js'
+const setupSuite = async suiteSnapshot => {
+  if (suiteSnapshot && typeof suiteSnapshot === 'object' && 'props' in suiteSnapshot) {
+    restoreFromSnapshot(suiteSnapshot)
+  }
+  const tests = await importFileInWorker(workerData.testFileUrl)
+  let afterAllCleanup
+  if (is.objectNative(tests) && is.function(tests.beforeAll)) {
+    const result = await tests.beforeAll()
+    if (is.function(result)) {
+      afterAllCleanup = result
+    }
+  }
+  return { tests, afterAllCleanup }
+}
+const runWithHooks = async (tests, fn) => {
+  try {
+    if (is.objectNative(tests) && is.function(tests.beforeEach)) {
+      await tests.beforeEach()
+    }
+    const result = await fn()
+    if (is.objectNative(tests) && is.function(tests.afterEach)) {
+      await tests.afterEach()
+    }
+    return result
+  } catch (e) {
+    if (is.objectNative(tests) && is.function(tests.afterEach)) {
+      await tests.afterEach()
+    }
+    throw e
+  }
+}
+const cleanupSuite = async (tests, afterAllCleanup) => {
+  if (afterAllCleanup) {
+    await afterAllCleanup()
+  }
+  if (is.objectNative(tests) && is.function(tests.afterAll)) {
+    await tests.afterAll()
+  }
+}
+const makeErrorResult = (testName, error) => {
+  const test = {
+    name: testName,
+    parent: workerData.testParent || '',
+    pkg: workerData.testPkg,
+    fn: undefined,
+  }
+  const result = createFailResult(test)
+  const cleanErr = cleanError(is.error(error) ? error : new Error(String(error)))
+  return { ...result, error: cleanErr }
+}
 const main = async () => {
   const batchMode = workerData.batchMode === true
   if (batchMode) {
@@ -13,124 +64,56 @@ const main = async () => {
   }
 }
 const runSingleMode = async () => {
-  const { testFileUrl, testIndex, testPkg, testParent, testName, suiteSnapshot } = workerData
+  const { testIndex, testPkg, testParent, testName, suiteSnapshot } = workerData
   try {
-    if (suiteSnapshot) {
-      restoreFromSnapshot(suiteSnapshot)
-    }
-    const tests = await importFileInWorker(testFileUrl)
-    let afterAllCleanup
-    if (is.objectNative(tests) && is.function(tests.beforeAll)) {
-      const result = await tests.beforeAll()
-      if (is.function(result)) {
-        afterAllCleanup = result
-      }
-    }
+    const { tests, afterAllCleanup } = await setupSuite(suiteSnapshot)
     let result
     try {
-      if (is.objectNative(tests) && is.function(tests.beforeEach)) {
-        await tests.beforeEach()
-      }
-      result = await runSingleTestFromFileInWorker(tests, testIndex, testPkg, testParent, testName)
+      result = await runWithHooks(tests, () =>
+        runSingleTestFromFileInWorker(tests, testIndex, testPkg, testParent, testName),
+      )
     } finally {
-      if (is.objectNative(tests) && is.function(tests.afterEach)) {
-        await tests.afterEach()
-      }
-      if (afterAllCleanup) {
-        await afterAllCleanup()
-      }
-      if (is.objectNative(tests) && is.function(tests.afterAll)) {
-        await tests.afterAll()
-      }
+      await cleanupSuite(tests, afterAllCleanup)
     }
     const payload = {
       ...result,
-      result: makeSafeClone(result.result),
+      result: makeSafeClone(result?.result),
     }
     if (parentPort) {
       parentPort.postMessage(payload)
     }
   } catch (e) {
     if (parentPort) {
-      parentPort.postMessage({
-        result: undefined,
-        msg: '',
-        pass: false,
-        parent: testParent || '',
-        name: testName,
-        expect: undefined,
-        expString: undefined,
-        key: getTestKey(testPkg, testParent, testName),
-        info: '',
-        pkg: testPkg,
-        error: cleanError(is.error(e) ? e : new Error(String(e))),
-      })
+      parentPort.postMessage(makeErrorResult(testName, e))
     }
   }
 }
 const runBatchMode = async () => {
-  const { testFileUrl, testIndices, testPkg, testParent, testNames, suiteSnapshot } = workerData
+  const { testIndices, testPkg, testParent, testNames, suiteSnapshot } = workerData
   try {
-    if (suiteSnapshot) {
-      restoreFromSnapshot(suiteSnapshot)
-    }
-    const tests = await importFileInWorker(testFileUrl)
-    let afterAllCleanup
-    if (is.objectNative(tests) && is.function(tests.beforeAll)) {
-      const result = await tests.beforeAll()
-      if (is.function(result)) {
-        afterAllCleanup = result
-      }
-    }
+    const { tests, afterAllCleanup } = await setupSuite(suiteSnapshot)
     const results = []
     try {
       for (let i = 0; i < testIndices.length; i++) {
         const testIndex = testIndices[i]
         const testName = testNames[i]
-        if (is.objectNative(tests) && is.function(tests.beforeEach)) {
-          await tests.beforeEach()
-        }
-        const result = await runSingleTestFromFileInWorker(
-          tests,
-          testIndex,
-          testPkg,
-          testParent,
-          testName,
+        const result = await runWithHooks(tests, () =>
+          runSingleTestFromFileInWorker(tests, testIndex, testPkg, testParent, testName),
         )
         results.push({
           ...result,
           result: makeSafeClone(result.result),
         })
-        if (is.objectNative(tests) && is.function(tests.afterEach)) {
-          await tests.afterEach()
-        }
       }
     } finally {
-      if (afterAllCleanup) {
-        await afterAllCleanup()
-      }
-      if (is.objectNative(tests) && is.function(tests.afterAll)) {
-        await tests.afterAll()
-      }
+      await cleanupSuite(tests, afterAllCleanup)
     }
     if (parentPort) {
       parentPort.postMessage(results)
     }
   } catch (e) {
     if (parentPort) {
-      const results = testNames.map(testName => ({
-        result: undefined,
-        msg: '',
-        pass: false,
-        parent: testParent || '',
-        name: testName,
-        expect: undefined,
-        expString: undefined,
-        key: getTestKey(testPkg, testParent, testName),
-        info: '',
-        pkg: testPkg,
-        error: cleanError(is.error(e) ? e : new Error(String(e))),
-      }))
+      const results = testNames.map(name => makeErrorResult(name, e))
       parentPort.postMessage(results)
     }
   }

@@ -1,4 +1,4 @@
-import { mount, html } from '../../../../../src/lib/svelte/index.js'
+import { html } from '../../../../../src/lib/svelte/index.js'
 import type { TestContext, TestCase } from '../../../../../src/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Modal.svelte'
