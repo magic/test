@@ -60,7 +60,9 @@ export const testImportsMutableModuleState = async (
 }
 
 const hasFixedPort = (hook: unknown): boolean => {
-  if (!hook) return false
+  if (!hook) {
+    return false
+  }
   const ports = getPortPatterns(hook.toString())
   return ports.some(p => p !== '.listen(0')
 }
