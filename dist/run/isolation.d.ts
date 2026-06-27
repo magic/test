@@ -19,6 +19,11 @@ export declare class Isolation {
   buildSnapshot(): Snapshot
   captureSuiteSnapshot(suiteKey: string): void
   restoreSuiteSnapshot(suiteKey: string): void
+  /**
+   * Restore properties from a snapshot to globalThis.
+   * Handles symbol keys, accessor properties, and falls back to direct assignment.
+   */
+  restoreProperties(snapshot: Snapshot): void
   restoreSnapshotFromMap(snapshotMap: Map<string, Snapshot>, key: string): void
   captureSnapshot(testKey: string): void
   restoreSnapshot(testKey: string): void

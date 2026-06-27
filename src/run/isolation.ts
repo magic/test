@@ -343,7 +343,7 @@ export class Isolation {
    * Restore properties from a snapshot to globalThis.
    * Handles symbol keys, accessor properties, and falls back to direct assignment.
    */
-  private restoreProperties(snapshot: Snapshot): void {
+  restoreProperties(snapshot: Snapshot): void {
     const currentNames = [
       ...Object.getOwnPropertyNames(globalThis),
       ...Object.getOwnPropertySymbols(globalThis),

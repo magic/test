@@ -304,16 +304,17 @@ export class Isolation {
   restoreSuiteSnapshot(suiteKey) {
     this.restoreSnapshotFromMap(this.suiteSnapshots, suiteKey)
   }
-  restoreSnapshotFromMap(snapshotMap, key) {
-    const snapshot = snapshotMap.get(key)
-    if (!snapshot) {
-      return
-    }
+  /**
+   * Restore properties from a snapshot to globalThis.
+   * Handles symbol keys, accessor properties, and falls back to direct assignment.
+   */
+  restoreProperties(snapshot) {
     const currentNames = [
       ...Object.getOwnPropertyNames(globalThis),
       ...Object.getOwnPropertySymbols(globalThis),
     ]
     const snapshotNames = new Set(Object.keys(snapshot.props))
+    // Delete properties not in snapshot
     for (const prop of currentNames) {
       if (!this.shouldCaptureProperty(prop)) {
         continue
@@ -329,6 +330,7 @@ export class Isolation {
         }
       }
     }
+    // Restore properties from snapshot
     for (const keyStr in snapshot.props) {
       if (!Object.prototype.hasOwnProperty.call(snapshot.props, keyStr)) {
         continue
@@ -365,6 +367,13 @@ export class Isolation {
         }
       }
     }
+  }
+  restoreSnapshotFromMap(snapshotMap, key) {
+    const snapshot = snapshotMap.get(key)
+    if (!snapshot) {
+      return
+    }
+    this.restoreProperties(snapshot)
     snapshotMap.delete(key)
   }
   captureSnapshot(testKey) {
@@ -523,61 +532,6 @@ export const restoreFromSnapshot = snapshot => {
   if (!snapshot) {
     return
   }
-  const currentNames = [
-    ...Object.getOwnPropertyNames(globalThis),
-    ...Object.getOwnPropertySymbols(globalThis),
-  ]
-  const snapshotNames = new Set(Object.keys(snapshot.props))
-  for (const prop of currentNames) {
-    if (!isolation.shouldCaptureProperty(prop)) {
-      continue
-    }
-    if (!snapshotNames.has(String(prop))) {
-      try {
-        const desc = Object.getOwnPropertyDescriptor(globalThis, prop)
-        if (desc && desc.configurable !== false) {
-          delete globalThis[prop]
-        }
-      } catch {
-        // ignore
-      }
-    }
-  }
-  for (const keyStr in snapshot.props) {
-    if (!Object.prototype.hasOwnProperty.call(snapshot.props, keyStr)) {
-      continue
-    }
-    const stored = snapshot.props[keyStr]
-    if (!stored) {
-      continue
-    }
-    const prop = isolation._reviveKeyFromString(keyStr)
-    try {
-      const desc = {
-        configurable: !!stored.configurable,
-        enumerable: !!stored.enumerable,
-      }
-      if ('value' in stored) {
-        desc.writable = !!stored.writable
-        desc.value = stored.value
-      } else {
-        if (stored.get) {
-          desc.get = stored.get
-        }
-        if (stored.set) {
-          desc.set = stored.set
-        }
-      }
-      Object.defineProperty(globalThis, prop, desc)
-    } catch {
-      try {
-        if ('value' in stored && stored.value !== undefined) {
-          globalThis[prop] = stored.value
-        }
-      } catch {
-        // ignore
-      }
-    }
-  }
+  isolation.restoreProperties(snapshot)
 }
 export const isolation = new Isolation()
