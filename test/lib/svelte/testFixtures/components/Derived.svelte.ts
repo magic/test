@@ -64,7 +64,7 @@ export default [
     component,
     props: { items: [1] },
     fn: ({ component: instance, target }: TestContext) => {
-      const addBtn = target.querySelector('.add')!
+      const addBtn = target.querySelector('.add')! as HTMLElement
       addBtn.click()
       flushSync()
       return (instance as ComponentInstance)['count']
@@ -76,7 +76,7 @@ export default [
     component,
     props: { items: [1] },
     fn: ({ target }: TestContext) => {
-      const addBtn = target.querySelector('.add')!
+      const addBtn = target.querySelector('.add')! as HTMLElement
       addBtn.click()
       flushSync()
       return target.querySelector('.double')?.textContent
@@ -88,7 +88,7 @@ export default [
     component,
     props: { items: [] },
     fn: ({ target }: TestContext) => {
-      const removeBtn = target.querySelector('.remove')!
+      const removeBtn = target.querySelector('.remove')! as HTMLElement
       removeBtn.click()
       flushSync()
       return target.querySelector('.count')?.textContent
@@ -114,7 +114,7 @@ export default [
     component,
     props: { items: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
     fn: ({ target }: TestContext) => {
-      const addBtn = target.querySelector('.add')!
+      const addBtn = target.querySelector('.add')! as HTMLElement
       addBtn.click()
       flushSync()
       return target.querySelector('.large')?.textContent
