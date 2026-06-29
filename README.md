@@ -153,7 +153,7 @@ example output, from this repository, lots of worker tests:
 ```
 ### Testing package: @magic/test@0.3.15
 
-Ran 1843 tests in 4.7s. Passed 1843/1843 100%
+Ran 2116 tests in 1.4s. Passed 2116/2116 100%
 ```
 
 fastest tests from a private project
