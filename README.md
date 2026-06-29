@@ -2360,6 +2360,10 @@ update dependencies
 - test: update fixtures for improved test harness
 - update dependencies
 
-##### 0.3.23 - unreleased
+##### 0.3.23
+
+- 0.3.22 caused tests to fail because viteconfig was not loaded correctly and lead to recursive imports
+
+##### 0.3.24 - unreleased
 
 ...
