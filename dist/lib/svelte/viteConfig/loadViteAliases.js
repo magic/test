@@ -23,6 +23,8 @@ import { findConfigFile } from './findConfigFile.js'
 import { aliasCache } from './cache.js'
 import { normalizeAlias } from './normalizeAlias.js'
 import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
+// Track loading state to prevent circular dependencies
+const loadingViteConfig = new Set()
 export const loadViteAliases = async rootDir => {
   const cacheKey = rootDir + ':vite'
   const cached = aliasCache.get(cacheKey)
@@ -34,6 +36,11 @@ export const loadViteAliases = async rootDir => {
     aliasCache.set(cacheKey, [])
     return []
   }
+  // Prevent circular imports
+  if (loadingViteConfig.has(configPath)) {
+    return []
+  }
+  loadingViteConfig.add(configPath)
   try {
     const configUrl = pathToFileURL(configPath).href
     const config =
@@ -46,5 +53,7 @@ export const loadViteAliases = async rootDir => {
     return aliases
   } catch {
     return []
+  } finally {
+    loadingViteConfig.delete(configPath)
   }
 }

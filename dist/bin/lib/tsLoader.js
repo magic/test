@@ -10,6 +10,8 @@ import { cacheManager } from '../../lib/caches/cache.js'
 import { getCacheDir } from '../../lib/caches/persistentCache.js'
 import { writeQueue } from '../../lib/svelte/compile/writeQueue.js'
 import { hasSvelteRunes } from '../../lib/svelte/compile/astParse.js'
+// Track files currently being loaded to prevent circular dependency hangs
+const currentlyLoading = new Set()
 // Use shared cache manager for all Svelte compilation
 // Helper to get or compile a Svelte file with caching
 const compileSvelteFile = async filePath => {
@@ -62,6 +64,10 @@ export const resolve = async (specifier, context, nextResolve) => {
 }
 const resolveImpl = async (specifier, context, nextResolve) => {
   try {
+    // Skip alias resolution if parent is already being loaded (prevents circular deps)
+    if (context.parentURL && currentlyLoading.has(context.parentURL)) {
+      return nextResolve(specifier, context)
+    }
     // Handle .js -> .ts conversion for absolute file:// URLs
     if (specifier.endsWith('.js') && specifier.startsWith('file://')) {
       const tsUrl = specifier.replace(/\.js$/, '.ts')
@@ -285,6 +291,19 @@ export const load = async (url, context, nextLoad) => {
   }
 }
 const loadImpl = async (url, context, nextLoad) => {
+  // Track file loading to prevent circular dependency hangs
+  const wasLoading = currentlyLoading.has(url)
+  currentlyLoading.add(url)
+  try {
+    return await loadImplInner(url, context, nextLoad)
+  } finally {
+    // Only remove if it wasn't already being tracked (prevents clearing for nested loads)
+    if (!wasLoading) {
+      currentlyLoading.delete(url)
+    }
+  }
+}
+const loadImplInner = async (url, context, nextLoad) => {
   if (url.includes('/magic/util/test/src/') && url.endsWith('.js')) {
     const tsUrl = url.replace(/\.js$/, '.ts')
     const filePath = tsUrl.replace('file://', '')

@@ -7,6 +7,9 @@ import { aliasCache, type AliasEntry } from './cache.ts'
 import { normalizeAlias } from './normalizeAlias.ts'
 import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.ts'
 
+// Track loading state to prevent circular dependencies
+const loadingViteConfig = new Set<string>()
+
 export const loadViteAliases = async (rootDir: string): Promise<AliasEntry[]> => {
   const cacheKey = rootDir + ':vite'
   const cached = aliasCache.get(cacheKey)
@@ -21,6 +24,12 @@ export const loadViteAliases = async (rootDir: string): Promise<AliasEntry[]> =>
     return []
   }
 
+  // Prevent circular imports
+  if (loadingViteConfig.has(configPath)) {
+    return []
+  }
+  loadingViteConfig.add(configPath)
+
   try {
     const configUrl = pathToFileURL(configPath).href
     const config = (await import(configUrl)).default ?? (await import(configUrl))
@@ -31,5 +40,7 @@ export const loadViteAliases = async (rootDir: string): Promise<AliasEntry[]> =>
     return aliases
   } catch {
     return []
+  } finally {
+    loadingViteConfig.delete(configPath)
   }
 }
