@@ -2342,6 +2342,24 @@ update dependencies
 - add more tests for @magic/test itself
 - update dependencies
 
-##### 0.3.22 - unreleased
+##### 0.3.22
+
+- feat: make restoreProperties method public on Isolation class
+- fix: move BigInt check before other type checks in makeSafeClone
+- refactor: use pathToFileURL for ESM config imports
+- refactor: use wrapTest helper consistently in suite
+- refactor: simplify suiteHasBeforeAllOrAfterAll condition
+- refactor: extract hasFixedPort helper in isolationChecks
+- refactor: extract restoreProperties helper
+- refactor: deduplicate evaluateWorkerResult by re-exporting evaluateTestResult
+- refactor: use CACHE_DIR constant for test temp files
+- refactor: use dynamic imports instead of manual config parsing
+- refactor(http): extract makeRequest helper to deduplicate get/post
+- refactor(mount): handle Svelte 5 snippets properly
+- test: fix test type errors for HTMLElement click function
+- test: update fixtures for improved test harness
+- update dependencies
+
+##### 0.3.23 - unreleased
 
 ...
