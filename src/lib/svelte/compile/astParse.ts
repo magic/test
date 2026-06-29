@@ -221,10 +221,7 @@ const getDeclarationNames = (decl: TSESTree.Node): string[] => {
 
 const extractPatternNames = (
   pattern:
-    | TSESTree.Identifier
-    | TSESTree.ArrayPattern
-    | TSESTree.ObjectPattern
-    | TSESTree.RestElement,
+    TSESTree.Identifier | TSESTree.ArrayPattern | TSESTree.ObjectPattern | TSESTree.RestElement,
   _code: string,
 ): string[] => {
   if (pattern.type === 'Identifier') {
@@ -364,9 +361,7 @@ const extractExports = (fileInfo: FileInfo): ExportInfo[] => {
 
 const getSpecifierString = (
   spec:
-    | TSESTree.ImportSpecifier
-    | TSESTree.ImportDefaultSpecifier
-    | TSESTree.ImportNamespaceSpecifier,
+    TSESTree.ImportSpecifier | TSESTree.ImportDefaultSpecifier | TSESTree.ImportNamespaceSpecifier,
 ): string => {
   if (spec.type === 'ImportSpecifier') {
     const imported =

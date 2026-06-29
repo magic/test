@@ -139,8 +139,7 @@ export function invalidateAll(): Promise<void> {
 }
 
 type PreloadedData =
-  | { type: 'loaded'; status: number; data: unknown }
-  | { type: 'redirect'; location: string }
+  { type: 'loaded'; status: number; data: unknown } | { type: 'redirect'; location: string }
 
 export function preloadData(_href: string): Promise<PreloadedData> {
   return Promise.resolve({ type: 'loaded', status: 200, data: {} })

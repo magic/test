@@ -3,9 +3,7 @@ import { parse } from '@typescript-eslint/parser'
 import type { TSESTree } from '@typescript-eslint/types'
 
 type ImportSpecifier =
-  | TSESTree.ImportSpecifier
-  | TSESTree.ImportDefaultSpecifier
-  | TSESTree.ImportNamespaceSpecifier
+  TSESTree.ImportSpecifier | TSESTree.ImportDefaultSpecifier | TSESTree.ImportNamespaceSpecifier
 
 const getSpecifierName = (spec: ImportSpecifier): string => {
   if (spec.type === 'ImportNamespaceSpecifier') {

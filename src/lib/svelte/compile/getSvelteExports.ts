@@ -11,8 +11,7 @@ export const getSvelteExports = async (
 
   // Check if another process is already getting exports for this file
   const pending = pendingPromises.get(`exports:${filePath}`) as
-    | Promise<{ name: string; path: string; isDefaultReexport?: boolean }[]>
-    | undefined
+    Promise<{ name: string; path: string; isDefaultReexport?: boolean }[]> | undefined
   if (pending) {
     traceEnd(id, 'waiting for pending')
     const result = await pending

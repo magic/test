@@ -46,8 +46,7 @@ export const compileBarrel = async (
     }
 
     const pending = pendingPromises.get(`barrel:${filePath}`) as
-      | Promise<{ filePath: string; js: string; wrapperAbsPath: string }>
-      | undefined
+      Promise<{ filePath: string; js: string; wrapperAbsPath: string }> | undefined
     if (pending) {
       traceEnd(id, 'waiting for pending')
       const result = await pending

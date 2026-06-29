@@ -396,8 +396,7 @@ const resolvePackageExportImpl = async (
 
       if (hasNonSvelteCondition) {
         const importPath = (conditions.import || conditions.module || conditions.default) as
-          | string
-          | undefined
+          string | undefined
         if (importPath) {
           const resolved = await tryResolvePath(nodeModulesPath, importPath)
           if (resolved) {
