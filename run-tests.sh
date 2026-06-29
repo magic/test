@@ -15,6 +15,7 @@ PROJECTS=(
   "$HOME/dev/arm/systemkollektiv/audio-player"
   "$HOME/dev/arm/systemkollektiv/resizable-list"
   "$HOME/dev/arm/systemkollektiv/render-jsx"
+  "$HOME/dev/arm/systemkollektiv/i18n"
 )
 
 for project in "${PROJECTS[@]}"; do
