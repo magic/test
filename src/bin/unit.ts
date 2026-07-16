@@ -12,6 +12,9 @@ import { maybeInjectMagic, readRecursive, resetVisitedDirs } from './lib/index.t
 
 import type { CustomError } from '@magic/error'
 
+// Create globalStartTime BEFORE anything else for accurate total timing
+const globalStartTime = log.hrtime()
+
 const getShardConfig = () => {
   const rawShards = process.env.MAGIC_TEST_SHARDING_SHARDS
   const rawShardId = process.env.MAGIC_TEST_SHARDING_ID
@@ -38,7 +41,30 @@ const init = async () => {
     // Reset state between runs to prevent stale cache issues
     resetVisitedDirs()
 
-    const tests = await readRecursive()
+    // Progress tracking for test collection
+    let testFileCount = 0
+    const tests = await readRecursive('', (count: number) => {
+      if (count > testFileCount) {
+        testFileCount = count
+        process.stdout.write(`\rCollecting tests: ${count} files processed`)
+      }
+    })
+
+    // Clear the progress line
+    process.stdout.write('\r' + ' '.repeat(50) + '\r')
+
+    if (tests) {
+      // Count total tests
+      const countTests = (obj: unknown): number => {
+        if (Array.isArray(obj)) return obj.length
+        if (typeof obj === 'object' && obj !== null) {
+          return Object.values(obj).reduce((sum, val) => sum + countTests(val), 0)
+        }
+        return 0
+      }
+      const totalTests = countTests(tests)
+      log.annotate(`Found ${totalTests} tests across ${testFileCount} files\n`)
+    }
 
     if (!tests) {
       log.error('NO tests specified')
@@ -47,7 +73,7 @@ const init = async () => {
 
     const { shards, shardId, workers } = getShardConfig()
 
-    await run(tests, { shards, shardId, workers })
+    await run(tests, { shards, shardId, workers, globalStartTime })
   } catch (e) {
     const err = e as CustomError
     err.code = 'E_MAGIC_TEST'

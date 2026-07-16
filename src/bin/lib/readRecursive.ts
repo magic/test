@@ -41,7 +41,7 @@ const importFile = async (filePath: string): Promise<unknown> => {
 
     let importPath: string
     if (transformedCode !== code) {
-      const tempFile = await writeTempFile(fsPath, transformedCode)
+      const tempFile = await writeTempFile(filePath, transformedCode)
       importPath = pathToFileURL(tempFile).href
     } else {
       importPath = isUrl ? filePath : pathToFileURL(fsPath).href
@@ -77,7 +77,14 @@ export const resetVisitedDirs = () => {
   visitedDirs.clear()
 }
 
-export const readRecursive = async (dir = ''): Promise<TestSuites> => {
+type ProgressCallback = (count: number) => void
+
+type ReadResult = {
+  tests: TestSuites
+  fileCount: number
+}
+
+const readRecursiveImpl = async (dir = '', onProgress?: ProgressCallback): Promise<ReadResult> => {
   const testDir = path.join(process.cwd(), 'test')
   const targetDir = path.join(testDir, dir)
 
@@ -98,6 +105,8 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
 
   const testDefines = await loadTestDefines(process.cwd())
 
+  let processedCount = 0
+
   if (await fs.exists(indexFilePath)) {
     // if index.js exists, we will simply import it as is and do no recursion.
     const fileP = indexFilePath.replace(testDir, '')
@@ -114,6 +123,12 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
 
       const imported = await importFile(importPath)
       tests[fileP] = imported as TestCollection
+      processedCount = 1
+
+      // Report progress
+      if (onProgress) {
+        onProgress(1)
+      }
     } catch (err) {
       const error = is.error(err) ? err : new Error(String(err))
       errors.push({ file: fileP, error })
@@ -146,8 +161,13 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
       if (stat.isDirectory()) {
         visitedDirs.add(realPath)
         try {
-          const deepTests = await readRecursive(dir ? path.join(dir, file) : file)
-          return { type: 'directory', file, tests: deepTests } as ImportResult
+          // Recursively get tests and file count from child directory
+          const deepResult = await readRecursiveImpl(dir ? path.join(dir, file) : file)
+          processedCount += deepResult.fileCount
+          if (onProgress) {
+            onProgress(processedCount)
+          }
+          return { type: 'directory', file, tests: deepResult.tests } as ImportResult
         } catch (err) {
           const relPath = path.join(dir || '', file)
           const error = is.error(err) ? err : new Error(String(err))
@@ -171,6 +191,10 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
           }
 
           const test = await importFile(filePath)
+          processedCount++
+          if (onProgress) {
+            onProgress(processedCount)
+          }
           return { type: 'file', file: fileP, test } as ImportResult
         } catch (err) {
           const error = is.error(err) ? err : new Error(String(err))
@@ -220,5 +244,13 @@ export const readRecursive = async (dir = ''): Promise<TestSuites> => {
     console.error(`${errors.length} test file(s) failed to load (continuing): ${errorMessages}`)
   }
 
-  return tests
+  return { tests, fileCount: processedCount }
+}
+
+export const readRecursive = async (
+  dir = '',
+  onProgress?: ProgressCallback,
+): Promise<TestSuites> => {
+  const result = await readRecursiveImpl(dir, onProgress)
+  return result.tests
 }
