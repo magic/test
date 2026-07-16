@@ -2,6 +2,42 @@ import is from '@magic/types'
 import { parse } from '@typescript-eslint/parser'
 import type { TSESTree } from '@typescript-eslint/types'
 
+// Safely cast a value to TSESTree.Node after validation
+const toNode = (val: unknown): TSESTree.Node | undefined => {
+  if (is.objectNative(val) && 'type' in val && typeof (val as Record<string, unknown>).type === 'string') {
+    return val as unknown as TSESTree.Node
+  }
+  return undefined
+}
+
+// Recursively get all nodes from an AST
+const getChildNodes = (node: TSESTree.Node): TSESTree.Node[] => {
+  const children: TSESTree.Node[] = []
+
+  for (const key of Object.keys(node) as Array<keyof TSESTree.Node>) {
+    if (key === 'type' || key === 'loc' || key === 'range' || key === 'parent') {
+      continue
+    }
+    const val = node[key] as unknown
+
+    if (is.array(val)) {
+      for (const item of val as unknown[]) {
+        const node = toNode(item)
+        if (node) {
+          children.push(node)
+        }
+      }
+    } else {
+      const node = toNode(val)
+      if (node) {
+        children.push(node)
+      }
+    }
+  }
+
+  return children
+}
+
 type ImportSpecifier =
   TSESTree.ImportSpecifier | TSESTree.ImportDefaultSpecifier | TSESTree.ImportNamespaceSpecifier
 
@@ -101,25 +137,9 @@ export const mutatesImportedState = (code: string, importNames: string[]): boole
       }
 
       // Recurse into children
-      for (const key of Object.keys(node)) {
-        if (key === 'type' || key === 'loc' || key === 'range' || key === 'parent') {
-          continue
-        }
-        const val = (node as unknown as Record<string, unknown>)[key]
-        if (val && typeof val === 'object') {
-          if ('type' in (val as object)) {
-            if (checkNode(val as TSESTree.Node)) {
-              return true
-            }
-          } else if (is.array(val)) {
-            for (const item of val) {
-              if (item && typeof item === 'object' && 'type' in (item as object)) {
-                if (checkNode(item as TSESTree.Node)) {
-                  return true
-                }
-              }
-            }
-          }
+      for (const child of getChildNodes(node)) {
+        if (checkNode(child)) {
+          return true
         }
       }
 
