@@ -3,8 +3,21 @@ import is from '@magic/types'
 
 /**
  * Get the duration since the stored start time
+ * @param storeObj - The store object containing start times
+ * @param timeKey - Which time to use: 'globalStartTime' (total time) or 'startTime' (test execution only)
  */
-export const getDuration = (storeObj: { get: (key: string) => unknown }): string => {
+export const getDuration = (
+  storeObj: { get: (key: string) => unknown },
+  timeKey: 'globalStartTime' | 'startTime' = 'startTime',
+): string => {
+  // Prefer globalStartTime if requested and available
+  if (timeKey === 'globalStartTime') {
+    const globalStartTime = storeObj.get('globalStartTime')
+    if (globalStartTime && is.array(globalStartTime) && globalStartTime.length === 2) {
+      return log.timeTaken(globalStartTime as [number, number], { log: false })
+    }
+  }
+
   const startTime = storeObj.get('startTime')
 
   if (!startTime || !is.array(startTime) || startTime.length !== 2) {

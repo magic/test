@@ -94,6 +94,7 @@ type RunOptions = {
   shardId?: number
   workers?: number
   clearCache?: boolean
+  globalStartTime?: [number, number]
 }
 
 /**
@@ -127,7 +128,7 @@ export const run = async (
   tests: TestSuites | (() => TestSuites),
   options: RunOptions = {},
 ): Promise<Error | void> => {
-  const { shards = 1, shardId = 0, workers, clearCache } = options
+  const { shards = 1, shardId = 0, workers, clearCache, globalStartTime } = options
 
   // Clear persistent cache if requested
   if (clearCache) {
@@ -146,8 +147,9 @@ export const run = async (
   resetAbort()
 
   const store = createStore()
-  const startTime = log.hrtime()
-  store.set({ startTime })
+  // Use globalStartTime if provided (from unit.ts), otherwise create new one
+  const startTime = globalStartTime || log.hrtime()
+  store.set({ startTime, globalStartTime })
 
   const rawResults: TestResult[] = []
 

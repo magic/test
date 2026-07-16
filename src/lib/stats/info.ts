@@ -102,10 +102,17 @@ export const info = (suites: unknown[], store: Store, useLogging: boolean = true
   const result = results.__PACKAGE_ROOT__ || { pass: 0, all: 0 }
   const { pass, all } = result
   const duration = getDuration(store)
+  const totalDuration = getDuration(store, 'globalStartTime')
   const percentage = all > 0 ? printPercent((pass / all) * 100) : printPercent(0)
 
   if (useLogging) {
-    log(`Ran ${all} tests in ${duration}. Passed ${pass}/${all} ${percentage}%\n`)
+    // Show total time if it differs from test execution time (indicates discovery overhead)
+    if (totalDuration && totalDuration !== duration) {
+      log(`\nRan ${all} tests in ${duration}. Passed ${pass}/${all} ${percentage}%`)
+      log(`Total time (including discovery): ${totalDuration}\n`)
+    } else {
+      log(`Ran ${all} tests in ${duration}. Passed ${pass}/${all} ${percentage}%\n`)
+    }
   }
   return true
 }
