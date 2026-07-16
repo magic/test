@@ -185,6 +185,7 @@ export interface State {
   stats: Stats
   pkg: string
   startTime?: [number, number]
+  globalStartTime?: [number, number]
   results?: TestResults
 }
 /**

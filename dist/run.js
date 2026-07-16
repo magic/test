@@ -100,7 +100,7 @@ const getShardForTest = (testPath, totalShards) => {
  * @returns {Promise<Error | void>}
  */
 export const run = async (tests, options = {}) => {
-  const { shards = 1, shardId = 0, workers, clearCache } = options
+  const { shards = 1, shardId = 0, workers, clearCache, globalStartTime } = options
   // Clear persistent cache if requested
   if (clearCache) {
     await clearPersistentCache()
@@ -115,8 +115,9 @@ export const run = async (tests, options = {}) => {
   }
   resetAbort()
   const store = createStore()
-  const startTime = log.hrtime()
-  store.set({ startTime })
+  // Use globalStartTime if provided (from unit.ts), otherwise create new one
+  const startTime = globalStartTime || log.hrtime()
+  store.set({ startTime, globalStartTime })
   const rawResults = []
   let testsObj = is.function(tests) ? tests() : tests
   if (!is.object(testsObj)) {
