@@ -4,6 +4,9 @@ type PromiseResult<T> = {
   reason?: unknown
 }
 
+// Default 30 second timeout for discovery tasks (can be overridden with env var)
+const DISCOVERY_TIMEOUT = parseInt(process.env.MAGIC_TEST_DISCOVERY_TIMEOUT || '30000', 10)
+
 export const limitedPromiseAllSettled = async <T>(
   items: T[],
   limit: number,
@@ -14,9 +17,9 @@ export const limitedPromiseAllSettled = async <T>(
 
   const processItem = async (item: T, index: number): Promise<void> => {
     try {
-      // Add 10 second timeout per item to prevent indefinite hangs
+      // Configurable timeout per item to prevent indefinite hangs
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error(`Task timeout for: ${item}`)), 10000)
+        setTimeout(() => reject(new Error(`Task timeout for: ${item}`)), DISCOVERY_TIMEOUT)
       })
       const value = await Promise.race([fn(item, index), timeoutPromise])
       results[index]! = { status: 'fulfilled', value: value as T }
