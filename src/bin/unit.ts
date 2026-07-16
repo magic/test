@@ -56,9 +56,11 @@ const init = async () => {
     if (tests) {
       // Count total tests
       const countTests = (obj: unknown): number => {
-        if (Array.isArray(obj)) return obj.length
-        if (typeof obj === 'object' && obj !== null) {
-          return Object.values(obj).reduce((sum, val) => sum + countTests(val), 0)
+        if (is.array(obj)) {
+          return obj.length
+        }
+        if (is.objectNative(obj)) {
+          return Object.values(obj).reduce((sum: number, val) => sum + countTests(val), 0)
         }
         return 0
       }
