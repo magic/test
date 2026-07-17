@@ -2364,6 +2364,13 @@ update dependencies
 
 - 0.3.22 caused tests to fail because viteconfig was not loaded correctly and lead to recursive imports
 
-##### 0.3.24 - unreleased
+##### 0.3.24
+
+- feat: show total time including test discovery overhead
+- feat: add progress tracking for test discovery
+- feat: add DISCOVERY_TIMEOUT env var to control test discovery timeout (default: 30s)
+- perf: cache getViteDefine results
+
+##### 0.3.25 - unreleased
 
 ...
