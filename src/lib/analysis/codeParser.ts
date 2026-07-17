@@ -4,7 +4,11 @@ import type { TSESTree } from '@typescript-eslint/types'
 
 // Safely cast a value to TSESTree.Node after validation
 const toNode = (val: unknown): TSESTree.Node | undefined => {
-  if (is.objectNative(val) && 'type' in val && typeof (val as Record<string, unknown>).type === 'string') {
+  if (
+    is.objectNative(val) &&
+    'type' in val &&
+    typeof (val as Record<string, unknown>).type === 'string'
+  ) {
     return val as unknown as TSESTree.Node
   }
   return undefined
