@@ -107,6 +107,52 @@ export default [
 ]
 `),
 
+  h3({ id: 'predicates-and-values' }, 'Predicates & Values Array'),
+
+  p([
+    'Combine type checks with value checks in a single expect array.',
+    ' Each element is checked independently against the test result.',
+    ' All must pass (AND semantics):',
+  ]),
+
+  Pre(`
+import { is } from '@magic/test'
+
+export default [
+  {
+    fn: () => 'wrong',
+    expect: [is.string, 'wrong'],
+    info: 'is a string AND equals "wrong"',
+  },
+  {
+    fn: () => [1, 2, 3],
+    expect: [is.array, [1, 2, 3]],
+    info: 'is an array AND deep equals [1, 2, 3]',
+  },
+  {
+    fn: () => ({ key: 'val' }),
+    expect: [is.object, { key: 'val' }],
+    info: 'is an object AND deep equals',
+  },
+]
+`),
+
+  p('Mix as many predicates and values as needed:'),
+
+  Pre(`
+export default {
+  fn: () => 42,
+  expect: [is.number, v => v > 0, 42],
+  info: 'is number, is greater than 0, equals 42',
+}
+`),
+
+  p([
+    'Predicate elements are functions — evaluated with the test result.',
+    ' Non-predicates are compared with strict equality (primitives) or deep equality (objects/arrays).',
+    ' Pure value arrays without functions, like `expect: [1, 2, 3]`, still use deep equality as before.',
+  ]),
+
   h3({ id: 'caveat' }, 'Caveat'),
 
   p([

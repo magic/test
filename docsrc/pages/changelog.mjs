@@ -1,7 +1,16 @@
 export const View = state => [
   h1({ id: 'changelog' }, 'Changelog'),
 
-  h2({}, '0.3.22'),
+  h2({}, '0.3.25'),
+  ul([
+    li(
+      'expect: arrays with predicates — functions call with result, values compare directly, all must pass',
+    ),
+    li('value checks in predicate arrays support primitives and objects (deep.equal)'),
+    li('docs: predicates and values section in writing-tests'),
+  ]),
+
+  h2({}, '0.3.24'),
   p('unreleased'),
 
   h2({}, '0.3.21'),

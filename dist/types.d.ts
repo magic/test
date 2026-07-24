@@ -18,7 +18,8 @@ type FnReturnType<F> = F extends () => Promise<infer R>
       : F extends (arg: TestContext) => infer R
         ? R
         : unknown
-export type TestExpect<T = unknown> = ((result: T) => boolean | Promise<boolean>) | T
+export type TestExpect<T = unknown> =
+  ((result: T) => boolean | Promise<boolean>) | T | (TestExpect<T> | T)[]
 export interface Test {
   /** Additional information about the test. */
   info?: string

@@ -17,6 +17,28 @@ export const evaluateTestResult = async (res, expect) => {
     if (res !== true) {
       pass = exp === res || exp === true
     }
+  } else if (Array.isArray(expect)) {
+    const hasPredicates = expect.some(f => typeof f === 'function')
+    if (hasPredicates) {
+      expString = expect
+      const results = []
+      for (const e of expect) {
+        if (typeof e === 'function') {
+          results.push(Boolean(await e(res)))
+        } else if (e === null || is.undefined(e)) {
+          results.push(e === res)
+        } else if (typeof e !== 'object') {
+          results.push(e === res)
+        } else {
+          results.push(is.deep.equal(e, res))
+        }
+      }
+      exp = results
+      pass = results.every(Boolean)
+    } else {
+      exp = expect
+      expString = expect
+    }
   } else if (is.promise(expect)) {
     exp = await expect
     expString = expect

@@ -35,6 +35,7 @@ incredibly fast.
 - [data/fs driven test suites](#test-suites)
 - [writing tests](#tests)
   - [js types](#tests-types)
+  - [predicates and values array](#predicates-and-values)
   - [typescript](#tests-typescript)
   - [multiple tests in one file](#tests-multiple)
   - [running tests multiple times](#tests-runs)
@@ -268,6 +269,46 @@ export default [
   },
 ]
 ```
+
+###### <a name="predicates-and-values"></a> predicates and values array
+
+combine type checks with value checks in a single expect array.
+each element is checked independently. all must pass (AND semantics):
+
+```javascript
+import { is } from '@magic/test'
+export default [
+  {
+    fn: () => 'wrong',
+    expect: [is.string, 'wrong'],
+    info: "is a string AND equals 'wrong'",
+  },
+  {
+    fn: () => [1, 2, 3],
+    expect: [is.array, [1, 2, 3]],
+    info: 'is an array AND deep equals [1, 2, 3]',
+  },
+  {
+    fn: () => ({ key: 'val' }),
+    expect: [is.object, { key: 'val' }],
+    info: 'is an object AND deep equals',
+  },
+]
+```
+
+mix predicates and value checks freely:
+
+```javascript
+export default {
+  fn: () => 42,
+  expect: [is.number, v => v > 0, 42],
+  info: 'is number, is greater than 0, equals 42',
+}
+```
+
+predicate elements are functions — evaluated with the test result.
+non-predicates are compared with strict equality (primitives) or deep equality (objects/arrays).
+pure value arrays without functions, like `expect: [1, 2, 3]`, still use deep equality as before.
 
 ###### Caveat:
 
