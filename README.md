@@ -2371,6 +2371,11 @@ update dependencies
 - feat: add DISCOVERY_TIMEOUT env var to control test discovery timeout (default: 30s)
 - perf: cache getViteDefine results
 
-##### 0.3.25 - unreleased
+##### 0.3.25
+
+- make more files testable by extracting pure functions 
+- update dependencies
+
+##### 0.3.26 - unreleased
 
 ...
