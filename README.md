@@ -2373,7 +2373,7 @@ update dependencies
 
 ##### 0.3.25
 
-- make more files testable by extracting pure functions 
+- make more files testable by extracting pure functions
 - update dependencies
 
 ##### 0.3.26 - unreleased
