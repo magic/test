@@ -5,9 +5,9 @@ import fs from '@magic/fs'
 import is from '@magic/types'
 import log from '@magic/log'
 
-const cwd = process.cwd()
+import { toImportPath } from './pathTransform.ts'
 
-const toImportPath = (p: string): string => p.split(path.sep).join('/')
+const cwd = process.cwd()
 
 type ModuleFn = (...args: unknown[]) => unknown[] | { View?: (...args: unknown[]) => unknown }
 

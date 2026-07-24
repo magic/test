@@ -1,8 +1,16 @@
 import { getTestKey } from '../../lib/index.ts'
+import { cleanError } from '../../lib/cleanError.js'
+import is from '@magic/types'
 import type { WrappedTest, TestResult } from '../../types.ts'
 
-export const createFailResult = (testToRun: WrappedTest): TestResult => {
-  return {
+/**
+ * Create a failure result. Optionally attach a cleaned error.
+ */
+export const createFailResult = (
+  testToRun: WrappedTest,
+  errorArg?: unknown,
+): TestResult & { error?: unknown } => {
+  const result: Record<string, unknown> = {
     result: undefined,
     msg: '',
     pass: false,
@@ -14,4 +22,8 @@ export const createFailResult = (testToRun: WrappedTest): TestResult => {
     info: testToRun.info || '',
     pkg: testToRun.pkg,
   }
+  if (errorArg !== undefined) {
+    result.error = cleanError(is.error(errorArg) ? errorArg : new Error(String(errorArg)))
+  }
+  return result as unknown as TestResult & { error?: unknown }
 }

@@ -2,6 +2,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import fs from '@magic/fs'
+import is from '@magic/types'
 
 const DEFINE_FILE_NAMES = ['.defines.mjs', '.defines.ts', 'defines.mjs', 'defines.ts'].map(
   f => `test/${f}`,
@@ -14,12 +15,12 @@ export const loadTestDefines = async (rootDir: string): Promise<Record<string, u
       try {
         const mod = await import(pathToFileURL(filePath).href)
 
-        if (mod.default && typeof mod.default === 'object') {
-          return mod.default as Record<string, unknown>
+        if (mod.default && is.objectNative(mod.default)) {
+          return mod.default
         }
 
-        if (mod.define && typeof mod.define === 'object') {
-          return mod.define as Record<string, unknown>
+        if (mod.define && is.objectNative(mod.define)) {
+          return mod.define
         }
 
         return {}
