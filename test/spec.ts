@@ -606,6 +606,17 @@ const spec = {
 
       isModule: 'fn',
       module: 'fn',
+
+      isIp: 'fn',
+      ip: 'fn',
+      isIPv4: 'fn',
+      ipv4: 'fn',
+      v4: 'fn',
+      isIPv6: 'fn',
+      ipv6: 'fn',
+      v6: 'fn',
+      ipV4: 'fn',
+      ipV6: 'fn',
     },
   ],
 
