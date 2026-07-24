@@ -1,5 +1,36 @@
 import is from '@magic/types'
 import { parse } from '@typescript-eslint/parser'
+// Safely cast a value to TSESTree.Node after validation
+const toNode = val => {
+  if (is.objectNative(val) && is.string(val.type)) {
+    return val
+  }
+  return undefined
+}
+// Recursively get all nodes from an AST
+const getChildNodes = node => {
+  const children = []
+  for (const key of Object.keys(node)) {
+    if (key === 'type' || key === 'loc' || key === 'range' || key === 'parent') {
+      continue
+    }
+    const val = node[key]
+    if (is.array(val)) {
+      for (const item of val) {
+        const node = toNode(item)
+        if (node) {
+          children.push(node)
+        }
+      }
+    } else {
+      const node = toNode(val)
+      if (node) {
+        children.push(node)
+      }
+    }
+  }
+  return children
+}
 const getSpecifierName = spec => {
   if (spec.type === 'ImportNamespaceSpecifier') {
     return spec.local.name
@@ -82,25 +113,9 @@ export const mutatesImportedState = (code, importNames) => {
         }
       }
       // Recurse into children
-      for (const key of Object.keys(node)) {
-        if (key === 'type' || key === 'loc' || key === 'range' || key === 'parent') {
-          continue
-        }
-        const val = node[key]
-        if (val && typeof val === 'object') {
-          if ('type' in val) {
-            if (checkNode(val)) {
-              return true
-            }
-          } else if (is.array(val)) {
-            for (const item of val) {
-              if (item && typeof item === 'object' && 'type' in item) {
-                if (checkNode(item)) {
-                  return true
-                }
-              }
-            }
-          }
+      for (const child of getChildNodes(node)) {
+        if (checkNode(child)) {
+          return true
         }
       }
       return false

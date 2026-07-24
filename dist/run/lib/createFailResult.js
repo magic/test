@@ -1,6 +1,11 @@
 import { getTestKey } from '../../lib/index.js'
-export const createFailResult = testToRun => {
-  return {
+import { cleanError } from '../../lib/cleanError.js'
+import is from '@magic/types'
+/**
+ * Create a failure result. Optionally attach a cleaned error.
+ */
+export const createFailResult = (testToRun, errorArg) => {
+  const result = {
     result: undefined,
     msg: '',
     pass: false,
@@ -12,4 +17,8 @@ export const createFailResult = testToRun => {
     info: testToRun.info || '',
     pkg: testToRun.pkg,
   }
+  if (errorArg !== undefined) {
+    result.error = cleanError(is.error(errorArg) ? errorArg : new Error(String(errorArg)))
+  }
+  return result
 }

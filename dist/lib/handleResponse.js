@@ -38,7 +38,24 @@ export class NetworkError extends Error {
   }
 }
 /**
- * Handles an HTTP response, collecting data and resolving or rejecting a promise.
+ * Parse HTTP response body based on content-type.
+ * Pure function for unit testing.
+ */
+export function parseHttpResponseContent(rawData, contentType) {
+  if (contentType === 'application/json') {
+    return JSON.parse(rawData)
+  }
+  return rawData
+}
+/**
+ * Sanitize error response body for safe logging.
+ * Pure function for unit testing.
+ */
+export function sanitizeBody(body) {
+  return body.substring(0, 200).replace(/(password|token|secret|key)=[^&]+/gi, '$1=***')
+}
+/**
+ * Handle an HTTP response, collecting data and resolving or rejecting a promise.
  * Automatically parses JSON responses based on content-type header.
  * Accepts any 2xx status code as successful.
  */
@@ -65,9 +82,7 @@ export const handleResponse = (res, resolve, reject, url, maxSize) => {
       let body
       if (chunks.length > 0) {
         body = chunks.join('')
-        const truncated = body.substring(0, 200)
-        const sanitized = truncated.replace(/(password|token|secret|key)=[^&]+/gi, '$1=***')
-        errorMessage += `\nResponse body: ${sanitized}`
+        errorMessage += `\nResponse body: ${sanitizeBody(body)}`
       }
       const error = new HttpStatusError(errorMessage, statusCode ?? 0, url, body)
       reject(error)
@@ -98,7 +113,7 @@ export const handleResponse = (res, resolve, reject, url, maxSize) => {
     const rawData = chunks.join('')
     if (contentType === 'application/json') {
       try {
-        const data = JSON.parse(rawData)
+        const data = parseHttpResponseContent(rawData, contentType)
         resolve(data)
         return
       } catch (e) {

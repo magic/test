@@ -23,7 +23,17 @@ export declare class NetworkError extends Error {
   constructor(message: string, cause?: unknown)
 }
 /**
- * Handles an HTTP response, collecting data and resolving or rejecting a promise.
+ * Parse HTTP response body based on content-type.
+ * Pure function for unit testing.
+ */
+export declare function parseHttpResponseContent(rawData: string, contentType?: string): unknown
+/**
+ * Sanitize error response body for safe logging.
+ * Pure function for unit testing.
+ */
+export declare function sanitizeBody(body: string): string
+/**
+ * Handle an HTTP response, collecting data and resolving or rejecting a promise.
  * Automatically parses JSON responses based on content-type header.
  * Accepts any 2xx status code as successful.
  */

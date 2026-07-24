@@ -20,6 +20,7 @@ var __rewriteRelativeImportExtension =
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import fs from '@magic/fs'
+import is from '@magic/types'
 const DEFINE_FILE_NAMES = ['.defines.mjs', '.defines.ts', 'defines.mjs', 'defines.ts'].map(
   f => `test/${f}`,
 )
@@ -29,10 +30,10 @@ export const loadTestDefines = async rootDir => {
     if (await fs.exists(filePath)) {
       try {
         const mod = await import(__rewriteRelativeImportExtension(pathToFileURL(filePath).href))
-        if (mod.default && typeof mod.default === 'object') {
+        if (mod.default && is.objectNative(mod.default)) {
           return mod.default
         }
-        if (mod.define && typeof mod.define === 'object') {
+        if (mod.define && is.objectNative(mod.define)) {
           return mod.define
         }
         return {}

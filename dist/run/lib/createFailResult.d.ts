@@ -1,2 +1,10 @@
 import type { WrappedTest, TestResult } from '../../types.ts'
-export declare const createFailResult: (testToRun: WrappedTest) => TestResult
+/**
+ * Create a failure result. Optionally attach a cleaned error.
+ */
+export declare const createFailResult: (
+  testToRun: WrappedTest,
+  errorArg?: unknown,
+) => TestResult & {
+  error?: unknown
+}

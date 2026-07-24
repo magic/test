@@ -22,8 +22,8 @@ import cases from '@magic/cases'
 import fs from '@magic/fs'
 import is from '@magic/types'
 import log from '@magic/log'
+import { toImportPath } from './pathTransform.js'
 const cwd = process.cwd()
-const toImportPath = p => p.split(path.sep).join('/')
 export const maybeInjectMagic = async () => {
   let importRoot = path.join('@magic', 'core', 'src')
   const pkg = await fs.readFile(path.join(cwd, 'package.json'), 'utf-8')
