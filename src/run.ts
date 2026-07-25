@@ -140,7 +140,8 @@ export const run = async (
     process.env.MAGIC_TEST_SHARDING_SHARDS = String(shards)
     process.env.MAGIC_TEST_SHARDING_ID = String(shardId)
   }
-  if (workers !== undefined) {
+
+  if (!is.undefined(workers)) {
     process.env.MAGIC_TEST_WORKERS = String(workers)
   }
 
