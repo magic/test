@@ -2414,7 +2414,9 @@ update dependencies
 
 ##### 0.3.25
 
-- make more files testable by extracting pure functions
+- fix: use @magic/types for more type comparisons
+- feat: make expect accept an array of typechecks
+- test: make more files testable by extracting pure functions
 - update dependencies
 
 ##### 0.3.26 - unreleased
