@@ -74,12 +74,12 @@
     "@magic-modules/no-spy": "0.0.9",
     "@magic-modules/pre": "0.0.12",
     "@magic-themes/docs": "0.0.15",
-    "@magic/core": "0.0.159",
+    "@magic/core": "0.0.160",
     "@magic/format": "0.0.75",
     "@types/node": "26.1.1",
-    "eslint": "10.7.0",
+    "eslint": "10.8.0",
     "prettier-plugin-svelte": "4.1.1",
-    "svelte": "5.56.7"
+    "svelte": "5.56.8"
   },
   "overrides": {
     "cookie": "^1.0.0",
@@ -93,6 +93,6 @@
   ],
   "allowScripts": {
     "canvas@3.2.3": true,
-    "@swc/core@1.15.43": true
+    "@swc/core@1.15.46": true
   }
 }
