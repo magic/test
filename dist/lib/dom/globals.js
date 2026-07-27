@@ -87,6 +87,7 @@ export const initGlobals = () => {
   define(globalThis, 'XMLSerializer', window.XMLSerializer)
   define(globalThis, 'WebSocket', window.WebSocket)
   define(globalThis, 'CustomElementRegistry', window.CustomElementRegistry)
+  define(globalThis, 'customElements', window.customElements)
   define(globalThis, 'MessagePort', window.MessagePort)
   define(globalThis, 'MediaStream', window.MediaStream)
   define(globalThis, 'MediaStreamTrack', window.MediaStreamTrack)

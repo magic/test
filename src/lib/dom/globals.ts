@@ -110,6 +110,7 @@ export const initGlobals = (): { window: HappyWindow; document: HappyDocument } 
   define(globalThis, 'WebSocket', window!.WebSocket)
 
   define(globalThis, 'CustomElementRegistry', window!.CustomElementRegistry)
+  define(globalThis, 'customElements', window!.customElements)
 
   define(globalThis, 'MessagePort', window!.MessagePort)
 
