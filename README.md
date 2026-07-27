@@ -2419,6 +2419,10 @@ update dependencies
 - test: make more files testable by extracting pure functions
 - update dependencies
 
-##### 0.3.26 - unreleased
+##### 0.3.26
+
+- add customElements to happy-dom globals
+
+##### 0.3.27 - unreleased
 
 ...
