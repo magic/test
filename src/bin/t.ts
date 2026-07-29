@@ -88,7 +88,9 @@ const run = async () => {
 
   const include = is.array(includeArgs) ? includeArgs : [includeArgs]
   const c8Excludes = userExclude
-    ? (is.array(userExclude) ? userExclude : [userExclude])
+    ? is.array(userExclude)
+      ? userExclude
+      : [userExclude]
     : ['dist', 'test']
 
   // Always exclude .d.ts from coverage

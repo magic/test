@@ -1775,5 +1775,4 @@ export default [
 ]
 ```
 
-
 See [CHANGELOG.md](CHANGELOG.md) for release history.
