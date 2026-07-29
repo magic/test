@@ -82,12 +82,19 @@ const run = async () => {
   let argv: string[] = []
 
   const includeArgs = res.args.include || ['src']
-  const excludeArgs = res.args.exclude || []
+  const userExclude = res.args.exclude
 
   const { shards, shardId, errorLength, timeout, workers } = res.args
 
   const include = is.array(includeArgs) ? includeArgs : [includeArgs]
-  const exclude = is.array(excludeArgs) ? excludeArgs : [excludeArgs]
+  const c8Excludes = userExclude
+    ? (is.array(userExclude) ? userExclude : [userExclude])
+    : ['dist', 'test']
+
+  // Always exclude .d.ts from coverage
+  if (!c8Excludes.includes('.d.ts')) {
+    c8Excludes.push('.d.ts')
+  }
 
   // Enable Node.js source map capture for c8 coverage remapping
   process.env.NODE_OPTIONS = (process.env.NODE_OPTIONS || '')
@@ -97,10 +104,6 @@ const run = async () => {
     .join(' ')
 
   if (!isProd) {
-    exclude.forEach(ex => {
-      argv = ['--exclude', ex, ...argv]
-    })
-
     include.forEach(inc => {
       argv = ['--src', inc, ...argv]
     })
@@ -142,8 +145,8 @@ const run = async () => {
 
     const c8Cmd = isWin ? 'c8.cmd' : 'c8'
     cmd = path.join(cwd, 'node_modules', '.bin', c8Cmd)
-    argv = [
-      '--all',
+
+    const c8Args: string[] = [
       '--source-maps',
       '--extension',
       '.js',
@@ -152,8 +155,13 @@ const run = async () => {
       '--extension',
       '.svelte',
       '--exclude-after-remap',
-      ...argv,
     ]
+
+    c8Excludes.forEach(ex => {
+      c8Args.unshift('--exclude', ex)
+    })
+
+    argv = [...c8Args, ...argv]
   }
 
   childProcess = await cli.spawn(cmd, argv)

@@ -177,6 +177,9 @@ const readRecursiveImpl = async (dir = '', onProgress?: ProgressCallback): Promi
         if (!file.endsWith('js') && !file.endsWith('mjs') && !file.endsWith('ts')) {
           return { type: 'skip', file } as ImportResult
         }
+        if (file.endsWith('.d.ts')) {
+          return { type: 'skip', file } as ImportResult
+        }
 
         const fileP = filePath.replace(testDir, '')
 
