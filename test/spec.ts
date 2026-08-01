@@ -1,4 +1,4 @@
-import * as test from '../src/index.js'
+import * as lib from '../src/index.js'
 
 const constants = [
   'object',
@@ -66,7 +66,7 @@ const constants = [
 
 const spec = {
   // check if spec can handle functions instead of strings to allow more complicated tests
-  run: test.is.fn,
+  run: lib.is.fn,
   curry: 'fn',
   http: [
     'obj',
@@ -666,6 +666,4 @@ const spec = {
   ],
 }
 
-const libTests = test.version({ ...test }, spec)
-
-export default libTests
+export default lib.version(lib, spec)
