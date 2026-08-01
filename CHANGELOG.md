@@ -652,3 +652,8 @@ update dependencies
 - fix: always exclude .d.ts from c8 coverage (user --exclude can no longer remove it)
 - refactor: restructure c8 exclude logic in t.ts
 - chore: move changelog from README.md to CHANGELOG.md (650 lines extracted)
+
+##### 0.3.28
+
+- regression fix: version spec check now correctly errors with expected type again.
+- update dependencies
