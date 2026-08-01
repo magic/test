@@ -31,7 +31,7 @@ const createLibTest = (
 
   return {
     fn: fn(lib),
-    info: `Spec for ${fullName} is wrong, expected: ${spec}, actual type is ${is.type(lib)}`,
+    info: `Spec for ${fullName} is wrong, expected: ${spec}, actual type is ${typeof lib}`,
   }
 }
 
