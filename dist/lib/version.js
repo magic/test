@@ -20,7 +20,7 @@ const createLibTest = (lib, spec, fullName) => {
   }
   return {
     fn: fn(lib),
-    info: `Spec for ${fullName} is wrong, expected: ${spec}, actual type is ${is.type(lib)}`,
+    info: `Spec for ${fullName} is wrong, expected: ${spec}, actual type is ${typeof lib}`,
   }
 }
 export const test = (lib = {}, spec = {}, parent = '') => {

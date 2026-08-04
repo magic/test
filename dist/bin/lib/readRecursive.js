@@ -155,6 +155,9 @@ const readRecursiveImpl = async (dir = '', onProgress) => {
         if (!file.endsWith('js') && !file.endsWith('mjs') && !file.endsWith('ts')) {
           return { type: 'skip', file }
         }
+        if (file.endsWith('.d.ts')) {
+          return { type: 'skip', file }
+        }
         const fileP = filePath.replace(testDir, '')
         try {
           const defines = {
