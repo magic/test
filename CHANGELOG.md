@@ -655,5 +655,6 @@ update dependencies
 
 ##### 0.3.28
 
+- fix: $lib/types.js -> the .js gets removed before appending the correct extension
 - regression fix: version spec check now correctly errors with expected type again.
 - update dependencies
