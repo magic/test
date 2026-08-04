@@ -140,7 +140,7 @@ const resolveViteAliasImpl = async (
   // Fallback: $lib maps to src/lib
   if (importPath.startsWith('$lib')) {
     // Remove $ and .js
-    const aliasPath = importPath.slice(1).replace(/\.js$/, '') 
+    const aliasPath = importPath.slice(1).replace(/\.js$/, '')
     const libPath = path.join(rootDir, 'src', aliasPath)
 
     const extensions = ['', '.js', '.svelte', '.ts']
