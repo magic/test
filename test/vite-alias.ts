@@ -3,7 +3,7 @@ import { fs } from '@magic/fs'
 import { CACHE_DIR } from '../src/constants.js'
 import { mount } from '../src/svelte.js'
 import { resolveAlias } from '../src/lib/svelte/viteConfig/index.js'
-import { configCache, aliasCache } from '../src/lib/svelte/viteConfig/cache.js'
+import { configCache, aliasCache, resolvedAliasCache } from '../src/lib/svelte/viteConfig/cache.js'
 import { findProjectRoot } from '../src/lib/svelte/viteConfig/findProjectRoot.js'
 import type { CustomError } from '@magic/error'
 
@@ -65,6 +65,7 @@ export default {
 
     configCache.clear()
     aliasCache.clear()
+    resolvedAliasCache.clear()
 
     return async () => {
       await Promise.all([

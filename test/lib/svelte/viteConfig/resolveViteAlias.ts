@@ -1,9 +1,9 @@
 import is from '@magic/types'
-import { resolveViteAlias } from '../../../../src/lib/svelte/viteConfig/resolveViteAlias.js'
+import { resolveAlias } from '../../../../src/lib/svelte/viteConfig/resolveAlias.js'
 
 export default [
   {
-    fn: () => resolveViteAlias,
+    fn: () => resolveAlias,
     expect: is.function,
     info: 'is a function',
   },
