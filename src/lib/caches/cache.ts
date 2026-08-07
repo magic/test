@@ -38,6 +38,26 @@ export const barrelCache = new LRUCache<BarrelCacheEntry>(100)
 export const pendingPromises = new Map<string, Promise<unknown>>()
 
 /**
+ * Deduplicate concurrent promises by key.
+ * If a promise for this key is already running, returns it.
+ * Otherwise runs fn, caches the promise, and returns the result.
+ */
+export const dedup = async <T>(key: string, fn: () => Promise<T>): Promise<T> => {
+  const pending = pendingPromises.get(key) as Promise<T> | undefined
+  if (pending) {
+    return pending
+  }
+
+  const promise = fn()
+  pendingPromises.set(key, promise)
+  try {
+    return await promise
+  } finally {
+    pendingPromises.delete(key)
+  }
+}
+
+/**
  * Generic cache entry type
  */
 interface CacheEntry<T> {
