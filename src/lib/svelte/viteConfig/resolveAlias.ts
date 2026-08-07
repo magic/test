@@ -7,14 +7,35 @@ import { parseTsConfig } from './parseTsConfig.ts'
 import { loadViteAliases } from './loadViteAliases.ts'
 import { classifyImport } from './classifyImport.ts'
 
+export interface ResolveAliasOptions {
+  includeShims?: boolean
+}
+
 export const resolveAlias = async (
   importPath: string,
   sourceFilePath: string,
+  options: ResolveAliasOptions = {},
 ): Promise<string | null> => {
+  const { includeShims } = options
   const importType = classifyImport(importPath)
 
-  // Only process relative, vite-alias and scoped imports
-  if (importType !== 'relative' && importType !== 'vite-alias' && importType !== 'scoped') {
+  // For non-shim mode, only process relative, vite-alias and scoped imports
+  if (
+    !includeShims &&
+    importType !== 'relative' &&
+    importType !== 'vite-alias' &&
+    importType !== 'scoped'
+  ) {
+    return null
+  }
+
+  // For shim mode, also handle bare imports
+  if (
+    includeShims &&
+    importType !== 'vite-alias' &&
+    importType !== 'bare' &&
+    importType !== 'scoped'
+  ) {
     return null
   }
 
