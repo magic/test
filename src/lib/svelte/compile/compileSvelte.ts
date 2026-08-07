@@ -2,7 +2,11 @@ import path from 'node:path'
 
 import fs from '@magic/fs'
 
-import { testExportsPreprocessor, viteDefinePreprocessor } from '../preprocess.ts'
+import {
+  testExportsPreprocessor,
+  viteDefinePreprocessor,
+  resolveNodeModulesRelativeImportsPreprocessor,
+} from '../preprocess.ts'
 import { getSvelteCompiler } from '../compiler-cache.ts'
 
 import { cache, pendingPromises } from '../../caches/cache.ts'
@@ -15,11 +19,18 @@ export interface CompileSvelteReturn {
   map?: string
 }
 
+export interface CompileSvelteOptions {
+  processImports?: boolean
+}
+
 /**
  * Pure compilation function - caching handled by CacheManager in tsLoader
  * Uses pendingPromises for deduplication
  */
-export const compileSvelte = async (filePath: string): Promise<CompileSvelteReturn> => {
+export const compileSvelte = async (
+  filePath: string,
+  options: CompileSvelteOptions = {},
+): Promise<CompileSvelteReturn> => {
   // Legacy promise dedup for direct callers (prefer CacheManager for new code)
   const pending = pendingPromises.get(`svelte:${filePath}`) as
     Promise<CompileSvelteReturn> | undefined
@@ -34,8 +45,12 @@ export const compileSvelte = async (filePath: string): Promise<CompileSvelteRetu
 
     const source = await fs.readFile(absPath, 'utf-8')
 
-    const preprocessors = [testExportsPreprocessor(), viteDefinePreprocessor()]
-    const preprocessed = await preprocess(source, preprocessors)
+    const preprocessors = [
+      resolveNodeModulesRelativeImportsPreprocessor(),
+      testExportsPreprocessor(),
+      viteDefinePreprocessor(),
+    ]
+    const preprocessed = await preprocess(source, preprocessors, { filename: absPath })
 
     const result = compile(preprocessed.code, {
       generate: 'client',
@@ -48,8 +63,13 @@ export const compileSvelte = async (filePath: string): Promise<CompileSvelteRetu
       throw new Error('Compilation failed: no JS output')
     }
 
-    const jsCodeString = String(result.js.code)
+    let jsCodeString = String(result.js.code)
     const { css } = result
+
+    if (options.processImports) {
+      const { processImports } = await import('./processImports.ts')
+      jsCodeString = await processImports(jsCodeString, absPath)
+    }
 
     // Generate source map string for coverage remapping
     const mapString = result.js.map ? JSON.stringify(result.js.map) : undefined

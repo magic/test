@@ -1,12 +1,11 @@
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
-import fs from 'node:fs/promises'
 
-import { CACHE_DIR, CWD } from '../../../constants.ts'
+import { CWD } from '../../../constants.ts'
 import type { CssObject } from './types.ts'
 import { transformForNode } from './transformForNode.ts'
 import { compileSvelte } from './compileSvelte.ts'
-import { processImports } from './processImports.ts'
+import { getTempFilePath } from './getTempFilePath.ts'
+import { writeCompiledFile } from './fileWriter.ts'
 import { traceStart, traceEnd } from '../../trace/timing.ts'
 
 export const compileSvelteWithWrite = async (
@@ -14,18 +13,15 @@ export const compileSvelteWithWrite = async (
 ): Promise<{ js: string; css: CssObject | null; tmpFile: string; importUrl: string }> => {
   const id = traceStart(`compileSvelteWithWrite ${path.basename(filePath)}`)
   try {
-    // Pure compile (no caching - handled by CacheManager)
     const { js, css, map } = await compileSvelte(filePath)
 
     const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
-    const absPath = resolvedPath
-    const relPath = path.relative(CWD, resolvedPath)
-    const tmpFile = path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
+    const tmpFile = getTempFilePath(resolvedPath)
     const tmpFileAbs = path.resolve(CWD, tmpFile)
-    const importUrl = pathToFileURL(tmpFileAbs).href
 
     // Transform imports (resolves $app/*, $lib/*, etc.)
     const processId = traceStart('processImports')
+    const { processImports } = await import('./processImports.ts')
     const code = await processImports(js, filePath)
     traceEnd(processId)
 
@@ -34,31 +30,14 @@ export const compileSvelteWithWrite = async (
     const transformedCode = transformForNode(code, filePath)
     traceEnd(transformId)
 
-    // Write to temp file synchronously
-    const mkdirId = traceStart('fs.mkdir')
-    await fs.mkdir(path.dirname(tmpFileAbs), { recursive: true })
-    traceEnd(mkdirId)
+    const { tmpFile: writtenTmpFile, importUrl } = await writeCompiledFile(
+      tmpFile,
+      transformedCode + `//# sourceMappingURL=${path.basename(tmpFileAbs)}.map\n`,
+      map,
+      true,
+    )
 
-    // Append source map reference for c8 coverage remapping
-    const sourceMapComment = `//# sourceMappingURL=${path.basename(tmpFileAbs)}.map\n`
-    const codeWithSourceMap = transformedCode + sourceMapComment
-
-    const fileWriteId = traceStart('fs.writeFile')
-    await fs.writeFile(tmpFileAbs, codeWithSourceMap)
-    traceEnd(fileWriteId)
-
-    // Write source map file for c8 coverage remapping
-    if (map) {
-      // Fix source map to use absolute path so c8 can find the original .svelte file
-      const mapObj = JSON.parse(map)
-      if (mapObj.sources && mapObj.sources.length > 0 && !path.isAbsolute(mapObj.sources[0])) {
-        mapObj.sources = [absPath]
-        mapObj.sourceRoot = ''
-      }
-      await fs.writeFile(tmpFileAbs + '.map', JSON.stringify(mapObj))
-    }
-
-    return { js: transformedCode, css, tmpFile, importUrl }
+    return { js: transformedCode, css, tmpFile: writtenTmpFile, importUrl }
   } catch (e) {
     traceEnd(id, `ERROR: ${(e as Error).message}`)
     throw e

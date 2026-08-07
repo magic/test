@@ -3,10 +3,10 @@ import type { ResolveAndCompileResult } from './types.ts'
 import path from 'node:path'
 import fs from '@magic/fs'
 
-import { resolveAlias, resolveViteAlias } from '../viteConfig/index.ts'
+import { resolveAlias } from '../viteConfig/index.ts'
 
 import { importCache, pendingPromises } from '../../caches/cache.ts'
-import { CACHE_DIR, CWD } from '../../../constants.ts'
+import { CWD } from '../../../constants.ts'
 import { acquireLock } from './acquireLock.ts'
 import { isSvelteFile } from './isSvelteFile.ts'
 import { getSvelteExports } from './getSvelteExports.ts'
@@ -26,6 +26,7 @@ import { traceStart, traceEnd } from '../../trace/timing.ts'
 import { writeQueue } from './writeQueue.ts'
 import { existsCached } from '../../caches/pathCache.ts'
 import { extractImportsSync } from './astParse.ts'
+import { resolveFilePath } from './pathUtils.ts'
 const extractNamedImportsFromCode = (code: string, spec: string): string[] => {
   const imports = extractImportsSync(code)
   const imp = imports.find(i => i.source === spec)
@@ -164,34 +165,13 @@ const resolveAndCompileImportImplCore = async (
 
   if (importType === 'vite-alias') {
     const aliasId = traceStart('resolve.vite-alias')
-    const aliasResolved = await resolveViteAlias(importPath, sourceFilePath)
+    const aliasResolved = await resolveAlias(importPath, sourceFilePath, { includeShims: true })
     if (aliasResolved) {
       resolvedPath = aliasResolved
-      traceEnd(aliasId)
-    } else {
-      if (importPath.startsWith('$lib')) {
-        const rootDir = await (async () => {
-          let current = path.dirname(sourceFilePath)
-          const root = CWD
-          while (current && current !== path.dirname(current)) {
-            const pkgPath = path.join(current, 'package.json')
-            if (await existsCached(pkgPath)) {
-              return current
-            }
-            current = path.dirname(current)
-          }
-          return root
-        })()
-        const aliasPath = importPath.slice(1)
-        resolvedPath = path.resolve(rootDir, 'src', aliasPath)
-      } else if (importPath.startsWith('$app')) {
-        const rootDir = CWD
-        const shimName = importPath.slice(5)
-        resolvedPath = path.join(rootDir, 'src/lib/svelte/shims/$app', shimName)
-      } else {
-        traceEnd(aliasId)
-        return { filePath: importPath, js: '', url: null, skipProcessing: true }
-      }
+    }
+    traceEnd(aliasId)
+    if (!aliasResolved) {
+      return { filePath: importPath, js: '', url: null, skipProcessing: true }
     }
   } else {
     const aliasResolved = await resolveAlias(importPath, sourceFilePath)
@@ -202,17 +182,15 @@ const resolveAndCompileImportImplCore = async (
     }
   }
 
+  if (!resolvedPath) {
+    return { filePath: importPath, js: '', url: null, skipProcessing: true }
+  }
+
   if (!path.extname(resolvedPath)) {
-    const extId = traceStart('resolve.extensions')
-    const extensions = ['.ts', '.js', '.svelte', '/index.ts', '/index.js', '/index.svelte']
-    for (const ext of extensions) {
-      const withExt = resolvedPath + ext
-      if (await existsCached(withExt)) {
-        resolvedPath = withExt
-        break
-      }
+    const withExt = await resolveFilePath(resolvedPath)
+    if (withExt) {
+      resolvedPath = withExt
     }
-    traceEnd(extId)
   } else if (resolvedPath.endsWith('.js')) {
     const tsPath = resolvedPath.slice(0, -3) + '.ts'
     if (await existsCached(tsPath)) {
@@ -268,8 +246,24 @@ const resolveAndCompileImportImplCore = async (
     }
   }
 
+  // Fallback: if file doesn't exist and is inside node_modules, try dist/ prefix
+  if (!(await existsCached(resolvedPath)) && resolvedPath.includes('node_modules')) {
+    const nodeModulesIdx = resolvedPath.indexOf('node_modules')
+    const afterNodeModules = resolvedPath.slice(nodeModulesIdx + 'node_modules'.length + 1)
+    const parts = afterNodeModules.split('/').filter(Boolean)
+    if (parts.length >= 2 && parts[0] && parts[1]) {
+      const isScoped = parts[0].startsWith('@')
+      const pkgPath = isScoped ? `node_modules/${parts[0]}/${parts[1]}` : `node_modules/${parts[0]}`
+      const relPath = isScoped ? parts.slice(2).join('/') : parts.slice(1).join('/')
+      const distCandidate = path.join(process.cwd(), pkgPath, 'dist', relPath)
+      if (await existsCached(distCandidate)) {
+        resolvedPath = distCandidate
+      }
+    }
+  }
+
   const ext = path.extname(resolvedPath)
-  if (ext === '.ts' || ext === '.js') {
+  if ((ext === '.ts' || ext === '.js') && (await existsCached(resolvedPath))) {
     const barrelId = traceStart('compileBarrel')
     const exports = await getSvelteExports(resolvedPath)
     if (exports.length > 0) {
@@ -286,6 +280,11 @@ const resolveAndCompileImportImplCore = async (
   if (!isSvelteFile(resolvedPath)) {
     // Use absolute file:// URL for non-Svelte imports to avoid broken relative paths
     // that go through node_modules/.magic-test-cache/
+    const absoluteUrl = pathToFileURL(resolvedPath).href
+    return { filePath: resolvedPath, js: '', url: absoluteUrl }
+  }
+
+  if (!(await existsCached(resolvedPath))) {
     const absoluteUrl = pathToFileURL(resolvedPath).href
     return { filePath: resolvedPath, js: '', url: absoluteUrl }
   }
@@ -309,8 +308,7 @@ const resolveAndCompileImportImplCore = async (
     return { filePath: resolvedPath, js: '', url: absoluteUrl }
   }
 
-  const relPath = path.relative(CWD, resolvedPath)
-  const tmpFile = path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
+  const tmpFile = getTempFilePath(resolvedPath)
   const tmpFileAbs = path.join(CWD, tmpFile)
 
   const release = await acquireLock(tmpFile)

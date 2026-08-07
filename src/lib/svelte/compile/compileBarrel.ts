@@ -9,6 +9,7 @@ import { getSvelteExports } from './getSvelteExports.ts'
 import { processImports } from './processImports.ts'
 import { compileSvelte } from './compileSvelte.ts'
 import { computeRelativePath } from './computeRelativePath.ts'
+import { getTempFilePath } from './getTempFilePath.ts'
 import { parallelMap, MAX_CONCURRENT } from './parallelMap.ts'
 
 export const compileBarrel = async (
@@ -105,8 +106,7 @@ const compileBarrelImpl = async (
       traceEnd(processId)
       traceEnd(compileId)
 
-      const relPath = path.relative(CWD, sveltePath)
-      const tmpFile = path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
+      const tmpFile = getTempFilePath(sveltePath)
       const tmpFileAbs = path.join(CWD, tmpFile)
 
       return {
