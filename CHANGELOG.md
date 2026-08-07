@@ -658,3 +658,17 @@ update dependencies
 - fix: $lib/types.js -> the .js gets removed before appending the correct extension
 - regression fix: version spec check now correctly errors with expected type again.
 - update dependencies
+
+##### 0.3.29
+
+- feat(svelte): extract pathUtils with shared path resolution helpers (resolveFilePath, EXTENSION_CANDIDATES, FALLBACK_CANDIDATES, isSkipPattern)
+- feat(svelte): extract fileWriter module for compiled file output with source map support
+- feat(svelte): add resolveNodeModulesRelativeImportsPreprocessor for fixing '..' imports in node_modules
+- feat(cache): add dedup function for concurrent promise deduplication
+- refactor(svelte): extract loadViteConfig to shared module, consolidate getViteDefine and loadViteDefine
+- refactor(svelte): remove resolveViteAlias, consolidate into resolveAlias
+- refactor(svelte): use visitor pattern in resolveSvelteOnlyExports (traverseExports + ExportVisitor)
+- refactor(svelte): use pathUtils in resolvePackageExport, fix .mjs resolution
+- refactor(svelte): update tsLoader to use resolveAlias with includeShims and extractImportsSync
+- refactor(svelte): use shared helpers across compile modules (getTempFilePath, fileWriter, processImports)
+- fix(svelte): add includeShims option to resolveAlias for bare imports
