@@ -1,15 +1,15 @@
 import fs from '@magic/fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { resolveViteAlias } from '../../lib/svelte/viteConfig/resolveViteAlias.ts'
+import { resolveAlias } from '../../lib/svelte/viteConfig/resolveAlias.ts'
 import is from '@magic/types'
-import ts from 'typescript'
 import log from '@magic/log'
 import { traceStart, traceEnd } from '../../lib/trace/timing.ts'
 import { cacheManager } from '../../lib/caches/cache.ts'
-import { getCacheDir } from '../../lib/caches/persistentCache.ts'
 import { writeQueue } from '../../lib/svelte/compile/writeQueue.ts'
-import { hasSvelteRunes } from '../../lib/svelte/compile/astParse.ts'
+import { hasSvelteRunes, extractImportsSync } from '../../lib/svelte/compile/astParse.ts'
+import { getTempFilePath } from '../../lib/svelte/compile/getTempFilePath.ts'
+import { transpileWithTypescript } from './tsTranspile.ts'
 
 // Track files currently being loaded to prevent circular dependency hangs
 const currentlyLoading = new Set<string>()
@@ -46,9 +46,7 @@ const compileSvelteFile = async (filePath: string): Promise<string | undefined> 
   }
   // Reconstruct importUrl from tmpFile path (disk cache returns { js, css, mtime })
   if (result?.js) {
-    const relPath = path.relative(process.cwd(), filePath)
-    const cacheDir = getCacheDir()
-    const tmpFile = path.join(cacheDir, relPath.replace(/\.svelte$/, '.svelte.js'))
+    const tmpFile = getTempFilePath(filePath)
     const tmpFileAbs = path.resolve(process.cwd(), tmpFile)
     // Eagerly flush this file's write before returning URL
     await writeQueue.flushPath(tmpFileAbs)
@@ -106,7 +104,9 @@ const resolveImpl = async (
     // Try alias resolution
     if (context.parentURL) {
       try {
-        const aliasResolved = await resolveViteAlias(specifier, new URL(context.parentURL).pathname)
+        const aliasResolved = await resolveAlias(specifier, new URL(context.parentURL).pathname, {
+          includeShims: true,
+        })
         if (aliasResolved) {
           // Check if resolved path exists, try extensions if not
           const withExtensions = ['', '.ts', '.svelte.ts', '.js', '/index.ts', '/index.js']
@@ -272,44 +272,29 @@ const resolveImpl = async (
 
 const transpileWithTypeScript = (code: string): string => {
   const id = traceStart('tsLoader.transpile')
-  const result = ts.transpileModule(code, {
-    compilerOptions: {
-      target: ts.ScriptTarget.ESNext,
-      module: ts.ModuleKind.ESNext,
-    },
-    reportDiagnostics: false,
-  })
-  const output = result.outputText
+  const output = transpileWithTypescript(code)
   traceEnd(id)
   return output
 }
 
 const resolveDollarLibImports = async (code: string, filePath: string): Promise<string> => {
-  const dollarImportRe = /from\s+['"]($lib[^'"]*|$app[^'"]*)['"]/g
-  let match
+  const imports = extractImportsSync(code)
+  const dollarImports = imports.filter(
+    i => i.source.startsWith('$lib') || i.source.startsWith('$app'),
+  )
+  if (dollarImports.length === 0) {
+    return code
+  }
+
   const replacements: Array<{ original: string; replacement: string }> = []
+  const parentDir = path.dirname(filePath)
 
-  while ((match = dollarImportRe.exec(code)) !== null) {
-    const fullMatch = match[0]
-    const importPath = match[1]
-    if (!importPath) {
-      continue
-    }
-
-    const parentDir = path.dirname(filePath)
-    const resolved = await resolveViteAlias(importPath, parentDir)
+  for (const imp of dollarImports) {
+    const resolved = await resolveAlias(imp.source, parentDir, { includeShims: true })
     if (resolved) {
-      const withExtensions = [resolved, resolved + '.ts', resolved + '.svelte.ts', resolved + '.js']
-      let foundPath = resolved
-      for (const p of withExtensions) {
-        if (await fs.exists(p)) {
-          foundPath = p
-          break
-        }
-      }
       replacements.push({
-        original: fullMatch,
-        replacement: `from '${pathToFileURL(foundPath).href}'`,
+        original: imp.originalText || `import { ${imp.specifiers} } from '${imp.source}'`,
+        replacement: `import ${imp.specifiers} from '${pathToFileURL(resolved).href}'`,
       })
     }
   }
