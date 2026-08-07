@@ -1,4 +1,5 @@
 import is from '@magic/types'
+import path from 'node:path'
 
 import { getViteDefine } from './viteConfig/index.ts'
 import { getSvelteCompiler } from './compiler-cache.ts'
@@ -171,6 +172,59 @@ export const viteDefinePreprocessor = () => {
       const newContent = content.slice(0, scriptEnd) + defineStatements + content.slice(scriptEnd)
 
       return { code: newContent }
+    },
+  }
+}
+
+export const resolveNodeModulesRelativeImportsPreprocessor = () => {
+  let savedFilename: string | undefined = undefined
+  return {
+    name: 'magic-resolve-node-modules-relative-imports',
+    markup: async ({
+      content,
+      filename,
+    }: {
+      content: string
+      attributes?: Record<string, string | boolean>
+      markup?: string
+      filename?: string
+    }) => {
+      savedFilename = filename
+      return { content }
+    },
+    script: async ({
+      content,
+      filename,
+    }: {
+      content: string
+      attributes?: Record<string, string | boolean>
+      markup?: string
+      filename?: string
+    }) => {
+      const fn = filename || savedFilename
+      if (!fn || !fn.includes('node_modules')) {
+        return { code: content }
+      }
+      const absolutePath = fn.startsWith('file://') ? fn.slice(7) : fn
+      const resolvedPath = absolutePath.startsWith('/') ? absolutePath : path.resolve(absolutePath)
+      const nodeModulesIndex = resolvedPath.indexOf('/node_modules/')
+      if (nodeModulesIndex === -1) {
+        return { code: content }
+      }
+      const afterNodeModules = resolvedPath.slice(nodeModulesIndex + 14)
+      const dirPath = path.dirname(afterNodeModules)
+      const pkgMatch = afterNodeModules.match(/^(@[^/]+\/[^/]+)\//)
+      const pkgName = pkgMatch ? pkgMatch[1] + '/' : ''
+      const relativeToPkg = dirPath.startsWith(pkgName) ? dirPath.slice(pkgName.length) : dirPath
+      // Only transform bare '..' imports (directory barrel imports), not '../subpath'
+      const hasDotDot = /from\s+['"]\.\.['"]/.test(content)
+      if (!hasDotDot) {
+        return { code: content }
+      }
+      const depth = relativeToPkg ? (relativeToPkg.match(/\//g) || []).length + 1 : 1
+      const upPath = '../'.repeat(depth)
+      const transformed = content.replace(/from\s+['"]\.\.['"]/g, `from '${upPath}index.js'`)
+      return { code: transformed }
     },
   }
 }
