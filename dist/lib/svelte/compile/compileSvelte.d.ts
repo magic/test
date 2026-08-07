@@ -4,8 +4,14 @@ export interface CompileSvelteReturn {
   css: CssObject | null
   map?: string
 }
+export interface CompileSvelteOptions {
+  processImports?: boolean
+}
 /**
  * Pure compilation function - caching handled by CacheManager in tsLoader
  * Uses pendingPromises for deduplication
  */
-export declare const compileSvelte: (filePath: string) => Promise<CompileSvelteReturn>
+export declare const compileSvelte: (
+  filePath: string,
+  options?: CompileSvelteOptions,
+) => Promise<CompileSvelteReturn>

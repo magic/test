@@ -1,5 +1,6 @@
 import path from 'node:path'
 import fs from '@magic/fs'
+import { parseFile, extractExports } from './astParse.js'
 import { barrelCache, pendingPromises } from '../../caches/cache.js'
 import { traceStart, traceEnd } from '../../trace/timing.js'
 export const getSvelteExports = async filePath => {
@@ -32,39 +33,30 @@ export const getSvelteExports = async filePath => {
 }
 const getSvelteExportsImpl = async filePath => {
   const content = await fs.readFile(filePath, 'utf-8')
-  const exports = []
-  const regex = /export\s+\{([^}]+)\}\s+from\s+['"](\.\/[^'"]+\.svelte)['"]/g
-  let match
+  const fileInfo = await parseFile(content, filePath)
+  const exports = extractExports(fileInfo)
+  const result = []
   const sourceDir = path.dirname(filePath)
-  while ((match = regex.exec(content)) !== null) {
-    if (!match[1] || !match[2]) {
-      continue
-    }
-    const exportStatement = match[1].trim()
-    const exportPath = match[2]
-    const resolvedPath = path.resolve(sourceDir, exportPath)
-    if (await fs.exists(resolvedPath)) {
-      const exportedNames = exportStatement.split(',')
-      for (const name of exportedNames) {
-        const trimmed = name.trim()
-        if (trimmed.startsWith('type ') || trimmed === '') {
-          continue
-        }
-        if (trimmed.includes(' as ')) {
-          const parts = trimmed.split(/\s+as\s+/)
-          const lastPart = parts[parts.length - 1]
-          const exportedName = lastPart?.trim() || trimmed
-          const isDefaultReexport = parts[0]?.trim() === 'default'
-          exports.push({
-            name: exportedName,
-            path: resolvedPath,
-            isDefaultReexport: isDefaultReexport || undefined,
-          })
-        } else {
-          exports.push({ name: trimmed, path: resolvedPath })
-        }
+  for (const exp of exports) {
+    if (exp.isBatch && exp.source?.endsWith('.svelte')) {
+      // export * from './foo.svelte' - extract default name
+      const svelteDefaultName = path.basename(exp.source, '.svelte')
+      result.push({
+        name: svelteDefaultName,
+        path: path.resolve(sourceDir, exp.source),
+      })
+    } else if (exp.source?.endsWith('.svelte')) {
+      // export { x } from './foo.svelte'
+      const resolvedPath = path.resolve(sourceDir, exp.source)
+      const exportedName = exp.alias || exp.name
+      if (exportedName && exportedName !== 'type') {
+        result.push({
+          name: exportedName,
+          path: resolvedPath,
+          isDefaultReexport: exp.name === 'default',
+        })
       }
     }
   }
-  return exports
+  return result
 }

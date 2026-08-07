@@ -19,6 +19,12 @@ export declare const packageExportCache: LRUCache<PackageExportResolveEntry>
 export declare const barrelCache: LRUCache<BarrelCacheEntry>
 export declare const pendingPromises: Map<string, Promise<unknown>>
 /**
+ * Deduplicate concurrent promises by key.
+ * If a promise for this key is already running, returns it.
+ * Otherwise runs fn, caches the promise, and returns the result.
+ */
+export declare const dedup: <T>(key: string, fn: () => Promise<T>) => Promise<T>
+/**
  * Centralized cache manager for Svelte compilation
  * Handles: promise dedup, memory cache, disk cache
  */

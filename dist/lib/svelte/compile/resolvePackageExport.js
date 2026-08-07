@@ -20,6 +20,7 @@ import {
   getExportStarTargets,
   getExportNamedTargets,
 } from './astParse.js'
+import { isSkipPattern, FALLBACK_CANDIDATES } from './pathUtils.js'
 const getPackageName = spec => {
   const parts = spec.split('/')
   if (spec.startsWith('@')) {
@@ -42,8 +43,8 @@ const tryResolvePath = async (basePath, ...candidates) => {
   const paths = []
   for (const candidate of candidates) {
     paths.push(path.join(basePath, candidate))
-    if (candidate.endsWith('.js')) {
-      paths.push(path.join(basePath, candidate + '.mjs'))
+    if (candidate.endsWith('.js') && !candidate.endsWith('.mjs')) {
+      paths.push(path.join(basePath, candidate.slice(0, -3) + '.mjs'))
     }
   }
   // Check all in parallel
@@ -176,14 +177,7 @@ const hasOnlySvelteCondition = conditions => {
 }
 export const resolvePackageExport = async (pkgSpec, sourceDir) => {
   // Fast skip check
-  if (
-    pkgSpec.startsWith('./') ||
-    pkgSpec.startsWith('../') ||
-    pkgSpec.startsWith('$app/') ||
-    pkgSpec.startsWith('$lib/') ||
-    pkgSpec.startsWith('$') ||
-    pkgSpec.startsWith('/')
-  ) {
+  if (isSkipPattern(pkgSpec)) {
     return { resolvedPath: null, isSvelteOnly: false }
   }
   const pkgName = getPackageName(pkgSpec)
@@ -265,14 +259,7 @@ const resolvePackageExportImpl = async (_pkgSpec, sourceDir, pkgName) => {
   const exports = pkg.exports
   let result = { resolvedPath: null, isSvelteOnly: false }
   if (!exports) {
-    const fallbackCandidates = [
-      pkg.main,
-      pkg.module,
-      './dist/index.js',
-      'index.js',
-      'src/index.js',
-    ].filter(a => !is.undef(a) && is.str(a))
-    const resolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
+    const resolved = await tryResolvePath(nodeModulesPath, ...FALLBACK_CANDIDATES)
     result = { resolvedPath: resolved, isSvelteOnly: false }
   } else if (is.string(exports)) {
     const resolved = await tryResolvePath(nodeModulesPath, exports)
@@ -383,14 +370,7 @@ const resolvePackageExportImpl = async (_pkgSpec, sourceDir, pkgName) => {
                 isSvelteOnlyPackage: true,
               }
             } else {
-              const fallbackCandidates = [
-                pkg.main,
-                pkg.module,
-                './dist/index.js',
-                'index.js',
-                'src/index.js',
-              ].filter(Boolean)
-              const fallbackResolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
+              const fallbackResolved = await tryResolvePath(nodeModulesPath, ...FALLBACK_CANDIDATES)
               if (fallbackResolved) {
                 const svelteReExports = await hasSvelteReExports(fallbackResolved)
                 result = {
@@ -440,14 +420,7 @@ const resolvePackageExportImpl = async (_pkgSpec, sourceDir, pkgName) => {
             result = { resolvedPath: null, isSvelteOnly: false }
           }
         } else {
-          const fallbackCandidates = [
-            pkg.main,
-            pkg.module,
-            './dist/index.js',
-            'index.js',
-            'src/index.js',
-          ].filter(Boolean)
-          const fallbackResolved = await tryResolvePath(nodeModulesPath, ...fallbackCandidates)
+          const fallbackResolved = await tryResolvePath(nodeModulesPath, ...FALLBACK_CANDIDATES)
           result = { resolvedPath: fallbackResolved ?? null, isSvelteOnly: false }
         }
       }

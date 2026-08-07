@@ -25,3 +25,28 @@ export declare const viteDefinePreprocessor: () => {
     code: string
   }>
 }
+export declare const resolveNodeModulesRelativeImportsPreprocessor: () => {
+  name: string
+  markup: ({
+    content,
+    filename,
+  }: {
+    content: string
+    attributes?: Record<string, string | boolean>
+    markup?: string
+    filename?: string
+  }) => Promise<{
+    content: string
+  }>
+  script: ({
+    content,
+    filename,
+  }: {
+    content: string
+    attributes?: Record<string, string | boolean>
+    markup?: string
+    filename?: string
+  }) => Promise<{
+    code: string
+  }>
+}

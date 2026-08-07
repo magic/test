@@ -17,6 +17,24 @@ export const barrelCache = new LRUCache(100)
 // Keys prefixed: 'barrel:', 'svelte:', 'exports:', 'pkg:', 'resolve:'
 export const pendingPromises = new Map()
 /**
+ * Deduplicate concurrent promises by key.
+ * If a promise for this key is already running, returns it.
+ * Otherwise runs fn, caches the promise, and returns the result.
+ */
+export const dedup = async (key, fn) => {
+  const pending = pendingPromises.get(key)
+  if (pending) {
+    return pending
+  }
+  const promise = fn()
+  pendingPromises.set(key, promise)
+  try {
+    return await promise
+  } finally {
+    pendingPromises.delete(key)
+  }
+}
+/**
  * Centralized cache manager for Svelte compilation
  * Handles: promise dedup, memory cache, disk cache
  */

@@ -11,9 +11,11 @@ import { LRUCache } from '../../caches/LRUCache.js'
 import { cache as compileCache } from '../../caches/cache.js'
 import { CWD, CACHE_DIR } from '../../../constants.js'
 import { hasSvelteRunes } from './astParse.js'
-import { parseFile, extractExports, extractImports } from './astParse.js'
+import { parseFile, extractExports, extractImports, extractImportsSync } from './astParse.js'
+import { getTempFilePath } from './getTempFilePath.js'
 import { writeQueue } from './writeQueue.js'
 import { existsCached } from '../../caches/pathCache.js'
+import { isSkipPattern } from './pathUtils.js'
 const pendingWrites = new Map()
 // Helper to resolve relative imports to file URLs
 const resolveRelativeToUrl = async (relativePath, baseDir) => {
@@ -103,15 +105,7 @@ export const compileSvelteOnlyExport = async (sveltePath, sourceDir, exportNames
       })
       // cacheResult may be disk cache which only has { js, css, mtime } without tmpFile
       // Reconstruct tmpFile path the same way compileSvelteWithWrite does
-      const tmpFile =
-        cacheResult.tmpFile ??
-        (() => {
-          const resolvedPath = path.isAbsolute(sveltePath)
-            ? sveltePath
-            : path.resolve(CWD, sveltePath)
-          const relPath = path.relative(CWD, resolvedPath)
-          return path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
-        })()
+      const tmpFile = cacheResult.tmpFile ?? getTempFilePath(sveltePath)
       compileCache.set(cacheKey, { js: content, css: null, mtime: Date.now() })
       tmpFileCache.set(sveltePath, tmpFile)
       return tmpFile
@@ -137,19 +131,10 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
     // Handle paths like .magic-test-cache/node_modules_processed/package/path
     // by stripping the cache prefix and reconstructing the original node_modules path
     const cachePrefix = path.join(CWD, CACHE_DIR, 'node_modules_processed')
-    if (jsFilePath.startsWith(cachePrefix)) {
-      const relFromProcessed = jsFilePath.slice(cachePrefix.length + 1) // +1 for trailing slash
-      jsDir = path.join(CWD, 'node_modules', relFromProcessed)
-      jsDir = path.dirname(jsDir)
-    } else {
-      // Fallback for older path format
-      const parts = jsFilePath.split('node_modules_processed/')
-      if (parts.length === 2 && parts[1]) {
-        const relFromProcessed = parts[1]
-        jsDir = path.join(CWD, 'node_modules', relFromProcessed)
-        jsDir = path.dirname(jsDir)
-      }
-    }
+    const relFromProcessed = jsFilePath
+      .replace(cachePrefix + path.sep, '')
+      .replace('node_modules_processed/', '')
+    jsDir = path.dirname(path.join(CWD, 'node_modules', relFromProcessed))
   }
   const exportsByOriginalText = new Map()
   for (const exp of exports) {
@@ -375,55 +360,10 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
   }
   return result
 }
-const extractNamedExportsRecursive = async (filePath, visited) => {
-  if (visited?.has(filePath)) {
-    return []
+const traverseExports = async (filePath, visitor, visited = new Set()) => {
+  if (visited.has(filePath)) {
+    return
   }
-  visited ??= new Set()
-  visited.add(filePath)
-  const content = await fs.readFile(filePath, 'utf-8')
-  const fileInfo = await parseFile(content, filePath)
-  const exports = extractExports(fileInfo)
-  const result = []
-  for (const exp of exports) {
-    if (exp.isBatch) {
-      if (exp.source?.endsWith('.svelte')) {
-        const svelteDefaultName = path.basename(exp.source, '.svelte')
-        result.push({
-          name: svelteDefaultName,
-          source: null,
-          isType: false,
-          isDefault: false,
-          isBatch: false,
-        })
-      } else if (exp.source) {
-        const resolved = path.resolve(path.dirname(filePath), exp.source)
-        const nested = await extractNamedExportsRecursive(resolved, visited)
-        result.push(...nested)
-      }
-    } else if (exp.source?.endsWith('.svelte')) {
-      result.push({
-        name: exp.alias || exp.name,
-        source: null,
-        isType: exp.isType,
-        isDefault: exp.isDefault,
-        isBatch: false,
-      })
-    } else if (exp.source) {
-      const resolved = path.resolve(path.dirname(filePath), exp.source)
-      const nested = await extractNamedExportsRecursive(resolved, visited)
-      result.push(...nested)
-    } else if (!exp.source) {
-      result.push(exp)
-    }
-  }
-  return result
-}
-const findSvelteFileForExport = async (filePath, exportName, visited) => {
-  if (visited?.has(filePath)) {
-    return null
-  }
-  visited ??= new Set()
   visited.add(filePath)
   const content = await fs.readFile(filePath, 'utf-8')
   const fileInfo = await parseFile(content, filePath)
@@ -432,49 +372,81 @@ const findSvelteFileForExport = async (filePath, exportName, visited) => {
   for (const exp of exports) {
     if (exp.isBatch && exp.source?.endsWith('.svelte')) {
       const resolved = path.resolve(fileDir, exp.source)
-      const svelteExportName = path.basename(resolved, '.svelte')
-      if (svelteExportName === exportName) {
-        return resolved
+      if (!visitor.onSvelteDefault(path.basename(resolved, '.svelte'), resolved)) {
+        return
       }
     } else if (exp.source?.endsWith('.svelte')) {
       const resolved = path.resolve(fileDir, exp.source)
-      const nameToMatch = exp.alias || exp.name
-      if (nameToMatch === exportName) {
-        return resolved
+      if (!visitor.onSvelteExport(exp.alias || exp.name, resolved)) {
+        return
       }
-    } else if (exp.source && !exp.source.endsWith('.svelte')) {
+    } else if (exp.source) {
       const resolved = path.resolve(fileDir, exp.source)
-      if (exp.isBatch) {
-        const found = await findSvelteFileForExport(resolved, exportName, visited)
-        if (found) {
-          return found
-        }
-      } else {
-        const found = await findSvelteFileForExport(resolved, exportName, visited)
-        if (found) {
-          return found
-        }
+      if (!visitor.onJsExport(exp)) {
+        return
+      }
+      await traverseExports(resolved, visitor, visited)
+    } else if (!exp.source) {
+      if (!visitor.onJsExport(exp)) {
+        return
       }
     }
   }
-  return null
 }
-const isSkipPattern = spec => {
-  return (
-    spec.startsWith('./') || spec.startsWith('../') || spec.startsWith('$') || spec.startsWith('/')
-  )
+const extractNamedExportsRecursive = async filePath => {
+  const result = []
+  await traverseExports(filePath, {
+    onSvelteExport: name => {
+      result.push({ name, source: null, isType: false, isDefault: false, isBatch: false })
+      return true
+    },
+    onSvelteDefault: defaultName => {
+      result.push({
+        name: defaultName,
+        source: null,
+        isType: false,
+        isDefault: false,
+        isBatch: false,
+      })
+      return true
+    },
+    onJsExport: exp => {
+      if (exp.name && !exp.name.startsWith('type')) {
+        result.push(exp)
+      }
+      return true
+    },
+  })
+  return result
 }
-const extractNamedImportsFromCode = async (code, spec) => {
-  const fi = await parseFile(code, '<inline>')
-  const imports = extractImports(fi)
-  return imports
-    .filter(imp => imp.source === spec && (imp.type === 'static' || imp.type === 'namespace'))
-    .flatMap(imp =>
-      imp.specifiers.map(s => {
-        const parts = s.split(' as ')
-        return parts.length > 1 ? parts[1].trim() : s.trim()
-      }),
-    )
+const findSvelteFileForExport = async (filePath, exportName) => {
+  let found = null
+  await traverseExports(filePath, {
+    onSvelteExport: (name, resolvedPath) => {
+      if (name === exportName) {
+        found = resolvedPath
+        return false
+      }
+      return true
+    },
+    onSvelteDefault: (defaultName, resolvedPath) => {
+      if (defaultName === exportName) {
+        found = resolvedPath
+        return false
+      }
+      return true
+    },
+    onJsExport: () => true,
+  })
+  return found
+}
+const isSkipPatternLocal = spec => {
+  return isSkipPattern(spec)
+}
+const extractNamedImportsFromCode = (code, spec) => {
+  const imports = extractImportsSync(code)
+  const imp = imports.find(i => i.source === spec)
+  return imp?.localNames ?? []
 }
 export const resolveSvelteOnlyExports = async (code, sourceDir) => {
   let result = code
@@ -483,12 +455,12 @@ export const resolveSvelteOnlyExports = async (code, sourceDir) => {
   const exports = extractExports(fileInfo)
   const specsToResolve = new Set()
   for (const imp of imports) {
-    if (imp.source && !isSkipPattern(imp.source)) {
+    if (imp.source && !isSkipPatternLocal(imp.source)) {
       specsToResolve.add(imp.source)
     }
   }
   for (const exp of exports) {
-    if (exp.source && !isSkipPattern(exp.source)) {
+    if (exp.source && !isSkipPatternLocal(exp.source)) {
       specsToResolve.add(exp.source)
     }
   }
@@ -501,7 +473,7 @@ export const resolveSvelteOnlyExports = async (code, sourceDir) => {
       let compiledPath = null
       let exportStarCode = null
       if (resolved.isSvelteOnly && resolved.resolvedPath) {
-        const namedImports = await extractNamedImportsFromCode(code, spec)
+        const namedImports = extractNamedImportsFromCode(code, spec)
         if (namedImports.length > 0) {
           const svelteFiles = await Promise.all(
             namedImports.map(async name => {

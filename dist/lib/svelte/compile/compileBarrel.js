@@ -7,6 +7,7 @@ import { getSvelteExports } from './getSvelteExports.js'
 import { processImports } from './processImports.js'
 import { compileSvelte } from './compileSvelte.js'
 import { computeRelativePath } from './computeRelativePath.js'
+import { getTempFilePath } from './getTempFilePath.js'
 import { parallelMap, MAX_CONCURRENT } from './parallelMap.js'
 export const compileBarrel = async (filePath, importChain = []) => {
   const id = traceStart(`compileBarrel ${path.basename(filePath)}`)
@@ -84,8 +85,7 @@ const compileBarrelImpl = async (filePath, currentChain) => {
       const processed = await processImports(js, sveltePath, currentChain)
       traceEnd(processId)
       traceEnd(compileId)
-      const relPath = path.relative(CWD, sveltePath)
-      const tmpFile = path.join(CACHE_DIR, relPath.replace(/\.svelte$/, '.svelte.js'))
+      const tmpFile = getTempFilePath(sveltePath)
       const tmpFileAbs = path.join(CWD, tmpFile)
       return {
         name,

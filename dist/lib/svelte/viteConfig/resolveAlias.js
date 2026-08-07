@@ -5,10 +5,25 @@ import { findProjectRoot } from './findProjectRoot.js'
 import { parseTsConfig } from './parseTsConfig.js'
 import { loadViteAliases } from './loadViteAliases.js'
 import { classifyImport } from './classifyImport.js'
-export const resolveAlias = async (importPath, sourceFilePath) => {
+export const resolveAlias = async (importPath, sourceFilePath, options = {}) => {
+  const { includeShims } = options
   const importType = classifyImport(importPath)
-  // Only process relative, vite-alias and scoped imports
-  if (importType !== 'relative' && importType !== 'vite-alias' && importType !== 'scoped') {
+  // For non-shim mode, only process relative, vite-alias and scoped imports
+  if (
+    !includeShims &&
+    importType !== 'relative' &&
+    importType !== 'vite-alias' &&
+    importType !== 'scoped'
+  ) {
+    return null
+  }
+  // For shim mode, also handle bare imports
+  if (
+    includeShims &&
+    importType !== 'vite-alias' &&
+    importType !== 'bare' &&
+    importType !== 'scoped'
+  ) {
     return null
   }
   const sourceDir = path.dirname(sourceFilePath)
