@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises'
+import fs from '@magic/fs'
 import path from 'node:path'
 
 // Batched write queue with eager flush support
@@ -43,8 +43,8 @@ class WriteQueue {
     const request = this.pendingWrites.get(filePath)
     if (request) {
       this.pendingWrites.delete(filePath)
-      await mkdir(path.dirname(request.path), { recursive: true })
-      await writeFile(request.path, request.content)
+      await fs.mkdir(path.dirname(request.path), { recursive: true })
+      await fs.writeFile(request.path, request.content)
     }
   }
 
@@ -70,8 +70,8 @@ class WriteQueue {
       // Write all files in parallel
       await Promise.all(
         writes.map(async w => {
-          await mkdir(path.dirname(w.path), { recursive: true })
-          await writeFile(w.path, w.content)
+          await fs.mkdir(path.dirname(w.path), { recursive: true })
+          await fs.writeFile(w.path, w.content)
         }),
       )
 

@@ -2,7 +2,7 @@
 // Provides path utilities and asset resolution
 
 import is from '@magic/types'
-import { readFileSync, existsSync } from 'node:fs'
+import fs from '@magic/fs'
 import { join } from 'node:path'
 
 // Default configuration
@@ -20,8 +20,8 @@ try {
     join(root, 'vite.config.cjs'),
   ]
   for (const configPath of configPaths) {
-    if (existsSync(configPath)) {
-      const content = readFileSync(configPath, 'utf-8')
+    if (fs.existsSync(configPath)) {
+      const content = fs.readFileSync(configPath, 'utf-8')
       const kitMatch = content.match(/defineConfig\s*\(\s*\{[\s\S]*?kit\s*:\s*\{([\s\S]*?)\}/)
       if (kitMatch) {
         const kitBlock = kitMatch[1]

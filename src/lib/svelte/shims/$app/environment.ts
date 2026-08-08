@@ -1,7 +1,7 @@
 // Shim for $app/environment
 // Reads config from vite.config.ts if available, otherwise uses defaults
 
-import { readFileSync, existsSync } from 'node:fs'
+import fs from '@magic/fs'
 import { join } from 'node:path'
 
 interface ViteKitConfig {
@@ -10,7 +10,7 @@ interface ViteKitConfig {
   version?: string
 }
 
-function getViteConfig(): ViteKitConfig {
+const getViteConfig = (): ViteKitConfig => {
   try {
     const root = process.cwd()
     const configPaths = [
@@ -21,8 +21,8 @@ function getViteConfig(): ViteKitConfig {
       join(root, 'vite.config.cjs'),
     ]
     for (const configPath of configPaths) {
-      if (existsSync(configPath)) {
-        const content = readFileSync(configPath, 'utf-8')
+      if (fs.existsSync(configPath)) {
+        const content = fs.readFileSync(configPath, 'utf-8')
         // Look for defineConfig({ kit: { ... } })
         const kitMatch = content.match(/defineConfig\s*\(\s*\{[\s\S]*?kit\s*:\s*\{([\s\S]*?)\}/)
         if (kitMatch) {
