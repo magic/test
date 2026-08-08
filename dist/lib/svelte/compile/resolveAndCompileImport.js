@@ -73,6 +73,28 @@ const resolveAndCompileImportImplCore = async (
   importChain = [],
 ) => {
   const importType = classifyImport(importPath)
+  // Direct handling of $app imports - resolve to shims
+  if (importPath.startsWith('$app')) {
+    if (process.env.MAGIC_TEST_DEBUG) {
+      console.error('[resolveAndCompileImport] $app import:', importPath)
+    }
+    const shimsDir = path.join(
+      path.dirname(new URL(import.meta.url).pathname),
+      '..',
+      'shims',
+      '$app',
+    )
+    const shimPath = path.join(shimsDir, importPath.slice(5))
+    const withExtensions = ['.ts', '.js', '/index.ts', '/index.js']
+    for (const ext of withExtensions) {
+      const candidate = shimPath + ext
+      if (await existsCached(candidate)) {
+        return { filePath: importPath, js: '', url: candidate }
+      }
+    }
+    // $app not found - skip processing
+    return { filePath: importPath, js: '', url: null, skipProcessing: true }
+  }
   if (importPath === 'svelte') {
     const svelteClient = path.resolve(CWD, 'node_modules/svelte/src/index-client.js')
     if (await existsCached(svelteClient)) {

@@ -62,6 +62,30 @@ export const resolve = async (specifier, context, nextResolve) => {
 }
 const resolveImpl = async (specifier, context, nextResolve) => {
   try {
+    // Direct handling of $app imports - resolve to mocks in the project root or shims
+    if (specifier.startsWith('$app') && context.parentURL) {
+      const mocksDir = path.join(process.cwd(), '__app_mocks__')
+      let resolved = false
+      if (await fs.exists(mocksDir)) {
+        const mockPath = path.join(mocksDir, specifier.slice(5))
+        const withExtensions = ['.js', '/index.js']
+        for (const ext of withExtensions) {
+          if (await fs.exists(mockPath + ext)) {
+            return { url: pathToFileURL(mockPath + ext).href, shortCircuit: true }
+          }
+        }
+      } else {
+        const loaderDir = path.dirname(new URL(import.meta.url).pathname)
+        const shimsDir = path.join(loaderDir, '..', 'lib', 'svelte', 'shims', '$app')
+        const shimPath = path.join(shimsDir, specifier.slice(5))
+        const withExtensions = ['.ts', '.js', '/index.ts', '/index.js']
+        for (const ext of withExtensions) {
+          if (await fs.exists(shimPath + ext)) {
+            return { url: pathToFileURL(shimPath + ext).href, shortCircuit: true }
+          }
+        }
+      }
+    }
     // Skip alias resolution if parent is already being loaded (prevents circular deps)
     if (context.parentURL && currentlyLoading.has(context.parentURL)) {
       return nextResolve(specifier, context)
