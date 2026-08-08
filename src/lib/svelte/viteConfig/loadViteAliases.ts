@@ -1,4 +1,4 @@
-import fs from 'node:fs'
+import fs from '@magic/fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
