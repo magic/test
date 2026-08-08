@@ -17,6 +17,7 @@ var __rewriteRelativeImportExtension =
     }
     return path
   }
+import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { findConfigFile } from './findConfigFile.js'
@@ -49,6 +50,15 @@ export const loadViteAliases = async rootDir => {
     const configDir = path.dirname(configPath)
     const resolveConfig = config.resolve
     const aliases = normalizeAlias(resolveConfig?.alias, configDir)
+    // Always add $app alias pointing to mocks (the sveltekit plugin sets this
+    // in its configure hook which we can't access in test mode)
+    const mocksDir = path.join(rootDir, '__app_mocks__')
+    if (fs.existsSync(mocksDir)) {
+      const hasAppAlias = aliases.some(a => a.find === '$app')
+      if (!hasAppAlias) {
+        aliases.unshift({ find: '$app', replacement: mocksDir })
+      }
+    }
     aliasCache.set(cacheKey, aliases)
     return aliases
   } catch {
