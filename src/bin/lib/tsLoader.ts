@@ -80,7 +80,6 @@ const resolveImpl = async (
     // Direct handling of $app imports - resolve to mocks in the project root or shims
     if (specifier.startsWith('$app') && context.parentURL) {
       const mocksDir = path.join(process.cwd(), '__app_mocks__')
-      let resolved = false
       if (await fs.exists(mocksDir)) {
         const mockPath = path.join(mocksDir, specifier.slice(5))
         const withExtensions = ['.js', '/index.js']

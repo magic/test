@@ -87,7 +87,7 @@ const run = async () => {
     .join(' ')
   if (!isProd) {
     include.forEach(inc => {
-      argv = ['--src', inc, ...argv]
+      argv = ['--include', inc, ...argv]
     })
   }
   // Set shard environment variables
@@ -135,7 +135,7 @@ const run = async () => {
     c8Excludes.forEach(ex => {
       c8Args.unshift('--exclude', ex)
     })
-    argv = [...c8Args, ...argv]
+    argv = [...argv, ...c8Args]
   }
   childProcess = await cli.spawn(cmd, argv)
 }
