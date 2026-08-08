@@ -680,3 +680,4 @@ update dependencies
 - fix(svelte): skip non-default exports from .svelte files in barrel compilation (TypeScript types erased at runtime)
 - fix(vite): inject $app alias into vite aliases for resolveAlias fallback
 - style(svelte): use @magic/fs instead of node:fs for consistency
+- fix(c8): correctly order argv for c8 runs.
