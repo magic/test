@@ -673,3 +673,10 @@ update dependencies
 - refactor(svelte): use shared helpers across compile modules (getTempFilePath, fileWriter, processImports)
 - fix(svelte): add includeShims option to resolveAlias for bare imports
 - fix(vite): vite defines now correctly set in globalThis, by calling JSON.parse during assign.
+
+##### 0.3.30
+
+- fix(svelte): resolve $app imports to shims instead of @sveltejs/kit runtime (fixes ERR_MODULE_NOT_FOUND in tests)
+- fix(svelte): skip non-default exports from .svelte files in barrel compilation (TypeScript types erased at runtime)
+- fix(vite): inject $app alias into vite aliases for resolveAlias fallback
+- style(svelte): use @magic/fs instead of node:fs for consistency
