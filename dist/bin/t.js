@@ -107,21 +107,10 @@ const run = async () => {
     process.env.MAGIC_TEST_WORKERS = String(workers)
   }
   argv.push(binFile)
-  if (process.argv.length > 2) {
-    const [, , ...argvs] = process.argv
-    argv = [...argv, ...argvs]
-  }
   if (!isProd) {
-    // Insert 'node' before the script so c8 can execute it properly
-    const binIndex = argv.indexOf(binFile)
-    if (binIndex !== -1) {
-      argv.splice(binIndex, 0, 'node')
-    } else {
-      // If binFile not found (shouldn't happen), prepend node
-      argv = ['node', ...argv]
-    }
     const c8Cmd = isWin ? 'c8.cmd' : 'c8'
     cmd = path.join(cwd, 'node_modules', '.bin', c8Cmd)
+    // Build c8 args
     const c8Args = [
       '--source-maps',
       '--extension',
@@ -135,7 +124,16 @@ const run = async () => {
     c8Excludes.forEach(ex => {
       c8Args.unshift('--exclude', ex)
     })
-    argv = [...argv, ...c8Args]
+    // Insert 'node' before binFile
+    const binIndex = argv.indexOf(binFile)
+    if (binIndex !== -1) {
+      argv.splice(binIndex, 0, 'node')
+    }
+    // Insert c8 args before 'node' keyword
+    const nodeIndex = argv.indexOf('node')
+    if (nodeIndex !== -1) {
+      argv.splice(nodeIndex, 0, ...c8Args)
+    }
   }
   childProcess = await cli.spawn(cmd, argv)
 }
