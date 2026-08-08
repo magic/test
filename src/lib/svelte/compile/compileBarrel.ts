@@ -156,6 +156,12 @@ const compileBarrelImpl = async (
         }
       }
 
+      // Non-default exports from compiled .svelte.js files are TypeScript types
+      // that get erased at runtime. Only re-export default from Svelte files.
+      if (absPath.endsWith('.svelte.js')) {
+        return null
+      }
+
       return `export { ${name} } from '${relative}'`
     })
     .filter((e): e is string => e !== null)
