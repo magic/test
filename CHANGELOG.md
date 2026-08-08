@@ -672,3 +672,4 @@ update dependencies
 - refactor(svelte): update tsLoader to use resolveAlias with includeShims and extractImportsSync
 - refactor(svelte): use shared helpers across compile modules (getTempFilePath, fileWriter, processImports)
 - fix(svelte): add includeShims option to resolveAlias for bare imports
+- fix(vite): vite defines now correctly set in globalThis, by calling JSON.parse during assign.
