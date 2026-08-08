@@ -107,7 +107,7 @@ const run = async () => {
 
   if (!isProd) {
     include.forEach(inc => {
-      argv = ['--src', inc, ...argv]
+      argv = ['--include', inc, ...argv]
     })
   }
 
@@ -163,7 +163,7 @@ const run = async () => {
       c8Args.unshift('--exclude', ex)
     })
 
-    argv = [...c8Args, ...argv]
+    argv = [...argv, ...c8Args]
   }
 
   childProcess = await cli.spawn(cmd, argv)
