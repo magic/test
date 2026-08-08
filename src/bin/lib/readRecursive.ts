@@ -118,7 +118,7 @@ const readRecursiveImpl = async (dir = '', onProgress?: ProgressCallback): Promi
       }
       for (const [key, value] of Object.entries(defines)) {
         // @ts-expect-error - dynamic globalThis property assignment
-        globalThis[key] = value
+        globalThis[key] = typeof value === 'string' ? JSON.parse(value) : value
       }
 
       const imported = await importFile(importPath)
@@ -190,7 +190,7 @@ const readRecursiveImpl = async (dir = '', onProgress?: ProgressCallback): Promi
           }
           for (const [key, value] of Object.entries(defines)) {
             // @ts-expect-error - dynamic globalThis property assignment
-            globalThis[key] = value
+            globalThis[key] = typeof value === 'string' ? JSON.parse(value) : value
           }
 
           const test = await importFile(filePath)

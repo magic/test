@@ -29,7 +29,7 @@ export const importFileInWorker = async filePath => {
     }
     for (const [key, value] of Object.entries(defines)) {
       // @ts-expect-error - dynamic globalThis property assignment
-      globalThis[key] = value
+      globalThis[key] = typeof value === 'string' ? JSON.parse(value) : value
     }
     const mod = await import(__rewriteRelativeImportExtension(filePath))
     if (mod && mod.default) {
