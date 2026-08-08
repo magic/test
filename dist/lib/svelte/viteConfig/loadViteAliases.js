@@ -17,7 +17,7 @@ var __rewriteRelativeImportExtension =
     }
     return path
   }
-import fs from 'node:fs'
+import fs from '@magic/fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { findConfigFile } from './findConfigFile.js'
