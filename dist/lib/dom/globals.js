@@ -14,6 +14,8 @@ export const define = (target, key, value) => {
 }
 export const initGlobals = () => {
   if (window && document) {
+    define(globalThis, 'addEventListener', window.addEventListener.bind(window))
+    define(globalThis, 'removeEventListener', window.removeEventListener.bind(window))
     // Re-set Event globals to ensure happy-dom's Event is used
     // (Node.js native Event may have overwritten it)
     define(globalThis, 'Event', window.Event)
