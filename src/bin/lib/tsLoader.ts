@@ -10,52 +10,53 @@ import { writeQueue } from '../../lib/svelte/compile/writeQueue.ts'
 import { hasSvelteRunes, extractImportsSync } from '../../lib/svelte/compile/astParse.ts'
 import { getTempFilePath } from '../../lib/svelte/compile/getTempFilePath.ts'
 import { transpileWithTypescript } from './tsTranspile.ts'
+import { compileModule } from 'svelte/compiler'
+import { compileSvelteWithWrite } from '../../lib/svelte/compile/compileSvelteWithWrite.ts'
+import { writeTempFile } from '../../lib/svelte/compile/resolveSvelteOnlyExports.ts'
+import { processImports } from '../../lib/svelte/compile/processImports.ts'
+import { transformForNode } from '../../lib/svelte/compile/transformForNode.ts'
+import { loadViteConfig } from '../../lib/svelte/viteConfig/loadViteConfig.ts'
+import { initGlobals } from '../../lib/dom/globals.ts'
 
 // Track files currently being loaded to prevent circular dependency hangs
 const currentlyLoading = new Set<string>()
-
+// Warm the user vite config and the whole compile pipeline at loader init.
+// Dynamic imports that run while a resolve/load hook is still being awaited can
+// deadlock Node's ESM loader, so eagerly load them here (outside hook context)
+// to populate the module map before any test module is imported.
+await loadViteConfig(process.cwd())
+// Initialize DOM globals (window, addEventListener, etc.) so that
+// .svelte.ts files using browser APIs don't crash in Node.js
+initGlobals()
 // Use shared cache manager for all Svelte compilation
 // Helper to get or compile a Svelte file with caching
 const compileSvelteFile = async (filePath: string): Promise<string | undefined> => {
   const id = traceStart(`compileSvelteWithWrite ${path.basename(filePath)}`)
 
-  // Use cache manager for all caching (promise dedup, memory, disk)
-  const result = await cacheManager.getOrCompile(filePath, async () => {
-    const { compileSvelteWithWrite } =
-      await import('../../lib/svelte/compile/compileSvelteWithWrite.ts')
-    return compileSvelteWithWrite(filePath)
-  })
-
-  // Build cache status string for tracing
-  const cacheStatus = result?.cacheStatus
-  let traceDetail = 'compiled'
-  if (cacheStatus) {
-    if (cacheStatus.cached) {
-      traceDetail = `cached [${cacheStatus.source || 'memory'}]`
-    } else {
-      traceDetail = 'compiled'
+  try {
+    const result = await cacheManager.getOrCompile(filePath, async () =>
+      compileSvelteWithWrite(filePath),
+    )
+    traceEnd(
+      id,
+      result?.cacheStatus?.cached ? `cached [${result.cacheStatus.source || '?'}]` : 'compiled',
+    )
+    if (result?.importUrl) {
+      await writeQueue.flushPath(result.importUrl.replace('file://', ''))
+      return result.importUrl
     }
+    if (result?.js) {
+      const tmpFile = getTempFilePath(filePath)
+      const tmpFileAbs = path.resolve(process.cwd(), tmpFile)
+      await writeQueue.flushPath(tmpFileAbs)
+      return pathToFileURL(tmpFileAbs).href
+    }
+    traceEnd(id, 'ERROR: no result')
+    return undefined
+  } catch (e) {
+    traceEnd(id, `ERROR: ${(e as Error).message}`)
+    throw e
   }
-
-  // Handle disk cache results which don't have importUrl
-  if (result?.importUrl) {
-    // Eagerly flush this file's write before returning URL
-    await writeQueue.flushPath(result.importUrl.replace('file://', ''))
-    traceEnd(id, traceDetail)
-    return result.importUrl
-  }
-  // Reconstruct importUrl from tmpFile path (disk cache returns { js, css, mtime })
-  if (result?.js) {
-    const tmpFile = getTempFilePath(filePath)
-    const tmpFileAbs = path.resolve(process.cwd(), tmpFile)
-    // Eagerly flush this file's write before returning URL
-    await writeQueue.flushPath(tmpFileAbs)
-    const importUrl = pathToFileURL(tmpFileAbs).href
-    traceEnd(id, traceDetail)
-    return importUrl
-  }
-  traceEnd(id, traceDetail)
-  return undefined
 }
 
 export const resolve = async (
@@ -71,33 +72,34 @@ export const resolve = async (
   }
 }
 
+// Resolve a $app/* import to the built-in shims directory.
+// Returns the absolute shim path or null if no shim exists.
+const resolveAppImport = async (importPath: string): Promise<string | null> => {
+  const loaderDir = path.dirname(new URL(import.meta.url).pathname)
+  // loaderDir is .../bin/lib - go up two levels to reach .../src or .../dist
+  const shimsDir = path.join(loaderDir, '..', '..', 'lib', 'svelte', 'shims', '$app')
+  const shimPath = path.join(shimsDir, importPath.slice(5))
+  const withExtensions = ['.ts', '.js', '/index.ts', '/index.js']
+  for (const ext of withExtensions) {
+    if (await fs.exists(shimPath + ext)) {
+      return shimPath + ext
+    }
+  }
+  return null
+}
+
 const resolveImpl = async (
   specifier: string,
   context: { parentURL?: string },
   nextResolve: (specifier: string, context?: object) => Promise<{ url: string }>,
 ): Promise<{ url: string; shortCircuit?: boolean }> => {
+  const id = traceStart(`tsLoader.resolve ${specifier.split('/').pop() || specifier}`)
   try {
-    // Direct handling of $app imports - resolve to mocks in the project root or shims
-    if (specifier.startsWith('$app') && context.parentURL) {
-      const mocksDir = path.join(process.cwd(), '__app_mocks__')
-      if (await fs.exists(mocksDir)) {
-        const mockPath = path.join(mocksDir, specifier.slice(5))
-        const withExtensions = ['.js', '/index.js']
-        for (const ext of withExtensions) {
-          if (await fs.exists(mockPath + ext)) {
-            return { url: pathToFileURL(mockPath + ext).href, shortCircuit: true }
-          }
-        }
-      } else {
-        const loaderDir = path.dirname(new URL(import.meta.url).pathname)
-        const shimsDir = path.join(loaderDir, '..', 'lib', 'svelte', 'shims', '$app')
-        const shimPath = path.join(shimsDir, specifier.slice(5))
-        const withExtensions = ['.ts', '.js', '/index.ts', '/index.js']
-        for (const ext of withExtensions) {
-          if (await fs.exists(shimPath + ext)) {
-            return { url: pathToFileURL(shimPath + ext).href, shortCircuit: true }
-          }
-        }
+    // Direct handling of $app imports - resolve to built-in shims
+    if (specifier.startsWith('$app')) {
+      const resolved = await resolveAppImport(specifier)
+      if (resolved) {
+        return { url: pathToFileURL(resolved).href, shortCircuit: true }
       }
     }
 
@@ -148,8 +150,13 @@ const resolveImpl = async (
 
     // Handle .svelte files
     if (specifier.endsWith('.svelte') && context.parentURL) {
-      const parentDir = path.dirname(new URL(context.parentURL).pathname)
-      const resolvedPath = path.resolve(parentDir, specifier)
+      let resolvedPath: string
+      if (specifier.startsWith('file://')) {
+        resolvedPath = specifier.replace('file://', '')
+      } else {
+        const parentDir = path.dirname(new URL(context.parentURL).pathname)
+        resolvedPath = path.resolve(parentDir, specifier)
+      }
       if (await fs.exists(resolvedPath)) {
         const importUrl = await compileSvelteFile(resolvedPath)
         if (importUrl) {
@@ -167,13 +174,7 @@ const resolveImpl = async (
         const hasRune = hasSvelteRunes(source)
         if (hasRune) {
           try {
-            const { compileModule } = await import('svelte/compiler')
             const result = compileModule(source, { filename: resolvedPath })
-            const { writeTempFile } =
-              await import('../../lib/svelte/compile/resolveSvelteOnlyExports.ts')
-            const { processImports } = await import('../../lib/svelte/compile/processImports.ts')
-            const { transformForNode } =
-              await import('../../lib/svelte/compile/transformForNode.ts')
             const jsCode = String(result.js.code)
             const processed = await processImports(jsCode, resolvedPath)
             const transformed = transformForNode(processed, resolvedPath)
@@ -287,8 +288,8 @@ const resolveImpl = async (
       }
     }
   } catch (e) {
-    // fall through
     log.error('Error resolving file', e)
+    throw e
   }
 
   return nextResolve(specifier, context)
@@ -303,9 +304,12 @@ const transpileWithTypeScript = (code: string): string => {
 
 const resolveDollarLibImports = async (code: string, filePath: string): Promise<string> => {
   const imports = extractImportsSync(code)
-  const dollarImports = imports.filter(
-    i => i.source.startsWith('$lib') || i.source.startsWith('$app'),
-  )
+  const dollarImports = imports.filter(i => {
+    if (!i.source) {
+      return false
+    }
+    return i.source.startsWith('$lib') || i.source.startsWith('$app')
+  })
   if (dollarImports.length === 0) {
     return code
   }
@@ -314,7 +318,15 @@ const resolveDollarLibImports = async (code: string, filePath: string): Promise<
   const parentDir = path.dirname(filePath)
 
   for (const imp of dollarImports) {
-    const resolved = await resolveAlias(imp.source, parentDir, { includeShims: true })
+    let resolved: string | null = null
+
+    if (imp.source.startsWith('$app')) {
+      // Resolve $app imports directly to built-in shims
+      resolved = await resolveAppImport(imp.source)
+    } else {
+      resolved = await resolveAlias(imp.source, parentDir, { includeShims: true })
+    }
+
     if (resolved) {
       replacements.push({
         original: imp.originalText || `import { ${imp.specifiers} } from '${imp.source}'`,
@@ -366,66 +378,117 @@ const loadImplInner = async (
   context: { format?: string },
   nextLoad: (url: string, context?: object) => Promise<{ format?: string; source?: string }>,
 ): Promise<{ format?: string; source?: string; shortCircuit?: boolean }> => {
-  if (url.includes('/magic/util/test/src/') && url.endsWith('.js')) {
-    const tsUrl = url.replace(/\.js$/, '.ts')
-    const filePath = tsUrl.replace('file://', '')
-    if (await fs.exists(filePath)) {
-      const source = await fs.readFile(filePath, 'utf-8')
-      return { format: 'module', source, shortCircuit: true }
-    }
-  }
-
-  if (url.endsWith('.svelte.ts')) {
-    const filePath = url.replace('file://', '')
-    if (await fs.exists(filePath)) {
-      const source = await fs.readFile(filePath, 'utf-8')
-      const withResolvedImports = await resolveDollarLibImports(source, filePath)
-      const transpiled = transpileWithTypeScript(withResolvedImports)
-      const { compileModule } = await import('svelte/compiler')
-
-      try {
-        const result = compileModule(transpiled, { filename: filePath })
-        return { format: 'module', source: result.js.code, shortCircuit: true }
-      } catch {
-        // Pre-compiled Svelte files may contain `import * as $` which Svelte 5 rejects
-        // Fall back to TypeScript transpilation only
-        return { format: 'module', source: transpiled, shortCircuit: true }
+  try {
+    if (url.includes('/magic/util/test/src/') && url.endsWith('.js')) {
+      const tsUrl = url.replace(/\.js$/, '.ts')
+      const filePath = tsUrl.replace('file://', '')
+      if (await fs.exists(filePath)) {
+        const source = await fs.readFile(filePath, 'utf-8')
+        return { format: 'module', source, shortCircuit: true }
       }
     }
-  }
 
-  if (url.endsWith('.ts') && !url.includes('/magic/util/test/src/')) {
-    const filePath = url.replace('file://', '')
-    if (await fs.exists(filePath)) {
-      const source = await fs.readFile(filePath, 'utf-8')
-      const withResolvedImports = await resolveDollarLibImports(source, filePath)
-      const transpiled = transpileWithTypeScript(withResolvedImports)
-      return { format: 'module', source: transpiled, shortCircuit: true }
-    }
-  }
+    if (url.endsWith('.svelte.ts')) {
+      const filePath = url.replace('file://', '')
+      if (await fs.exists(filePath)) {
+        const source = await fs.readFile(filePath, 'utf-8')
+        const withResolvedImports = await resolveDollarLibImports(source, filePath)
+        const transpiled = transpileWithTypeScript(withResolvedImports)
 
-  if (url.endsWith('.mjs')) {
-    const filePath = url.replace('file://', '')
-    if (await fs.exists(filePath)) {
-      const source = await fs.readFile(filePath, 'utf-8')
-
-      const hasTypeScript =
-        source.includes('import type') ||
-        source.includes(' as const') ||
-        source.includes(' as ') ||
-        source.includes('satisfies') ||
-        source.includes('declare ')
-
-      if (hasTypeScript) {
-        const transpiled = transpileWithTypeScript(source)
-        return { format: 'module', source: transpiled, shortCircuit: true }
+        try {
+          const result = compileModule(transpiled, { filename: filePath })
+          return {
+            format: 'module',
+            source:
+              ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
+              result.js.code,
+            shortCircuit: true,
+          }
+        } catch {
+          // Pre-compiled Svelte files may contain `import * as $` which Svelte 5 rejects
+          // Fall back to TypeScript transpilation only
+          return {
+            format: 'module',
+            source:
+              ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
+              transpiled,
+            shortCircuit: true,
+          }
+        }
       }
     }
-  }
 
-  if (url.endsWith('.css')) {
-    return { format: 'module', source: 'export default ""', shortCircuit: true }
-  }
+    if (url.endsWith('.svelte.js')) {
+      const filePath = url.replace('file://', '')
+      if (await fs.exists(filePath)) {
+        const source = await fs.readFile(filePath, 'utf-8')
+        const withResolvedImports = await resolveDollarLibImports(source, filePath)
+        const transpiled = transpileWithTypeScript(withResolvedImports)
 
-  return nextLoad(url, context)
+        try {
+          const result = compileModule(transpiled, { filename: filePath })
+          return {
+            format: 'module',
+            source:
+              ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
+              result.js.code,
+            shortCircuit: true,
+          }
+        } catch {
+          // Pre-compiled Svelte files may contain `import * as $` which Svelte 5 rejects
+          // Fall back to TypeScript transpilation only
+          return {
+            format: 'module',
+            source:
+              ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
+              transpiled,
+            shortCircuit: true,
+          }
+        }
+      }
+    }
+
+    if (url.endsWith('.ts') && !url.includes('/magic/util/test/src/')) {
+      const filePath = url.replace('file://', '')
+      if (await fs.exists(filePath)) {
+        const source = await fs.readFile(filePath, 'utf-8')
+        const withResolvedImports = await resolveDollarLibImports(source, filePath)
+        const transpiled = transpileWithTypeScript(withResolvedImports)
+        return {
+          format: 'module',
+          source:
+            ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
+            transpiled,
+          shortCircuit: true,
+        }
+      }
+    }
+
+    if (url.endsWith('.mjs')) {
+      const filePath = url.replace('file://', '')
+      if (await fs.exists(filePath)) {
+        const source = await fs.readFile(filePath, 'utf-8')
+
+        const hasTypeScript =
+          source.includes('import type') ||
+          source.includes(' as const') ||
+          source.includes(' as ') ||
+          source.includes('satisfies') ||
+          source.includes('declare ')
+
+        if (hasTypeScript) {
+          const transpiled = transpileWithTypeScript(source)
+          return { format: 'module', source: transpiled, shortCircuit: true }
+        }
+      }
+    }
+
+    if (url.endsWith('.css')) {
+      return { format: 'module', source: 'export default ""', shortCircuit: true }
+    }
+
+    return nextLoad(url, context)
+  } catch (e) {
+    throw e
+  }
 }
