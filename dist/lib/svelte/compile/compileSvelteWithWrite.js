@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { CWD } from '../../../constants.js'
 import { transformForNode } from './transformForNode.js'
+import { processImports } from './processImports.js'
 import { compileSvelte } from './compileSvelte.js'
 import { getTempFilePath } from './getTempFilePath.js'
 import { writeCompiledFile } from './fileWriter.js'
@@ -14,7 +15,6 @@ export const compileSvelteWithWrite = async filePath => {
     const tmpFileAbs = path.resolve(CWD, tmpFile)
     // Transform imports (resolves $app/*, $lib/*, etc.)
     const processId = traceStart('processImports')
-    const { processImports } = await import('./processImports.js')
     const code = await processImports(js, filePath)
     traceEnd(processId)
     // Node.js compatibility transforms

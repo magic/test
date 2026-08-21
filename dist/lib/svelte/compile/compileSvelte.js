@@ -7,6 +7,8 @@ import {
 } from '../preprocess.js'
 import { getSvelteCompiler } from '../compiler-cache.js'
 import { cache, pendingPromises } from '../../caches/cache.js'
+import { ddl, ddlHold, ddlRelease } from './ddl.js'
+import { processImports } from './processImports.js'
 import { CWD } from '../../../constants.js'
 /**
  * Pure compilation function - caching handled by CacheManager in tsLoader
@@ -16,7 +18,13 @@ export const compileSvelte = async (filePath, options = {}) => {
   // Legacy promise dedup for direct callers (prefer CacheManager for new code)
   const pending = pendingPromises.get(`svelte:${filePath}`)
   if (pending) {
-    return pending
+    ddl('svelte PENDING-HIT ' + path.basename(filePath))
+    ddlHold('svelte:' + filePath, path.basename(filePath))
+    try {
+      return await pending
+    } finally {
+      ddlRelease('svelte:' + filePath, path.basename(filePath))
+    }
   }
   const compilePromise = (async () => {
     const { compile, preprocess } = await getSvelteCompiler()
@@ -40,7 +48,6 @@ export const compileSvelte = async (filePath, options = {}) => {
     let jsCodeString = String(result.js.code)
     const { css } = result
     if (options.processImports) {
-      const { processImports } = await import('./processImports.js')
       jsCodeString = await processImports(jsCodeString, absPath)
     }
     // Generate source map string for coverage remapping
@@ -51,6 +58,7 @@ export const compileSvelte = async (filePath, options = {}) => {
     return { js: jsCodeString, css: css ?? null, map: mapString }
   })()
   pendingPromises.set(`svelte:${filePath}`, compilePromise)
+  ddl('svelte SET compile ' + path.basename(filePath))
   try {
     return await compilePromise
   } finally {

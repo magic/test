@@ -1,6 +1,10 @@
 import path from 'node:path'
 
 import fs from '@magic/fs'
+
+import { ddlHold, ddlRelease, ddlInitWatchdog } from '../svelte/compile/ddl.ts'
+
+ddlInitWatchdog()
 import { LRUCache } from './LRUCache.ts'
 
 import { CWD } from '../../constants.ts'
@@ -88,8 +92,14 @@ export class CacheManager<T> {
     const pending = this.pendingCompiles.get(absPath)
     if (pending) {
       this.hits++
-      const result = await pending
-      return { ...result, cacheStatus: { cached: true, source: 'promise' } }
+      const key = `cmgr:${absPath}`
+      ddlHold(key, path.basename(absPath))
+      try {
+        const result = await pending
+        return { ...result, cacheStatus: { cached: true, source: 'promise' } }
+      } finally {
+        ddlRelease(key, path.basename(absPath))
+      }
     }
 
     // Check memory cache

@@ -11,6 +11,7 @@ import { compileSvelte } from './compileSvelte.ts'
 import { computeRelativePath } from './computeRelativePath.ts'
 import { getTempFilePath } from './getTempFilePath.ts'
 import { parallelMap, MAX_CONCURRENT } from './parallelMap.ts'
+import { ddl, ddlHold, ddlRelease } from './ddl.ts'
 
 export const compileBarrel = async (
   filePath: string,
@@ -49,15 +50,21 @@ export const compileBarrel = async (
     const pending = pendingPromises.get(`barrel:${filePath}`) as
       Promise<{ filePath: string; js: string; wrapperAbsPath: string }> | undefined
     if (pending) {
-      traceEnd(id, 'waiting for pending')
-      const result = await pending
-      // Re-read from disk to get the actual JS content
+      ddl('barrel PENDING-HIT ' + path.basename(filePath))
+      ddlHold('barrel:' + filePath, path.basename(filePath))
       try {
-        const js = await fs.readFile(result.wrapperAbsPath, 'utf-8')
-        return { filePath, js, wrapperAbsPath: result.wrapperAbsPath }
-      } catch {
-        // File doesn't exist, continue to recompile
-        pendingPromises.delete(`barrel:${filePath}`)
+        traceEnd(id, 'waiting for pending')
+        const result = await pending
+        // Re-read from disk to get the actual JS content
+        try {
+          const js = await fs.readFile(result.wrapperAbsPath, 'utf-8')
+          return { filePath, js, wrapperAbsPath: result.wrapperAbsPath }
+        } catch {
+          // File doesn't exist, continue to recompile
+          pendingPromises.delete(`barrel:${filePath}`)
+        }
+      } finally {
+        ddlRelease('barrel:' + filePath, path.basename(filePath))
       }
     }
 
@@ -73,6 +80,7 @@ export const compileBarrel = async (
     })()
 
     pendingPromises.set(`barrel:${filePath}`, compilePromise)
+    ddl('barrel SET compile ' + path.basename(filePath))
 
     const result = await compilePromise
     traceEnd(id)
@@ -99,6 +107,7 @@ const compileBarrelImpl = async (
     validExports,
     async (exp, i) => {
       const { name, path: sveltePath, isDefaultReexport } = exp
+      ddl('barrel EXPORT ' + name + ' ' + path.basename(sveltePath))
       const compileId = traceStart(`compileBarrel.export[${i + 1}/${validExports.length}] ${name}`)
       const { js } = await compileSvelte(sveltePath)
       const processId = traceStart('processImports')

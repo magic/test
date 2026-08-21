@@ -9,6 +9,7 @@ import { extractImportsSync } from './astParse.ts'
 import { resolveAndCompileImport } from './resolveAndCompileImport.ts'
 import { traceStart, traceEnd } from '../../trace/timing.ts'
 import { parallelMap, MAX_CONCURRENT } from './parallelMap.ts'
+import { ddl } from './ddl.ts'
 
 // Cache for processImports results (key: codeHash:sourceFilePath)
 const processImportsCache = new LRUCache<{ code: string; result: string }>(200)
@@ -50,6 +51,7 @@ const processImportsImpl = async (
   const astImports = extractImportsSync(code)
   const imports = astImports
     .filter(imp => imp.type === 'static' || imp.type === 'namespace')
+    .filter(imp => imp.source != null)
     .map(imp => ({
       imported: imp.specifiers,
       path: imp.source,
@@ -67,6 +69,7 @@ const processImportsImpl = async (
     imports.map((item, i) => ({ item, index: i })),
     async ({ item, index }) => {
       const { imported, path: importPath, start, end } = item
+      ddl('resolve ' + importPath + ' <- ' + path.basename(sourceFilePath))
       const resolveId = traceStart(
         `resolve.import[${index + 1}/${importCount}] ${importPath.split('/').pop() || importPath}`,
       )

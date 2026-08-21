@@ -3,6 +3,7 @@ import path from 'node:path'
 import { CWD } from '../../../constants.ts'
 import type { CssObject } from './types.ts'
 import { transformForNode } from './transformForNode.ts'
+import { processImports } from './processImports.ts'
 import { compileSvelte } from './compileSvelte.ts'
 import { getTempFilePath } from './getTempFilePath.ts'
 import { writeCompiledFile } from './fileWriter.ts'
@@ -21,7 +22,6 @@ export const compileSvelteWithWrite = async (
 
     // Transform imports (resolves $app/*, $lib/*, etc.)
     const processId = traceStart('processImports')
-    const { processImports } = await import('./processImports.ts')
     const code = await processImports(js, filePath)
     traceEnd(processId)
 

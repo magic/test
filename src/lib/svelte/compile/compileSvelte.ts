@@ -10,6 +10,8 @@ import {
 import { getSvelteCompiler } from '../compiler-cache.ts'
 
 import { cache, pendingPromises } from '../../caches/cache.ts'
+import { ddl, ddlHold, ddlRelease } from './ddl.ts'
+import { processImports } from './processImports.ts'
 import { CWD } from '../../../constants.ts'
 import type { CssObject } from './types.ts'
 
@@ -35,7 +37,13 @@ export const compileSvelte = async (
   const pending = pendingPromises.get(`svelte:${filePath}`) as
     Promise<CompileSvelteReturn> | undefined
   if (pending) {
-    return pending
+    ddl('svelte PENDING-HIT ' + path.basename(filePath))
+    ddlHold('svelte:' + filePath, path.basename(filePath))
+    try {
+      return await pending
+    } finally {
+      ddlRelease('svelte:' + filePath, path.basename(filePath))
+    }
   }
 
   const compilePromise = (async () => {
@@ -67,7 +75,6 @@ export const compileSvelte = async (
     const { css } = result
 
     if (options.processImports) {
-      const { processImports } = await import('./processImports.ts')
       jsCodeString = await processImports(jsCodeString, absPath)
     }
 
@@ -82,6 +89,7 @@ export const compileSvelte = async (
   })()
 
   pendingPromises.set(`svelte:${filePath}`, compilePromise)
+  ddl('svelte SET compile ' + path.basename(filePath))
   try {
     return await compilePromise
   } finally {
