@@ -16,6 +16,7 @@ import { compileBarrel } from './compileBarrel.js'
 import { resolvePackageExport } from './resolvePackageExport.js'
 import { compileSvelteOnlyExport } from './resolveSvelteOnlyExports.js'
 import { tryStat } from '../../../lib/fs.js'
+import { ddl } from './ddl.js'
 import { traceStart, traceEnd } from '../../trace/timing.js'
 import { writeQueue } from './writeQueue.js'
 import { existsCached } from '../../caches/pathCache.js'
@@ -51,6 +52,7 @@ const resolveAndCompileImportImpl = async (
   const dedupKey = `resolve:${importPath}:${sourceDir}:${sourceFilePath}`
   const pending = pendingPromises.get(dedupKey)
   if (pending) {
+    ddl('resolve PENDING-HIT ' + importPath.split('/').pop() || importPath)
     return pending
   }
   const promise = resolveAndCompileImportImplCore(
@@ -92,8 +94,6 @@ const resolveAndCompileImportImplCore = async (
         return { filePath: importPath, js: '', url: candidate }
       }
     }
-    // $app not found - skip processing
-    return { filePath: importPath, js: '', url: null, skipProcessing: true }
   }
   if (importPath === 'svelte') {
     const svelteClient = path.resolve(CWD, 'node_modules/svelte/src/index-client.js')
@@ -224,6 +224,17 @@ const resolveAndCompileImportImplCore = async (
         resolvedPath = directCandidate
       }
     }
+    if (pathStats?.isDirectory()) {
+      const siblingFile = path.join(path.dirname(resolvedPath), importFileName + '.js')
+      if (await existsCached(siblingFile)) {
+        resolvedPath = siblingFile
+      } else {
+        const indexPath = path.join(resolvedPath, 'index.js')
+        if (await existsCached(indexPath)) {
+          resolvedPath = indexPath
+        }
+      }
+    }
   }
   if (!(await existsCached(resolvedPath))) {
     // Parallel existence checks
@@ -306,41 +317,48 @@ const resolveAndCompileImportImplCore = async (
   }
   const tmpFile = getTempFilePath(resolvedPath)
   const tmpFileAbs = path.join(CWD, tmpFile)
-  const release = await acquireLock(tmpFile)
-  try {
-    const compileId = traceStart('compile.svelte-file')
-    const cached = importCache.get(resolvedPath)
-    if (cached) {
-      const stats = await fs.stat(resolvedPath)
-      if (stats.mtimeMs === cached.mtime) {
-        traceEnd(compileId, 'cache hit')
-        const sourceTmpFile = getTempFilePath(sourceFilePath)
-        const fromDir = path.dirname(sourceTmpFile)
-        const relativePath = computeRelativePath(fromDir, cached.absPath)
-        return { filePath: resolvedPath, js: cached.js, url: relativePath }
-      }
+  ddl('COMPILE-FILE start ' + path.basename(resolvedPath))
+  const compileId = traceStart('compile.svelte-file')
+  const cached = importCache.get(resolvedPath)
+  if (cached) {
+    const stats = await fs.stat(resolvedPath)
+    if (stats.mtimeMs === cached.mtime) {
+      traceEnd(compileId, 'cache hit')
+      const sourceTmpFile = getTempFilePath(sourceFilePath)
+      const fromDir = path.dirname(sourceTmpFile)
+      const relativePath = computeRelativePath(fromDir, cached.absPath)
+      return { filePath: resolvedPath, js: cached.js, url: relativePath }
     }
-    const { js } = await compileSvelte(resolvedPath)
-    const newChain = [...importChain, resolvedPath]
-    const processId = traceStart('processImports')
-    const processed = await processImports(js, resolvedPath, newChain)
-    traceEnd(processId)
+  }
+  const { js } = await compileSvelte(resolvedPath)
+  const newChain = [...importChain, resolvedPath]
+  const processId = traceStart('processImports')
+  const processed = await processImports(js, resolvedPath, newChain)
+  traceEnd(processId)
+  ddl('COMPILE-FILE done-recursion ' + path.basename(resolvedPath))
+  // Lock only around the temp-file write. Holding it across compileSvelte/processImports
+  // deadlocks when the recursion re-enters this file (its lock can only release once the
+  // recursion that is blocked on the lock completes).
+  ddl('COMPILE-FILE lock-wait ' + path.basename(resolvedPath))
+  const release = await acquireLock(tmpFile)
+  ddl('COMPILE-FILE lock-held ' + path.basename(resolvedPath))
+  try {
     const writeId = traceStart('fs.writeFile')
     await writeQueue.write(tmpFile, processed)
     await writeQueue.flushPath(tmpFile)
     traceEnd(writeId)
-    const stats = await fs.stat(resolvedPath)
-    importCache.set(resolvedPath, {
-      js: processed,
-      absPath: tmpFileAbs,
-      mtime: stats.mtimeMs,
-    })
-    traceEnd(compileId)
-    const sourceTmpFile = getTempFilePath(sourceFilePath)
-    const fromDir = path.dirname(sourceTmpFile)
-    const relativePath = computeRelativePath(fromDir, tmpFileAbs)
-    return { filePath: resolvedPath, js: processed, url: relativePath }
   } finally {
     release()
   }
+  const stats = await fs.stat(resolvedPath)
+  importCache.set(resolvedPath, {
+    js: processed,
+    absPath: tmpFileAbs,
+    mtime: stats.mtimeMs,
+  })
+  traceEnd(compileId)
+  const sourceTmpFile = getTempFilePath(sourceFilePath)
+  const fromDir = path.dirname(sourceTmpFile)
+  const relativePath = computeRelativePath(fromDir, tmpFileAbs)
+  return { filePath: resolvedPath, js: processed, url: relativePath }
 }

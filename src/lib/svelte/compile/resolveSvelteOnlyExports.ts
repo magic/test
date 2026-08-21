@@ -1,12 +1,16 @@
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { pathToFileURL, fileURLToPath } from 'node:url'
 import crypto from 'node:crypto'
+import { AsyncLocalStorage } from 'node:async_hooks'
 
 import fs from '@magic/fs'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 import { getSvelteCompiler } from '../compiler-cache.ts'
 import { cacheManager } from '../../caches/cache.ts'
 import { processImports } from './processImports.ts'
+import { compileSvelteWithWrite } from './compileSvelteWithWrite.ts'
 import { transformForNode } from './transformForNode.ts'
 import { resolvePackageExport, type PackageExportResolve } from './resolvePackageExport.ts'
 import { LRUCache } from '../../caches/LRUCache.ts'
@@ -19,8 +23,34 @@ import { writeQueue } from './writeQueue.ts'
 import { existsCached } from '../../caches/pathCache.ts'
 import type { ExportInfo } from './types.ts'
 import { isSkipPattern } from './pathUtils.ts'
+import { ddl, ddlInitWatchdog, ddlHold, ddlRelease } from './ddl.ts'
+
+ddlInitWatchdog()
 
 const pendingWrites = new Map<string, Promise<string>>()
+
+// Resolve $app/* imports to shim files
+const shimCache = new Map<string, string | null>()
+
+const resolveAppImport = async (importPath: string): Promise<string | null> => {
+  const cached = shimCache.get(importPath)
+  if (cached !== undefined) return cached
+
+  const shimBase = path.join(__dirname, '..', 'shims', '$app')
+  const shimPath = path.join(shimBase, importPath.slice(5))
+
+  const extensions = ['.ts', '.js', '/index.ts', '/index.js']
+  for (const ext of extensions) {
+    const candidate = shimPath + ext
+    if (await existsCached(candidate)) {
+      shimCache.set(importPath, candidate)
+      return candidate
+    }
+  }
+
+  shimCache.set(importPath, null)
+  return null
+}
 
 // Helper to resolve relative imports to file URLs
 const resolveRelativeToUrl = async (
@@ -32,21 +62,65 @@ const resolveRelativeToUrl = async (
   for (const ext of extensions) {
     const withExt = absolutePath + ext
     if (await existsCached(withExt)) {
+      try {
+        const stat = await fs.stat(withExt)
+        if (stat.isDirectory()) {
+          const siblingFile = absolutePath + '.js'
+          if (await existsCached(siblingFile)) {
+            return pathToFileURL(siblingFile).href
+          }
+          const indexPath = withExt + '/index.js'
+          if (await existsCached(indexPath)) {
+            return pathToFileURL(indexPath).href
+          }
+          continue
+        }
+      } catch {
+        continue
+      }
       return pathToFileURL(withExt).href
     }
   }
   return undefined
 }
 
-export const writeTempFile = async (filePath: string, code: string): Promise<string> => {
-  let tempFile: string
+const computeTempPath = (filePath: string): string => {
   if (filePath.includes('node_modules')) {
     const relFromNodeModules = filePath.split('node_modules/').pop() || ''
-    tempFile = path.join(CWD, CACHE_DIR, 'node_modules_processed', relFromNodeModules)
-  } else {
-    const relPath = path.relative(CWD, filePath)
-    tempFile = path.join(CWD, CACHE_DIR, relPath + '.mjs')
+    return path.join(CWD, CACHE_DIR, 'node_modules_processed', relFromNodeModules)
   }
+  const relPath = path.relative(CWD, filePath)
+  return path.join(CWD, CACHE_DIR, relPath + '.mjs')
+}
+
+// Process a `.js` file reachable via re-exports. When it was already processed in this
+// traversal (shared `visited` set, e.g. the same file re-exported both via
+// `export * from './x.js'` and `export * as X from './x.js'`), reuse the already-written
+// mirror URL instead of re-writing the raw content over the processed copy.
+const processJsReexport = async (
+  absolutePath: string,
+  exportNames: string[] | undefined,
+  visited: Set<string>,
+): Promise<string> => {
+  let tempFile: string
+  if (visited.has(absolutePath)) {
+    tempFile = computeTempPath(absolutePath)
+  } else {
+    const reexportContent = await fs.readFile(absolutePath, 'utf-8')
+    const processedReexport = await handleJsWithSvelteReexports(
+      reexportContent,
+      absolutePath,
+      path.dirname(absolutePath),
+      visited,
+      exportNames,
+    )
+    tempFile = await writeTempFile(absolutePath, processedReexport)
+  }
+  return pathToFileURL(tempFile).href
+}
+
+export const writeTempFile = async (filePath: string, code: string): Promise<string> => {
+  const tempFile = computeTempPath(filePath)
 
   // Check for existing pending write first
   const existing = pendingWrites.get(tempFile)
@@ -77,11 +151,51 @@ const tmpFileCache = new LRUCache<string>(100)
 
 const compiling = new Map<string, Promise<string>>()
 
+// Files currently being compiled on the CALL STACK (per async context). Re-entering
+// one from within its own compile (direct or transitive self-import) must not await
+// its own pending promise - that self-await deadlocks the event loop. A sibling
+// (concurrent, different async context) is NOT treated as a cycle: it safely awaits
+// the shared pending compile via the `compiling` map.
+const compileStack = new AsyncLocalStorage<{ active: Set<string> }>()
+
+const reentryOutputPath = (p: string): string => {
+  if (p.endsWith('.svelte')) {
+    return path.join(CWD, getTempFilePath(p))
+  }
+  return computeTempPath(p)
+}
+
 export const compileSvelteOnlyExport = async (
   sveltePath: string,
   sourceDir: string,
   exportNames?: string[],
 ): Promise<string> => {
+  const normalized = path.resolve(CWD, sveltePath)
+  const store = compileStack.getStore()
+  ddl(
+    'compileOnly CALL ' +
+      path.basename(normalized) +
+      (store
+        ? ' S=[' + [...store.active].map(p => p.split('/').pop()).join(',') + ']'
+        : ' NOSTORE'),
+  )
+  if (store && store.active.has(normalized)) {
+    ddl('compileOnly CYCLE-BREAK ' + path.basename(normalized))
+    return reentryOutputPath(normalized)
+  }
+  const stack = store ?? { active: new Set<string>() }
+  stack.active.add(normalized)
+  return compileStack.run(stack, () =>
+    compileSvelteOnlyExportImpl(sveltePath, sourceDir, exportNames),
+  )
+}
+
+const compileSvelteOnlyExportImpl = async (
+  sveltePath: string,
+  sourceDir: string,
+  exportNames?: string[],
+): Promise<string> => {
+  ddl('compileOnly ENTER ' + path.basename(sveltePath))
   if (!sveltePath.endsWith('.js') && !sveltePath.endsWith('.mjs')) {
     if (!(await existsCached(sveltePath))) {
       const svelteJsPath = sveltePath + '.js'
@@ -102,7 +216,13 @@ export const compileSvelteOnlyExport = async (
 
   const existing = compiling.get(cacheKey)
   if (existing) {
-    return existing
+    ddl('compileOnly PENDING-HIT ' + path.basename(sveltePath))
+    ddlHold('compileOnly:' + cacheKey, path.basename(sveltePath))
+    try {
+      return await existing
+    } finally {
+      ddlRelease('compileOnly:' + cacheKey, path.basename(sveltePath))
+    }
   }
 
   const promise = (async () => {
@@ -122,11 +242,9 @@ export const compileSvelteOnlyExport = async (
       }
 
       // Use cacheManager for deduplication and caching
-      const cacheResult = await cacheManager.getOrCompile(sveltePath, async () => {
-        // Import compileSvelteWithWrite lazily to avoid circular deps
-        const { compileSvelteWithWrite } = await import('./compileSvelteWithWrite.js')
-        return compileSvelteWithWrite(sveltePath)
-      })
+      const cacheResult = await cacheManager.getOrCompile(sveltePath, () =>
+        compileSvelteWithWrite(sveltePath),
+      )
       // cacheResult may be disk cache which only has { js, css, mtime } without tmpFile
       // Reconstruct tmpFile path the same way compileSvelteWithWrite does
       const tmpFile = cacheResult.tmpFile ?? getTempFilePath(sveltePath)
@@ -205,28 +323,16 @@ const handleJsWithSvelteReexports = async (
           replacement: `export { ${svelteDefaultName} } from '${compiledUrl}'`,
         })
       } catch (e) {
-        const err = e as Error
-        console.error(
-          '[handleJs] COMPILE ERROR for',
-          absoluteSveltePath.split('/').pop(),
-          ':',
-          err.message,
-        )
-        throw e
+        const svelteDefaultName = path.basename(absoluteSveltePath, '.svelte')
+        replacements.push({
+          original: firstExp.originalText || `export * from '${firstExp.source}'`,
+          replacement: `export const ${svelteDefaultName} = {}`,
+        })
       }
     } else if (firstExp.isBatch && firstExp.source?.endsWith('.js')) {
       const absolutePath = path.resolve(jsDir, firstExp.source)
       if (await existsCached(absolutePath)) {
-        const reexportContent = await fs.readFile(absolutePath, 'utf-8')
-        const processedReexport = await handleJsWithSvelteReexports(
-          reexportContent,
-          absolutePath,
-          path.dirname(absolutePath),
-          visited,
-          exportNames,
-        )
-        const tempFile = await writeTempFile(absolutePath, processedReexport)
-        const tempUrl = pathToFileURL(tempFile).href
+        const tempUrl = await processJsReexport(absolutePath, exportNames, visited)
         replacements.push({
           original: firstExp.originalText || `export * from '${firstExp.source}'`,
           replacement: `export * from '${tempUrl}'`,
@@ -271,21 +377,30 @@ const handleJsWithSvelteReexports = async (
           })
         }
       } catch (e) {
-        const err = e as Error
-        console.error(
-          '[handleJs] COMPILE ERROR for',
-          absoluteSveltePath.split('/').pop(),
-          ':',
-          err.message,
-        )
-        throw e
+        const specifiers = exps.map(exp => {
+          const exportName = exp.alias || exp.name
+          const isDefault = exp.name === 'default'
+          if (isDefault) {
+            replacements.push({
+              original:
+                firstExp.originalText ||
+                `export { ${exps.map(e => e.name).join(', ')} } from '${firstExp.source}'`,
+              replacement: `export const ${exportName} = {}`,
+            })
+          } else {
+            replacements.push({
+              original:
+                firstExp.originalText ||
+                `export { ${exps.map(e => e.name).join(', ')} } from '${firstExp.source}'`,
+              replacement: `export const ${exportName} = {}`,
+            })
+          }
+        })
       }
     } else if (firstExp.source?.endsWith('.js')) {
       const absolutePath = path.resolve(jsDir, firstExp.source)
       if (await existsCached(absolutePath)) {
         const reexportContent = await fs.readFile(absolutePath, 'utf-8')
-        let processedReexport: string
-        let tempFile: string
         let tempUrl: string
 
         if (hasSvelteRunes(reexportContent)) {
@@ -295,26 +410,14 @@ const handleJsWithSvelteReexports = async (
             const jsCodeString = String(result.js.code)
             const code = await processImports(jsCodeString, absolutePath)
             const transformedCode = transformForNode(code, absolutePath)
-            tempFile = await writeTempFile(absolutePath, transformedCode)
-            tempUrl = pathToFileURL(tempFile).href
-            processedReexport = transformedCode
+            tempUrl = pathToFileURL(await writeTempFile(absolutePath, transformedCode)).href
           } catch {
             // Pre-compiled Svelte files may contain `import * as $` which Svelte 5 rejects
             // Skip processing and use original content
-            processedReexport = reexportContent
-            tempFile = await writeTempFile(absolutePath, processedReexport)
-            tempUrl = pathToFileURL(tempFile).href
+            tempUrl = pathToFileURL(await writeTempFile(absolutePath, reexportContent)).href
           }
         } else {
-          processedReexport = await handleJsWithSvelteReexports(
-            reexportContent,
-            absolutePath,
-            path.dirname(absolutePath),
-            visited,
-            exportNames,
-          )
-          tempFile = await writeTempFile(absolutePath, processedReexport)
-          tempUrl = pathToFileURL(tempFile).href
+          tempUrl = await processJsReexport(absolutePath, exportNames, visited)
         }
 
         const specifiers = exps.map(exp => {
@@ -356,6 +459,26 @@ const handleJsWithSvelteReexports = async (
           replacement: 'export { ' + specifiers.join(', ') + " } from '" + absoluteUrl + "'",
         })
       }
+    } else if (
+      firstExp.source?.startsWith('@') ||
+      (!firstExp.source?.startsWith('.') &&
+        !firstExp.source?.startsWith('$') &&
+        !firstExp.source?.startsWith('/'))
+    ) {
+      const source = firstExp.source!
+      const resolved = await resolvePackageExport(source, jsDir)
+      if (resolved.isSvelteOnly && resolved.resolvedPath) {
+        const compiledPath = await compileSvelteOnlyExport(
+          resolved.resolvedPath,
+          jsDir,
+          exportNames,
+        )
+        const compiledUrl = pathToFileURL(compiledPath).href
+        replacements.push({
+          original: firstExp.originalText || `export * from '${source}'`,
+          replacement: `export * from '${compiledUrl}'`,
+        })
+      }
     }
   }
 
@@ -394,6 +517,41 @@ const handleJsWithSvelteReexports = async (
             replacement: `import { ${imp.specifiers.join(', ')} } from '${absoluteUrl}'`,
           })
         }
+      } else if (importPath?.startsWith('$app')) {
+        const shimResolved = await resolveAppImport(importPath)
+        if (shimResolved) {
+          const shimUrl = pathToFileURL(shimResolved).href
+          replacements.push({
+            original:
+              imp.originalText || `import { ${imp.specifiers.join(', ')} } from '${importPath}'`,
+            replacement: `import { ${imp.specifiers.join(', ')} } from '${shimUrl}'`,
+          })
+        }
+      } else if (
+        importPath?.startsWith('@') ||
+        (!importPath?.startsWith('.') &&
+          !importPath?.startsWith('$') &&
+          !importPath?.startsWith('/'))
+      ) {
+        const source = importPath!
+        const resolved = await resolvePackageExport(source, jsDir)
+        try {
+          if (resolved.isSvelteOnly && resolved.resolvedPath) {
+            const compiledPath = await compileSvelteOnlyExport(
+              resolved.resolvedPath,
+              jsDir,
+              exportNames,
+            )
+            const compiledUrl = pathToFileURL(compiledPath).href
+            replacements.push({
+              original:
+                imp.originalText || `import { ${imp.specifiers.join(', ')} } from '${source}'`,
+              replacement: `import { ${imp.specifiers.join(', ')} } from '${compiledUrl}'`,
+            })
+          }
+        } catch {
+          // Skip import that can't be compiled
+        }
       }
     }
   }
@@ -401,6 +559,22 @@ const handleJsWithSvelteReexports = async (
   let result = code
   for (const { original, replacement } of replacements) {
     result = result.replace(original, replacement)
+  }
+
+  // Replace any remaining unresolved .svelte imports with stub exports
+  const svelteImportRegex = /export\s+(?:{[^}]*}|[*])\s+from\s+['"]\.+\.+\/[^'"]*\.svelte['"]/g
+  let match
+  while ((match = svelteImportRegex.exec(result)) !== null) {
+    const importDecl = match[0]
+    const defaultMatch = importDecl.match(/export\s+{\s+default\s+as\s+(\w+)\s+}/)
+    const batchMatch = importDecl.match(/export\s+\*\s+from/)
+    if (batchMatch) {
+      result = result.replace(importDecl, `// stub: ${importDecl}`)
+    } else if (defaultMatch) {
+      result = result.replace(importDecl, `export const ${defaultMatch[1]} = {}`)
+    } else {
+      result = result.replace(importDecl, `// stub: ${importDecl}`)
+    }
   }
 
   return result
@@ -531,6 +705,20 @@ export const resolveSvelteOnlyExports = async (
   const imports = extractImports(fileInfo)
   const exports = extractExports(fileInfo)
 
+  // Handle $app/* imports first (before early return check)
+  for (const imp of imports) {
+    if ((imp.type === 'static' || imp.type === 'namespace') && imp.source?.startsWith('$app')) {
+      const shimResolved = await resolveAppImport(imp.source)
+      if (shimResolved) {
+        const shimUrl = pathToFileURL(shimResolved).href
+        result = result.replace(
+          imp.originalText || `import { ${imp.specifiers.join(', ')} } from '${imp.source}'`,
+          `import { ${imp.specifiers.join(', ')} } from '${shimUrl}'`,
+        )
+      }
+    }
+  }
+
   const specsToResolve = new Set<string>()
 
   for (const imp of imports) {
@@ -556,49 +744,53 @@ export const resolveSvelteOnlyExports = async (
       let exportStarCode: string | null = null
 
       if (resolved.isSvelteOnly && resolved.resolvedPath) {
-        const namedImports = extractNamedImportsFromCode(code, spec)
+        try {
+          const namedImports = extractNamedImportsFromCode(code, spec)
 
-        if (namedImports.length > 0) {
-          const svelteFiles = await Promise.all(
-            namedImports.map(async name => {
-              const sveltePath = await findSvelteFileForExport(resolved.resolvedPath!, name)
-              return sveltePath ? { name, sveltePath } : null
-            }),
-          )
-          const validSvelteFiles = svelteFiles.filter(
-            (f): f is { name: string; sveltePath: string } => f !== null,
-          )
-
-          if (validSvelteFiles.length > 0) {
-            const compiledSvelteFiles = await Promise.all(
-              validSvelteFiles.map(async ({ name, sveltePath }) => {
-                const compiled = await compileSvelteOnlyExport(sveltePath, sourceDir)
-                return { name, compiledPath: compiled }
+          if (namedImports.length > 0) {
+            const svelteFiles = await Promise.all(
+              namedImports.map(async name => {
+                const sveltePath = await findSvelteFileForExport(resolved.resolvedPath!, name)
+                return sveltePath ? { name, sveltePath } : null
               }),
             )
+            const validSvelteFiles = svelteFiles.filter(
+              (f): f is { name: string; sveltePath: string } => f !== null,
+            )
 
-            const barrelContent = compiledSvelteFiles
-              .map(({ name, compiledPath: cp }) => {
-                const url = pathToFileURL(cp).href
-                return `export { ${name} } from '${url}'`
-              })
-              .join('\n')
+            if (validSvelteFiles.length > 0) {
+              const compiledSvelteFiles = await Promise.all(
+                validSvelteFiles.map(async ({ name, sveltePath }) => {
+                  const compiled = await compileSvelteOnlyExport(sveltePath, sourceDir)
+                  return { name, compiledPath: compiled }
+                }),
+              )
 
-            const barrelPath = resolved.resolvedPath.replace(/\.js$/, '.svelte-only-barrel.js')
-            const barrelTmpFile = await writeTempFile(barrelPath, barrelContent)
-            compiledPath = barrelTmpFile
-            exportStarCode = `export { ${compiledSvelteFiles.map(f => f.name).join(', ')} } from '${pathToFileURL(barrelTmpFile).href}'`
-          }
-        } else {
-          compiledPath = await compileSvelteOnlyExport(resolved.resolvedPath, sourceDir)
+              const barrelContent = compiledSvelteFiles
+                .map(({ name, compiledPath: cp }) => {
+                  const url = pathToFileURL(cp).href
+                  return `export { ${name} } from '${url}'`
+                })
+                .join('\n')
 
-          const exportInfos = await extractNamedExportsRecursive(resolved.resolvedPath)
-          if (exportInfos.length > 0) {
-            const names = exportInfos.map(e => e.alias || e.name)
-            exportStarCode = `export { ${names.join(', ')} } from '${pathToFileURL(compiledPath).href}'`
+              const barrelPath = resolved.resolvedPath.replace(/\.js$/, '.svelte-only-barrel.js')
+              const barrelTmpFile = await writeTempFile(barrelPath, barrelContent)
+              compiledPath = barrelTmpFile
+              exportStarCode = `export { ${compiledSvelteFiles.map(f => f.name).join(', ')} } from '${pathToFileURL(barrelTmpFile).href}'`
+            }
           } else {
-            exportStarCode = `export * from '${pathToFileURL(compiledPath).href}'`
+            compiledPath = await compileSvelteOnlyExport(resolved.resolvedPath, sourceDir)
+
+            const exportInfos = await extractNamedExportsRecursive(resolved.resolvedPath)
+            if (exportInfos.length > 0) {
+              const names = exportInfos.map(e => e.alias || e.name)
+              exportStarCode = `export { ${names.join(', ')} } from '${pathToFileURL(compiledPath).href}'`
+            } else {
+              exportStarCode = `export * from '${pathToFileURL(compiledPath).href}'`
+            }
           }
+        } catch {
+          // Skip package that can't be compiled
         }
       }
 

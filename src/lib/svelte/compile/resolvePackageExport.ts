@@ -6,6 +6,7 @@ import log from '@magic/log'
 import { LRUCache } from '../../caches/LRUCache.ts'
 import { traceStart, traceEnd } from '../../trace/timing.ts'
 import { existsCached } from '../../caches/pathCache.ts'
+import { ddlHold, ddlRelease } from './ddl.ts'
 import {
   pendingPromises,
   packageExportCache,
@@ -247,8 +248,13 @@ export const resolvePackageExport = async (
   // Check deduplication (using shared pendingPromises)
   const pending = pendingPromises.get(cacheKey) as Promise<PackageExportResolve> | undefined
   if (pending) {
-    traceEnd(id, 'dedup')
-    return pending
+    ddlHold('pkg:' + cacheKey, pkgSpec)
+    try {
+      traceEnd(id, 'dedup')
+      return await pending
+    } finally {
+      ddlRelease('pkg:' + cacheKey, pkgSpec)
+    }
   }
 
   const promise = resolvePackageExportImpl(pkgSpec, sourceDir, pkgName)
@@ -343,7 +349,7 @@ const resolvePackageExportImpl = async (
           result = { resolvedPath: null, isSvelteOnly: false }
         } else {
           const sveltePath = conditions.svelte
-          if (sveltePath) {
+          if (sveltePath && is.string(sveltePath)) {
             const resolved = await tryResolvePath(nodeModulesPath, sveltePath)
             result = { resolvedPath: resolved, isSvelteOnly: true }
           } else {
@@ -384,7 +390,7 @@ const resolvePackageExportImpl = async (
       if (hasNonSvelteCondition) {
         const importPath = (conditions.import || conditions.module || conditions.default) as
           string | undefined
-        if (importPath) {
+        if (importPath && is.string(importPath)) {
           const resolved = await tryResolvePath(nodeModulesPath, importPath)
           if (resolved) {
             const svelteReExports = await hasSvelteReExports(resolved)
@@ -392,7 +398,7 @@ const resolvePackageExportImpl = async (
               result = { resolvedPath: resolved, isSvelteOnly: true, hasSvelteReExports: true }
             } else {
               const sveltePath = conditions.svelte as string | undefined
-              if (sveltePath) {
+              if (sveltePath && is.string(sveltePath)) {
                 const resolved2 = await tryResolvePath(nodeModulesPath, sveltePath)
                 if (resolved2) {
                   const svelteReExports2 = await hasSvelteReExports(resolved2)
@@ -420,7 +426,7 @@ const resolvePackageExportImpl = async (
         }
       } else {
         const sveltePath = conditions.svelte as string | undefined
-        if (sveltePath) {
+        if (sveltePath && is.string(sveltePath)) {
           const resolved = await tryResolvePath(nodeModulesPath, sveltePath)
           if (resolved) {
             const svelteReExports = await hasSvelteReExports(resolved)
@@ -463,10 +469,16 @@ const resolvePackageExportImpl = async (
                   const subpathExport = pkgExports?.[subpathKey]
                   const subpathStr = is.string(subpathExport)
                     ? subpathExport
-                    : ((subpathExport as Record<string, unknown>)?.svelte as string) ||
-                      ((subpathExport as Record<string, unknown>)?.import as string) ||
-                      ((subpathExport as Record<string, unknown>)?.default as string)
-                  if (subpathStr) {
+                    : ((is.string((subpathExport as Record<string, unknown>)?.svelte)
+                        ? (subpathExport as Record<string, unknown>)?.svelte
+                        : undefined) as string | undefined) ||
+                      ((is.string((subpathExport as Record<string, unknown>)?.import)
+                        ? (subpathExport as Record<string, unknown>)?.import
+                        : undefined) as string | undefined) ||
+                      ((is.string((subpathExport as Record<string, unknown>)?.default)
+                        ? (subpathExport as Record<string, unknown>)?.default
+                        : undefined) as string | undefined)
+                  if (subpathStr && is.string(subpathStr)) {
                     const subpathResolved = await tryResolvePath(nodeModulesPath, subpathStr)
                     if (subpathResolved) {
                       const svelteReExports = await hasSvelteReExports(subpathResolved)

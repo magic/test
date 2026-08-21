@@ -6,6 +6,7 @@ import log from '@magic/log'
 import { LRUCache } from '../../caches/LRUCache.js'
 import { traceStart, traceEnd } from '../../trace/timing.js'
 import { existsCached } from '../../caches/pathCache.js'
+import { ddlHold, ddlRelease } from './ddl.js'
 import { pendingPromises, packageExportCache } from '../../caches/cache.js'
 // Combined LRU cache for file scanning operations (boolean results)
 // Keys prefixed: 'reexports:' or 'exportstar:'
@@ -195,8 +196,13 @@ export const resolvePackageExport = async (pkgSpec, sourceDir) => {
   // Check deduplication (using shared pendingPromises)
   const pending = pendingPromises.get(cacheKey)
   if (pending) {
-    traceEnd(id, 'dedup')
-    return pending
+    ddlHold('pkg:' + cacheKey, pkgSpec)
+    try {
+      traceEnd(id, 'dedup')
+      return await pending
+    } finally {
+      ddlRelease('pkg:' + cacheKey, pkgSpec)
+    }
   }
   const promise = resolvePackageExportImpl(pkgSpec, sourceDir, pkgName)
   pendingPromises.set(cacheKey, promise)
@@ -277,7 +283,7 @@ const resolvePackageExportImpl = async (_pkgSpec, sourceDir, pkgName) => {
           result = { resolvedPath: null, isSvelteOnly: false }
         } else {
           const sveltePath = conditions.svelte
-          if (sveltePath) {
+          if (sveltePath && is.string(sveltePath)) {
             const resolved = await tryResolvePath(nodeModulesPath, sveltePath)
             result = { resolvedPath: resolved, isSvelteOnly: true }
           } else {
@@ -315,7 +321,7 @@ const resolvePackageExportImpl = async (_pkgSpec, sourceDir, pkgName) => {
       const packageHasOnlySvelteCondition = hasOnlySvelteCondition(conditions)
       if (hasNonSvelteCondition) {
         const importPath = conditions.import || conditions.module || conditions.default
-        if (importPath) {
+        if (importPath && is.string(importPath)) {
           const resolved = await tryResolvePath(nodeModulesPath, importPath)
           if (resolved) {
             const svelteReExports = await hasSvelteReExports(resolved)
@@ -323,7 +329,7 @@ const resolvePackageExportImpl = async (_pkgSpec, sourceDir, pkgName) => {
               result = { resolvedPath: resolved, isSvelteOnly: true, hasSvelteReExports: true }
             } else {
               const sveltePath = conditions.svelte
-              if (sveltePath) {
+              if (sveltePath && is.string(sveltePath)) {
                 const resolved2 = await tryResolvePath(nodeModulesPath, sveltePath)
                 if (resolved2) {
                   const svelteReExports2 = await hasSvelteReExports(resolved2)
@@ -351,7 +357,7 @@ const resolvePackageExportImpl = async (_pkgSpec, sourceDir, pkgName) => {
         }
       } else {
         const sveltePath = conditions.svelte
-        if (sveltePath) {
+        if (sveltePath && is.string(sveltePath)) {
           const resolved = await tryResolvePath(nodeModulesPath, sveltePath)
           if (resolved) {
             const svelteReExports = await hasSvelteReExports(resolved)
@@ -394,8 +400,10 @@ const resolvePackageExportImpl = async (_pkgSpec, sourceDir, pkgName) => {
                   const subpathExport = pkgExports?.[subpathKey]
                   const subpathStr = is.string(subpathExport)
                     ? subpathExport
-                    : subpathExport?.svelte || subpathExport?.import || subpathExport?.default
-                  if (subpathStr) {
+                    : (is.string(subpathExport?.svelte) ? subpathExport?.svelte : undefined) ||
+                      (is.string(subpathExport?.import) ? subpathExport?.import : undefined) ||
+                      (is.string(subpathExport?.default) ? subpathExport?.default : undefined)
+                  if (subpathStr && is.string(subpathStr)) {
                     const subpathResolved = await tryResolvePath(nodeModulesPath, subpathStr)
                     if (subpathResolved) {
                       const svelteReExports = await hasSvelteReExports(subpathResolved)
