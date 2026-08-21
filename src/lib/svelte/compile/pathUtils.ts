@@ -13,6 +13,10 @@ export const EXTENSION_CANDIDATES = [
 export const FALLBACK_CANDIDATES = ['index.js', 'src/index.js', './dist/index.js']
 
 export const isSkipPattern = (spec: string): boolean => {
+  if (!spec) {
+    console.error('isSkipPattern: null/empty spec:', spec)
+    return true
+  }
   return (
     spec.startsWith('./') || spec.startsWith('../') || spec.startsWith('$') || spec.startsWith('/')
   )
@@ -29,6 +33,14 @@ export const resolveFilePath = async (
         if (ext === '') {
           const stat = await fs.stat(candidate)
           if (stat.isDirectory()) {
+            const siblingFile = base + '.js'
+            if (await fs.exists(siblingFile)) {
+              return siblingFile
+            }
+            const indexPath = candidate + '/index.js'
+            if (await fs.exists(indexPath)) {
+              return indexPath
+            }
             continue
           }
         }
