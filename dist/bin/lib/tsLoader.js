@@ -80,7 +80,6 @@ const resolveAppImport = async importPath => {
   return null
 }
 const resolveImpl = async (specifier, context, nextResolve) => {
-  const id = traceStart(`tsLoader.resolve ${specifier.split('/').pop() || specifier}`)
   try {
     // Direct handling of $app imports - resolve to built-in shims
     if (specifier.startsWith('$app')) {
@@ -283,7 +282,7 @@ const resolveDollarLibImports = async (code, filePath) => {
   const replacements = []
   const parentDir = path.dirname(filePath)
   for (const imp of dollarImports) {
-    let resolved = null
+    let resolved
     if (imp.source.startsWith('$app')) {
       // Resolve $app imports directly to built-in shims
       resolved = await resolveAppImport(imp.source)
@@ -324,77 +323,32 @@ const loadImpl = async (url, context, nextLoad) => {
   }
 }
 const loadImplInner = async (url, context, nextLoad) => {
-  try {
-    if (url.includes('/magic/util/test/src/') && url.endsWith('.js')) {
-      const tsUrl = url.replace(/\.js$/, '.ts')
-      const filePath = tsUrl.replace('file://', '')
-      if (await fs.exists(filePath)) {
-        const source = await fs.readFile(filePath, 'utf-8')
-        return { format: 'module', source, shortCircuit: true }
-      }
+  if (url.includes('/magic/util/test/src/') && url.endsWith('.js')) {
+    const tsUrl = url.replace(/\.js$/, '.ts')
+    const filePath = tsUrl.replace('file://', '')
+    if (await fs.exists(filePath)) {
+      const source = await fs.readFile(filePath, 'utf-8')
+      return { format: 'module', source, shortCircuit: true }
     }
-    if (url.endsWith('.svelte.ts')) {
-      const filePath = url.replace('file://', '')
-      if (await fs.exists(filePath)) {
-        const source = await fs.readFile(filePath, 'utf-8')
-        const withResolvedImports = await resolveDollarLibImports(source, filePath)
-        const transpiled = transpileWithTypeScript(withResolvedImports)
-        try {
-          const result = compileModule(transpiled, { filename: filePath })
-          return {
-            format: 'module',
-            source:
-              ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
-              result.js.code,
-            shortCircuit: true,
-          }
-        } catch {
-          // Pre-compiled Svelte files may contain `import * as $` which Svelte 5 rejects
-          // Fall back to TypeScript transpilation only
-          return {
-            format: 'module',
-            source:
-              ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
-              transpiled,
-            shortCircuit: true,
-          }
+  }
+  if (url.endsWith('.svelte.ts')) {
+    const filePath = url.replace('file://', '')
+    if (await fs.exists(filePath)) {
+      const source = await fs.readFile(filePath, 'utf-8')
+      const withResolvedImports = await resolveDollarLibImports(source, filePath)
+      const transpiled = transpileWithTypeScript(withResolvedImports)
+      try {
+        const result = compileModule(transpiled, { filename: filePath })
+        return {
+          format: 'module',
+          source:
+            ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
+            result.js.code,
+          shortCircuit: true,
         }
-      }
-    }
-    if (url.endsWith('.svelte.js')) {
-      const filePath = url.replace('file://', '')
-      if (await fs.exists(filePath)) {
-        const source = await fs.readFile(filePath, 'utf-8')
-        const withResolvedImports = await resolveDollarLibImports(source, filePath)
-        const transpiled = transpileWithTypeScript(withResolvedImports)
-        try {
-          const result = compileModule(transpiled, { filename: filePath })
-          return {
-            format: 'module',
-            source:
-              ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
-              result.js.code,
-            shortCircuit: true,
-          }
-        } catch {
-          // Pre-compiled Svelte files may contain `import * as $` which Svelte 5 rejects
-          // Fall back to TypeScript transpilation only
-          return {
-            format: 'module',
-            source:
-              ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
-              transpiled,
-            shortCircuit: true,
-          }
-        }
-      }
-    }
-    if (url.endsWith('.ts') && !url.includes('/magic/util/test/src/')) {
-      const filePath = url.replace('file://', '')
-      if (await fs.exists(filePath)) {
-        const source = await fs.readFile(filePath, 'utf-8')
-        const withResolvedImports = await resolveDollarLibImports(source, filePath)
-        const transpiled = transpileWithTypeScript(withResolvedImports)
+      } catch {
+        // Pre-compiled Svelte files may contain `import * as $` which Svelte 5 rejects
+        // Fall back to TypeScript transpilation only
         return {
           format: 'module',
           source:
@@ -404,27 +358,68 @@ const loadImplInner = async (url, context, nextLoad) => {
         }
       }
     }
-    if (url.endsWith('.mjs')) {
-      const filePath = url.replace('file://', '')
-      if (await fs.exists(filePath)) {
-        const source = await fs.readFile(filePath, 'utf-8')
-        const hasTypeScript =
-          source.includes('import type') ||
-          source.includes(' as const') ||
-          source.includes(' as ') ||
-          source.includes('satisfies') ||
-          source.includes('declare ')
-        if (hasTypeScript) {
-          const transpiled = transpileWithTypeScript(source)
-          return { format: 'module', source: transpiled, shortCircuit: true }
+  }
+  if (url.endsWith('.svelte.js')) {
+    const filePath = url.replace('file://', '')
+    if (await fs.exists(filePath)) {
+      const source = await fs.readFile(filePath, 'utf-8')
+      const withResolvedImports = await resolveDollarLibImports(source, filePath)
+      const transpiled = transpileWithTypeScript(withResolvedImports)
+      try {
+        const result = compileModule(transpiled, { filename: filePath })
+        return {
+          format: 'module',
+          source:
+            ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
+            result.js.code,
+          shortCircuit: true,
+        }
+      } catch {
+        // Pre-compiled Svelte files may contain `import * as $` which Svelte 5 rejects
+        // Fall back to TypeScript transpilation only
+        return {
+          format: 'module',
+          source:
+            ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
+            transpiled,
+          shortCircuit: true,
         }
       }
     }
-    if (url.endsWith('.css')) {
-      return { format: 'module', source: 'export default ""', shortCircuit: true }
-    }
-    return nextLoad(url, context)
-  } catch (e) {
-    throw e
   }
+  if (url.endsWith('.ts') && !url.includes('/magic/util/test/src/')) {
+    const filePath = url.replace('file://', '')
+    if (await fs.exists(filePath)) {
+      const source = await fs.readFile(filePath, 'utf-8')
+      const withResolvedImports = await resolveDollarLibImports(source, filePath)
+      const transpiled = transpileWithTypeScript(withResolvedImports)
+      return {
+        format: 'module',
+        source:
+          ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
+          transpiled,
+        shortCircuit: true,
+      }
+    }
+  }
+  if (url.endsWith('.mjs')) {
+    const filePath = url.replace('file://', '')
+    if (await fs.exists(filePath)) {
+      const source = await fs.readFile(filePath, 'utf-8')
+      const hasTypeScript =
+        source.includes('import type') ||
+        source.includes(' as const') ||
+        source.includes(' as ') ||
+        source.includes('satisfies') ||
+        source.includes('declare ')
+      if (hasTypeScript) {
+        const transpiled = transpileWithTypeScript(source)
+        return { format: 'module', source: transpiled, shortCircuit: true }
+      }
+    }
+  }
+  if (url.endsWith('.css')) {
+    return { format: 'module', source: 'export default ""', shortCircuit: true }
+  }
+  return nextLoad(url, context)
 }

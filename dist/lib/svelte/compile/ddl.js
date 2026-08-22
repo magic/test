@@ -8,27 +8,41 @@ export const ddl = msg => {
   }
 }
 export const ddlHold = (key, waiter) => {
-  if (!process.env.MAGIC_TEST_DDL) return
+  if (!process.env.MAGIC_TEST_DDL) {
+    return
+  }
   g.__DDL ??= { map: new Map() }
   const list = g.__DDL.map.get(key) ?? []
   list.push(waiter)
   g.__DDL.map.set(key, list)
 }
 export const ddlRelease = (key, waiter) => {
-  if (!process.env.MAGIC_TEST_DDL) return
+  if (!process.env.MAGIC_TEST_DDL) {
+    return
+  }
   const list = g.__DDL?.map.get(key)
-  if (!list) return
+  if (!list) {
+    return
+  }
   const i = list.indexOf(waiter)
-  if (i >= 0) list.splice(i, 1)
-  if (list.length === 0) g.__DDL.map.delete(key)
+  if (i >= 0) {
+    list.splice(i, 1)
+  }
+  if (list.length === 0) {
+    g.__DDL.map.delete(key)
+  }
 }
 let watchdogStarted = false
 const startWatchdog = () => {
-  if (watchdogStarted) return
+  if (watchdogStarted) {
+    return
+  }
   watchdogStarted = true
   setInterval(() => {
     process._rawDebug(`[DDL-hb] loop-alive`)
-    if (!g.__DDL || g.__DDL.map.size === 0) return
+    if (!g.__DDL || g.__DDL.map.size === 0) {
+      return
+    }
     const parts = []
     for (const [key, waiters] of g.__DDL.map) {
       parts.push(`${key} <- ${waiters.join(',')}`)
@@ -37,5 +51,7 @@ const startWatchdog = () => {
   }, 5000)
 }
 export const ddlInitWatchdog = () => {
-  if (process.env.MAGIC_TEST_DDL) startWatchdog()
+  if (process.env.MAGIC_TEST_DDL) {
+    startWatchdog()
+  }
 }

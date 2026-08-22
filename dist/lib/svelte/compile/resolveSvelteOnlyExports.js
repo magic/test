@@ -26,7 +26,9 @@ const pendingWrites = new Map()
 const shimCache = new Map()
 const resolveAppImport = async importPath => {
   const cached = shimCache.get(importPath)
-  if (cached !== undefined) return cached
+  if (cached !== undefined) {
+    return cached
+  }
   const shimBase = path.join(__dirname, '..', 'shims', '$app')
   const shimPath = path.join(shimBase, importPath.slice(5))
   const extensions = ['.ts', '.js', '/index.ts', '/index.js']
@@ -265,7 +267,7 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
           original: firstExp.originalText || `export * from '${firstExp.source}'`,
           replacement: `export { ${svelteDefaultName} } from '${compiledUrl}'`,
         })
-      } catch (e) {
+      } catch {
         const svelteDefaultName = path.basename(absoluteSveltePath, '.svelte')
         replacements.push({
           original: firstExp.originalText || `export * from '${firstExp.source}'`,
@@ -317,8 +319,8 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
             replacement: `export { ${specifiers.join(', ')} } from '${compiledUrl}'`,
           })
         }
-      } catch (e) {
-        const specifiers = exps.map(exp => {
+      } catch {
+        exps.forEach(exp => {
           const exportName = exp.alias || exp.name
           const isDefault = exp.name === 'default'
           if (isDefault) {
