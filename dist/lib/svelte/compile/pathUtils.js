@@ -11,7 +11,6 @@ export const EXTENSION_CANDIDATES = [
 export const FALLBACK_CANDIDATES = ['index.js', 'src/index.js', './dist/index.js']
 export const isSkipPattern = spec => {
   if (!spec) {
-    console.error('isSkipPattern: null/empty spec:', spec)
     return true
   }
   return (
