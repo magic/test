@@ -14,7 +14,6 @@ export const FALLBACK_CANDIDATES = ['index.js', 'src/index.js', './dist/index.js
 
 export const isSkipPattern = (spec: string): boolean => {
   if (!spec) {
-    console.error('isSkipPattern: null/empty spec:', spec)
     return true
   }
   return (
