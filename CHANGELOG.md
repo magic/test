@@ -674,6 +674,19 @@ update dependencies
 - fix(svelte): add includeShims option to resolveAlias for bare imports
 - fix(vite): vite defines now correctly set in globalThis, by calling JSON.parse during assign.
 
+##### 0.3.31
+
+- feat: add deadlock detection system (ddl)
+- feat: integrate ddl into cache, compile, and import pipeline
+- feat: integrate ddl into resolve and package export pipeline
+- feat: add loader init, warmup, and $app resolution
+- feat: add addEventListener/removeEventListener to globals
+- fix(svelte): remove console.error from pathUtils
+- fix: add null guard and directory fallback in pathUtils
+- fix: update registerLoader usage
+- fix: remove REGISTERED message from tsLoader
+- fix: fix tsc and eslint errors
+
 ##### 0.3.30
 
 - fix(svelte): resolve $app imports to shims instead of @sveltejs/kit runtime (fixes ERR_MODULE_NOT_FOUND in tests)
