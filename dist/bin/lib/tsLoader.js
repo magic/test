@@ -10,13 +10,28 @@ import { writeQueue } from '../../lib/svelte/compile/writeQueue.js'
 import { hasSvelteRunes, extractImportsSync } from '../../lib/svelte/compile/astParse.js'
 import { getTempFilePath } from '../../lib/svelte/compile/getTempFilePath.js'
 import { transpileWithTypescript } from './tsTranspile.js'
-import { compileModule } from 'svelte/compiler'
 import { compileSvelteWithWrite } from '../../lib/svelte/compile/compileSvelteWithWrite.js'
 import { writeTempFile } from '../../lib/svelte/compile/resolveSvelteOnlyExports.js'
 import { processImports } from '../../lib/svelte/compile/processImports.js'
 import { transformForNode } from '../../lib/svelte/compile/transformForNode.js'
 import { loadViteConfig } from '../../lib/svelte/viteConfig/loadViteConfig.js'
 import { initGlobals } from '../../lib/dom/globals.js'
+// Svelte is optional - only required when .svelte files are tested
+let svelteAvailable = false
+let svelteCompilerCache = null
+try {
+  const mod = await import('svelte/compiler')
+  svelteCompilerCache = mod
+  svelteAvailable = true
+} catch {
+  // svelte not installed, svelte-specific blocks will be skipped
+}
+const getCompileModule = () => {
+  if (!svelteCompilerCache) {
+    svelteCompilerCache = import('svelte/compiler')
+  }
+  return Promise.resolve(svelteCompilerCache)
+}
 // Track files currently being loaded to prevent circular dependency hangs
 const currentlyLoading = new Set()
 // Warm the user vite config and the whole compile pipeline at loader init.
@@ -130,7 +145,7 @@ const resolveImpl = async (specifier, context, nextResolve) => {
       }
     }
     // Handle .svelte files
-    if (specifier.endsWith('.svelte') && context.parentURL) {
+    if (svelteAvailable && specifier.endsWith('.svelte') && context.parentURL) {
       let resolvedPath
       if (specifier.startsWith('file://')) {
         resolvedPath = specifier.replace('file://', '')
@@ -146,7 +161,7 @@ const resolveImpl = async (specifier, context, nextResolve) => {
       }
     }
     // Handle .svelte.js files with Svelte 5 runes
-    if (specifier.endsWith('.svelte.js') && context.parentURL) {
+    if (svelteAvailable && specifier.endsWith('.svelte.js') && context.parentURL) {
       const parentDir = path.dirname(new URL(context.parentURL).pathname)
       const resolvedPath = path.resolve(parentDir, specifier)
       if (await fs.exists(resolvedPath)) {
@@ -154,7 +169,8 @@ const resolveImpl = async (specifier, context, nextResolve) => {
         const hasRune = hasSvelteRunes(source)
         if (hasRune) {
           try {
-            const result = compileModule(source, { filename: resolvedPath })
+            const compiler = await getCompileModule()
+            const result = compiler.compileModule(source, { filename: resolvedPath })
             const jsCode = String(result.js.code)
             const processed = await processImports(jsCode, resolvedPath)
             const transformed = transformForNode(processed, resolvedPath)
@@ -178,7 +194,7 @@ const resolveImpl = async (specifier, context, nextResolve) => {
       const pkgPath = path.join(nodeModulesPath, 'package.json')
       if (await fs.exists(pkgPath)) {
         const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'))
-        if (pkg.exports?.['.']?.svelte && !pkg.exports?.['.']?.import) {
+        if (svelteAvailable && pkg.exports?.['.']?.svelte && !pkg.exports?.['.']?.import) {
           const sveltePath = path.join(nodeModulesPath, pkg.exports['.'].svelte)
           if (await fs.exists(sveltePath)) {
             const importUrl = await compileSvelteFile(sveltePath)
@@ -211,6 +227,7 @@ const resolveImpl = async (specifier, context, nextResolve) => {
     }
     // Handle relative imports without extension - check .svelte
     if (
+      svelteAvailable &&
       specifier.startsWith('.') &&
       !specifier.endsWith('.ts') &&
       !specifier.endsWith('.js') &&
@@ -331,14 +348,15 @@ const loadImplInner = async (url, context, nextLoad) => {
       return { format: 'module', source, shortCircuit: true }
     }
   }
-  if (url.endsWith('.svelte.ts')) {
+  if (svelteAvailable && url.endsWith('.svelte.ts')) {
     const filePath = url.replace('file://', '')
     if (await fs.exists(filePath)) {
       const source = await fs.readFile(filePath, 'utf-8')
       const withResolvedImports = await resolveDollarLibImports(source, filePath)
       const transpiled = transpileWithTypeScript(withResolvedImports)
       try {
-        const result = compileModule(transpiled, { filename: filePath })
+        const compiler = await getCompileModule()
+        const result = compiler.compileModule(transpiled, { filename: filePath })
         return {
           format: 'module',
           source:
@@ -359,14 +377,15 @@ const loadImplInner = async (url, context, nextLoad) => {
       }
     }
   }
-  if (url.endsWith('.svelte.js')) {
+  if (svelteAvailable && url.endsWith('.svelte.js')) {
     const filePath = url.replace('file://', '')
     if (await fs.exists(filePath)) {
       const source = await fs.readFile(filePath, 'utf-8')
       const withResolvedImports = await resolveDollarLibImports(source, filePath)
       const transpiled = transpileWithTypeScript(withResolvedImports)
       try {
-        const result = compileModule(transpiled, { filename: filePath })
+        const compiler = await getCompileModule()
+        const result = compiler.compileModule(transpiled, { filename: filePath })
         return {
           format: 'module',
           source:
