@@ -674,6 +674,14 @@ update dependencies
 - fix(svelte): add includeShims option to resolveAlias for bare imports
 - fix(vite): vite defines now correctly set in globalThis, by calling JSON.parse during assign.
 
+##### 0.3.30
+
+- fix(svelte): resolve $app imports to shims instead of @sveltejs/kit runtime (fixes ERR_MODULE_NOT_FOUND in tests)
+- fix(svelte): skip non-default exports from .svelte files in barrel compilation (TypeScript types erased at runtime)
+- fix(vite): inject $app alias into vite aliases for resolveAlias fallback
+- style(svelte): use @magic/fs instead of node:fs for consistency
+- fix(c8): correctly order argv for c8 runs.
+
 ##### 0.3.31
 
 - feat: add deadlock detection system (ddl)
@@ -687,10 +695,6 @@ update dependencies
 - fix: remove REGISTERED message from tsLoader
 - fix: fix tsc and eslint errors
 
-##### 0.3.30
+##### 0.3.32
 
-- fix(svelte): resolve $app imports to shims instead of @sveltejs/kit runtime (fixes ERR_MODULE_NOT_FOUND in tests)
-- fix(svelte): skip non-default exports from .svelte files in barrel compilation (TypeScript types erased at runtime)
-- fix(vite): inject $app alias into vite aliases for resolveAlias fallback
-- style(svelte): use @magic/fs instead of node:fs for consistency
-- fix(c8): correctly order argv for c8 runs.
+- make svelte optional again
