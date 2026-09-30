@@ -698,3 +698,7 @@ update dependencies
 ##### 0.3.32
 
 - make svelte optional again
+
+##### 0.3.33
+
+- update dependencies
