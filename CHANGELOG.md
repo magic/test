@@ -702,3 +702,7 @@ update dependencies
 ##### 0.3.33
 
 - update dependencies
+
+##### 0.3.34
+
+- has subfunctions now allow either predicate functions OR literal values to be checked
