@@ -194,6 +194,57 @@ export default [
     info: 'nested returns false when path contains non-object',
   },
 
+  // Literal value tests for nested
+  {
+    fn: () => nested('textContent', 'Simple content')({ textContent: 'Simple content' }),
+    expect: true,
+    info: 'nested accepts literal string value',
+  },
+  {
+    fn: () => nested('textContent', 'Simple content')({ textContent: 'Other content' }),
+    expect: false,
+    info: 'nested returns false when literal string does not match',
+  },
+  {
+    fn: () => nested('a.count', 5)({ a: { count: 5 } }),
+    expect: true,
+    info: 'nested accepts literal number value',
+  },
+  {
+    fn: () => nested('a.count', 5)({ a: { count: 6 } }),
+    expect: false,
+    info: 'nested returns false when literal number does not match',
+  },
+  {
+    fn: () =>
+      nested('a.user', { name: 'John', age: 30 })({ a: { user: { name: 'John', age: 30 } } }),
+    expect: true,
+    info: 'nested uses deep.equal for object literals',
+  },
+  {
+    fn: () => nested('a.user', { name: 'John' })({ a: { user: { name: 'John', age: 30 } } }),
+    expect: false,
+    info: 'nested returns false for partial object literal match',
+  },
+  {
+    fn: () =>
+      nested(
+        '0.textContent',
+        'Object in array 1',
+      )([{ textContent: 'Object in array 1' }, { textContent: 'Object in array 2' }]),
+    expect: true,
+    info: 'nested works with array index paths and literals',
+  },
+  {
+    fn: () =>
+      nested(
+        '0.textContent',
+        'Object in array 2',
+      )([{ textContent: 'Object in array 1' }, { textContent: 'Object in array 2' }]),
+    expect: false,
+    info: 'nested returns false when array index path literal does not match',
+  },
+
   // has.string tests
   {
     fn: () => string('hello')('hello world'),
@@ -224,6 +275,33 @@ export default [
     fn: () => string('')(''),
     expect: true,
     info: 'string returns true for empty substring',
+  },
+
+  // has.string predicate tests
+  {
+    fn: () => string(s => s.includes('a') && s.includes('z'))('hello a to z'),
+    expect: true,
+    info: 'string accepts a predicate checking multiple conditions',
+  },
+  {
+    fn: () => string(s => s.includes('a') && s.includes('z'))('hello'),
+    expect: false,
+    info: 'string predicate returns false when a condition does not hold',
+  },
+  {
+    fn: () => string(s => s.length > 3)('hello'),
+    expect: true,
+    info: 'string predicate receives the full string',
+  },
+  {
+    fn: () => string(s => s.length > 0)(123),
+    expect: false,
+    info: 'string returns false for non-string result with predicate',
+  },
+  {
+    fn: () => string(s => s.length > 0)(null),
+    expect: false,
+    info: 'string returns false for null result with predicate',
   },
 
   // has.key tests
@@ -393,6 +471,28 @@ export default [
     fn: () => includes('a')(null),
     expect: false,
     info: 'includes returns false for null',
+  },
+
+  // has.includes predicate tests
+  {
+    fn: () => includes((v: unknown) => is.number(v) && v > 5)([1, 3, 7]),
+    expect: true,
+    info: 'includes accepts a predicate for array elements',
+  },
+  {
+    fn: () => includes((v: unknown) => is.number(v) && v > 5)([1, 3, 4]),
+    expect: false,
+    info: 'includes predicate returns false when no element matches',
+  },
+  {
+    fn: () => includes((v: unknown) => v === 'a')('not an array'),
+    expect: false,
+    info: 'includes returns false for string result with predicate',
+  },
+  {
+    fn: () => includes((v: unknown) => v === 'a')(null),
+    expect: false,
+    info: 'includes returns false for null result with predicate',
   },
 
   // has.oneOf tests

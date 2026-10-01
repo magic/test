@@ -44,7 +44,7 @@ export const any = spec => {
     return false
   }
 }
-export const nested = (path, predicate) => {
+export const nested = (path, check) => {
   const pathKeys = path.split('.')
   return result => {
     let current = result
@@ -54,12 +54,18 @@ export const nested = (path, predicate) => {
       }
       current = current[key]
     }
-    return predicate(current)
+    return checkValue(current, check)
   }
 }
 export const string = substring => {
   return result => {
-    return is.string(result) && result.includes(substring)
+    if (!is.string(result)) {
+      return false
+    }
+    if (is.function(substring)) {
+      return substring(result)
+    }
+    return result.includes(substring)
   }
 }
 export const at = (index, check) => {
@@ -94,7 +100,7 @@ export const keys = keyNames => {
 }
 export const includes = item => result => {
   if (is.array(result)) {
-    return result.some(v => is.deep.equal(v, item))
+    return result.some(v => (is.function(item) ? item(v) : is.deep.equal(v, item)))
   }
   if (is.string(result) && is.string(item)) {
     return result.includes(item)

@@ -55,7 +55,7 @@ export const any = (spec: Record<string, Check>) => {
   }
 }
 
-export const nested = (path: string, predicate: Predicate) => {
+export const nested = (path: string, check: Check) => {
   const pathKeys = path.split('.')
 
   return (result: unknown): boolean => {
@@ -68,13 +68,21 @@ export const nested = (path: string, predicate: Predicate) => {
       current = (current as Record<string, unknown>)[key]
     }
 
-    return predicate(current)
+    return checkValue(current, check)
   }
 }
 
-export const string = (substring: string) => {
+type StringCheck = string | ((value: string) => boolean)
+
+export const string = (substring: StringCheck) => {
   return (result: unknown): boolean => {
-    return is.string(result) && result.includes(substring)
+    if (!is.string(result)) {
+      return false
+    }
+    if (is.function(substring)) {
+      return substring(result)
+    }
+    return result.includes(substring)
   }
 }
 
@@ -115,7 +123,7 @@ export const includes =
   (item: unknown) =>
   (result: unknown): boolean => {
     if (is.array(result)) {
-      return result.some(v => is.deep.equal(v, item))
+      return result.some(v => (is.function(item) ? item(v) : is.deep.equal(v, item)))
     }
     if (is.string(result) && is.string(item)) {
       return result.includes(item)
