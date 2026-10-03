@@ -1,8 +1,8 @@
 import path from 'node:path'
 import { fs } from '@magic/fs'
-import { CACHE_DIR } from '../../../../src/constants.js'
-import { getViteDefine } from '../../../../src/lib/svelte/viteConfig/getViteDefine.js'
-import { defineCache, configCache } from '../../../../src/lib/svelte/viteConfig/cache.js'
+import { CACHE_DIR } from '#src/constants.js'
+import { getViteDefine } from '#src/lib/svelte/viteConfig/getViteDefine.js'
+import { defineCache, configCache } from '#src/lib/svelte/viteConfig/cache.js'
 import is from '@magic/types'
 
 const TEST_ROOT = path.join(CACHE_DIR, 'viteConfig', 'getViteDefine')

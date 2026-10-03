@@ -1,6 +1,6 @@
 import is from '@magic/types'
-import { limitedPromiseAllSettled } from '../../../src/bin/lib/limitedPromiseAllSettled.js'
-import type { TestCase } from '../../../src/types.js'
+import { limitedPromiseAllSettled } from '#src/bin/lib/limitedPromiseAllSettled.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   // Empty array

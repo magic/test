@@ -1,6 +1,6 @@
 import is from '@magic/types'
-import { get, post, http } from '../../src/lib/http.js'
-import type { TestCase } from '../../src/types.js'
+import { get, post, http } from '#src/lib/http.js'
+import type { TestCase } from '#src/types.js'
 
 // Store original env
 const originalEnv = { ...process.env }

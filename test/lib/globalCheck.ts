@@ -2,8 +2,8 @@ import {
   functionModifiesGlobals,
   testModifiesGlobals,
   suiteModifiesGlobals,
-} from '../../src/lib/globalCheck.js'
-import type { TestCase, TestCollection } from '../../src/types.js'
+} from '#src/lib/globalCheck.js'
+import type { TestCase, TestCollection } from '#src/types.js'
 
 // Helper to access properties without 'any'
 type GlobalAny = Record<string, unknown> & typeof globalThis

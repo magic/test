@@ -1,6 +1,6 @@
-import { Store } from '../../../src/lib/store.js'
-import { test } from '../../../src/lib/stats/test.js'
-import type { TestCase } from '../../../src/types.js'
+import { Store } from '#src/lib/store.js'
+import { test } from '#src/lib/stats/test.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   // Basic test recording

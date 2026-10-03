@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { transpileWithTypescript } from '../../../src/bin/lib/tsTranspile.js'
+import { transpileWithTypescript } from '#src/bin/lib/tsTranspile.js'
 
 export default [
   {

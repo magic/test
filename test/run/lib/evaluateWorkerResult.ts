@@ -1,5 +1,5 @@
-import { evaluateWorkerResult } from '../../../src/run/lib/evaluateWorkerResult.js'
-import type { TestCase } from '../../../src/types.js'
+import { evaluateWorkerResult } from '#src/run/lib/evaluateWorkerResult.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   {

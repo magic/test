@@ -1,6 +1,6 @@
 import is from '@magic/types'
-import { initGlobals } from '../../../../src/lib/dom/globals.js'
-import type { TestObject } from '../../../../src/types.js'
+import { initGlobals } from '#src/lib/dom/globals.js'
+import type { TestObject } from '#src/types.js'
 
 export default {
   beforeAll: initGlobals,

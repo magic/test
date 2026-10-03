@@ -1,6 +1,6 @@
 import is from '@magic/types'
-import { makeSafeClone } from '../../../src/run/lib/makeSafeClone.js'
-import type { TestCase } from '../../../src/types.js'
+import { makeSafeClone } from '#src/run/lib/makeSafeClone.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   {

@@ -3,7 +3,7 @@ import {
   hasAfterAll,
   hasBeforeEach,
   hasAfterEach,
-} from '../../../src/run/lib/suiteHooks.js'
+} from '#src/run/lib/suiteHooks.js'
 
 export default [
   // hasBeforeAll

@@ -1,5 +1,5 @@
-import { mount, html } from '../../../../../src/lib/svelte/index.js'
-import type { TestContext, TestCase } from '../../../../../src/types.js'
+import { mount, html } from '#src/lib/svelte/index.js'
+import type { TestContext, TestCase } from '#src/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Tabs.svelte'
 const tabs = [

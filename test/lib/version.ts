@@ -1,7 +1,7 @@
-import type { Test } from '../../src/types.js'
-import { version } from '../../src/lib/version.js'
+import type { Test } from '#src/types.js'
+import { version } from '#src/lib/version.js'
 import is from '@magic/types'
-import type { TestCase } from '../../src/types.js'
+import type { TestCase } from '#src/types.js'
 
 const lib = {
   array: [],

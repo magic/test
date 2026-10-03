@@ -1,4 +1,4 @@
-import { printPercent } from '../../../src/lib/stats/printPercent.js'
+import { printPercent } from '#src/lib/stats/printPercent.js'
 
 export default [
   {

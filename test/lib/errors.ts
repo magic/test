@@ -1,6 +1,6 @@
 import is from '@magic/types'
-import { ERRORS, ERROR_MESSAGES, createError } from '../../src/lib/errors.js'
-import type { TestCase } from '../../src/types.js'
+import { ERRORS, ERROR_MESSAGES, createError } from '#src/lib/errors.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   // ERRORS object contains expected codes

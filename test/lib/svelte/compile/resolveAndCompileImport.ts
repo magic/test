@@ -1,4 +1,4 @@
-import { classifyImport } from '../../../../src/lib/svelte/viteConfig/classifyImport.js'
+import { classifyImport } from '#src/lib/svelte/viteConfig/classifyImport.js'
 
 export default [
   {
@@ -60,5 +60,20 @@ export default [
     fn: () => classifyImport('./foo.svelte') === 'relative',
     expect: true,
     info: 'classifyImport handles .svelte extension',
+  },
+  {
+    fn: () => classifyImport('#lib') === 'bare',
+    expect: true,
+    info: 'classifyImport returns bare for #lib prefix',
+  },
+  {
+    fn: () => classifyImport('#lib/components/Figure.svelte') === 'bare',
+    expect: true,
+    info: 'classifyImport returns bare for #lib/components path',
+  },
+  {
+    fn: () => classifyImport('#lib/forms/Button.svelte') === 'bare',
+    expect: true,
+    info: 'classifyImport returns bare for #lib/forms path',
   },
 ]

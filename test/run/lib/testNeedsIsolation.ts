@@ -1,5 +1,5 @@
-import { testNeedsIsolation } from '../../../src/run/lib/testNeedsIsolation.js'
-import type { TestCase } from '../../../src/types.js'
+import { testNeedsIsolation } from '#src/run/lib/testNeedsIsolation.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   {

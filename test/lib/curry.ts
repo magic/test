@@ -1,6 +1,6 @@
 import is from '@magic/types'
-import { tryCatch, curry } from '../../src/index.js'
-import type { TestCase } from '../../src/types.js'
+import { tryCatch, curry } from '#src/index.js'
+import type { TestCase } from '#src/types.js'
 
 const fn = (v: unknown) => v
 

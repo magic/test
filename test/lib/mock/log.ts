@@ -1,4 +1,4 @@
-import { is, mock, env } from '../../../src/index.js'
+import { is, mock, env } from '#src/index.js'
 
 const mayLog = (t: boolean) => (env.isNodeProd() ? t === false : t === true)
 

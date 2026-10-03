@@ -4,7 +4,7 @@ import is from '@magic/types'
 import {
   writeTempFile,
   compileSvelteOnlyExport,
-} from '../../../../src/lib/svelte/compile/resolveSvelteOnlyExports.js'
+} from '#src/lib/svelte/compile/resolveSvelteOnlyExports.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixturePath = path.join(

@@ -1,5 +1,5 @@
-import { prepareTest } from '../../../src/run/lib/prepareTest.js'
-import type { TestCase } from '../../../src/types.js'
+import { prepareTest } from '#src/run/lib/prepareTest.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   {

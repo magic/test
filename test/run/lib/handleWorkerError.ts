@@ -1,6 +1,6 @@
-import { handleWorkerError } from '../../../src/run/lib/handleWorkerError.js'
-import type { TestResult } from '../../../src/types.js'
-import type { TestCase } from '../../../src/types.js'
+import { handleWorkerError } from '#src/run/lib/handleWorkerError.js'
+import type { TestResult } from '#src/types.js'
+import type { TestCase } from '#src/types.js'
 
 const createTest = (overrides = {}): Parameters<typeof handleWorkerError>[0] => ({
   name: 'test-name',

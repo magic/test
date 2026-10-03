@@ -9,6 +9,10 @@
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
+  "imports": {
+    "#src": "./src/index.js",
+    "#src/*": "./src/*"
+  },
   "exports": {
     ".": "./dist/index.js",
     "./svelte": "./dist/svelte.js"

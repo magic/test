@@ -10,8 +10,8 @@ import {
   WheelEvent,
 } from 'happy-dom'
 
-import { getEventClass, DragEvent, TransitionEvent } from '../../../src/lib/svelte/events.js'
-import type { Test } from '../../../src/types.js'
+import { getEventClass, DragEvent, TransitionEvent } from '#src/lib/svelte/events.js'
+import type { Test } from '#src/types.js'
 
 export default [
   {

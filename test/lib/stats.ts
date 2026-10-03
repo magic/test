@@ -1,8 +1,8 @@
 import is from '@magic/types'
-import * as stats from '../../src/lib/stats/index.js'
-import { info, reset, test } from '../../src/lib/stats/index.js'
-import { Store } from '../../src/lib/store.js'
-import type { TestCase } from '../../src/types.js'
+import * as stats from '#src/lib/stats/index.js'
+import { info, reset, test } from '#src/lib/stats/index.js'
+import { Store } from '#src/lib/store.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   { fn: () => stats, expect: is.obj, info: 'stats exports a function' },

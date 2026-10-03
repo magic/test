@@ -5,7 +5,7 @@ import {
   isTracingEnabled,
   enableTracing,
   disableTracing,
-} from '../../../src/lib/trace/timing.js'
+} from '#src/lib/trace/timing.js'
 
 export default [
   {

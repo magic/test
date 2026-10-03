@@ -1,7 +1,7 @@
 import is from '@magic/types'
-import { has } from '../../../src/index.js'
-import { handleSuiteHooks } from '../../../src/run/lib/handleSuiteHooks.js'
-import type { TestCase } from '../../../src/types.js'
+import { has } from '#src/index.js'
+import { handleSuiteHooks } from '#src/run/lib/handleSuiteHooks.js'
+import type { TestCase } from '#src/types.js'
 
 const cleanup = () => 'cleanup-result'
 

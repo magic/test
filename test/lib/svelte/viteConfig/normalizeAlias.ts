@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { normalizeAlias } from '../../../../src/lib/svelte/viteConfig/normalizeAlias.js'
+import { normalizeAlias } from '#src/lib/svelte/viteConfig/normalizeAlias.js'
 
 export default [
   {

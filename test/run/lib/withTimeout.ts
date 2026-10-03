@@ -1,5 +1,5 @@
-import { withTimeout } from '../../../src/run/lib/withTimeout.js'
-import type { TestCase } from '../../../src/types.js'
+import { withTimeout } from '#src/run/lib/withTimeout.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   {

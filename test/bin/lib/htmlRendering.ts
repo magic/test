@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { decodeHtmlEntities, createRenderString } from '../../../src/bin/lib/htmlRendering.js'
+import { decodeHtmlEntities, createRenderString } from '#src/bin/lib/htmlRendering.js'
 
 export default [
   {

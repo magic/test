@@ -3,8 +3,8 @@
 // For now, we test the function exists and returns expected types.
 
 import is from '@magic/types'
-import { loadTestDefines } from '../../../src/bin/lib/loadTestDefines.js'
-import type { TestCase } from '../../../src/types.js'
+import { loadTestDefines } from '#src/bin/lib/loadTestDefines.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   // Function exists and is async

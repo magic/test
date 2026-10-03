@@ -1,5 +1,5 @@
-import { tryStat } from '../../src/lib/fs.js'
-import type { TestCase } from '../../src/types.js'
+import { tryStat } from '#src/lib/fs.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   {

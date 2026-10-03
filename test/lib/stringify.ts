@@ -1,5 +1,5 @@
-import { stringify } from '../../src/lib/stringify.js'
-import type { TestCase } from '../../src/types.ts'
+import { stringify } from '#src/lib/stringify.js'
+import type { TestCase } from '#src/types.ts'
 
 // Store original env
 const _originalArgv = [...process.argv]

@@ -3,7 +3,7 @@ import {
   normalizeImportPath,
   usesWindowsSeparators,
   ensureForwardSlashes,
-} from '../../../src/bin/lib/pathTransform.js'
+} from '#src/bin/lib/pathTransform.js'
 
 export default [
   {

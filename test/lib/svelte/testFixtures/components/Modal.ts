@@ -1,5 +1,5 @@
-import { html } from '../../../../../src/lib/svelte/index.js'
-import type { TestContext } from '../../../../../src/types.js'
+import { html } from '#src/lib/svelte/index.js'
+import type { TestContext } from '#src/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Modal.svelte'
 

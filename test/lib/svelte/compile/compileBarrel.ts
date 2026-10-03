@@ -1,9 +1,9 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { compileBarrel } from '../../../../src/lib/svelte/compile/compileBarrel.js'
-import { barrelCache } from '../../../../src/lib/caches/cache.js'
-import type { TestCase } from '../../../../src/types.js'
+import { compileBarrel } from '#src/lib/svelte/compile/compileBarrel.js'
+import { barrelCache } from '#src/lib/caches/cache.js'
+import type { TestCase } from '#src/types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtureBase = path.join(

@@ -1,5 +1,5 @@
 import { flushSync } from 'svelte'
-import type { TestContext, TestCase } from '../../../../../src/types.js'
+import type { TestContext, TestCase } from '#src/types.js'
 
 const component = './src/lib/svelte/testFixtures/components/Derived.svelte'
 

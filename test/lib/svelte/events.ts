@@ -1,5 +1,5 @@
 import { Event } from 'happy-dom'
-import { initDOM, getDocument } from '../../../src/lib/dom/index.js'
+import { initDOM, getDocument } from '#src/lib/dom/index.js'
 import {
   fireEvent,
   click,
@@ -46,8 +46,8 @@ import {
   trigger,
   volumeChange,
   checked,
-} from '../../../src/lib/svelte/events.js'
-import type { Test } from '../../../src/types.js'
+} from '#src/lib/svelte/events.js'
+import type { Test } from '#src/types.js'
 
 initDOM()
 const doc = getDocument()

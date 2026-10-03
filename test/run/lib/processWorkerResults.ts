@@ -1,7 +1,7 @@
 import is from '@magic/types'
-import { processWorkerResults } from '../../../src/run/lib/processWorkerResults.js'
-import type { TestResult } from '../../../src/types.js'
-import type { TestCase } from '../../../src/types.js'
+import { processWorkerResults } from '#src/run/lib/processWorkerResults.js'
+import type { TestResult } from '#src/types.js'
+import type { TestCase } from '#src/types.js'
 
 const createResult = (overrides: Partial<TestResult> = {}): TestResult => ({
   result: undefined,

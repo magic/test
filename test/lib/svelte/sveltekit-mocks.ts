@@ -5,7 +5,7 @@ import {
   dev,
   prod,
   platform,
-} from '../../../src/lib/svelte/sveltekit-mocks.js'
+} from '#src/lib/svelte/sveltekit-mocks.js'
 
 export default [
   {

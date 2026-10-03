@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { parseTsConfig } from '../../../../src/lib/svelte/viteConfig/parseTsConfig.js'
+import { parseTsConfig } from '#src/lib/svelte/viteConfig/parseTsConfig.js'
 
 export default [
   {

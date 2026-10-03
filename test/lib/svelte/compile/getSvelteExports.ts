@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { getSvelteExports } from '../../../../src/lib/svelte/compile/getSvelteExports.js'
+import { getSvelteExports } from '#src/lib/svelte/compile/getSvelteExports.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtureBase = path.join(

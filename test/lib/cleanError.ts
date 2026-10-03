@@ -1,6 +1,6 @@
 import is from '@magic/types'
-import { cleanError } from '../../src/lib/cleanError.js'
-import type { TestCase } from '../../src/types.js'
+import { cleanError } from '#src/lib/cleanError.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   // Non-object returns as-is

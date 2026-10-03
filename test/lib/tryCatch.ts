@@ -1,6 +1,6 @@
 import is from '@magic/types'
-import { tryCatch } from '../../src/index.js'
-import type { TestCase } from '../../src/types.js'
+import { tryCatch } from '#src/index.js'
+import type { TestCase } from '#src/types.js'
 
 const catchPromise = (arg: unknown) => (res: (v: unknown) => void, rej: (e: Error) => void) =>
   setTimeout(() => (arg ? res(arg) : rej(new Error('test'))))

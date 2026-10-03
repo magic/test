@@ -1,4 +1,4 @@
-import { getTestKey } from '../../src/lib/getTestKey.js'
+import { getTestKey } from '#src/lib/getTestKey.js'
 
 export default [
   {

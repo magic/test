@@ -1,5 +1,5 @@
-import { toMinimalFixed } from '../../../src/lib/stats/toMinimalFixed.js'
-import type { TestCase } from '../../../src/types.js'
+import { toMinimalFixed } from '#src/lib/stats/toMinimalFixed.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   // Basic usage

@@ -1,5 +1,5 @@
-import { getFNS } from '../../src/lib/getFNS.js'
-import type { TestCase } from '../../src/types.js'
+import { getFNS } from '#src/lib/getFNS.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   {

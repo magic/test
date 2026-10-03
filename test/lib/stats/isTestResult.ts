@@ -1,4 +1,4 @@
-import { isTestResult } from '../../../src/lib/stats/isTestResult.js'
+import { isTestResult } from '#src/lib/stats/isTestResult.js'
 
 export default [
   {

@@ -1,6 +1,6 @@
 import { is } from '@magic/types'
-import { getDuration } from '../../src/lib/getDuration.js'
-import { Store } from '../../src/lib/store.js'
+import { getDuration } from '#src/lib/getDuration.js'
+import { Store } from '#src/lib/store.js'
 
 interface TestGlobals {
   store?: Store

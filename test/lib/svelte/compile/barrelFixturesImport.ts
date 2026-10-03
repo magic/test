@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { mount } from '../../../../src/svelte.js'
+import { mount } from '#src/svelte.js'
 import is from '@magic/types'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))

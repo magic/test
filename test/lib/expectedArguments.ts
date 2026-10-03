@@ -1,6 +1,6 @@
-import { is } from '../../src/index.js'
-import { expectedArguments } from '../../src/lib/expectedArguments.js'
-import type { TestCase } from '../../src/types.js'
+import { is } from '#src/index.js'
+import { expectedArguments } from '#src/lib/expectedArguments.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   // Basic cases

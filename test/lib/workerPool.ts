@@ -1,6 +1,6 @@
 import is from '@magic/types'
-import { getWorkerPool, WORKER_LIMIT } from '../../src/lib/workerPool.js'
-import type { TestCase } from '../../src/types.js'
+import { getWorkerPool, WORKER_LIMIT } from '#src/lib/workerPool.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   // WORKER_LIMIT export

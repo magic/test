@@ -11,8 +11,8 @@ import {
   oneOf,
   matches,
   at,
-} from '../../src/lib/has.js'
-import type { TestCase } from '../../src/types.js'
+} from '#src/lib/has.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   {

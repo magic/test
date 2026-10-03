@@ -1,6 +1,6 @@
-import { getTestTimeout } from '../../../src/run/lib/getTestTimeout.js'
-import { DEFAULT_TEST_TIMEOUT } from '../../../src/constants.js'
-import type { TestCase } from '../../../src/types.js'
+import { getTestTimeout } from '#src/run/lib/getTestTimeout.js'
+import { DEFAULT_TEST_TIMEOUT } from '#src/constants.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   {
