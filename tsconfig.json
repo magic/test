@@ -34,7 +34,7 @@
       "@magic/test": ["./dist/index.js"],
       "@magic/test/*": ["./dist/*"]
     },
-    "types": ["@types/node"]
+    "types": ["node"]
   },
 
   "include": ["src/**/*"],
