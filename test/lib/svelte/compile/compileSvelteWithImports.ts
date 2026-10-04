@@ -10,10 +10,8 @@ const fixture = path.join(
   '..',
   '..',
   '..',
-  'src',
-  'lib',
-  'svelte',
-  'testFixtures',
+  'test',
+  '.fixtures',
   'components',
   'Button.svelte',
 )

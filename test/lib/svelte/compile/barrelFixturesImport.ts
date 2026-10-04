@@ -11,10 +11,8 @@ const fixtureBase = path.join(
   '..',
   '..',
   '..',
-  'src',
-  'lib',
-  'svelte',
-  'testFixtures',
+  'test',
+  '.fixtures',
   'barrelFixtures',
 )
 

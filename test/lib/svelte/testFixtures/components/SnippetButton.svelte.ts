@@ -1,7 +1,7 @@
 import { html, createSnippet } from '#src/lib/svelte/index.js'
 import type { TestCase } from '#src/types.js'
 
-const component = './src/lib/svelte/testFixtures/components/SnippetButton.svelte'
+const component = './test/.fixtures/components/SnippetButton.svelte'
 
 export default [
   {

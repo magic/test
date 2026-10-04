@@ -5,9 +5,7 @@ import type { TestCase } from '../src/types.js'
 export default [
   {
     fn: async () => {
-      const { target, unmount } = await mount(
-        './src/lib/svelte/testFixtures/components/Counter.svelte',
-      )
+      const { target, unmount } = await mount('./test/.fixtures/components/Counter.svelte')
       const result = html(target)
       await unmount()
       return result
@@ -17,9 +15,7 @@ export default [
   },
   {
     fn: async () => {
-      const { component, unmount } = await mount(
-        './src/lib/svelte/testFixtures/components/Counter.svelte',
-      )
+      const { component, unmount } = await mount('./test/.fixtures/components/Counter.svelte')
       const result = component.count
       await unmount()
       return result
@@ -29,9 +25,7 @@ export default [
   },
   {
     fn: async () => {
-      const { component, unmount } = await mount(
-        './src/lib/svelte/testFixtures/components/Counter.svelte',
-      )
+      const { component, unmount } = await mount('./test/.fixtures/components/Counter.svelte')
       component.count = 5
       flushSync()
       const result = component.count
@@ -44,9 +38,7 @@ export default [
   {
     fn: async () => {
       let called = false
-      const { target, unmount } = await mount(
-        './src/lib/svelte/testFixtures/components/Counter.svelte',
-      )
+      const { target, unmount } = await mount('./test/.fixtures/components/Counter.svelte')
       const button = target.querySelector('button')
       button?.addEventListener('click', () => {
         called = true
@@ -62,9 +54,7 @@ export default [
   },
   {
     fn: async () => {
-      const { target, unmount } = await mount(
-        './src/lib/svelte/testFixtures/components/Counter.svelte',
-      )
+      const { target, unmount } = await mount('./test/.fixtures/components/Counter.svelte')
       const div = target.querySelector('.count')
       if (div) {
         scroll(div, 0, 100)
@@ -80,9 +70,7 @@ export default [
   {
     fn: async () => {
       let clicked = false
-      const { target, unmount } = await mount(
-        './src/lib/svelte/testFixtures/components/Counter.svelte',
-      )
+      const { target, unmount } = await mount('./test/.fixtures/components/Counter.svelte')
       const button = target.querySelector('button')
       button?.addEventListener('click', () => {
         clicked = true
@@ -98,9 +86,7 @@ export default [
   },
   {
     fn: async () => {
-      const { target, unmount } = await mount(
-        './src/lib/svelte/testFixtures/components/Counter.svelte',
-      )
+      const { target, unmount } = await mount('./test/.fixtures/components/Counter.svelte')
       const button = target.querySelector('button')!
       const result = props(button)
       await unmount()
@@ -110,7 +96,7 @@ export default [
     info: 'props returns element attributes',
   },
   {
-    component: './src/lib/svelte/testFixtures/components/SvelteKit.svelte',
+    component: './test/.fixtures/components/SvelteKit.svelte',
     fn: async ({ target }) => {
       const result = html(target)
       return result
@@ -120,7 +106,7 @@ export default [
     info: 'SvelteKit wrapper provides correct $app/environment values (dev mode)',
   },
   {
-    component: 'src/lib/svelte/testFixtures/components/SvelteKit.svelte',
+    component: 'test/.fixtures/components/SvelteKit.svelte',
     fn: async ({ target }) => {
       return html(target)
     },
@@ -129,7 +115,7 @@ export default [
     info: 'SvelteKit component initial state',
   },
   {
-    component: 'src/lib/svelte/testFixtures/components/SvelteKit.svelte',
+    component: 'test/.fixtures/components/SvelteKit.svelte',
     fn: async ({ target }) => {
       click(target, 'button')
       await flushSync()
