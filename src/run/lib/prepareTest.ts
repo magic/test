@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import type { WrappedTest, ComponentProps } from '../../types.ts'
+import type { WrappedTest, ComponentProps } from '#src/types.js'
 
 /**
  * Prepare test by setting defaults and extracting component props

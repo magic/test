@@ -1,7 +1,7 @@
 import path from 'node:path'
 
-import { toImportPath } from '../../../bin/lib/pathTransform.ts'
-import { CWD } from '../../../constants.ts'
+import { toImportPath } from '#src/bin/lib/pathTransform.js'
+import { CWD } from '#src/constants.js'
 
 export const computeRelativePath = (fromDir: string, toFile: string): string => {
   const absoluteFrom = path.isAbsolute(fromDir) ? fromDir : path.join(CWD, fromDir)

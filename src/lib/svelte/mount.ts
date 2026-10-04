@@ -7,8 +7,8 @@ import log from '@magic/log'
 import is from '@magic/types'
 
 import { compileSvelteWithWrite } from './compile/index.ts'
-import { initDOM, getDocument, getWindow } from '../../lib/dom/index.ts'
-import type { CssObject, ComponentProps } from '../../types.ts'
+import { initDOM, getDocument, getWindow } from '#src/lib/dom/index.js'
+import type { CssObject, ComponentProps } from '#src/types.js'
 import { createContext, runWithContext } from './shims/$app/state.ts'
 import { detectSvelteKitImports, needsSvelteKitContext } from './detect-sveltekit-imports.ts'
 

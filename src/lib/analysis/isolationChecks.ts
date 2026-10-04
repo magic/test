@@ -1,4 +1,4 @@
-import type { TestCollection, TestObject, WrappedTest } from '../../types.ts'
+import type { TestCollection, TestObject, WrappedTest } from '#src/types.js'
 import { walkTests } from './testWalker.ts'
 import {
   getImportNames,

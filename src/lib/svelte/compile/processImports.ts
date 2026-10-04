@@ -4,10 +4,10 @@ import crypto from 'node:crypto'
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { LRUCache } from '../../caches/LRUCache.ts'
+import { LRUCache } from '#src/lib/caches/LRUCache.js'
 import { extractImportsSync } from './astParse.ts'
 import { resolveAndCompileImport } from './resolveAndCompileImport.ts'
-import { traceStart, traceEnd } from '../../trace/timing.ts'
+import { traceStart, traceEnd } from '#src/lib/trace/timing.js'
 import { parallelMap, MAX_CONCURRENT } from './parallelMap.ts'
 import { ddl } from './ddl.ts'
 

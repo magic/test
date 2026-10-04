@@ -1,6 +1,6 @@
 import { Store } from '../store.ts'
 
-import type { TestResults } from '../../types.ts'
+import type { TestResults } from '#src/types.js'
 
 /**
  * Record a test result in the store, updating statistics for the test,

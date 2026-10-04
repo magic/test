@@ -8,8 +8,8 @@ import { loadTestDefines } from './loadTestDefines.ts'
 import {
   resolveSvelteOnlyExports,
   writeTempFile,
-} from '../../lib/svelte/compile/resolveSvelteOnlyExports.ts'
-import type { TestSuites, TestCollection } from '../../types.ts'
+} from '#src/lib/svelte/compile/resolveSvelteOnlyExports.js'
+import type { TestSuites, TestCollection } from '#src/types.js'
 
 interface ImportResult {
   type: 'file' | 'directory' | 'error' | 'skip'

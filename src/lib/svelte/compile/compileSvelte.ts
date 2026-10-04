@@ -9,10 +9,10 @@ import {
 } from '../preprocess.ts'
 import { getSvelteCompiler } from '../compiler-cache.ts'
 
-import { cache, pendingPromises } from '../../caches/cache.ts'
+import { cache, pendingPromises } from '#src/lib/caches/cache.js'
 import { ddl, ddlHold, ddlRelease } from './ddl.ts'
 import { processImports } from './processImports.ts'
-import { CWD } from '../../../constants.ts'
+import { CWD } from '#src/constants.js'
 import type { CssObject } from './types.ts'
 
 export interface CompileSvelteReturn {

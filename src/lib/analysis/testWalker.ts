@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import type { TestCollection, TestObject, WrappedTest } from '../../types.ts'
+import type { TestCollection, TestObject, WrappedTest } from '#src/types.js'
 
 interface WalkableTest {
   before?: unknown

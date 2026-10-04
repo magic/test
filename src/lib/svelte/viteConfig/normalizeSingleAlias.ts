@@ -2,7 +2,7 @@ import is from '@magic/types'
 import path from 'node:path'
 import { escapeRegex } from './escapeRegex.ts'
 
-import type { AliasEntry } from '../../../types.ts'
+import type { AliasEntry } from '#src/types.js'
 
 export const normalizeSingleAlias = (entry: unknown, configDir: string): AliasEntry => {
   const e = entry as Record<string, unknown>

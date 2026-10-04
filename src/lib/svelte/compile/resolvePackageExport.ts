@@ -3,15 +3,15 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { createRequire } from 'node:module'
 import log from '@magic/log'
-import { LRUCache } from '../../caches/LRUCache.ts'
-import { traceStart, traceEnd } from '../../trace/timing.ts'
-import { existsCached } from '../../caches/pathCache.ts'
+import { LRUCache } from '#src/lib/caches/LRUCache.js'
+import { traceStart, traceEnd } from '#src/lib/trace/timing.js'
+import { existsCached } from '#src/lib/caches/pathCache.js'
 import { ddlHold, ddlRelease } from './ddl.ts'
 import {
   pendingPromises,
   packageExportCache,
   type PackageExportResolveEntry,
-} from '../../caches/cache.ts'
+} from '#src/lib/caches/cache.js'
 
 // Combined LRU cache for file scanning operations (boolean results)
 // Keys prefixed: 'reexports:' or 'exportstar:'

@@ -1,7 +1,6 @@
-import { getTestKey } from '../../lib/index.ts'
-import { cleanError } from '../../lib/cleanError.js'
 import is from '@magic/types'
-import type { WrappedTest, TestResult } from '../../types.ts'
+import type { WrappedTest, TestResult } from '#src/types.js'
+import { getTestKey, cleanError } from '#src/lib/index.js'
 
 /**
  * Create a failure result. Optionally attach a cleaned error.

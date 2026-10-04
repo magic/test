@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url'
 import { findConfigFile } from './findConfigFile.ts'
 import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.ts'
 import { aliasCache, defineCache, configCache, type AliasEntry } from './cache.ts'
-import type { ViteConfig } from '../../../types.ts'
+import type { ViteConfig } from '#src/types.js'
 import { normalizeAlias } from './normalizeAlias.ts'
 
 export const loadViteConfig = async (rootDir: string): Promise<ViteConfig> => {

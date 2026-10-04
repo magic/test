@@ -1,7 +1,7 @@
 import is from '@magic/types'
 
-import { getTestKey } from '../../lib/index.ts'
-import type { WrappedTest, TestResult } from '../../types.ts'
+import { getTestKey } from '#src/lib/index.js'
+import type { WrappedTest, TestResult } from '#src/types.js'
 
 import { hasTestProperties } from './hasTestProperties.ts'
 import { runSingleTestInWorker } from './runSingleTestInWorker.ts'

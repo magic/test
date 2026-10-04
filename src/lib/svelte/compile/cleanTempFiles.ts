@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import fs from '@magic/fs'
 
-import { CACHE_DIR, CWD } from '../../../constants.ts'
+import { CACHE_DIR, CWD } from '#src/constants.js'
 
 export let cleanupDone = false
 

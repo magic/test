@@ -7,13 +7,13 @@ import { ddlHold, ddlRelease, ddlInitWatchdog } from '../svelte/compile/ddl.ts'
 ddlInitWatchdog()
 import { LRUCache } from './LRUCache.ts'
 
-import { CWD } from '../../constants.ts'
+import { CWD } from '#src/constants.js'
 import type {
   CompileCacheEntry,
   ImportCacheEntry,
   BarrelCacheEntry,
   CssObject,
-} from '../../types.ts'
+} from '#src/types.js'
 import { getCachedCompile, recordCompile } from './persistentCache.ts'
 import is from '@magic/types'
 

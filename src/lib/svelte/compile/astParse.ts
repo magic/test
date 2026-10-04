@@ -1,5 +1,5 @@
 import { getSvelteCompiler } from '../compiler-cache.ts'
-import { LRUCache } from '../../caches/LRUCache.ts'
+import { LRUCache } from '#src/lib/caches/LRUCache.js'
 import type { TSESTree } from '@typescript-eslint/types'
 import crypto from 'node:crypto'
 import type { ExportInfo } from './types.ts'

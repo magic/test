@@ -2,9 +2,9 @@ import path from 'node:path'
 
 import fs from '@magic/fs'
 
-import { barrelCache, pendingPromises } from '../../caches/cache.ts'
-import { traceStart, traceEnd } from '../../trace/timing.ts'
-import { CACHE_DIR, CWD } from '../../../constants.ts'
+import { barrelCache, pendingPromises } from '#src/lib/caches/cache.js'
+import { traceStart, traceEnd } from '#src/lib/trace/timing.js'
+import { CACHE_DIR, CWD } from '#src/constants.js'
 import { getSvelteExports } from './getSvelteExports.ts'
 import { processImports } from './processImports.ts'
 import { compileSvelte } from './compileSvelte.ts'

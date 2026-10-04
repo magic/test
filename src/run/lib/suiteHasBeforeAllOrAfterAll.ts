@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import type { TestCollection } from '../../types.ts'
+import type { TestCollection } from '#src/types.js'
 
 export const suiteHasBeforeAllOrAfterAll = (tests: TestCollection): boolean => {
   if (is.object(tests) && !is.arr(tests)) {

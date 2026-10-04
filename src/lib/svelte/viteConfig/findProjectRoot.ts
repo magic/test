@@ -1,7 +1,7 @@
 import fs from '@magic/fs'
 import path from 'node:path'
 
-import { LRUCache } from '../../caches/LRUCache.ts'
+import { LRUCache } from '#src/lib/caches/LRUCache.js'
 
 const projectRootCache = new LRUCache<string>(100)
 

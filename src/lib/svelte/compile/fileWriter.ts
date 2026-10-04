@@ -2,7 +2,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import fs from '@magic/fs'
 
-import { CWD } from '../../../constants.ts'
+import { CWD } from '#src/constants.js'
 
 export const writeCompiledFile = async (
   tempPath: string,

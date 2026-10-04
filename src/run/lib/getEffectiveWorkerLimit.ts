@@ -1,3 +1,3 @@
 // Re-export from lib
-import { getEffectiveWorkerLimit as _getEffectiveWorkerLimit } from '../../lib/workerPool.ts'
+import { getEffectiveWorkerLimit as _getEffectiveWorkerLimit } from '#src/lib/workerPool.js'
 export const getEffectiveWorkerLimit = _getEffectiveWorkerLimit

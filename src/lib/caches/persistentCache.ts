@@ -4,7 +4,7 @@ import crypto from 'node:crypto'
 
 import { LRUCache } from './LRUCache.ts'
 
-import { CACHE_DIR } from '../../constants.ts'
+import { CACHE_DIR } from '#src/constants.js'
 
 const MANIFEST_FILE = path.join(CACHE_DIR, 'manifest.json')
 

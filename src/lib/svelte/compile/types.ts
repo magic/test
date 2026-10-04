@@ -5,7 +5,7 @@ export type {
   CompileCacheEntry,
   ImportCacheEntry,
   BarrelCacheEntry,
-} from '../../../types.ts'
+} from '#src/types.js'
 
 // ExportInfo is specific to this module
 export interface ExportInfo {

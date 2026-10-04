@@ -7,7 +7,7 @@ import { Store } from '../store.ts'
 import { isTestResult } from './isTestResult.ts'
 import { printPercent } from './printPercent.ts'
 
-import type { InputValue, TestResult, TestResults } from '../../types.ts'
+import type { InputValue, TestResult, TestResults } from '#src/types.js'
 import path from 'node:path'
 
 /**

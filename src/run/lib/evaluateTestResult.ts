@@ -1,7 +1,7 @@
 import is from '@magic/types'
 
-import { cleanFunctionString } from '../../lib/index.ts'
-import type { EvaluateResult } from '../../types.ts'
+import { cleanFunctionString } from '#src/lib/index.js'
+import type { EvaluateResult } from '#src/types.js'
 
 /**
  * Evaluate test result against expected value
