@@ -4,6 +4,22 @@ import { createImagePolyfill } from './image.js'
 import { createCanvasPolyfill } from './canvas.js'
 let window = null
 let document = null
+// A process must have exactly ONE happy-dom window. Multiple copies of this
+// module can be loaded in the same process (e.g. the dist/ build and the src/
+// build of this package imported side by side — the native test runner mounts
+// `component:` tests through the dist mount while test files import the src
+// mount). Each copy used to create its own Window; the last `initGlobals()`
+// call wins the global class references (Comment, Node, Text, ...), so a later
+// mount swapping `globalThis.document`/`window` back to the other window left
+// `instanceof Comment` checks in the Svelte runtime comparing against the
+// wrong window's classes, mis-anchoring `{#if}` blocks.
+// The Symbol.for key lets a copy that has not created a window yet adopt the
+// window an earlier copy already installed.
+const SHARED_WINDOW_KEY = Symbol.for('@magic/test.happy-dom.window')
+const sharedWindow = () => globalThis[SHARED_WINDOW_KEY] ?? null
+const setSharedWindow = win => {
+  globalThis[SHARED_WINDOW_KEY] = win
+}
 export const define = (target, key, value) => {
   Object.defineProperty(target, key, {
     value,
@@ -13,7 +29,15 @@ export const define = (target, key, value) => {
   })
 }
 export const initGlobals = () => {
+  if (!window && !document) {
+    const existing = sharedWindow()
+    if (existing && existing.document) {
+      window = existing
+      document = existing.document
+    }
+  }
   if (window && document) {
+    setSharedWindow(window)
     define(globalThis, 'addEventListener', window.addEventListener.bind(window))
     define(globalThis, 'removeEventListener', window.removeEventListener.bind(window))
     // Re-set Event globals to ensure happy-dom's Event is used
@@ -31,6 +55,7 @@ export const initGlobals = () => {
     }
   }
   window = new HappyWindow({ url: 'http://localhost/' })
+  setSharedWindow(window)
   document = window.document
   define(globalThis, 'document', document)
   define(globalThis, 'window', window)
