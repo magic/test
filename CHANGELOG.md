@@ -706,3 +706,11 @@ update dependencies
 ##### 0.3.34
 
 - has subfunctions now allow either predicate functions OR literal values to be checked
+
+#### 0.3.35
+
+- works with sveltekit ^3.0.0
+- feat: add package.json imports support and module resolution (feat)
+- feat: add svelte shims: $app/env added, also resolves as $app/environment
+- move test fixtures to test/.fixtures
+- chore: update dependencies
