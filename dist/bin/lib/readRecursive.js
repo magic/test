@@ -89,7 +89,7 @@ const readRecursiveImpl = async (dir = '', onProgress) => {
   if (await fs.exists(indexFileTsPath)) {
     indexFilePath = indexFileTsPath
   }
-  const { getViteDefine } = await import('../../lib/svelte/viteConfig/index.js')
+  const { getViteDefine } = await import('#src/lib/svelte/viteConfig/index.js')
   const testDefines = await loadTestDefines(process.cwd())
   let processedCount = 0
   if (await fs.exists(indexFilePath)) {

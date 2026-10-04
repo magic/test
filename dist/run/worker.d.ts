@@ -1,1 +1,1 @@
-import '../bin/lib/registerLoader.js'
+import '#src/bin/lib/registerLoader.js'

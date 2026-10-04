@@ -4,7 +4,7 @@ import { cleanError } from '../lib/index.js'
 import { restoreFromSnapshot } from './isolation.js'
 import { createFailResult } from './lib/index.js'
 import { runSingleTestFromFileInWorker, importFileInWorker, makeSafeClone } from './lib/index.js'
-import '../bin/lib/registerLoader.js'
+import '#src/bin/lib/registerLoader.js'
 const setupSuite = async suiteSnapshot => {
   if (suiteSnapshot && typeof suiteSnapshot === 'object' && 'props' in suiteSnapshot) {
     restoreFromSnapshot(suiteSnapshot)
