@@ -67,11 +67,14 @@ export const info = (suites, store, useLogging = true) => {
       return
     }
     const { name } = suite
+    if (name === undefined) {
+      return
+    }
     const { pass, all } = results[name] || { pass: 0, all: 0 }
     const passPercent = all > 0 ? (pass / all) * 100 : 0
     const percentage = printPercent(passPercent)
-    const logOutput = `${name} => Pass: ${pass}/${all} ${percentage}%`
-    if (useLogging) {
+    if (useLogging && all > 0) {
+      const logOutput = `${name} => Pass: ${pass}/${all} ${percentage}%`
       if (passPercent === 100) {
         log.info(logOutput)
       } else {
@@ -84,7 +87,7 @@ export const info = (suites, store, useLogging = true) => {
   const duration = getDuration(store)
   const totalDuration = getDuration(store, 'globalStartTime')
   const percentage = all > 0 ? printPercent((pass / all) * 100) : printPercent(0)
-  if (useLogging) {
+  if (useLogging && all > 0) {
     // Show total time if it differs from test execution time (indicates discovery overhead)
     if (totalDuration && totalDuration !== duration) {
       log(`\nRan ${all} tests in ${duration}. Passed ${pass}/${all} ${percentage}%`)
