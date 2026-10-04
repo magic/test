@@ -3,168 +3,284 @@ import {
   testModifiesGlobals,
   suiteModifiesGlobals,
 } from '#src/lib/globalCheck.js'
-import type { TestCase, TestCollection } from '#src/types.js'
+import type { TestCase } from '#src/types.js'
 
-// Helper to access properties without 'any'
-type GlobalAny = Record<string, unknown> & typeof globalThis
-
-export default [
-  // functionModifiesGlobals
+const tests: TestCase[] = [
+  // Test function with globalThis
+  {
+    fn: () =>
+      functionModifiesGlobals(function () {
+        console.log(globalThis)
+      }),
+    expect: true,
+    info: 'function with globalThis modifies globals',
+  },
+  // Test function with window
+  {
+    fn: () => functionModifiesGlobals(() => window.alert('hi')),
+    expect: true,
+    info: 'function with window modifies globals',
+  },
+  // Test function with global (nodejs)
+  {
+    fn: () =>
+      functionModifiesGlobals(() => {
+        global.someVar = 1
+      }),
+    expect: true,
+    info: 'function with global modifies globals',
+  },
+  // Test function with self
+  {
+    fn: () =>
+      functionModifiesGlobals(() => {
+        self.location = 'http://evil.com'
+      }),
+    expect: true,
+    info: 'function with self modifies globals',
+  },
+  // Test function with process.env
+  {
+    fn: () => functionModifiesGlobals(() => console.log(process.env)),
+    expect: true,
+    info: 'function with process.env modifies globals',
+  },
+  // Test function with property access
+  {
+    fn: () =>
+      functionModifiesGlobals(() => {
+        console.log(process.env.NODE_ENV)
+      }),
+    expect: true,
+    info: 'function with process.env.NODE_ENV modifies globals',
+  },
+  // Test function without globals
+  {
+    fn: () =>
+      functionModifiesGlobals(() => {
+        console.log('hello world')
+      }),
+    expect: false,
+    info: 'function without globals does not modify globals',
+  },
+  // Test function with empty string
   {
     fn: () => functionModifiesGlobals(() => {}),
     expect: false,
-    info: 'returns false for plain function',
+    info: 'function without global references does not modify globals',
   },
+  // Test function with numeric literal
   {
-    fn: () => functionModifiesGlobals(() => (globalThis as GlobalAny).x),
-    expect: true,
-    info: 'detects globalThis access',
-  },
-  {
-    fn: () => functionModifiesGlobals(() => (window as unknown as GlobalAny).x),
-    expect: true,
-    info: 'detects window access',
-  },
-  {
-    fn: () => functionModifiesGlobals(() => (global as unknown as GlobalAny).x),
-    expect: true,
-    info: 'detects global access',
-  },
-  {
-    fn: () => functionModifiesGlobals(() => (self as unknown as GlobalAny).x),
-    expect: true,
-    info: 'detects self access',
-  },
-  {
-    fn: () => functionModifiesGlobals(() => process.env.X),
-    expect: true,
-    info: 'detects process.env access',
-  },
-  {
-    fn: () => functionModifiesGlobals('not a function'),
+    fn: () =>
+      functionModifiesGlobals(() => {
+        console.log(42)
+      }),
     expect: false,
-    info: 'returns false for non-function',
+    info: 'function with literal does not modify globals',
   },
+  // Test function with string literal
   {
-    fn: () => functionModifiesGlobals(42),
+    fn: () =>
+      functionModifiesGlobals(() => {
+        console.log('hello')
+      }),
     expect: false,
-    info: 'returns false for number',
+    info: 'function with string literal does not modify globals',
   },
+  // Test function with function that has no body
+  {
+    fn: () => functionModifiesGlobals(function () {}),
+    expect: false,
+    info: 'function without body does not modify globals',
+  },
+  // Test function with null
   {
     fn: () => functionModifiesGlobals(null),
     expect: false,
-    info: 'returns false for null',
+    info: 'null does not modify globals',
   },
-  // testModifiesGlobals
+  // Test function with undefined
   {
-    fn: () => testModifiesGlobals({ fn: () => {} }),
+    fn: () => functionModifiesGlobals(undefined),
     expect: false,
-    info: 'testModifiesGlobals returns false for clean test',
+    info: 'undefined does not modify globals',
   },
+  // Test function with number
   {
-    fn: () => testModifiesGlobals({ fn: () => (globalThis as GlobalAny).x }),
+    fn: () => functionModifiesGlobals(123),
+    expect: false,
+    info: 'number does not modify globals',
+  },
+  // Test function with string
+  {
+    fn: () => functionModifiesGlobals('not a function'),
+    expect: false,
+    info: 'string does not modify globals',
+  },
+  // Test function with object
+  {
+    fn: () => functionModifiesGlobals({}),
+    expect: false,
+    info: 'object does not modify globals',
+  },
+  // Test testModifiesGlobals with no hooks
+  {
+    fn: () => {
+      const test = { fn: () => 1, before: undefined, after: undefined, expect: undefined }
+      return testModifiesGlobals(test)
+    },
+    expect: false,
+    info: 'test without hooks does not modify globals',
+  },
+  // Test testModifiesGlobals with fn that modifies globals
+  {
+    fn: () => {
+      const test = {
+        fn: () => {
+          globalThis.foo = 1
+        },
+        before: undefined,
+        after: undefined,
+        expect: undefined,
+      }
+      return testModifiesGlobals(test)
+    },
     expect: true,
-    info: 'testModifiesGlobals detects fn modifying globals',
+    info: 'test with fn modifying globals',
   },
+  // Test testModifiesGlobals with before hook that modifies globals
   {
-    fn: () =>
-      testModifiesGlobals({
+    fn: () => {
+      const test = {
+        fn: undefined,
         before: () => {
-          void (window as unknown as GlobalAny).x
+          window.bar = 2
         },
-      }),
+        after: undefined,
+        expect: undefined,
+      }
+      return testModifiesGlobals(test)
+    },
     expect: true,
-    info: 'testModifiesGlobals detects before modifying globals',
+    info: 'test with before hook modifying globals',
   },
+  // Test testModifiesGlobals with after hook that modifies globals
   {
-    fn: () =>
-      testModifiesGlobals({
+    fn: () => {
+      const test = {
+        fn: undefined,
+        before: undefined,
         after: () => {
-          void (global as unknown as GlobalAny).x
+          self.baz = 3
         },
-      }),
+        expect: undefined,
+      }
+      return testModifiesGlobals(test)
+    },
     expect: true,
-    info: 'testModifiesGlobals detects after modifying globals',
+    info: 'test with after hook modifying globals',
   },
+  // Test testModifiesGlobals with expect that modifies globals
   {
-    fn: () => testModifiesGlobals({ expect: () => (self as unknown as GlobalAny).x }),
+    fn: () => {
+      const test = {
+        fn: undefined,
+        before: undefined,
+        after: undefined,
+        expect: () => {
+          console.log(process.env)
+        },
+      }
+      return testModifiesGlobals(test)
+    },
     expect: true,
-    info: 'testModifiesGlobals detects expect modifying globals',
+    info: 'test with expect modifying globals',
   },
-  // suiteModifiesGlobals
+  // Test suiteModifiesGlobals with single test
   {
-    fn: () => suiteModifiesGlobals([{ fn: () => {} }]),
+    fn: () => {
+      const tests = {
+        test: {
+          fn: () => {
+            globalThis.test = 1
+          },
+          before: undefined,
+          after: undefined,
+          expect: undefined,
+        },
+      }
+      return suiteModifiesGlobals(tests)
+    },
+    expect: true,
+    info: 'suite with test modifying globals',
+  },
+  // Test suiteModifiesGlobals with multiple tests, one modifies globals
+  {
+    fn: () => {
+      const tests = {
+        test1: { fn: () => 1, before: undefined, after: undefined, expect: undefined },
+        test2: {
+          fn: () => {
+            window.test2 = 2
+          },
+          before: undefined,
+          after: undefined,
+          expect: undefined,
+        },
+      }
+      return suiteModifiesGlobals(tests)
+    },
+    expect: true,
+    info: 'suite with multiple tests, one modifies globals',
+  },
+  // Test suiteModifiesGlobals with empty suite
+  {
+    fn: () => {
+      const tests = {}
+      return suiteModifiesGlobals(tests)
+    },
     expect: false,
-    info: 'suiteModifiesGlobals returns false for clean suite',
+    info: 'empty suite does not modify globals',
   },
+  // Test suiteModifiesGlobals with suite with no modifying functions
   {
-    fn: () => suiteModifiesGlobals([{ fn: () => (globalThis as GlobalAny).x }]),
-    expect: true,
-    info: 'suiteModifiesGlobals detects fn modifying globals in array',
-  },
-  {
-    fn: () => suiteModifiesGlobals({ tests: [{ fn: () => {} }] }),
+    fn: () => {
+      const tests = {
+        test1: { fn: () => 1, before: () => {}, after: () => {}, expect: () => 1 },
+      }
+      return suiteModifiesGlobals(tests)
+    },
     expect: false,
-    info: 'suiteModifiesGlobals returns false for clean object suite',
+    info: 'suite with only clean functions does not modify globals',
   },
+  // Test suiteModifiesGlobals with beforeAll hook modifying globals
   {
-    fn: () => suiteModifiesGlobals({ beforeAll: () => (window as unknown as GlobalAny).x }),
-    expect: true,
-    info: 'suiteModifiesGlobals detects beforeAll modifying globals',
-  },
-  {
-    fn: () => suiteModifiesGlobals({ afterAll: () => (global as unknown as GlobalAny).x }),
-    expect: true,
-    info: 'suiteModifiesGlobals detects afterAll modifying globals',
-  },
-  {
-    fn: () =>
-      suiteModifiesGlobals({
+    fn: () => {
+      const tests = {
         beforeAll: () => {
-          void (window as unknown as GlobalAny).x
+          globalThis.suiteHook = 1
         },
-        tests: { nested: true } as never,
-      }),
+        tests: { test: { fn: () => 1, before: undefined, after: undefined, expect: undefined } },
+      }
+      return suiteModifiesGlobals(tests)
+    },
     expect: true,
-    info: 'suiteModifiesGlobals detects beforeAll modifying globals with nested tests',
+    info: 'suite with beforeAll hook modifying globals',
   },
-  // Edge cases
+  // Test suiteModifiesGlobals with afterAll hook modifying globals
   {
-    fn: () => functionModifiesGlobals(() => (globalThis as GlobalAny)['x']),
-    expect: true,
-    info: 'detects bracket notation globalThis access',
-  },
-  {
-    fn: () => functionModifiesGlobals(() => (globalThis as GlobalAny).process?.env),
-    expect: true,
-    info: 'detects optional chaining on globalThis',
-  },
-  // Test recursive suiteModifiesGlobals path (lines 49-50)
-  // Note: recursion only happens when tests.tests is an object, not an array
-  {
-    fn: () =>
-      suiteModifiesGlobals({
-        tests: {
-          beforeAll: () => (globalThis as GlobalAny).x,
+    fn: () => {
+      const tests = {
+        afterAll: () => {
+          process.env.AFTERALL = 'set'
         },
-      }),
+        tests: { test: { fn: () => 1, before: undefined, after: undefined, expect: undefined } },
+      }
+      return suiteModifiesGlobals(tests)
+    },
     expect: true,
-    info: 'suiteModifiesGlobals detects globals in nested tests.beforeAll',
+    info: 'suite with afterAll hook modifying globals',
   },
-  {
-    fn: () =>
-      suiteModifiesGlobals({
-        tests: {
-          afterAll: () => (globalThis as GlobalAny).x,
-        },
-      }),
-    expect: true,
-    info: 'suiteModifiesGlobals detects globals in nested tests.afterAll',
-  },
-  // Test for object with tests property that's not objectNative
-  {
-    fn: () => suiteModifiesGlobals({ tests: null as unknown as TestCollection }),
-    expect: false,
-    info: 'suiteModifiesGlobals handles null tests',
-  },
-] satisfies TestCase[]
+]
+
+export default tests

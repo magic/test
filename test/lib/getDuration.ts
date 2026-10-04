@@ -1,52 +1,71 @@
-import { is } from '@magic/types'
 import { getDuration } from '#src/lib/getDuration.js'
-import { Store } from '#src/lib/store.js'
+import { createStore } from '#src/lib/store.js'
+import type { TestCase } from '#src/types.js'
 
-interface TestGlobals {
-  store?: Store
-}
-
-const beforeAll = () => {
-  const g = globalThis as TestGlobals
-  g.store = new Store()
-
-  return () => {
-    g.store = undefined
-  }
-}
-
-export default {
-  beforeAll,
-  tests: [
-    {
-      fn: () => {
-        const g = globalThis as TestGlobals
-        const store = g.store as Store
-        store.state.startTime = undefined
-        return getDuration(store)
-      },
-      expect: '',
-      info: 'returns empty string when startTime is undefined',
+const tests: TestCase[] = [
+  // getDuration with no startTime returns empty string
+  {
+    fn: () => {
+      const store = createStore()
+      return getDuration(store)
     },
-    {
-      fn: () => {
-        const g = globalThis as TestGlobals
-        delete g.store?.state.startTime
-        return g.store && getDuration(g.store)
-      },
-      expect: '',
-      info: 'returns empty string when startTime is null',
+    expect: '',
+    info: 'getDuration with no startTime returns empty string',
+  },
+  // getDuration with globalStartTime and no startTime returns duration from global
+  {
+    fn: () => {
+      const store = createStore()
+      const globalStartTime: [number, number] = [Date.now(), 0]
+      store.set({ globalStartTime })
+      const result = getDuration(store, 'globalStartTime')
+      return result !== undefined
     },
-    {
-      fn: () => {
-        const g = globalThis as TestGlobals
-        const store = g.store as Store
-        store.state.startTime = [0, 0]
-        const result = getDuration(store)
-        return result
-      },
-      expect: is.string,
-      info: 'returns string when startTime exists',
+    expect: true,
+    info: 'getDuration with globalStartTime returns duration',
+  },
+  // getDuration with startTime returns duration
+  {
+    fn: () => {
+      const store = createStore()
+      const startTime: [number, number] = [Date.now(), 0]
+      store.set({ startTime })
+      const result = getDuration(store)
+      return result !== undefined && result !== ''
     },
-  ],
-}
+    expect: true,
+    info: 'getDuration with startTime returns non-empty duration',
+  },
+  // getDuration with invalid startTime returns empty string
+  {
+    fn: () => {
+      const store = createStore()
+      store.set({ startTime: 'not a tuple' })
+      return getDuration(store)
+    },
+    expect: '',
+    info: 'getDuration with invalid startTime returns empty string',
+  },
+  // getDuration with globalStartTime of length 1 returns duration from startTime
+  {
+    fn: () => {
+      const store = createStore()
+      store.set({ globalStartTime: [123] })
+      return getDuration(store, 'globalStartTime')
+    },
+    expect: '',
+    info: 'getDuration with invalid globalStartTime falls back to startTime',
+  },
+  // getDuration with globalStartTime null falls back to startTime
+  {
+    fn: () => {
+      const store = createStore()
+      store.set({ globalStartTime: null as unknown as [number, number] })
+      return getDuration(store, 'globalStartTime')
+    },
+    expect: '',
+    info: 'getDuration with null globalStartTime returns empty string',
+  },
+]
+
+export default tests

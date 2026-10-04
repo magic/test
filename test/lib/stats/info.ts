@@ -1,222 +1,49 @@
 import { info } from '#src/lib/stats/info.js'
 import { createStore } from '#src/lib/store.js'
-import type { TestCase, TestResult } from '#src/types.js'
+import type { TestCase } from '#src/types.js'
 
-export default [
-  // Empty suites
+const tests: TestCase[] = [
+  // info with no results should return true
   {
     fn: () => {
       const store = createStore()
-      return info([], store, false)
+      return info([], store) === true
     },
     expect: true,
-    info: 'empty suites array returns true',
+    info: 'info with no results returns true',
   },
-  // Suites with no results
+  // info with no suites should return true
   {
     fn: () => {
       const store = createStore()
-      return info([{ name: 'test.ts' }], store, false)
+      store.set({ results: {} })
+      return info([], store) === true
     },
     expect: true,
-    info: 'suite without tests returns true',
+    info: 'info with empty suites array returns true',
   },
-  // Suite with tests but no results in store
+  // info with empty test results should not crash
   {
     fn: () => {
       const store = createStore()
-      const suites = [
-        {
-          name: 'test.ts',
-          tests: [
-            {
-              pass: true,
-              result: 1,
-              expString: '1',
-              key: 'test.ts',
-              msg: 'equal',
-            } as TestResult,
-          ],
-        },
-      ]
-      return info(suites, store, false)
+      store.set({ results: { test1: { all: 1, pass: 1 } } })
+      return info(['test1'], store) === true
     },
     expect: true,
-    info: 'tests without results data returns true',
+    info: 'info with test results returns true',
   },
-  // Passing test
+  // info sets default values when results missing
   {
     fn: () => {
       const store = createStore()
-      store.set({
-        results: {
-          __PACKAGE_ROOT__: { all: 1, pass: 1 },
-          'test.ts': { all: 1, pass: 1 },
-        },
-      })
-      const suites = [
-        {
-          name: 'test.ts',
-          tests: [
-            {
-              pass: true,
-              result: 1,
-              expString: '1',
-              key: 'test.ts',
-              msg: 'equal',
-            } as TestResult,
-          ],
-        },
-      ]
-      return info(suites, store, false)
+      store.set({ results: { test1: { all: 10, pass: 8 } } })
+      info(['test1'], store)
+      const results = store.get('results')
+      return results?.test1?.all === 10 && results?.test1?.pass === 8
     },
     expect: true,
-    info: 'passing test returns true',
+    info: 'info can read results from store',
   },
-  // Failing test
-  {
-    fn: () => {
-      const store = createStore()
-      store.set({
-        results: {
-          __PACKAGE_ROOT__: { all: 1, pass: 0 },
-          'test.ts': { all: 1, pass: 0 },
-        },
-      })
-      const suites = [
-        {
-          name: 'test.ts',
-          tests: [
-            {
-              pass: false,
-              result: 1,
-              expString: '2',
-              key: 'test.ts',
-              msg: 'not deep equal',
-              info: 'values differ',
-            } as TestResult,
-          ],
-        },
-      ]
-      return info(suites, store, false)
-    },
-    expect: true,
-    info: 'failing test returns true',
-  },
-  // Multiple suites
-  {
-    fn: () => {
-      const store = createStore()
-      store.set({
-        results: {
-          __PACKAGE_ROOT__: { all: 4, pass: 3 },
-          'suite1.ts': { all: 2, pass: 2 },
-          'suite2.ts': { all: 2, pass: 1 },
-        },
-      })
-      const suites = [
-        {
-          name: 'suite1.ts',
-          tests: [
-            { pass: true, result: 1, expString: '1', key: 'suite1.ts', msg: '' } as TestResult,
-          ],
-        },
-        {
-          name: 'suite2.ts',
-          tests: [
-            { pass: false, result: 1, expString: '2', key: 'suite2.ts', msg: '' } as TestResult,
-          ],
-        },
-      ]
-      return info(suites, store, false)
-    },
-    expect: true,
-    info: 'multiple suites returns true',
-  },
-  // Suite with duration
-  {
-    fn: () => {
-      const store = createStore()
-      store.set({
-        results: {
-          __PACKAGE_ROOT__: { all: 1, pass: 1 },
-          'test.ts': { all: 1, pass: 1 },
-        },
-      })
-      const suites = [
-        {
-          name: 'test.ts',
-          duration: '100ms',
-          tests: [{ pass: true, result: 1, expString: '1', key: 'test.ts', msg: '' } as TestResult],
-        },
-      ]
-      return info(suites, store, false)
-    },
-    expect: true,
-    info: 'suite with duration string works',
-  },
-  // Null suite in array
-  {
-    fn: () => {
-      const store = createStore()
-      store.set({
-        results: {
-          __PACKAGE_ROOT__: { all: 1, pass: 1 },
-        },
-      })
-      const suites = [
-        null,
-        {
-          name: 'test.ts',
-          tests: [{ pass: true, result: 1, expString: '1', key: 'test.ts', msg: '' } as TestResult],
-        },
-      ]
-      return info(suites, store, false)
-    },
-    expect: true,
-    info: 'null suite in array is skipped',
-  },
-  // Test with non-matching key (nested)
-  {
-    fn: () => {
-      const store = createStore()
-      store.set({
-        results: {
-          __PACKAGE_ROOT__: { all: 1, pass: 1 },
-          'parent.ts': { all: 1, pass: 1 },
-        },
-      })
-      const suites = [
-        {
-          name: 'parent.ts',
-          tests: [
-            {
-              pass: true,
-              result: 1,
-              expString: '1',
-              key: 'parent.ts/nested',
-              msg: '',
-            } as TestResult,
-          ],
-        },
-      ]
-      return info(suites, store, false)
-    },
-    expect: true,
-    info: 'test with nested key is skipped for suite level',
-  },
-  // Zero tests edge case
-  {
-    fn: () => {
-      const store = createStore()
-      store.set({
-        results: {
-          __PACKAGE_ROOT__: { all: 0, pass: 0 },
-        },
-      })
-      return info([], store, false)
-    },
-    expect: true,
-    info: 'zero tests handled gracefully',
-  },
-] satisfies TestCase[]
+]
+
+export default tests

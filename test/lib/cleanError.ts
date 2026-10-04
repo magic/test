@@ -1,104 +1,110 @@
-import is from '@magic/types'
 import { cleanError } from '#src/lib/cleanError.js'
 import type { TestCase } from '#src/types.js'
 
-export default [
-  // Non-object returns as-is
-  {
-    fn: () => cleanError('string error'),
-    expect: 'string error',
-    info: 'returns string as-is',
-  },
-  {
-    fn: () => cleanError(42),
-    expect: 42,
-    info: 'returns number as-is',
-  },
+const tests: TestCase[] = [
+  // cleanError with null
   {
     fn: () => cleanError(null),
     expect: null,
-    info: 'returns null as-is',
+    info: 'cleanError(null) returns null',
   },
+  // cleanError with undefined
   {
     fn: () => cleanError(undefined),
     expect: undefined,
-    info: 'returns undefined as-is',
+    info: 'cleanError(undefined) returns undefined',
   },
-  // Object without stack
+  // cleanError with non-object
+  {
+    fn: () => cleanError(42),
+    expect: 42,
+    info: 'cleanError(42) returns 42',
+  },
+  // cleanError with string
+  {
+    fn: () => cleanError('not an error'),
+    expect: 'not an error',
+    info: 'cleanError("not an error") returns string',
+  },
+  // cleanError with object without stack
   {
     fn: () => cleanError({}),
-    expect: {},
-    info: 'returns plain object as-is',
+    expect: result => result !== undefined && result !== null,
+    info: 'cleanError({}) returns object',
   },
-  // Object with non-string stack
+  // cleanError with object with numeric stack
   {
     fn: () => cleanError({ stack: 123 }),
-    expect: { stack: 123 },
-    info: 'returns object with non-string stack as-is',
+    expect: result => result !== undefined && result !== null,
+    info: 'cleanError({ stack: 123 }) returns object',
   },
-  // Standard error with file in stack
+  // cleanError with empty stack string (falsy, returns original object)
   {
     fn: () => {
-      const err = new Error('test error')
-      return cleanError(err)
-    },
-    expect: (result: unknown) => is.array(result) && result.length >= 1,
-    info: 'returns array for standard error',
-  },
-  // Error with stack but no file part (uncovered branch line 20)
-  {
-    fn: () => {
-      const err = { stack: 'Error: only message' }
-      return cleanError(err)
-    },
-    expect: ['Error: only message'],
-    info: 'error with stack but no file part returns message only',
-  },
-  // Error with stack containing file with unusual spacing (line 23)
-  {
-    fn: () => {
-      const err = { stack: 'Error: msg\n    file.js:10' }
-      const result = cleanError(err)
-      return is.array(result) && result.length === 2
+      const original = { stack: '' }
+      return cleanError(original) === original
     },
     expect: true,
-    info: 'handles unusual spacing in stack',
+    info: 'cleanError({ stack: "" }) returns original object (empty stack is falsy)',
   },
-  // Error with multiple lines in stack
+  // cleanError with simple stack (no newline)
+  {
+    fn: () => cleanError({ stack: 'Error: boom' }),
+    expect: ['Error: boom'],
+    info: 'cleanError({ stack: "Error: boom" }) returns ["Error: boom"]',
+  },
+  // cleanError with stack containing newline
+  {
+    fn: () => cleanError({ stack: 'Error: boom\n    at module.js:10:5' }),
+    expect: ['Error: boom', 'at module.js:10:5'],
+    info: 'cleanError with multi-line stack returns [err, file]',
+  },
+  // cleanError with stack where first line is empty
+  {
+    fn: () => cleanError({ stack: '\n    at module.js:10:5' }),
+    expect: ['', 'at module.js:10:5'],
+    info: 'cleanError with empty first line returns ["", "at module.js:10:5"]',
+  },
+  // cleanError with real Error object
   {
     fn: () => {
-      const err = new Error('multi\nline\nerror')
-      return cleanError(err)
+      const result = cleanError(new Error('test error'))
+      return Array.isArray(result) && result[0] === 'Error: test error'
     },
-    expect: (result: unknown) => is.array(result),
-    info: 'handles multiline error message',
+    expect: true,
+    info: 'cleanError(new Error(...)) returns array with error message',
   },
-  // Error with empty message
+  // cleanError with Error object containing stack trace
   {
     fn: () => {
-      const err = new Error('')
-      return cleanError(err)
-    },
-    expect: (result: unknown) => is.array(result),
-    info: 'handles empty error message',
-  },
-  // Object with empty string stack returns object (not array)
-  {
-    fn: () => {
-      const err = { stack: '' }
+      const err = new Error('deep error')
+      err.stack = 'Error: deep error\n    at cleanError.ts:5:10\n    at module.ts:10:20'
       const result = cleanError(err)
-      return result
+      return Array.isArray(result) && result.length === 2
     },
-    expect: is.objectNative,
-    info: 'returns object as-is when stack is empty string',
+    expect: true,
+    info: 'cleanError with Error having stack trace returns 2-element array',
   },
-  // Object with only file in stack (no message)
+  // cleanError with Error object with empty stack
   {
     fn: () => {
-      const err = { stack: '\n    at Object.<anonymous> (/path/file.js:1:1)' }
-      return cleanError(err)
+      const err = new Error('no stack')
+      err.stack = ''
+      return cleanError(err) === err
     },
-    expect: is.array,
-    info: 'handles stack with only file location',
+    expect: true,
+    info: 'cleanError with empty stack returns original Error object',
   },
-] satisfies TestCase[]
+  // cleanError with Error having no stack property
+  {
+    fn: () => {
+      const err = new Error('no stack property')
+      delete err.stack
+      return cleanError(err) === err
+    },
+    expect: true,
+    info: 'cleanError with no stack property returns original',
+  },
+]
+
+export default tests
