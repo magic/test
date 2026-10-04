@@ -9,7 +9,7 @@ import type { TestResult, WrappedTest } from '../types.ts'
 
 import { runSingleTestFromFileInWorker, importFileInWorker, makeSafeClone } from './lib/index.ts'
 
-import '../bin/lib/registerLoader.js'
+import '#src/bin/lib/registerLoader.js'
 
 type SuiteSetup = {
   tests: unknown

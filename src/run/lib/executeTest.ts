@@ -10,7 +10,7 @@ export const executeTest = async (
   componentProps?: Record<string, unknown>,
 ): Promise<unknown> => {
   if (componentFile) {
-    const { mount } = await import('../../lib/svelte/mount.js')
+    const { mount } = await import('#src/lib/svelte/mount.js')
     const {
       target,
       component: instance,

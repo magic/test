@@ -101,7 +101,7 @@ const readRecursiveImpl = async (dir = '', onProgress?: ProgressCallback): Promi
     indexFilePath = indexFileTsPath
   }
 
-  const { getViteDefine } = await import('../../lib/svelte/viteConfig/index.ts')
+  const { getViteDefine } = await import('#src/lib/svelte/viteConfig/index.js')
 
   const testDefines = await loadTestDefines(process.cwd())
 
