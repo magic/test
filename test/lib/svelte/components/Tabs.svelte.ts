@@ -1,7 +1,7 @@
 import { mount, html } from '#src/lib/svelte/index.js'
 import type { TestContext, TestCase } from '#src/types.js'
 
-const component = './test/.fixtures/components/Tabs.svelte'
+const component = 'test/.fixtures/components/Tabs.svelte'
 const tabs = [
   { id: 'a', label: 'Tab A', content: 'Content A' },
   { id: 'b', label: 'Tab B', content: 'Content B' },
