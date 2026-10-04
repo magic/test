@@ -1,6 +1,7 @@
+import is from '@magic/types'
+
 import { has } from '#src/index.js'
 import { createFailResult } from '#src/run/lib/createFailResult.js'
-import is from '@magic/types'
 import type { TestCase } from '#src/types.js'
 
 export default [
