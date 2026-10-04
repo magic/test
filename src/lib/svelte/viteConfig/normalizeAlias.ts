@@ -10,7 +10,13 @@ export const normalizeAlias = (alias: unknown, configDir: string): AliasEntry[] 
   }
 
   if (is.object(alias)) {
-    return Object.entries(alias as Record<string, unknown>).map(([find, replacement]) =>
+    const obj = alias as Record<string, unknown>
+    // Single-alias object form: { find, replacement }
+    if ('find' in obj && 'replacement' in obj) {
+      return [normalizeSingleAlias(obj, configDir)]
+    }
+    // Map form: { [find]: replacement }
+    return Object.entries(obj).map(([find, replacement]) =>
       normalizeSingleAlias({ find, replacement }, configDir),
     )
   }
