@@ -6,10 +6,10 @@ import {
   resolveNodeModulesRelativeImportsPreprocessor,
 } from '../preprocess.js'
 import { getSvelteCompiler } from '../compiler-cache.js'
-import { cache, pendingPromises } from '../../caches/cache.js'
+import { cache, pendingPromises } from '#src/lib/caches/cache.js'
 import { ddl, ddlHold, ddlRelease } from './ddl.js'
 import { processImports } from './processImports.js'
-import { CWD } from '../../../constants.js'
+import { CWD } from '#src/constants.js'
 /**
  * Pure compilation function - caching handled by CacheManager in tsLoader
  * Uses pendingPromises for deduplication

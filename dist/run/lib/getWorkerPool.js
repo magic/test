@@ -1,2 +1,2 @@
 // Re-export from lib
-export { getWorkerPool, WORKER_LIMIT, getEffectiveWorkerLimit } from '../../lib/workerPool.js'
+export { getWorkerPool, WORKER_LIMIT, getEffectiveWorkerLimit } from '#src/lib/workerPool.js'

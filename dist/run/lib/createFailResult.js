@@ -1,6 +1,5 @@
-import { getTestKey } from '../../lib/index.js'
-import { cleanError } from '../../lib/cleanError.js'
 import is from '@magic/types'
+import { getTestKey, cleanError } from '#src/lib/index.js'
 /**
  * Create a failure result. Optionally attach a cleaned error.
  */

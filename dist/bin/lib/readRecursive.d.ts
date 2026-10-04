@@ -1,4 +1,4 @@
-import type { TestSuites } from '../../types.ts'
+import type { TestSuites } from '#src/types.js'
 /**
  * Reset visitedDirs between test runs to prevent stale symlink cycle detection
  */

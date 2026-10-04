@@ -1,11 +1,11 @@
 import path from 'node:path'
-import { CWD } from '../../../constants.js'
+import { CWD } from '#src/constants.js'
 import { transformForNode } from './transformForNode.js'
 import { processImports } from './processImports.js'
 import { compileSvelte } from './compileSvelte.js'
 import { getTempFilePath } from './getTempFilePath.js'
 import { writeCompiledFile } from './fileWriter.js'
-import { traceStart, traceEnd } from '../../trace/timing.js'
+import { traceStart, traceEnd } from '#src/lib/trace/timing.js'
 export const compileSvelteWithWrite = async filePath => {
   const id = traceStart(`compileSvelteWithWrite ${path.basename(filePath)}`)
   try {

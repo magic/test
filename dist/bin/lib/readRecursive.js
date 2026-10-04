@@ -26,7 +26,7 @@ import { loadTestDefines } from './loadTestDefines.js'
 import {
   resolveSvelteOnlyExports,
   writeTempFile,
-} from '../../lib/svelte/compile/resolveSvelteOnlyExports.js'
+} from '#src/lib/svelte/compile/resolveSvelteOnlyExports.js'
 /**
  * Type guard for ImportResult.
  */

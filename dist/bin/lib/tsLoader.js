@@ -3,19 +3,19 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import is from '@magic/types'
 import log from '@magic/log'
-import { resolveAlias } from '../../lib/svelte/viteConfig/resolveAlias.js'
-import { traceStart, traceEnd } from '../../lib/trace/timing.js'
-import { cacheManager } from '../../lib/caches/cache.js'
-import { writeQueue } from '../../lib/svelte/compile/writeQueue.js'
-import { hasSvelteRunes, extractImportsSync } from '../../lib/svelte/compile/astParse.js'
-import { getTempFilePath } from '../../lib/svelte/compile/getTempFilePath.js'
+import { resolveAlias } from '#src/lib/svelte/viteConfig/resolveAlias.js'
+import { traceStart, traceEnd } from '#src/lib/trace/timing.js'
+import { cacheManager } from '#src/lib/caches/cache.js'
+import { writeQueue } from '#src/lib/svelte/compile/writeQueue.js'
+import { hasSvelteRunes, extractImportsSync } from '#src/lib/svelte/compile/astParse.js'
+import { getTempFilePath } from '#src/lib/svelte/compile/getTempFilePath.js'
 import { transpileWithTypescript } from './tsTranspile.js'
-import { compileSvelteWithWrite } from '../../lib/svelte/compile/compileSvelteWithWrite.js'
-import { writeTempFile } from '../../lib/svelte/compile/resolveSvelteOnlyExports.js'
-import { processImports } from '../../lib/svelte/compile/processImports.js'
-import { transformForNode } from '../../lib/svelte/compile/transformForNode.js'
-import { loadViteConfig } from '../../lib/svelte/viteConfig/loadViteConfig.js'
-import { initGlobals } from '../../lib/dom/globals.js'
+import { compileSvelteWithWrite } from '#src/lib/svelte/compile/compileSvelteWithWrite.js'
+import { writeTempFile } from '#src/lib/svelte/compile/resolveSvelteOnlyExports.js'
+import { processImports } from '#src/lib/svelte/compile/processImports.js'
+import { transformForNode } from '#src/lib/svelte/compile/transformForNode.js'
+import { loadViteConfig } from '#src/lib/svelte/viteConfig/loadViteConfig.js'
+import { initGlobals } from '#src/lib/dom/globals.js'
 // Svelte is optional - only required when .svelte files are tested
 let svelteAvailable = false
 let svelteCompilerCache = null
@@ -273,7 +273,7 @@ const resolveImpl = async (specifier, context, nextResolve) => {
       }
     }
     // Handle #-prefixed import map specifiers (defined in package.json imports field)
-    // e.g. #src/lib/stats/info.js -> src/lib/stats/info.ts, #lib/actions/clickOutside.svelte.js -> src/lib/actions/clickOutside.svelte.ts
+    // e.g. #src/lib/stats/info.js -> src/lib/stats/info.ts, #lib/actions/clickOutside.svelte.js -> src/lib/actions/clickOutside.svelte.js
     if (specifier.startsWith('#')) {
       // Use the nearest package.json to the importing module (not process.cwd())
       // so import maps from nested packages (e.g. node_modules/@magic/test) work too.

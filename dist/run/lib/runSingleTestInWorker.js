@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { cleanFunctionString } from '../../lib/index.js'
+import { cleanFunctionString } from '#src/lib/index.js'
 import { runTestFnInWorker } from './runTestFnInWorker.js'
 export const runSingleTestInWorker = async (test, testKey, testPkg, testParent, testName) => {
   const { fn, info } = test

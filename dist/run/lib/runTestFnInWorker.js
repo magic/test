@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { cleanError } from '../../lib/index.js'
+import { cleanError } from '#src/lib/index.js'
 import { isolation } from '../isolation.js'
 import { evaluateWorkerResult } from './evaluateWorkerResult.js'
 export const runTestFnInWorker = async (test, key) => {

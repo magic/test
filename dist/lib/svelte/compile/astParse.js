@@ -1,5 +1,5 @@
 import { getSvelteCompiler } from '../compiler-cache.js'
-import { LRUCache } from '../../caches/LRUCache.js'
+import { LRUCache } from '#src/lib/caches/LRUCache.js'
 import crypto from 'node:crypto'
 import is from '@magic/types'
 import { createRequire } from 'node:module'

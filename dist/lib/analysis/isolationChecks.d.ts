@@ -1,4 +1,4 @@
-import type { TestCollection, TestObject, WrappedTest } from '../../types.ts'
+import type { TestCollection, TestObject, WrappedTest } from '#src/types.js'
 export declare const testImportsMutableModuleState: (
   tests: TestCollection | TestObject | WrappedTest[],
   testFilePath: string,

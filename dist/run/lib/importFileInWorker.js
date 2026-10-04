@@ -18,8 +18,8 @@ var __rewriteRelativeImportExtension =
     return path
   }
 import is from '@magic/types'
-import { getViteDefine } from '../../lib/svelte/viteConfig/index.js'
-import { loadTestDefines } from '../../bin/lib/loadTestDefines.js'
+import { getViteDefine } from '#src/lib/svelte/viteConfig/index.js'
+import { loadTestDefines } from '#src/bin/lib/loadTestDefines.js'
 export const importFileInWorker = async filePath => {
   try {
     const rootDir = process.cwd()

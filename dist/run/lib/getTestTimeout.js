@@ -1,4 +1,4 @@
-import { DEFAULT_TEST_TIMEOUT } from '../../constants.js'
+import { DEFAULT_TEST_TIMEOUT } from '#src/constants.js'
 /**
  * Get timeout for a test, checking per-test option first, then env var
  */

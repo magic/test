@@ -4,7 +4,7 @@ import type {
   ImportCacheEntry,
   BarrelCacheEntry,
   CssObject,
-} from '../../types.ts'
+} from '#src/types.js'
 export { LRUCache }
 export { clearCache } from './persistentCache.ts'
 export interface PackageExportResolveEntry {

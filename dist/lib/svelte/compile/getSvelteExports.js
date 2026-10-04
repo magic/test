@@ -1,8 +1,8 @@
 import path from 'node:path'
 import fs from '@magic/fs'
 import { parseFile, extractExports } from './astParse.js'
-import { barrelCache, pendingPromises } from '../../caches/cache.js'
-import { traceStart, traceEnd } from '../../trace/timing.js'
+import { barrelCache, pendingPromises } from '#src/lib/caches/cache.js'
+import { traceStart, traceEnd } from '#src/lib/trace/timing.js'
 export const getSvelteExports = async filePath => {
   const id = traceStart(`getSvelteExports ${path.basename(filePath)}`)
   // Check if another process is already getting exports for this file

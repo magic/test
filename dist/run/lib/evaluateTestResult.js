@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { cleanFunctionString } from '../../lib/index.js'
+import { cleanFunctionString } from '#src/lib/index.js'
 /**
  * Evaluate test result against expected value
  */

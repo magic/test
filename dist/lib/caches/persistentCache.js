@@ -2,7 +2,7 @@ import fs from '@magic/fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { LRUCache } from './LRUCache.js'
-import { CACHE_DIR } from '../../constants.js'
+import { CACHE_DIR } from '#src/constants.js'
 const MANIFEST_FILE = path.join(CACHE_DIR, 'manifest.json')
 // In-memory caches for performance
 let manifestCache = null

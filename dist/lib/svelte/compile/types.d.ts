@@ -4,7 +4,7 @@ export type {
   CompileCacheEntry,
   ImportCacheEntry,
   BarrelCacheEntry,
-} from '../../../types.ts'
+} from '#src/types.js'
 export interface ExportInfo {
   name: string
   alias?: string

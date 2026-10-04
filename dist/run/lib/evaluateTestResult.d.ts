@@ -1,4 +1,4 @@
-import type { EvaluateResult } from '../../types.ts'
+import type { EvaluateResult } from '#src/types.js'
 /**
  * Evaluate test result against expected value
  */

@@ -13,4 +13,4 @@ export {
   resetTraces,
   getTraceData,
   getTraceSummary,
-} from '../../trace/timing.js'
+} from '#src/lib/trace/timing.js'

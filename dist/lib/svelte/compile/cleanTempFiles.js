@@ -1,6 +1,6 @@
 import path from 'node:path'
 import fs from '@magic/fs'
-import { CACHE_DIR, CWD } from '../../../constants.js'
+import { CACHE_DIR, CWD } from '#src/constants.js'
 export let cleanupDone = false
 export const cleanTempFiles = async () => {
   if (cleanupDone) {
