@@ -11,7 +11,8 @@
   "type": "module",
   "imports": {
     "#src": "./src/index.js",
-    "#src/*": "./src/*"
+    "#src/*": "./src/*",
+    "#test/*": "./test/*"
   },
   "exports": {
     ".": "./dist/index.js",
@@ -80,8 +81,8 @@
     "@magic-themes/docs": "0.0.15",
     "@magic/core": "0.0.160",
     "@magic/format": "0.0.75",
-    "@types/node": "26.6.3",
-    "eslint": "10.11.0",
+    "@types/node": "26.6.4",
+    "eslint": "10.12.0",
     "prettier-plugin-svelte": "4.1.1",
     "svelte": "5.57.1"
   },
