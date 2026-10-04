@@ -75,6 +75,108 @@ const resolveAndCompileImportImplCore = async (
   importChain = [],
 ) => {
   const importType = classifyImport(importPath)
+  let resolvedPath
+  // Resolve "#-prefixed" imports against the tested package's own
+  // package.json "imports" mappings (e.g. "#lib/*": "./src/lib/*",
+  // "#client": "./src/internal/client.js").
+  if (importPath.startsWith('#')) {
+    const pkgJsonPath = path.resolve(CWD, 'package.json')
+    if (await existsCached(pkgJsonPath)) {
+      try {
+        const pkgRaw = await fs.readFile(pkgJsonPath, 'utf-8')
+        const pkg = JSON.parse(pkgRaw)
+        const imports = pkg.imports
+        if (imports && typeof imports === 'object') {
+          let target
+          let suffix
+          // 1) Exact match: "#client": "./src/internal/client.js"
+          if (typeof imports[importPath] === 'string') {
+            target = imports[importPath]
+          } else {
+            // 2) Wildcard match, longest prefix wins:
+            //    "#lib/*": "./src/lib/*"
+            // 3) Parent-key base-dir match, longest prefix wins:
+            //    "#lib": "./src/lib/index.js" resolves "#lib/forms/Button.svelte"
+            //    to "./src/lib/forms/Button.svelte"
+            let bestLen = -1
+            for (const [key, value] of Object.entries(imports)) {
+              if (typeof value !== 'string') {
+                continue
+              }
+              if (key.endsWith('*')) {
+                const prefix = key.slice(0, -1)
+                if (importPath.startsWith(prefix) && prefix.length > bestLen) {
+                  target = value
+                  suffix = importPath.slice(prefix.length)
+                  bestLen = prefix.length
+                }
+              } else if (key !== importPath) {
+                const sep = key + '/'
+                if (importPath.startsWith(sep) && key.length > bestLen) {
+                  target = value
+                  suffix = importPath.slice(sep.length)
+                  bestLen = key.length
+                }
+              }
+            }
+          }
+          if (target) {
+            // A file target (has extension) implies its directory as the base;
+            // a directory target is used as the base directly.
+            const isFile = path.extname(target) !== ''
+            const local =
+              suffix === undefined
+                ? target
+                : target.includes('*')
+                  ? target.replace('*', suffix)
+                  : path.join(isFile ? path.dirname(target) : target, suffix)
+            const fullResolvedPath = path.resolve(CWD, local)
+            if (await existsCached(fullResolvedPath)) {
+              resolvedPath = fullResolvedPath
+            } else {
+              // If the resolved path has .js extension but the file is .ts, try .ts instead
+              if (path.extname(fullResolvedPath) === '.js') {
+                const tsPath = fullResolvedPath.slice(0, -3) + '.ts'
+                if (await existsCached(tsPath)) {
+                  resolvedPath = tsPath
+                } else {
+                  // Try with extensions
+                  for (const ext of ['.svelte', '.js', '.ts']) {
+                    const candidate = fullResolvedPath + ext
+                    if (await existsCached(candidate)) {
+                      resolvedPath = candidate
+                      break
+                    }
+                  }
+                }
+              } else {
+                // Try with extensions
+                for (const ext of ['.svelte', '.js', '.ts']) {
+                  const candidate = fullResolvedPath + ext
+                  if (await existsCached(candidate)) {
+                    resolvedPath = candidate
+                    break
+                  }
+                }
+              }
+              // Try as directory with index
+              if (!resolvedPath) {
+                for (const ext of ['/index.svelte', '/index.js', '/index.ts']) {
+                  const candidate = fullResolvedPath + ext
+                  if (await existsCached(candidate)) {
+                    resolvedPath = candidate
+                    break
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch {
+        // ignore - fallback to other resolution
+      }
+    }
+  }
   // Direct handling of $app imports - resolve to shims
   if (importPath.startsWith('$app')) {
     if (process.env.MAGIC_TEST_DEBUG) {
@@ -105,72 +207,77 @@ const resolveAndCompileImportImplCore = async (
     }
   }
   if (importType === 'scoped') {
-    const scopedId = traceStart('resolve.scoped')
-    if (importPath.startsWith('@magic/')) {
+    // If we already resolved via package.json imports handling, skip package resolution
+    if (!resolvedPath) {
+      const scopedId = traceStart('resolve.scoped')
+      if (importPath.startsWith('@magic/')) {
+        traceEnd(scopedId)
+        return { filePath: importPath, js: '', url: null, skipProcessing: true }
+      }
+      const resolved = await resolvePackageExport(importPath, sourceDir)
       traceEnd(scopedId)
+      if (resolved.isSvelteOnly && resolved.resolvedPath) {
+        if (resolved.isSvelteOnlyPackage) {
+          return {
+            filePath: importPath,
+            js: '',
+            url: null,
+            skipProcessing: true,
+            isSvelteOnlyPackage: true,
+          }
+        }
+        const sourceCode = await fs.readFile(sourceFilePath, 'utf-8')
+        const namedImports = extractNamedImportsFromCode(sourceCode, importPath)
+        const compiledPath = await compileSvelteOnlyExport(
+          resolved.resolvedPath,
+          sourceDir,
+          namedImports.length > 0 ? namedImports : undefined,
+        )
+        const compiledUrl = pathToFileURL(compiledPath).href
+        return { filePath: importPath, js: '', url: compiledUrl }
+      }
       return { filePath: importPath, js: '', url: null, skipProcessing: true }
     }
-    const resolved = await resolvePackageExport(importPath, sourceDir)
-    traceEnd(scopedId)
-    if (resolved.isSvelteOnly && resolved.resolvedPath) {
-      if (resolved.isSvelteOnlyPackage) {
-        return {
-          filePath: importPath,
-          js: '',
-          url: null,
-          skipProcessing: true,
-          isSvelteOnlyPackage: true,
-        }
-      }
-      const sourceCode = await fs.readFile(sourceFilePath, 'utf-8')
-      const namedImports = extractNamedImportsFromCode(sourceCode, importPath)
-      const compiledPath = await compileSvelteOnlyExport(
-        resolved.resolvedPath,
-        sourceDir,
-        namedImports.length > 0 ? namedImports : undefined,
-      )
-      const compiledUrl = pathToFileURL(compiledPath).href
-      return { filePath: importPath, js: '', url: compiledUrl }
-    }
-    return { filePath: importPath, js: '', url: null, skipProcessing: true }
   }
   if (importType === 'bare') {
-    const bareId = traceStart('resolve.bare')
-    const resolved = await resolvePackageExport(importPath, sourceDir)
-    if (resolved.isSvelteOnly && resolved.resolvedPath) {
-      traceEnd(bareId)
-      // If this is a svelte-only package (only has svelte export, no import/node condition),
-      // skip processing because the compiled output would contain imports Node.js can't resolve
-      if (resolved.isSvelteOnlyPackage) {
-        return {
-          filePath: importPath,
-          js: '',
-          url: null,
-          skipProcessing: true,
-          isSvelteOnlyPackage: true,
+    // If we already resolved via package.json imports handling, skip package resolution
+    if (!resolvedPath) {
+      const bareId = traceStart('resolve.bare')
+      const resolved = await resolvePackageExport(importPath, sourceDir)
+      if (resolved.isSvelteOnly && resolved.resolvedPath) {
+        traceEnd(bareId)
+        // If this is a svelte-only package (only has svelte export, no import/node condition),
+        // skip processing because the compiled output would contain imports Node.js can't resolve
+        if (resolved.isSvelteOnlyPackage) {
+          return {
+            filePath: importPath,
+            js: '',
+            url: null,
+            skipProcessing: true,
+            isSvelteOnlyPackage: true,
+          }
         }
+        const sourceCode = await fs.readFile(sourceFilePath, 'utf-8')
+        const namedImports = extractNamedImportsFromCode(sourceCode, importPath)
+        const compiledPath = await compileSvelteOnlyExport(
+          resolved.resolvedPath,
+          sourceDir,
+          namedImports.length > 0 ? namedImports : undefined,
+        )
+        const compiledUrl = pathToFileURL(compiledPath).href
+        return { filePath: importPath, js: '', url: compiledUrl }
       }
-      const sourceCode = await fs.readFile(sourceFilePath, 'utf-8')
-      const namedImports = extractNamedImportsFromCode(sourceCode, importPath)
-      const compiledPath = await compileSvelteOnlyExport(
-        resolved.resolvedPath,
-        sourceDir,
-        namedImports.length > 0 ? namedImports : undefined,
-      )
-      const compiledUrl = pathToFileURL(compiledPath).href
-      return { filePath: importPath, js: '', url: compiledUrl }
-    }
-    if (resolved.resolvedPath && !resolved.isSvelteOnly) {
-      const sourceTmpFile = getTempFilePath(sourceFilePath)
-      const fromDir = path.dirname(sourceTmpFile)
-      const relativePath = computeRelativePath(fromDir, resolved.resolvedPath)
+      if (resolved.resolvedPath && !resolved.isSvelteOnly) {
+        const sourceTmpFile = getTempFilePath(sourceFilePath)
+        const fromDir = path.dirname(sourceTmpFile)
+        const relativePath = computeRelativePath(fromDir, resolved.resolvedPath)
+        traceEnd(bareId)
+        return { filePath: importPath, js: '', url: relativePath }
+      }
       traceEnd(bareId)
-      return { filePath: importPath, js: '', url: relativePath }
+      return { filePath: importPath, js: '', url: null, skipProcessing: true }
     }
-    traceEnd(bareId)
-    return { filePath: importPath, js: '', url: null, skipProcessing: true }
   }
-  let resolvedPath
   if (importType === 'vite-alias') {
     const aliasId = traceStart('resolve.vite-alias')
     const aliasResolved = await resolveAlias(importPath, sourceFilePath, { includeShims: true })
@@ -185,7 +292,7 @@ const resolveAndCompileImportImplCore = async (
     const aliasResolved = await resolveAlias(importPath, sourceFilePath)
     if (aliasResolved) {
       resolvedPath = aliasResolved
-    } else {
+    } else if (!resolvedPath) {
       resolvedPath = path.resolve(sourceDir, importPath)
     }
   }
