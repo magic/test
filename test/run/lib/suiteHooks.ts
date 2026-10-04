@@ -1,9 +1,4 @@
-import {
-  hasBeforeAll,
-  hasAfterAll,
-  hasBeforeEach,
-  hasAfterEach,
-} from '#src/run/lib/suiteHooks.js'
+import { hasBeforeAll, hasAfterAll, hasBeforeEach, hasAfterEach } from '#src/run/lib/suiteHooks.js'
 
 export default [
   // hasBeforeAll

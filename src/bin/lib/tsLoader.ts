@@ -1,21 +1,21 @@
 import fs from '@magic/fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { resolveAlias } from '../../lib/svelte/viteConfig/resolveAlias.ts'
 import is from '@magic/types'
 import log from '@magic/log'
-import { traceStart, traceEnd } from '../../lib/trace/timing.ts'
-import { cacheManager } from '../../lib/caches/cache.ts'
-import { writeQueue } from '../../lib/svelte/compile/writeQueue.ts'
-import { hasSvelteRunes, extractImportsSync } from '../../lib/svelte/compile/astParse.ts'
-import { getTempFilePath } from '../../lib/svelte/compile/getTempFilePath.ts'
-import { transpileWithTypescript } from './tsTranspile.ts'
-import { compileSvelteWithWrite } from '../../lib/svelte/compile/compileSvelteWithWrite.ts'
-import { writeTempFile } from '../../lib/svelte/compile/resolveSvelteOnlyExports.ts'
-import { processImports } from '../../lib/svelte/compile/processImports.ts'
-import { transformForNode } from '../../lib/svelte/compile/transformForNode.ts'
-import { loadViteConfig } from '../../lib/svelte/viteConfig/loadViteConfig.ts'
-import { initGlobals } from '../../lib/dom/globals.ts'
+import { resolveAlias } from '../../lib/svelte/viteConfig/resolveAlias.js'
+import { traceStart, traceEnd } from '../../lib/trace/timing.js'
+import { cacheManager } from '../../lib/caches/cache.js'
+import { writeQueue } from '../../lib/svelte/compile/writeQueue.js'
+import { hasSvelteRunes, extractImportsSync } from '../../lib/svelte/compile/astParse.js'
+import { getTempFilePath } from '../../lib/svelte/compile/getTempFilePath.js'
+import { transpileWithTypescript } from './tsTranspile.js'
+import { compileSvelteWithWrite } from '../../lib/svelte/compile/compileSvelteWithWrite.js'
+import { writeTempFile } from '../../lib/svelte/compile/resolveSvelteOnlyExports.js'
+import { processImports } from '../../lib/svelte/compile/processImports.js'
+import { transformForNode } from '../../lib/svelte/compile/transformForNode.js'
+import { loadViteConfig } from '../../lib/svelte/viteConfig/loadViteConfig.js'
+import { initGlobals } from '../../lib/dom/globals.js'
 
 // Svelte is optional - only required when .svelte files are tested
 let svelteAvailable = false
@@ -124,11 +124,6 @@ const resolveImpl = async (
       }
     }
 
-    // Skip alias resolution if parent is already being loaded (prevents circular deps)
-    if (context.parentURL && currentlyLoading.has(context.parentURL)) {
-      return nextResolve(specifier, context)
-    }
-
     // Handle .js -> .ts conversion for absolute file:// URLs
     if (specifier.endsWith('.js') && specifier.startsWith('file://')) {
       const tsUrl = specifier.replace(/\.js$/, '.ts')
@@ -148,9 +143,12 @@ const resolveImpl = async (
       }
     }
 
-    // Try alias resolution
+    // Try alias resolution — skip if parent is already being loaded (prevents circular deps)
     if (context.parentURL) {
       try {
+        if (currentlyLoading.has(context.parentURL)) {
+          return nextResolve(specifier, context)
+        }
         const aliasResolved = await resolveAlias(specifier, new URL(context.parentURL).pathname, {
           includeShims: true,
         })
@@ -308,6 +306,125 @@ const resolveImpl = async (
       const tsPath = path.resolve(parentDir, specifier)
       if (await fs.exists(tsPath)) {
         return { url: pathToFileURL(tsPath).href, shortCircuit: true }
+      }
+    }
+
+    // Handle #-prefixed import map specifiers (defined in package.json imports field)
+    // e.g. #src/lib/stats/info.js -> src/lib/stats/info.ts, #lib/actions/clickOutside.svelte.js -> src/lib/actions/clickOutside.svelte.ts
+    if (specifier.startsWith('#')) {
+      // Use the nearest package.json to the importing module (not process.cwd())
+      // so import maps from nested packages (e.g. node_modules/@magic/test) work too.
+      let pkgJsonPath: string | null = null
+      if (context.parentURL && !context.parentURL.startsWith('data:')) {
+        let dir: string
+        try {
+          dir = path.dirname(new URL(context.parentURL).pathname)
+        } catch {
+          dir = ''
+        }
+        let stopped = false
+        while (dir && !stopped) {
+          const candidate = path.join(dir, 'package.json')
+          if (await fs.exists(candidate)) {
+            pkgJsonPath = candidate
+            stopped = true
+          } else {
+            const parent = path.dirname(dir)
+            if (parent === dir) {
+              stopped = true
+            } else {
+              dir = parent
+            }
+          }
+        }
+      }
+      if (!pkgJsonPath) {
+        pkgJsonPath = path.resolve(process.cwd(), 'package.json')
+      }
+      const packageRoot = path.dirname(pkgJsonPath)
+      if (await fs.exists(pkgJsonPath)) {
+        try {
+          const pkgRaw = await fs.readFile(pkgJsonPath, 'utf-8')
+          const pkg = JSON.parse(pkgRaw)
+          const imports = pkg.imports as Record<string, unknown> | undefined
+          if (is.objectNative(imports)) {
+            let target: string | undefined
+            let suffix: string | undefined
+
+            // 1) Exact match: "#client": "./src/internal/client.js"
+            if (is.string(imports[specifier])) {
+              target = imports[specifier]
+            } else {
+              // 2) Wildcard match, longest prefix wins:
+              //    "#lib/*": "./src/lib/*"
+              // 3) Parent-key base-dir match, longest prefix wins:
+              //    "#lib": "./src/lib/index.js" resolves "#lib/forms/Button.svelte"
+              //    to "./src/lib/forms/Button.svelte"
+              let bestLen = -1
+              for (const [key, value] of Object.entries(imports)) {
+                if (!is.string(value)) {
+                  continue
+                }
+                if (key.endsWith('*')) {
+                  const prefix = key.slice(0, -1)
+                  if (specifier.startsWith(prefix) && prefix.length > bestLen) {
+                    target = value
+                    suffix = specifier.slice(prefix.length)
+                    bestLen = prefix.length
+                  }
+                } else if (key !== specifier) {
+                  const sep = key + '/'
+                  if (specifier.startsWith(sep) && key.length > bestLen) {
+                    target = value
+                    suffix = specifier.slice(sep.length)
+                    bestLen = key.length
+                  }
+                }
+              }
+            }
+
+            if (target) {
+              // A file target (has extension) implies its directory as the base;
+              // a directory target is used as the base directly.
+              const isFile = path.extname(target) !== ''
+              const local =
+                suffix === undefined
+                  ? target
+                  : target.includes('*')
+                    ? target.replace('*', suffix)
+                    : path.join(isFile ? path.dirname(target) : target, suffix)
+              const fullResolvedPath = path.resolve(packageRoot, local)
+              if (await fs.exists(fullResolvedPath)) {
+                return { url: pathToFileURL(fullResolvedPath).href, shortCircuit: true }
+              } else {
+                // If the resolved path has .js extension but the file is .ts, try .ts instead
+                if (path.extname(fullResolvedPath) === '.js') {
+                  const tsPath = fullResolvedPath.slice(0, -3) + '.ts'
+                  if (await fs.exists(tsPath)) {
+                    return { url: pathToFileURL(tsPath).href, shortCircuit: true }
+                  }
+                } else {
+                  // Try with extensions
+                  for (const ext of ['.svelte', '.js', '.ts']) {
+                    const candidate = fullResolvedPath + ext
+                    if (await fs.exists(candidate)) {
+                      return { url: pathToFileURL(candidate).href, shortCircuit: true }
+                    }
+                  }
+                }
+                // Try as directory with index
+                for (const ext of ['/index.svelte', '/index.js', '/index.ts']) {
+                  const candidate = fullResolvedPath + ext
+                  if (await fs.exists(candidate)) {
+                    return { url: pathToFileURL(candidate).href, shortCircuit: true }
+                  }
+                }
+              }
+            }
+          }
+        } catch {
+          // ignore - fallback to other resolution
+        }
       }
     }
   } catch (e) {
