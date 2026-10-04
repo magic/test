@@ -4,6 +4,6 @@
     "rootDir": ".",
     "types": ["node"]
   },
-  "include": ["src/**/*", "test/**/*"],
+  "include": ["src/**/*", "test/**/*", "test/.fixtures/**/*"],
   "exclude": ["node_modules", "dist/**/*", "coverage", ".tmp"]
 }
