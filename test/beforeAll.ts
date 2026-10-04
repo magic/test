@@ -1,4 +1,4 @@
-import type { TestObject } from '../src/types.js'
+import type { TestObject } from '#src/types.js'
 
 interface TestGlobals {
   beforeAllTS?: boolean

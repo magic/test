@@ -1,6 +1,6 @@
-import { version } from '../src/index.js'
+import { version } from '#src/index.js'
 
-import * as test from '../src/svelte.js'
+import * as test from '#src/svelte.js'
 
 const spec = {
   // @magic/test svelte exports

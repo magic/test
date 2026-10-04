@@ -1,5 +1,5 @@
-import { is, tryCatch, promise } from '../src/index.js'
-import type { TestObject } from '../src/types.js'
+import { is, tryCatch, promise } from '#src/index.js'
+import type { TestObject } from '#src/types.js'
 
 const cbFn = (e: Error | null, a: unknown, cb: (e: Error | null, a: unknown) => void) => cb(e, a)
 

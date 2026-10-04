@@ -1,6 +1,6 @@
-import { mount, html, click, trigger, scroll, props } from '../src/svelte.js'
+import { mount, html, click, trigger, scroll, props } from '#src/svelte.js'
 import { flushSync } from 'svelte'
-import type { TestCase } from '../src/types.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   {

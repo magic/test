@@ -1,4 +1,4 @@
-import type { TestCase } from '../src/types.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   {

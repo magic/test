@@ -1,6 +1,6 @@
 const key = `before-${new Date().getTime() + Math.random() * 1000}` as const
 
-import type { TestCase } from '../src/types.js'
+import type { TestCase } from '#src/types.js'
 
 export default [
   {

@@ -1,4 +1,4 @@
-import * as lib from '../src/index.js'
+import * as lib from '#src/index.js'
 
 const constants = [
   'object',
