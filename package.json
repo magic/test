@@ -12,7 +12,8 @@
   "imports": {
     "#src": "./dist/index.js",
     "#src/*": "./dist/*",
-    "#test/*": "./test/*"
+    "#test/*": "./test/*",
+    "#docsrc/*": "./docsrc/*"
   },
   "exports": {
     ".": "./dist/index.js",
