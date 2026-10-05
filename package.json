@@ -69,7 +69,7 @@
     "c8": "12.0.0",
     "canvas": "3.2.3",
     "happy-dom": "20.14.5",
-    "magic-string": "1.4.2",
+    "magic-string": "1.4.3",
     "typescript": "npm:@typescript/typescript6",
     "typescript-eslint": "8.71.0"
   },
@@ -80,7 +80,7 @@
     "@magic-modules/no-spy": "0.0.9",
     "@magic-modules/pre": "0.0.12",
     "@magic-themes/docs": "0.0.15",
-    "@magic/core": "0.0.160",
+    "@magic/core": "0.0.161",
     "@magic/format": "0.0.75",
     "@types/node": "26.6.4",
     "eslint": "10.12.0",
@@ -89,7 +89,7 @@
   },
   "overrides": {
     "cookie": "^1.0.0",
-    "magic-string": "1.4.2"
+    "magic-string": "1.4.3"
   },
   "contributors": [
     {
@@ -99,6 +99,6 @@
   ],
   "allowScripts": {
     "canvas@3.2.3": true,
-    "@swc/core@1.15.46": true
+    "@swc/core@1.15.47": true
   }
 }
