@@ -40,3 +40,4 @@ export class Store {
  * Create a new store instance
  */
 export const createStore = () => new Store()
+//# sourceMappingURL=store.js.map

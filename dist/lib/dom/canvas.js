@@ -44,3 +44,4 @@ export const createCanvasPolyfill = () => {
     return ctx
   }
 }
+//# sourceMappingURL=canvas.js.map

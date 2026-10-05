@@ -14,3 +14,4 @@ export {
   getTraceData,
   getTraceSummary,
 } from '#src/lib/trace/timing.js'
+//# sourceMappingURL=index.js.map

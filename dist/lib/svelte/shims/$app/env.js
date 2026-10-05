@@ -65,3 +65,4 @@ export const dev = cfg.dev !== undefined ? !!cfg.dev : true
 export const prod = !dev
 export const building = cfg.building !== undefined ? !!cfg.building : false
 export const version = cfg.version || ''
+//# sourceMappingURL=env.js.map

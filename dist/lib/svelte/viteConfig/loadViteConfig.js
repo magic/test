@@ -58,3 +58,4 @@ export const getViteAliases = (config, configDir) => {
 export const getViteDefine = config => {
   return config.define ?? {}
 }
+//# sourceMappingURL=loadViteConfig.js.map

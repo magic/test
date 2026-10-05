@@ -74,3 +74,4 @@ export const test = (lib = {}, spec = {}, parent = '') => {
     )
 }
 export const version = (lib, spec, parent = '') => test(lib, spec, parent).flat(Infinity)
+//# sourceMappingURL=version.js.map

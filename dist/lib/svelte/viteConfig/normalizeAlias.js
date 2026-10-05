@@ -17,3 +17,4 @@ export const normalizeAlias = (alias, configDir) => {
   }
   return []
 }
+//# sourceMappingURL=normalizeAlias.js.map

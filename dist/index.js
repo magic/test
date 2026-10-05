@@ -38,3 +38,4 @@ process.on('unhandledRejection', reason => {
 process.on('uncaughtException', error => {
   handleError('uncaughtException', error)
 })
+//# sourceMappingURL=index.js.map

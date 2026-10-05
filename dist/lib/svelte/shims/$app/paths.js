@@ -124,3 +124,4 @@ export function asset(file) {
  * Expose base and assets for testing/configuration
  */
 export { base, assets }
+//# sourceMappingURL=paths.js.map

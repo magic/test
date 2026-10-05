@@ -5,3 +5,4 @@ export const VITE_CONFIG_NAMES = [
   'vite.config.mts',
   'vite.config.cjs',
 ]
+//# sourceMappingURL=VITE_CONFIG_NAMES.js.map

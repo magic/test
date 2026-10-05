@@ -57,3 +57,4 @@ export {
 } from './events.js'
 export { testExportsPreprocessor } from './preprocess.js'
 export { browser, dev, prod, createStaticPage } from './sveltekit-mocks.js'
+//# sourceMappingURL=index.js.map

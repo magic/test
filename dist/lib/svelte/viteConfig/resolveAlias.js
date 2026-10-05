@@ -104,3 +104,4 @@ export const resolveAlias = async (importPath, sourceFilePath, options = {}) => 
   }
   return null
 }
+//# sourceMappingURL=resolveAlias.js.map

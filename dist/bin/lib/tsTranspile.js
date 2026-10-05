@@ -13,3 +13,4 @@ export const transpileWithTypescript = code => {
   })
   return result.outputText
 }
+//# sourceMappingURL=tsTranspile.js.map

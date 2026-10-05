@@ -42,3 +42,4 @@ export const importFileInWorker = async filePath => {
     throw error
   }
 }
+//# sourceMappingURL=importFileInWorker.js.map

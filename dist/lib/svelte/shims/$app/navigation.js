@@ -138,3 +138,4 @@ export function reset() {
   ctx.callbacks.after = []
   ctx.callbacks.on = []
 }
+//# sourceMappingURL=navigation.js.map

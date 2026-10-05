@@ -13,3 +13,4 @@ export const printPercent = p => {
   const value = toMinimalFixed(p, 2)
   return log.color(color, value)
 }
+//# sourceMappingURL=printPercent.js.map

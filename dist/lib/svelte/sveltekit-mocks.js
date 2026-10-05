@@ -38,3 +38,4 @@ export const browser = true
 export const dev = process.env.NODE_ENV !== 'production'
 export const prod = process.env.NODE_ENV === 'production'
 export const platform = 'node'
+//# sourceMappingURL=sveltekit-mocks.js.map

@@ -33,3 +33,4 @@ export const cleanTempFiles = async () => {
     // Ignore cleanup errors
   }
 }
+//# sourceMappingURL=cleanTempFiles.js.map

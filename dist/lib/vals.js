@@ -68,3 +68,4 @@ export const vals = {
   hexa8: '#3d3d3111',
   regexp: /test/,
 }
+//# sourceMappingURL=vals.js.map

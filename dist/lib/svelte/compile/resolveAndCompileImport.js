@@ -469,3 +469,4 @@ const resolveAndCompileImportImplCore = async (
   const relativePath = computeRelativePath(fromDir, tmpFileAbs)
   return { filePath: resolvedPath, js: processed, url: relativePath }
 }
+//# sourceMappingURL=resolveAndCompileImport.js.map

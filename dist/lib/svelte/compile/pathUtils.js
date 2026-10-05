@@ -60,3 +60,4 @@ export const resolveFilePath = async (base, extensions = EXTENSION_CANDIDATES) =
   }
   return null
 }
+//# sourceMappingURL=pathUtils.js.map

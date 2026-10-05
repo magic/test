@@ -12,3 +12,4 @@ export const handleWorkerError = (testToRun, error, rawResults, logger = log.err
   rawResults.push(failResult)
   return failResult
 }
+//# sourceMappingURL=handleWorkerError.js.map

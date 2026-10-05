@@ -114,3 +114,4 @@ export async function clearCache() {
 export function getCacheDir() {
   return CACHE_DIR
 }
+//# sourceMappingURL=persistentCache.js.map

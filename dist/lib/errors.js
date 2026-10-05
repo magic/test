@@ -32,3 +32,4 @@ export const createError = (code, message) => {
   err.code = code
   return err
 }
+//# sourceMappingURL=errors.js.map

@@ -37,3 +37,4 @@ export const query$batch = {
     return args[args.length - 1]
   },
 }
+//# sourceMappingURL=server.js.map

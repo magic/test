@@ -5,3 +5,4 @@
 // EXPORT_STAR_REGEX, EXPORT_NAMED_REGEX are now in astParse.ts
 export const SVELTE_IMPORT_REGEX =
   /import\s+((?:\{[^}]*\}|\* as \w+|\w+))\s+from\s+['"]([^'"]+)['"]/gu
+//# sourceMappingURL=constants.js.map

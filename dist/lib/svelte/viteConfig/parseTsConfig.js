@@ -87,3 +87,4 @@ export const parseTsConfig = async rootDir => {
     return []
   }
 }
+//# sourceMappingURL=parseTsConfig.js.map

@@ -1,0 +1,1 @@
+{"version":3,"file":"ast-cache.js","sourceRoot":"","sources":["../../../src/lib/svelte/ast-cache.ts"],"names":[],"mappings":"AAAA,mFAAmF;AAEnF,IAAI,MAAM,GAAsD,IAAI,CAAA;AAEpE,MAAM,CAAC,MAAM,SAAS,GAAG,KAAK,IAAI,EAAE;IAClC,IAAI,CAAC,MAAM,EAAE,CAAC;QACZ,MAAM,GAAG,MAAM,MAAM,CAAC,2BAA2B,CAAC,CAAA;IACpD,CAAC;IACD,OAAO,MAAM,CAAA;AACf,CAAC,CAAA;AAED,qBAAqB;AACrB,SAAS,EAAE,CAAA"}

@@ -6,3 +6,4 @@ export const tryStat = async filePath => {
     return null
   }
 }
+//# sourceMappingURL=fs.js.map

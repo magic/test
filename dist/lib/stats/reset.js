@@ -4,3 +4,4 @@
 export const reset = store => {
   store.reset()
 }
+//# sourceMappingURL=reset.js.map

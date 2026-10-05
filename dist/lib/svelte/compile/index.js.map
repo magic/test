@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../../../../src/lib/svelte/compile/index.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,aAAa,EAAE,MAAM,oBAAoB,CAAA;AAClD,OAAO,EAAE,sBAAsB,EAAE,MAAM,6BAA6B,CAAA;AAEpE,mDAAmD;AACnD,OAAO,EACL,UAAU,EACV,QAAQ,EACR,UAAU,EACV,aAAa,EACb,cAAc,EACd,gBAAgB,EAChB,cAAc,EACd,iBAAiB,EACjB,WAAW,EACX,YAAY,EACZ,eAAe,GAChB,MAAM,0BAA0B,CAAA"}

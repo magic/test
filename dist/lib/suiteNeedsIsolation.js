@@ -16,3 +16,4 @@ export const suiteNeedsIsolation = tests => {
     return false
   })
 }
+//# sourceMappingURL=suiteNeedsIsolation.js.map

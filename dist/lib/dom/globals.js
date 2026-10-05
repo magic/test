@@ -144,3 +144,4 @@ export const initGlobals = () => {
     document,
   }
 }
+//# sourceMappingURL=globals.js.map

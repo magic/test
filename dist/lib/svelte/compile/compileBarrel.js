@@ -155,3 +155,4 @@ const compileBarrelImpl = async (filePath, currentChain) => {
   barrelCache.set(filePath, { exports, wrapperAbsPath })
   return { filePath, js: wrapperCode, wrapperAbsPath }
 }
+//# sourceMappingURL=compileBarrel.js.map

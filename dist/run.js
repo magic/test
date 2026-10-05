@@ -215,3 +215,4 @@ export const run = async (tests, options = {}) => {
   }
   process.exit(0)
 }
+//# sourceMappingURL=run.js.map

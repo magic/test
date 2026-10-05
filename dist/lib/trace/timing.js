@@ -258,3 +258,4 @@ export const getTraceSummary = () => {
   }))
 }
 export const getTraceData = () => getTraceSummary()
+//# sourceMappingURL=timing.js.map

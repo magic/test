@@ -26,3 +26,4 @@ export const suiteModifiesGlobals = tests => {
     return false
   })
 }
+//# sourceMappingURL=globalCheck.js.map

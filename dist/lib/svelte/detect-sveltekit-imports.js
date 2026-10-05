@@ -39,3 +39,4 @@ export const detectSvelteKitImports = async compiledCode => {
 export const needsSvelteKitContext = detected => {
   return detected.appState || detected.appNavigation || detected.appPaths || detected.appEnvironment
 }
+//# sourceMappingURL=detect-sveltekit-imports.js.map

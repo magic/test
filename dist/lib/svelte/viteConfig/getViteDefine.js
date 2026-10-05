@@ -10,3 +10,4 @@ export const getViteDefine = async sourceFilePath => {
   const config = await loadViteConfig(rootDir)
   return config.define ?? {}
 }
+//# sourceMappingURL=getViteDefine.js.map

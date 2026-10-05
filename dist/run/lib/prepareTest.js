@@ -28,3 +28,4 @@ export const prepareTest = test => {
   }
   throw new Error('component must be a string or [string, props]')
 }
+//# sourceMappingURL=prepareTest.js.map

@@ -43,3 +43,4 @@ export const test = (t, store) => {
   }
   store.set({ results })
 }
+//# sourceMappingURL=test.js.map

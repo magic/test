@@ -10,3 +10,4 @@ export async function ensureSvelte() {
   return svelte
 }
 export * from './lib/svelte/index.js'
+//# sourceMappingURL=svelte.js.map

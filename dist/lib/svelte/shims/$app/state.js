@@ -111,3 +111,4 @@ export const resetDefaultContext = () => {
   defaultContext.callbacks.after = []
   defaultContext.callbacks.on = []
 }
+//# sourceMappingURL=state.js.map

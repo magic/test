@@ -113,3 +113,4 @@ export const createImagePolyfill = win => {
   })
   return PolyfilledImage
 }
+//# sourceMappingURL=image.js.map

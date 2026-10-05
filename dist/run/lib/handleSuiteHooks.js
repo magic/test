@@ -20,3 +20,4 @@ export const handleSuiteHooks = async tests => {
   }
   return { afterAllCleanup }
 }
+//# sourceMappingURL=handleSuiteHooks.js.map

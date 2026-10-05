@@ -66,3 +66,4 @@ class WriteQueue {
 }
 // Singleton instance
 export const writeQueue = new WriteQueue()
+//# sourceMappingURL=writeQueue.js.map

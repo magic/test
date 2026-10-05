@@ -40,3 +40,4 @@ export const cleanFunctionString = fn => {
   }
   return JSON.stringify(fn)
 }
+//# sourceMappingURL=cleanFunctionString.js.map

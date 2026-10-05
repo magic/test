@@ -19,3 +19,4 @@ export const getTestKey = (pkg, parent, name) => {
   }
   return key
 }
+//# sourceMappingURL=getTestKey.js.map

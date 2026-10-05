@@ -63,3 +63,4 @@ export const log = {
   time: (..._) => !env.isNodeProd(),
   timeEnd: (..._) => !env.isNodeProd(),
 }
+//# sourceMappingURL=mock.js.map

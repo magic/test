@@ -21,3 +21,4 @@ export const writeCompiledFile = async (tempPath, code, map, sourceMapRef = fals
   const importUrl = pathToFileURL(tmpFileAbs).href
   return { tmpFile: tempPath, importUrl }
 }
+//# sourceMappingURL=fileWriter.js.map

@@ -3,3 +3,4 @@ export const isSvelteFile = filePath => {
   const ext = path.extname(filePath)
   return ext === '.svelte' || ext === '.svx'
 }
+//# sourceMappingURL=isSvelteFile.js.map

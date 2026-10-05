@@ -21,3 +21,4 @@ export const findProjectRoot = async sourceDir => {
   projectRootCache.set(sourceDir, root)
   return root
 }
+//# sourceMappingURL=findProjectRoot.js.map

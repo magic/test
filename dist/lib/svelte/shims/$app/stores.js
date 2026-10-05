@@ -23,3 +23,4 @@ export const updated = {
   subscribe: writable(false).subscribe,
   check: () => Promise.resolve(false),
 }
+//# sourceMappingURL=stores.js.map

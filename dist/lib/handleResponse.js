@@ -125,3 +125,4 @@ export const handleResponse = (res, resolve, reject, url, maxSize) => {
     resolve(rawData)
   })
 }
+//# sourceMappingURL=handleResponse.js.map

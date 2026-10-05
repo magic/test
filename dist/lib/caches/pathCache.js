@@ -25,3 +25,4 @@ export async function existsCached(filePath) {
 export function clearPathCache() {
   statsCache.clear()
 }
+//# sourceMappingURL=pathCache.js.map

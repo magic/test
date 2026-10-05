@@ -13,3 +13,4 @@ export const classifyImport = importPath => {
   }
   return 'bare'
 }
+//# sourceMappingURL=classifyImport.js.map

@@ -119,3 +119,4 @@ const runBatchMode = async () => {
   }
 }
 main()
+//# sourceMappingURL=worker.js.map

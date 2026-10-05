@@ -66,15 +66,11 @@ const run = async () => {
   const isWin = process.platform === 'win32'
   let cmd = 'node'
   let argv = []
-  const includeArgs = res.args.include || ['src']
+  const includeArgs = res.args.include || ['src', 'dist']
   const userExclude = res.args.exclude
   const { shards, shardId, errorLength, timeout, workers } = res.args
   const include = is.array(includeArgs) ? includeArgs : [includeArgs]
-  const c8Excludes = userExclude
-    ? is.array(userExclude)
-      ? userExclude
-      : [userExclude]
-    : ['dist', 'test']
+  const c8Excludes = userExclude ? (is.array(userExclude) ? userExclude : [userExclude]) : ['test']
   // Always exclude .d.ts from coverage
   if (!c8Excludes.includes('.d.ts')) {
     c8Excludes.push('.d.ts')
@@ -190,3 +186,4 @@ process
   .on('SIGTERM', () => shutdown(false))
   .on('SIGINT', () => shutdown(false))
   .on('SIGHUP', () => shutdown(false))
+//# sourceMappingURL=t.js.map

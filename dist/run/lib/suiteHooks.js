@@ -19,3 +19,4 @@ export const hasBeforeEach = tests => is.objectNative(tests) && is.function(test
  * Pure predicate.
  */
 export const hasAfterAll = tests => is.objectNative(tests) && is.function(tests.afterAll)
+//# sourceMappingURL=suiteHooks.js.map

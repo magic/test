@@ -535,3 +535,4 @@ export const restoreFromSnapshot = snapshot => {
   isolation.restoreProperties(snapshot)
 }
 export const isolation = new Isolation()
+//# sourceMappingURL=isolation.js.map

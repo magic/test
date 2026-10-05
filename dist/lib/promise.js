@@ -33,3 +33,4 @@ export const argHandler =
  * Wraps a function into a Promise-returning function, passing arguments via `argHandler`.
  */
 export const promise = fn => () => new Promise(r => fn(argHandler(r)))
+//# sourceMappingURL=promise.js.map

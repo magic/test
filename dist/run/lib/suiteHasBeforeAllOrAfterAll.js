@@ -5,3 +5,4 @@ export const suiteHasBeforeAllOrAfterAll = tests => {
   }
   return false
 }
+//# sourceMappingURL=suiteHasBeforeAllOrAfterAll.js.map

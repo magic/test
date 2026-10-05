@@ -13,3 +13,4 @@ export const getWindow = () => {
   const { window } = initGlobals()
   return window
 }
+//# sourceMappingURL=index.js.map

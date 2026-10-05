@@ -20,3 +20,4 @@ export const usesWindowsSeparators = p => p.includes('\\')
  * Pure function: only path manipulation.
  */
 export const ensureForwardSlashes = p => toImportPath(p)
+//# sourceMappingURL=pathTransform.js.map

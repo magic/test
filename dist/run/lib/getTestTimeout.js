@@ -15,3 +15,4 @@ export const getTestTimeout = testTimeout => {
   }
   return DEFAULT_TEST_TIMEOUT
 }
+//# sourceMappingURL=getTestTimeout.js.map

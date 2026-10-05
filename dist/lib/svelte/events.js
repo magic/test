@@ -413,3 +413,4 @@ fireEvent.ended = ended
 fireEvent.volumeChange = volumeChange
 fireEvent.checked = checked
 fireEvent.trigger = trigger
+//# sourceMappingURL=events.js.map

@@ -1,0 +1,1 @@
+{"version":3,"file":"isSvelteFile.js","sourceRoot":"","sources":["../../../../src/lib/svelte/compile/isSvelteFile.ts"],"names":[],"mappings":"AAAA,OAAO,IAAI,MAAM,WAAW,CAAA;AAE5B,MAAM,CAAC,MAAM,YAAY,GAAG,CAAC,QAAgB,EAAW,EAAE;IACxD,MAAM,GAAG,GAAG,IAAI,CAAC,OAAO,CAAC,QAAQ,CAAC,CAAA;IAClC,OAAO,GAAG,KAAK,SAAS,IAAI,GAAG,KAAK,MAAM,CAAA;AAC5C,CAAC,CAAA"}

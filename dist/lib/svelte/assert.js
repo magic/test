@@ -9,3 +9,4 @@ export const props = target => {
   }
   return result
 }
+//# sourceMappingURL=assert.js.map

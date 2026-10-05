@@ -6,3 +6,4 @@ try {
     '[registerLoader] ERROR: ' + (e instanceof Error ? e.message : String(e)) + '\n',
   )
 }
+//# sourceMappingURL=registerLoader.js.map

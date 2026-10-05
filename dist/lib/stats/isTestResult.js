@@ -9,3 +9,4 @@ export const isTestResult = obj =>
   'msg' in obj &&
   'pass' in obj &&
   'key' in obj
+//# sourceMappingURL=isTestResult.js.map

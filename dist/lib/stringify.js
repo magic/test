@@ -42,3 +42,4 @@ export const stringify = object => {
   }
   return object
 }
+//# sourceMappingURL=stringify.js.map

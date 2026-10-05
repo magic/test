@@ -21,3 +21,4 @@ export const loadViteDefine = async rootDir => {
   defineCache.set(cacheKey, defineConfig || {})
   return defineConfig || {}
 }
+//# sourceMappingURL=loadViteDefine.js.map

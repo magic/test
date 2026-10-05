@@ -57,3 +57,4 @@ export const loadViteAliases = async rootDir => {
     loadingViteConfig.delete(configPath)
   }
 }
+//# sourceMappingURL=loadViteAliases.js.map

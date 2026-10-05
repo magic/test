@@ -98,3 +98,4 @@ export const info = (suites, store, useLogging = true) => {
   }
   return true
 }
+//# sourceMappingURL=info.js.map

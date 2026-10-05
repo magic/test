@@ -24,3 +24,4 @@ export const acquireLock = async filePath => {
     }
   }
 }
+//# sourceMappingURL=acquireLock.js.map

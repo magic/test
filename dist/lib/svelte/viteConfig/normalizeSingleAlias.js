@@ -40,3 +40,4 @@ export const normalizeSingleAlias = (entry, configDir) => {
   }
   return { find: String(findVal), replacement: replacementVal }
 }
+//# sourceMappingURL=normalizeSingleAlias.js.map

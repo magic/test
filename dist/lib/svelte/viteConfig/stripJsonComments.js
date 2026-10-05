@@ -38,3 +38,4 @@ export const stripJsonComments = content => {
   }
   return result
 }
+//# sourceMappingURL=stripJsonComments.js.map

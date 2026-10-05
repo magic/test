@@ -5,3 +5,4 @@ export const getTempFilePath = sourceFilePath => {
   const tmpFile = path.join(CACHE_DIR, rel.replace(/\.svelte$/, '.svelte.js'))
   return tmpFile
 }
+//# sourceMappingURL=getTempFilePath.js.map

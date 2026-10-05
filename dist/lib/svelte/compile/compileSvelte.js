@@ -65,3 +65,4 @@ export const compileSvelte = async (filePath, options = {}) => {
     pendingPromises.delete(`svelte:${filePath}`)
   }
 }
+//# sourceMappingURL=compileSvelte.js.map

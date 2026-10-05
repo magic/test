@@ -19,3 +19,4 @@ export const getDuration = (storeObj, timeKey = 'startTime') => {
   }
   return log.timeTaken(startTime, { log: false })
 }
+//# sourceMappingURL=getDuration.js.map

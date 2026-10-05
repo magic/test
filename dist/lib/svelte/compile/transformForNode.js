@@ -5,3 +5,4 @@ export const transformForNode = (code, filePath) => {
   const transformed = code.replace(/_unknown_/g, safeName)
   return transformed
 }
+//# sourceMappingURL=transformForNode.js.map
