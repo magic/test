@@ -2,6 +2,7 @@ import path from 'node:path'
 import fs from '@magic/fs'
 
 import { parseFile, extractExports } from './astParse.ts'
+import { resolveImportMapSpecifier, findNearestPackageJson } from './resolveImportMap.ts'
 import { barrelCache, pendingPromises } from '#src/lib/caches/cache.js'
 import { traceStart, traceEnd } from '#src/lib/trace/timing.js'
 
@@ -50,7 +51,6 @@ const getSvelteExportsImpl = async (
   const exports = extractExports(fileInfo)
 
   const result: { name: string; path: string; isDefaultReexport?: boolean }[] = []
-  const sourceDir = path.dirname(filePath)
 
   for (const exp of exports) {
     if (exp.isBatch && exp.source?.endsWith('.svelte')) {
@@ -58,11 +58,11 @@ const getSvelteExportsImpl = async (
       const svelteDefaultName = path.basename(exp.source, '.svelte')
       result.push({
         name: svelteDefaultName,
-        path: path.resolve(sourceDir, exp.source),
+        path: await resolveExportPath(filePath, exp.source),
       })
     } else if (exp.source?.endsWith('.svelte')) {
       // export { x } from './foo.svelte'
-      const resolvedPath = path.resolve(sourceDir, exp.source)
+      const resolvedPath = await resolveExportPath(filePath, exp.source)
       const exportedName = exp.alias || exp.name
       if (exportedName && exportedName !== 'type') {
         result.push({
@@ -75,4 +75,22 @@ const getSvelteExportsImpl = async (
   }
 
   return result
+}
+
+// Resolve a re-export source to an absolute file path.
+// "#-prefixed" specifiers are package.json import-map entries
+// (e.g. "#lib/*": "./src/lib/*"), not relative paths - resolving them
+// against the source directory produces bogus paths like
+// "src/lib/#lib/forms/Form.svelte". They are resolved against the barrel
+// file's own package scope (nearest package.json), matching Node's ESM
+// semantics for import-map specifiers.
+const resolveExportPath = async (filePath: string, expSource: string): Promise<string> => {
+  if (expSource.startsWith('#')) {
+    const pkgJsonPath = await findNearestPackageJson(path.resolve(filePath))
+    const resolved = await resolveImportMapSpecifier(expSource, pkgJsonPath)
+    if (resolved) {
+      return resolved
+    }
+  }
+  return path.resolve(path.dirname(filePath), expSource)
 }
