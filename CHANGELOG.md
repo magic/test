@@ -1,5 +1,9 @@
 ### Changelog
 
+#### 0.3.36
+
+- fix: add null guards for TypeScript strict mode in getSvelteExports tests
+
 #### 0.3.35
 
 - works with sveltekit ^3.0.0
