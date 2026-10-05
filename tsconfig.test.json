@@ -3,12 +3,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "./.tmp/test-dist",
-    "noEmit": true,
-    "paths": {
-      "@magic/test": ["./dist/index.js"],
-      "@magic/test/*": ["./dist/*"]
-    }
+    "noEmit": true
   },
-  "include": ["src/**/*", "test/**/*", "docsrc/globals.d.ts"],
-  "exclude": ["node_modules", "dist/**/*", "coverage", ".tmp"]
+  "include": ["src/**/*", "test/**/*", "test/.fixtures/**/*", "docsrc/globals.d.ts"],
 }
