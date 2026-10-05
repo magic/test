@@ -72,11 +72,13 @@ export default [
       // like "test/.fixtures/#test/.fixtures/...".
       const barrelPath = path.join(fixtureBase, 'ImportMapBarrel.svelte.js')
       const exports = await getSvelteExports(barrelPath)
+      const firstExport = exports[0]
       return (
         exports.length === 1 &&
-        exports[0].name === 'TestComponent' &&
-        exports[0].path === path.join(fixtureBase, 'TestComponent.svelte') &&
-        fs.existsSync(exports[0].path)
+        firstExport != null &&
+        firstExport.name === 'TestComponent' &&
+        firstExport.path === path.join(fixtureBase, 'TestComponent.svelte') &&
+        fs.existsSync(firstExport.path)
       )
     },
     expect: true,
@@ -90,7 +92,8 @@ export default [
       const barrelPath = path.join(fixtureBase, '..', 'importMapPkg', 'src', 'Barrel.svelte.js')
       const expected = path.join(fixtureBase, '..', 'importMapPkg', 'src', 'Foo.svelte')
       const exports = await getSvelteExports(barrelPath)
-      return exports.length === 1 && exports[0].name === 'Foo' && exports[0].path === expected
+      const firstExport = exports[0]
+      return exports.length === 1 && firstExport != null && firstExport.name === 'Foo' && firstExport.path === expected
     },
     expect: true,
     info: 'getSvelteExports resolves #-prefixed sources against the nearest package.json (not CWD)',
