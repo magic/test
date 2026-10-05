@@ -112,6 +112,8 @@ const run = async () => {
       '--extension',
       '.js',
       '--extension',
+      '.mjs',
+      '--extension',
       '.ts',
       '--extension',
       '.svelte',
