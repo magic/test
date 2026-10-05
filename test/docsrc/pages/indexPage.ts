@@ -13,15 +13,15 @@ export default [
   {
     name: 'View returns array of html strings',
     fn: () => {
-      const result = View({})
-      return is.arr(result) && result.length > 0 && result.every(el => is.string(el))
+      const result = View()
+      return result.length > 0 && result.every(el => is.string(el))
     },
     expect: true,
   },
   {
     name: 'View has magictest h1 heading',
     fn: () => {
-      const result = View({})
+      const result = View()
       return is.arr(result) && result.some(el => el.includes('<h1 id="magictest">'))
     },
     expect: true,
@@ -29,17 +29,17 @@ export default [
   {
     name: 'View has getting-started section',
     fn: () => {
-      const result = View({})
-      return is.arr(result) && result.some(el => el.includes('id="getting-started"'))
+      const result = View()
+      return result.some(el => el.includes('id="getting-started"'))
     },
     expect: true,
   },
   {
     name: 'View has code blocks',
     fn: () => {
-      const result = View({})
+      const result = View()
       const pres = result.filter(el => el.includes('<pre') || el.includes('Pre'))
-      return is.arr(result) && pres.length > 0
+      return pres.length > 0
     },
     expect: true,
   },

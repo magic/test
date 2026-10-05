@@ -14,7 +14,7 @@ export default [
   {
     name: 'View returns array',
     fn: () => {
-      const result = View({})
+      const result = View()
       return is.arr(result) && result.length > 0
     },
     expect: true,
