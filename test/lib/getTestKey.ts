@@ -1,4 +1,3 @@
-import is from '@magic/types'
 import { getTestKey } from '#src/lib/getTestKey.js'
 import type { TestCase } from '#src/types.js'
 

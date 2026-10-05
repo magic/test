@@ -1,8 +1,7 @@
-import is from '@magic/types'
 import { expectedArguments } from '#src/lib/expectedArguments.js'
-import type { TestCase } from '#src/types.js'
+import type { Test } from '#src/types.js'
 
-const tests: TestCase[] = [
+export default [
   // No arguments
   {
     fn: () => expectedArguments(),
@@ -47,43 +46,52 @@ const tests: TestCase[] = [
   },
   // arrow function with single param
   {
-    fn: () => expectedArguments(x => x),
+    fn: () => expectedArguments((x: unknown) => x),
     expect: ['x'],
     info: 'expectedArguments(x => x) returns ["x"]',
   },
   // arrow function with multiple params
   {
-    fn: () => expectedArguments((a, b) => {}),
-    expect: ['a', 'b'],
+    fn: () => expectedArguments((_a: unknown, _b: unknown) => {}),
+    expect: ['_a', '_b'],
     info: 'expectedArguments((a, b) => {}) returns ["a", "b"]',
   },
   // arrow function with single param returning expression
   {
-    fn: () => expectedArguments(x => x + 1),
+    fn: () => expectedArguments((x: number) => x + 1),
     expect: ['x'],
     info: 'expectedArguments(x => x + 1) returns ["x"]',
   },
   // arrow function with two params returning expression
   {
-    fn: () => expectedArguments((a, b) => a + b),
+    fn: () => expectedArguments((a: number, b: number) => a + b),
     expect: ['a', 'b'],
     info: 'expectedArguments((a, b) => a + b) returns ["a", "b"]',
   },
   // arrow function with underscore-prefixed param (not stripped for regular params)
   {
-    fn: () => expectedArguments((_a, b) => {}),
+    fn: () =>
+      expectedArguments((_a: unknown, b: unknown) => {
+        return b
+      }),
     expect: ['_a', 'b'],
     info: 'expectedArguments((_a, b) => {}) keeps _ prefix for regular params',
   },
   // arrow function with double underscore-prefixed param
   {
-    fn: () => expectedArguments((__a, b) => {}),
+    fn: () =>
+      expectedArguments((__a: unknown, b: unknown) => {
+        return b
+      }),
     expect: ['__a', 'b'],
     info: 'expectedArguments((__a, b) => {}) keeps __ prefix for regular params',
   },
   // regular function expression
   {
-    fn: () => expectedArguments(function (a, b) {}),
+    fn: () =>
+      expectedArguments(function (a: number, b: number) {
+        return a + b
+      }),
     expect: ['a', 'b'],
     info: 'expectedArguments(function(a, b) {}) returns ["a", "b"]',
   },
@@ -95,34 +103,41 @@ const tests: TestCase[] = [
   },
   // arrow function with default param
   {
-    fn: () => expectedArguments((a = 1, b) => {}),
+    fn: () =>
+      expectedArguments((a = 1, b: number) => {
+        return a + b
+      }),
     expect: ['a = 1', 'b'],
     info: 'expectedArguments((a = 1, b) => {}) includes default value',
   },
   // arrow function with rest param
   {
-    fn: () => expectedArguments((...args) => {}),
-    expect: ['...args'],
+    fn: () => expectedArguments((..._args: unknown[]) => {}),
+    expect: ['..._args'],
     info: 'expectedArguments((...args) => {}) returns ["...args"]',
   },
   // arrow function with single char param
   {
-    fn: () => expectedArguments(a => a),
+    fn: () => expectedArguments((a: unknown) => a),
     expect: ['a'],
     info: 'expectedArguments(a => a) returns ["a"]',
   },
   // arrow function with multi-char param
   {
-    fn: () => expectedArguments((foo, bar) => {}),
+    fn: () =>
+      expectedArguments((foo: unknown, bar: unknown) => {
+        return [foo, bar]
+      }),
     expect: ['foo', 'bar'],
     info: 'expectedArguments((foo, bar) => {}) returns ["foo", "bar"]',
   },
   // arrow function with whitespace
   {
-    fn: () => expectedArguments((a, b) => {}),
+    fn: () =>
+      expectedArguments((a: number, b: number) => {
+        return a + b
+      }),
     expect: ['a', 'b'],
     info: 'expectedArguments(( a , b ) => {}) trims whitespace',
   },
-]
-
-export default tests
+] satisfies Test[]

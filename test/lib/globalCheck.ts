@@ -9,7 +9,7 @@ const tests: TestCase[] = [
   // Test function with globalThis
   {
     fn: () =>
-      functionModifiesGlobals(function () {
+      functionModifiesGlobals(() => {
         console.log(globalThis)
       }),
     expect: true,
@@ -25,6 +25,7 @@ const tests: TestCase[] = [
   {
     fn: () =>
       functionModifiesGlobals(() => {
+        // @ts-expect-error assigning to a non-existent global property
         global.someVar = 1
       }),
     expect: true,
@@ -34,6 +35,7 @@ const tests: TestCase[] = [
   {
     fn: () =>
       functionModifiesGlobals(() => {
+        // @ts-expect-error assigning a string to self.location
         self.location = 'http://evil.com'
       }),
     expect: true,
@@ -137,6 +139,7 @@ const tests: TestCase[] = [
     fn: () => {
       const test = {
         fn: () => {
+          // @ts-expect-error assigning to a non-existent global property
           globalThis.foo = 1
         },
         before: undefined,
@@ -154,6 +157,7 @@ const tests: TestCase[] = [
       const test = {
         fn: undefined,
         before: () => {
+          // @ts-expect-error assigning to a non-existent window property
           window.bar = 2
         },
         after: undefined,
@@ -171,6 +175,7 @@ const tests: TestCase[] = [
         fn: undefined,
         before: undefined,
         after: () => {
+          // @ts-expect-error assigning to a non-existent self property
           self.baz = 3
         },
         expect: undefined,
@@ -202,6 +207,7 @@ const tests: TestCase[] = [
       const tests = {
         test: {
           fn: () => {
+            // @ts-expect-error assigning to a non-existent global property
             globalThis.test = 1
           },
           before: undefined,
@@ -221,6 +227,7 @@ const tests: TestCase[] = [
         test1: { fn: () => 1, before: undefined, after: undefined, expect: undefined },
         test2: {
           fn: () => {
+            // @ts-expect-error assigning to a non-existent window property
             window.test2 = 2
           },
           before: undefined,
@@ -258,6 +265,7 @@ const tests: TestCase[] = [
     fn: () => {
       const tests = {
         beforeAll: () => {
+          // @ts-expect-error assigning to a non-existent global property
           globalThis.suiteHook = 1
         },
         tests: { test: { fn: () => 1, before: undefined, after: undefined, expect: undefined } },

@@ -1,6 +1,6 @@
 import is from '@magic/types'
 import type { Test } from '#src/types.js'
-import { maybeInjectMagic } from '#src/bin/lib/maybeInjectMagic.js'
+import { View } from '#docsrc/pages/cli.mjs'
 
 export default [
   {
@@ -14,8 +14,6 @@ export default [
   {
     name: 'View returns array',
     fn: async () => {
-      await maybeInjectMagic()
-      const { View } = await import('../../../docsrc/pages/cli.mjs')
       const result = View({})
       return is.arr(result) && result.length > 0
     },

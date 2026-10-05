@@ -2,8 +2,13 @@ import { runSingleTestFromFileInWorker } from '#src/run/lib/runSingleTestFromFil
 import type { TestCase } from '#src/types.js'
 import type { WrappedTest } from '#src/types.js'
 
-const mkTest = (name: string, fn: () => unknown, expect: unknown): WrappedTest =>
-  ({ name, fn, expect }) as WrappedTest
+const mkTest = (name: string, fn: () => unknown, expect: unknown): WrappedTest => ({
+  name,
+  fn,
+  expect,
+  pkg: '@magic/test',
+  parent: '@magic/test',
+})
 
 const tests: TestCase[] = [
   // array format, valid index
@@ -73,7 +78,7 @@ const tests: TestCase[] = [
   // test without name uses provided testName
   {
     fn: async () => {
-      const test = { fn: () => 7, expect: 7 } as WrappedTest
+      const test = { fn: () => 7, expect: 7, pkg: '@magic/test', parent: '@magic/test' }
       const r = await runSingleTestFromFileInWorker([test], 0, 'p', 'pa', 'givenName')
       return r.name === 'givenName' && r.pass === true
     },

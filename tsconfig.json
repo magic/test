@@ -15,7 +15,9 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "verbatimModuleSyntax": false,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -28,24 +30,16 @@
     "noImplicitOverride": true,
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
-    "rewriteRelativeImportExtensions": true,
     "skipLibCheck": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
     "paths": {
-      "$app/*": ["./src/lib/svelte/shims/$app/*"],
       "@magic/test": ["./dist/index.js"],
       "@magic/test/*": ["./dist/*"]
-    },
-    "types": ["node"]
+    }
   },
 
   "include": ["src/**/*"],
 
-  "exclude": ["node_modules", "dist/**/*", "coverage", ".tmp"],
-
-  "ts-node": {
-    "esm": true,
-    "experimentalSpecifierResolution": "node"
-  },
-
-  "typeRoots": ["./node_modules/@types"]
+  "exclude": ["node_modules", "dist/**/*", "coverage", ".tmp"]
 }

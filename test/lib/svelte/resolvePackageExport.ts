@@ -1,4 +1,3 @@
-import path from 'node:path'
 import { resolvePackageExport } from '#src/lib/svelte/compile/resolvePackageExport.js'
 import { packageExportCache } from '#src/lib/caches/cache.js'
 import { CWD } from '#src/constants.js'

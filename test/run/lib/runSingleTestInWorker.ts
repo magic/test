@@ -1,13 +1,12 @@
 import { runSingleTestInWorker } from '#src/run/lib/runSingleTestInWorker.js'
-import type { TestCase } from '#src/types.js'
-import type { WrappedTest } from '#src/types.js'
+import type { Test } from '#src/types.js'
 
-const tests: TestCase[] = [
+export default [
   // test without fn -> fail result
   {
     fn: async () => {
       const r = await runSingleTestInWorker(
-        { name: 'nofn', expect: 1 } as WrappedTest,
+        { name: 'nofn', expect: 1, pkg: '@magic/test', parent: '@magic/test' },
         'k',
         'pkg',
         'parent',
@@ -22,7 +21,7 @@ const tests: TestCase[] = [
   {
     fn: async () => {
       const r = await runSingleTestInWorker(
-        { name: 'ok', fn: () => 1 + 1, expect: 2 } as WrappedTest,
+        { name: 'ok', fn: () => 1 + 1, expect: 2, pkg: '@magic/test', parent: '@magic/test' },
         'k',
         'pkg',
         'parent',
@@ -37,7 +36,7 @@ const tests: TestCase[] = [
   {
     fn: async () => {
       const r = await runSingleTestInWorker(
-        { name: 'bad', fn: () => 1, expect: 99 } as WrappedTest,
+        { name: 'bad', fn: () => 1, expect: 99, pkg: '@magic/test', parent: '@magic/test' },
         'k',
         'pkg',
         'parent',
@@ -52,7 +51,7 @@ const tests: TestCase[] = [
   {
     fn: async () => {
       const r = await runSingleTestInWorker(
-        { name: 'msg', fn: () => 5, expect: 5 } as WrappedTest,
+        { name: 'msg', fn: () => 5, expect: 5, pkg: '@magic/test', parent: '@magic/test' },
         'k',
         'pkg',
         'parent',
@@ -67,7 +66,7 @@ const tests: TestCase[] = [
   {
     fn: async () => {
       const r = await runSingleTestInWorker(
-        { name: 'fields', fn: () => 1, expect: 1 } as WrappedTest,
+        { name: 'fields', fn: () => 1, expect: 1, pkg: '@magic/test', parent: '@magic/test' },
         'the-key',
         'mypkg',
         'myparent',
@@ -84,7 +83,7 @@ const tests: TestCase[] = [
   {
     fn: async () => {
       const r = await runSingleTestInWorker(
-        { name: 'noparent', fn: () => 1, expect: 1 } as WrappedTest,
+        { name: 'noparent', fn: () => 1, expect: 1, pkg: '@magic/test', parent: '@magic/test' },
         'k',
         'pkg',
         '',
@@ -99,7 +98,14 @@ const tests: TestCase[] = [
   {
     fn: async () => {
       const r = await runSingleTestInWorker(
-        { name: 'info', fn: () => 1, expect: 1, info: 'my info' } as WrappedTest,
+        {
+          name: 'info',
+          fn: () => 1,
+          expect: 1,
+          info: 'my info',
+          pkg: '@magic/test',
+          parent: '@magic/test',
+        },
         'k',
         'pkg',
         'parent',
@@ -114,7 +120,13 @@ const tests: TestCase[] = [
   {
     fn: async () => {
       const r = await runSingleTestInWorker(
-        { name: 'async', fn: async () => 'done', expect: 'done' } as WrappedTest,
+        {
+          name: 'async',
+          fn: async () => 'done',
+          expect: 'done',
+          pkg: '@magic/test',
+          parent: '@magic/test',
+        },
         'k',
         'pkg',
         'parent',
@@ -135,7 +147,9 @@ const tests: TestCase[] = [
             throw new Error('boom')
           },
           expect: 1,
-        } as WrappedTest,
+          pkg: '@magic/test',
+          parent: '@magic/test',
+        },
         'k',
         'pkg',
         'parent',
@@ -146,6 +160,4 @@ const tests: TestCase[] = [
     expect: true,
     info: 'throwing fn yields pass=false without throwing',
   },
-]
-
-export default tests
+] satisfies Test[]

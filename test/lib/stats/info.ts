@@ -1,8 +1,8 @@
 import { info } from '#src/lib/stats/info.js'
 import { createStore } from '#src/lib/store.js'
-import type { TestCase } from '#src/types.js'
+import type { Test, TestResults } from '#src/types.js'
 
-const tests: TestCase[] = [
+export default [
   // info with no results should return true
   {
     fn: () => {
@@ -38,12 +38,10 @@ const tests: TestCase[] = [
       const store = createStore()
       store.set({ results: { test1: { all: 10, pass: 8 } } })
       info(['test1'], store)
-      const results = store.get('results')
+      const results = store.get<TestResults>('results')
       return results?.test1?.all === 10 && results?.test1?.pass === 8
     },
     expect: true,
     info: 'info can read results from store',
   },
-]
-
-export default tests
+] satisfies Test[]

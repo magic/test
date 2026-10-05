@@ -51,7 +51,6 @@ const tests: TestCase[] = [
   {
     fn: () => {
       const afterAll = () => {
-        // @ts-expect-error test string
         return close()
       }
       return testUsesFixedPorts({ afterAll, fn: () => {} })

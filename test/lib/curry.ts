@@ -59,7 +59,7 @@ const tests: TestCase[] = [
     fn: () => {
       const sum3 = (a: number, b: number, c: number) => a + b + c
       const curried = curry(sum3, 1)
-      const curried2 = curried(2)
+      const curried2 = (curried as (a: number) => unknown)(2)
       return typeof curried2 === 'function' && curried2(3) === 6
     },
     expect: true,

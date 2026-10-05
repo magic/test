@@ -37,7 +37,7 @@ export const runSingleTestInWorker = async (
   let pass = false
 
   try {
-    const testResult = await runTestFnInWorker(test as WrappedTest, testKey)
+    const testResult = await runTestFnInWorker(test, testKey)
     result = testResult.result
     pass = testResult.pass
     exp = testResult.exp

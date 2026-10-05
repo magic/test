@@ -1,6 +1,6 @@
 import { stringify } from '#src/lib/stringify.js'
-import { env } from '#src/lib/env.js'
 import type { TestCase } from '#src/types.js'
+import is from '@magic/types'
 
 const tests: TestCase[] = [
   // Test basic string handling
@@ -89,18 +89,17 @@ const tests: TestCase[] = [
   // Test error length env var (default 70)
   {
     fn: () => {
-      const original = env.getErrorLength()
       const result = stringify('x'.repeat(80))
       // Should be 70 chars, not 80
-      return result.length === 70
+      return is.string(result) && result.length === 70
     },
     expect: true,
     info: 'respects default error length limit (70)',
   },
   // Test stringify with array containing function
   {
-    fn: () => stringify([x => x + 1, y => y * 2]),
-    expect: ['x => x + 1', 'y => y * 2'],
+    fn: () => stringify([(x: number) => x + 1, (y: number) => y * 2]),
+    expect: ['(x) => x + 1', '(y) => y * 2'],
     info: 'converts all functions in array to strings',
   },
   // Test stringify with nested object containing array

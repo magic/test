@@ -1,14 +1,14 @@
 import { test } from '#src/lib/stats/test.js'
 import { createStore } from '#src/lib/store.js'
-import type { TestCase } from '#src/types.js'
+import type { Test, TestResults } from '#src/types.js'
 
-const tests: TestCase[] = [
+export default [
   // Test basic passing with no parent/pkg
   {
     fn: () => {
       const store = createStore()
       test({ name: 'test1', pass: true }, store)
-      const results = store.get('results')
+      const results = store.get<TestResults>('results')
       return results?.test1?.all === 1 && results?.test1?.pass === 1
     },
     expect: true,
@@ -19,7 +19,7 @@ const tests: TestCase[] = [
     fn: () => {
       const store = createStore()
       test({ name: 'test2', pass: false }, store)
-      const results = store.get('results')
+      const results = store.get<TestResults>('results')
       return results?.test2?.all === 1 && results?.test2?.pass === 0
     },
     expect: true,
@@ -30,10 +30,16 @@ const tests: TestCase[] = [
     fn: () => {
       const store = createStore()
       test({ name: 'child', parent: 'parent', pass: true }, store)
-      const results = store.get('results')
-      if (!results) return false
-      if (results.parent?.all !== 1 || results.parent?.pass !== 1) return false
-      if (!results['parent.child']) return false
+      const results = store.get<TestResults>('results')
+      if (!results) {
+        return false
+      }
+      if (results.parent?.all !== 1 || results.parent?.pass !== 1) {
+        return false
+      }
+      if (!results['parent.child']) {
+        return false
+      }
       return results['parent.child'].all === 1 && results['parent.child'].pass === 1
     },
     expect: true,
@@ -44,8 +50,10 @@ const tests: TestCase[] = [
     fn: () => {
       const store = createStore()
       test({ name: 'child', parent: 'parent', pass: false }, store)
-      const results = store.get('results')
-      if (!results) return false
+      const results = store.get<TestResults>('results')
+      if (!results) {
+        return false
+      }
       return results.parent?.all === 1 && results.parent?.pass === 0
     },
     expect: true,
@@ -56,9 +64,13 @@ const tests: TestCase[] = [
     fn: () => {
       const store = createStore()
       test({ name: 'test', pkg: 'pkg', pass: true }, store)
-      const results = store.get('results')
-      if (!results) return false
-      if (results.pkg?.all !== 1 || results.pkg?.pass !== 1) return false
+      const results = store.get<TestResults>('results')
+      if (!results) {
+        return false
+      }
+      if (results.pkg?.all !== 1 || results.pkg?.pass !== 1) {
+        return false
+      }
       return !!results['pkg.test'] && results['pkg.test'].all === 1
     },
     expect: true,
@@ -69,8 +81,10 @@ const tests: TestCase[] = [
     fn: () => {
       const store = createStore()
       test({ name: 'test', parent: 'parent', pkg: 'pkg', pass: true }, store)
-      const results = store.get('results')
-      if (!results) return false
+      const results = store.get<TestResults>('results')
+      if (!results) {
+        return false
+      }
       return (
         results.parent?.all === 1 &&
         results.pkg?.all === 1 &&
@@ -87,8 +101,10 @@ const tests: TestCase[] = [
       const store = createStore()
       test({ name: 'test1', pass: true }, store)
       test({ name: 'test2', pass: false }, store)
-      const results = store.get('results')
-      if (!results || !results.__PACKAGE_ROOT__) return false
+      const results = store.get<TestResults>('results')
+      if (!results || !results.__PACKAGE_ROOT__) {
+        return false
+      }
       return results.__PACKAGE_ROOT__.all === 2 && results.__PACKAGE_ROOT__.pass === 1
     },
     expect: true,
@@ -99,7 +115,7 @@ const tests: TestCase[] = [
     fn: () => {
       const store = createStore()
       test({ name: 'mytest', parent: '', pass: true }, store)
-      const results = store.get('results')
+      const results = store.get<TestResults>('results')
       return results?.mytest?.all === 1 && results?.mytest?.pass === 1
     },
     expect: true,
@@ -110,7 +126,7 @@ const tests: TestCase[] = [
     fn: () => {
       const store = createStore()
       test({ name: 'mytest', parent: null as unknown as string, pass: true }, store)
-      const results = store.get('results')
+      const results = store.get<TestResults>('results')
       return results?.mytest?.all === 1 && results?.mytest?.pass === 1
     },
     expect: true,
@@ -121,10 +137,14 @@ const tests: TestCase[] = [
     fn: () => {
       const store = createStore()
       test({ name: 'mytest', parent: 'pkg', pkg: 'pkg', pass: true }, store)
-      const results = store.get('results')
-      if (!results) return false
+      const results = store.get<TestResults>('results')
+      if (!results) {
+        return false
+      }
       const entry = results['pkg.mytest']
-      if (!entry) return false
+      if (!entry) {
+        return false
+      }
       return entry.all === 1 && entry.pass === 1 && !!results.pkg && results.pkg?.all === 1
     },
     expect: true,
@@ -137,9 +157,13 @@ const tests: TestCase[] = [
       test({ name: 't1', parent: 'suite', pass: true }, store)
       test({ name: 't2', parent: 'suite', pass: false }, store)
       test({ name: 't3', parent: 'suite', pass: true }, store)
-      const results = store.get('results')
-      if (!results) return false
-      if (!results.suite) return false
+      const results = store.get<TestResults>('results')
+      if (!results) {
+        return false
+      }
+      if (!results.suite) {
+        return false
+      }
       return results.suite.all === 3 && results.suite.pass === 2
     },
     expect: true,
@@ -151,8 +175,10 @@ const tests: TestCase[] = [
       const store = createStore()
       test({ name: 't1', parent: 'suite1', pass: true }, store)
       test({ name: 't2', parent: 'suite2', pass: false }, store)
-      const results = store.get('results')
-      if (!results) return false
+      const results = store.get<TestResults>('results')
+      if (!results) {
+        return false
+      }
       return (
         results.suite1?.all === 1 &&
         results.suite1?.pass === 1 &&
@@ -163,6 +189,4 @@ const tests: TestCase[] = [
     expect: true,
     info: 'multiple test suites independent stats',
   },
-]
-
-export default tests
+] satisfies Test[]

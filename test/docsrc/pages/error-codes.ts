@@ -1,21 +1,19 @@
 import is from '@magic/types'
 import type { Test } from '#src/types.js'
-import { maybeInjectMagic } from '#src/bin/lib/maybeInjectMagic.js'
+
+import { View } from '#docsrc/pages/error-codes.mjs'
 
 export default [
   {
     name: 'View is function',
-    fn: async () => {
-      const { View } = await import('../../../docsrc/pages/error-codes.mjs')
+    fn: () => {
       return is.function(View)
     },
     expect: true,
   },
   {
     name: 'View returns array',
-    fn: async () => {
-      await maybeInjectMagic()
-      const { View } = await import('../../../docsrc/pages/error-codes.mjs')
+    fn: () => {
       const result = View({})
       return is.arr(result) && result.length > 0
     },

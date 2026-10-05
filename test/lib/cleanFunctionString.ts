@@ -1,7 +1,7 @@
 import { cleanFunctionString } from '#src/lib/cleanFunctionString.js'
-import type { TestCase } from '#src/types.js'
+import type { Test } from '#src/types.js'
 
-const tests: TestCase[] = [
+export default [
   // falsy values return 'false'
   {
     fn: () => cleanFunctionString(null),
@@ -38,13 +38,13 @@ const tests: TestCase[] = [
   },
   // simple function with t param
   {
-    fn: () => cleanFunctionString(t => t + 1),
+    fn: () => cleanFunctionString((t: number) => t + 1),
     expect: 't + 1',
     info: 'function t => t + 1 cleaned to "t + 1"',
   },
   // function with (t) param
   {
-    fn: () => cleanFunctionString(t => t * 2),
+    fn: () => cleanFunctionString((t: number) => t * 2),
     expect: 't * 2',
     info: 'function (t) => t * 2 cleaned to "t * 2"',
   },
@@ -62,19 +62,19 @@ const tests: TestCase[] = [
   },
   // async (t) function
   {
-    fn: () => cleanFunctionString(async t => t + 1),
+    fn: () => cleanFunctionString(async (t: number) => t + 1),
     expect: 't + 1',
     info: 'async t => t + 1 cleaned to "t + 1"',
   },
   // async (t) function with await
   {
-    fn: () => cleanFunctionString(async t => await t),
+    fn: () => cleanFunctionString(async (t: unknown) => await t),
     expect: 't',
     info: 'async (t) => await t cleaned to "t"',
   },
   // function with other params (not t) stays as-is
   {
-    fn: () => cleanFunctionString((x, y) => x + y),
+    fn: () => cleanFunctionString((x: number, y: number) => x + y),
     expect: '(x, y) => x + y',
     info: 'function with other params not cleaned',
   },
@@ -110,6 +110,4 @@ const tests: TestCase[] = [
     expect: '1,2,3',
     info: 'array via toString',
   },
-]
-
-export default tests
+] satisfies Test[]

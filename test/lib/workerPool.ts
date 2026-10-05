@@ -31,8 +31,11 @@ const tests: TestCase[] = [
       const original = process.env.MAGIC_TEST_WORKERS
       process.env.MAGIC_TEST_WORKERS = '4'
       const result = getEffectiveWorkerLimit()
-      if (original === undefined) delete process.env.MAGIC_TEST_WORKERS
-      else process.env.MAGIC_TEST_WORKERS = original
+      if (original === undefined) {
+        delete process.env.MAGIC_TEST_WORKERS
+      } else {
+        process.env.MAGIC_TEST_WORKERS = original
+      }
       return result === 4
     },
     expect: true,
@@ -43,8 +46,11 @@ const tests: TestCase[] = [
       const original = process.env.MAGIC_TEST_WORKERS
       process.env.MAGIC_TEST_WORKERS = 'abc'
       const result = getEffectiveWorkerLimit()
-      if (original === undefined) delete process.env.MAGIC_TEST_WORKERS
-      else process.env.MAGIC_TEST_WORKERS = original
+      if (original === undefined) {
+        delete process.env.MAGIC_TEST_WORKERS
+      } else {
+        process.env.MAGIC_TEST_WORKERS = original
+      }
       // falls back to availableParallelism - 2
       return result >= 1
     },
@@ -56,8 +62,11 @@ const tests: TestCase[] = [
       const original = process.env.MAGIC_TEST_WORKERS
       process.env.MAGIC_TEST_WORKERS = '0'
       const result = getEffectiveWorkerLimit()
-      if (original === undefined) delete process.env.MAGIC_TEST_WORKERS
-      else process.env.MAGIC_TEST_WORKERS = original
+      if (original === undefined) {
+        delete process.env.MAGIC_TEST_WORKERS
+      } else {
+        process.env.MAGIC_TEST_WORKERS = original
+      }
       return result >= 1
     },
     expect: true,
@@ -68,7 +77,9 @@ const tests: TestCase[] = [
       const original = process.env.MAGIC_TEST_WORKERS
       delete process.env.MAGIC_TEST_WORKERS
       const result = getEffectiveWorkerLimit()
-      if (original !== undefined) process.env.MAGIC_TEST_WORKERS = original
+      if (original !== undefined) {
+        process.env.MAGIC_TEST_WORKERS = original
+      }
       return result >= 1
     },
     expect: true,
@@ -100,7 +111,6 @@ const tests: TestCase[] = [
     fn: async () => {
       const pool = getWorkerPool(2)
       const order: number[] = []
-      const start = Date.now()
       const t1 = pool(async () => {
         order.push(1)
         await sleep(30)

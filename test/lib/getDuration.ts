@@ -1,8 +1,8 @@
 import { getDuration } from '#src/lib/getDuration.js'
 import { createStore } from '#src/lib/store.js'
-import type { TestCase } from '#src/types.js'
+import type { Test } from '#src/types.js'
 
-const tests: TestCase[] = [
+export default [
   // getDuration with no startTime returns empty string
   {
     fn: () => {
@@ -40,6 +40,7 @@ const tests: TestCase[] = [
   {
     fn: () => {
       const store = createStore()
+      // @ts-expect-error invalid argument test
       store.set({ startTime: 'not a tuple' })
       return getDuration(store)
     },
@@ -50,6 +51,7 @@ const tests: TestCase[] = [
   {
     fn: () => {
       const store = createStore()
+      // @ts-expect-error invalid argument test
       store.set({ globalStartTime: [123] })
       return getDuration(store, 'globalStartTime')
     },
@@ -66,6 +68,4 @@ const tests: TestCase[] = [
     expect: '',
     info: 'getDuration with null globalStartTime returns empty string',
   },
-]
-
-export default tests
+] satisfies Test[]

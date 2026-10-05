@@ -1,8 +1,8 @@
 import { suiteNeedsIsolation } from '#src/lib/suiteNeedsIsolation.js'
 import { walkTests } from '#src/lib/analysis/testWalker.js'
-import type { TestCase } from '#src/types.js'
+import type { Test } from '#src/types.js'
 
-const tests: TestCase[] = [
+export default [
   // Array with plain test (no hooks) - no isolation
   {
     fn: () => suiteNeedsIsolation([{ fn: () => 1 }]),
@@ -127,7 +127,8 @@ const tests: TestCase[] = [
   {
     fn: () => {
       let visited = 0
-      walkTests(null as unknown, () => {
+      // @ts-expect-error null is not a valid Test
+      walkTests(null, () => {
         visited++
       })
       return visited === 0
@@ -141,8 +142,10 @@ const tests: TestCase[] = [
       const visited: string[] = []
       walkTests(
         [{ fn: () => 1, name: 'a' as never } as never, { fn: () => 2 }] as never,
-        (t: { name?: string }) => {
-          if (t.name === 'a') visited.push('a')
+        (t: { name?: string; fn?: unknown }) => {
+          if (t.name === 'a') {
+            visited.push('a')
+          }
         },
       )
       return visited.length === 1 && visited[0] === 'a'
@@ -166,18 +169,16 @@ const tests: TestCase[] = [
   // walkTests recurses into test.tests
   {
     fn: () => {
-      let found = false
-      walkTests(
-        [{ fn: () => 1, tests: { inner: { fn: () => 2 } } }] as never,
-        (t: { fn?: unknown }) => {
-          // check via nested key name
-          return false
-        },
-      )
+      walkTests([{ fn: () => 1, tests: { inner: { fn: () => 2 } } }] as never, () => {
+        // check via nested key name
+        return false
+      })
       // verify recursion by visiting nested object structure
-      let visitedKeys: string[] = []
+      const visitedKeys: string[] = []
       walkTests({ top: { deep: { fn: () => 1 } } } as never, t => {
-        if (t && 'fn' in (t as object)) visitedKeys.push('leaf')
+        if (t && 'fn' in (t as object)) {
+          visitedKeys.push('leaf')
+        }
         return false
       })
       return visitedKeys.includes('leaf')
@@ -195,8 +196,12 @@ const tests: TestCase[] = [
           suite1: { fn: () => 1 },
         } as never,
         t => {
-          if (t && 'beforeEach' in (t as object)) visited.push('hooks')
-          if (t && 'fn' in (t as object)) visited.push('test')
+          if (t && 'beforeEach' in (t as object)) {
+            visited.push('hooks')
+          }
+          if (t && 'fn' in (t as object)) {
+            visited.push('test')
+          }
           return false
         },
       )
@@ -205,6 +210,4 @@ const tests: TestCase[] = [
     expect: true,
     info: 'walkTests visits top-level hooks and nested tests',
   },
-]
-
-export default tests
+] satisfies Test[]

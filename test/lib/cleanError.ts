@@ -1,7 +1,8 @@
 import { cleanError } from '#src/lib/cleanError.js'
-import type { TestCase } from '#src/types.js'
+import type { Test } from '#src/types.js'
+import is from '@magic/types'
 
-const tests: TestCase[] = [
+export default [
   // cleanError with null
   {
     fn: () => cleanError(null),
@@ -29,14 +30,35 @@ const tests: TestCase[] = [
   // cleanError with object without stack
   {
     fn: () => cleanError({}),
-    expect: result => result !== undefined && result !== null,
-    info: 'cleanError({}) returns object',
+    expect: is.not.undefined,
+    info: 'cleanError({}) does not return undefined',
+  },
+  {
+    fn: () => cleanError({}),
+    expect: is.not.null,
+    info: 'cleanError({}) does not return null',
+  },
+  {
+    fn: () => cleanError({}),
+    expect: is.objectNative,
+    info: 'cleanError({}) returns an object',
   },
   // cleanError with object with numeric stack
   {
     fn: () => cleanError({ stack: 123 }),
-    expect: result => result !== undefined && result !== null,
-    info: 'cleanError({ stack: 123 }) returns object',
+    expect: is.not.undefined,
+    info: 'cleanError({ stack: 123 }) does not return undefined',
+  },
+  {
+    fn: () => cleanError({ stack: 123 }),
+    expect: is.not.null,
+    info: 'cleanError({ stack: 123 }) does not return null',
+  },
+
+  {
+    fn: () => cleanError({ stack: 123 }),
+    expect: is.objectNative,
+    info: 'cleanError({ stack: 123 }) returns an object',
   },
   // cleanError with empty stack string (falsy, returns original object)
   {
@@ -105,6 +127,4 @@ const tests: TestCase[] = [
     expect: true,
     info: 'cleanError with no stack property returns original',
   },
-]
-
-export default tests
+] satisfies Test[]
