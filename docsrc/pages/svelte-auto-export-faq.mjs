@@ -25,9 +25,7 @@ export const View = () => [
 
   h2({}, 'How to Manual-Export for Svelte 4'),
 
-  p([
-    'In Svelte 4, you must explicitly export variables to access them in tests:',
-  ]),
+  p(['In Svelte 4, you must explicitly export variables to access them in tests:']),
 
   Pre(`
 <!-- Component.svelte -->

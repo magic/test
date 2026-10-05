@@ -35,8 +35,12 @@ export const View = () => [
 
   h2({}, '0.3.30'),
   ul([
-    li('fix(svelte): resolve $app imports to shims instead of @sveltejs/kit runtime (fixes ERR_MODULE_NOT_FOUND in tests)'),
-    li('fix(svelte): skip non-default exports from .svelte files in barrel compilation (TypeScript types erased at runtime)'),
+    li(
+      'fix(svelte): resolve $app imports to shims instead of @sveltejs/kit runtime (fixes ERR_MODULE_NOT_FOUND in tests)',
+    ),
+    li(
+      'fix(svelte): skip non-default exports from .svelte files in barrel compilation (TypeScript types erased at runtime)',
+    ),
     li('fix(vite): inject $app alias into vite aliases for resolveAlias fallback'),
     li('style(svelte): use @magic/fs instead of node:fs for consistency'),
     li('fix(c8): correctly order argv for c8 runs.'),
@@ -44,18 +48,32 @@ export const View = () => [
 
   h2({}, '0.3.29'),
   ul([
-    li('feat(svelte): extract pathUtils with shared path resolution helpers (resolveFilePath, EXTENSION_CANDIDATES, FALLBACK_CANDIDATES, isSkipPattern)'),
+    li(
+      'feat(svelte): extract pathUtils with shared path resolution helpers (resolveFilePath, EXTENSION_CANDIDATES, FALLBACK_CANDIDATES, isSkipPattern)',
+    ),
     li('feat(svelte): extract fileWriter module for compiled file output with source map support'),
-    li('feat(svelte): add resolveNodeModulesRelativeImportsPreprocessor for fixing \'..\' imports in node_modules'),
+    li(
+      "feat(svelte): add resolveNodeModulesRelativeImportsPreprocessor for fixing '..' imports in node_modules",
+    ),
     li('feat(cache): add dedup function for concurrent promise deduplication'),
-    li('refactor(svelte): extract loadViteConfig to shared module, consolidate getViteDefine and loadViteDefine'),
+    li(
+      'refactor(svelte): extract loadViteConfig to shared module, consolidate getViteDefine and loadViteDefine',
+    ),
     li('refactor(svelte): remove resolveViteAlias, consolidate into resolveAlias'),
-    li('refactor(svelte): use visitor pattern in resolveSvelteOnlyExports (traverseExports + ExportVisitor)'),
+    li(
+      'refactor(svelte): use visitor pattern in resolveSvelteOnlyExports (traverseExports + ExportVisitor)',
+    ),
     li('refactor(svelte): use pathUtils in resolvePackageExport, fix .mjs resolution'),
-    li('refactor(svelte): update tsLoader to use resolveAlias with includeShims and extractImportsSync'),
-    li('refactor(svelte): use shared helpers across compile modules (getTempFilePath, fileWriter, processImports)'),
+    li(
+      'refactor(svelte): update tsLoader to use resolveAlias with includeShims and extractImportsSync',
+    ),
+    li(
+      'refactor(svelte): use shared helpers across compile modules (getTempFilePath, fileWriter, processImports)',
+    ),
     li('fix(svelte): add includeShims option to resolveAlias for bare imports'),
-    li('fix(vite): vite defines now correctly set in globalThis, by calling JSON.parse during assign.'),
+    li(
+      'fix(vite): vite defines now correctly set in globalThis, by calling JSON.parse during assign.',
+    ),
   ]),
 
   h2({}, '0.3.28'),
@@ -93,7 +111,11 @@ export const View = () => [
   ]),
 
   h2({}, '0.3.23'),
-  ul([li('0.3.22 caused tests to fail because viteconfig was not loaded correctly and lead to recursive imports')]),
+  ul([
+    li(
+      '0.3.22 caused tests to fail because viteconfig was not loaded correctly and lead to recursive imports',
+    ),
+  ]),
 
   h2({}, '0.3.22'),
   ul([
@@ -200,7 +222,11 @@ export const View = () => [
   ]),
 
   h2({}, '0.3.7'),
-  ul([li('advanced worker isolation, executing minimum number of needed workers for tests. lots of internal changes to achieve this.')]),
+  ul([
+    li(
+      'advanced worker isolation, executing minimum number of needed workers for tests. lots of internal changes to achieve this.',
+    ),
+  ]),
 
   h2({}, '0.3.6'),
   p('broken - tried implementing better isolation'),
@@ -242,7 +268,9 @@ export const View = () => [
 
   h2({}, '0.2.28'),
   ul([
-    li('use node:module register function for loader, allowing use of the --import flag instead of soon deprecated --loader.'),
+    li(
+      'use node:module register function for loader, allowing use of the --import flag instead of soon deprecated --loader.',
+    ),
   ]),
 
   h2({}, '0.2.27'),
@@ -326,24 +354,22 @@ export const View = () => [
   ul([li('update dependencies')]),
 
   h2({}, '0.2.7'),
-  ul([
-    li('update dependencies'),
-    li('replace coveralls with coveralls-next'),
-  ]),
+  ul([li('update dependencies'), li('replace coveralls with coveralls-next')]),
 
   h2({}, '0.2.6'),
   ul([li('update dependencies')]),
 
   h2({}, '0.2.5'),
-  ul([
-    li('update dependencies'),
-    li('@magic/core is a dev dependency now.'),
-  ]),
+  ul([li('update dependencies'), li('@magic/core is a dev dependency now.')]),
 
   h2({}, '0.2.4'),
   ul([
-    li('lib/version: spec can have objects defined with [\'obj\', false], which will test the parent to be an object, but does not test the key/value pairs in the object.'),
-    li('maybeInjectMagic: made magic injection more robust and much faster if magic is not being used.'),
+    li(
+      "lib/version: spec can have objects defined with ['obj', false], which will test the parent to be an object, but does not test the key/value pairs in the object.",
+    ),
+    li(
+      'maybeInjectMagic: made magic injection more robust and much faster if magic is not being used.',
+    ),
     li('t -p now does not show the coverage information'),
   ]),
 
@@ -351,7 +377,11 @@ export const View = () => [
   ul([li('update dependencies')]),
 
   h2({}, '0.2.2'),
-  ul([li('spec values can be functions, allowing arbitrary equality testing to be executed by @magic/test.version')]),
+  ul([
+    li(
+      'spec values can be functions, allowing arbitrary equality testing to be executed by @magic/test.version',
+    ),
+  ]),
 
   h2({}, '0.2.1'),
   ul([
@@ -363,10 +393,7 @@ export const View = () => [
   ]),
 
   h2({}, '0.2.0'),
-  ul([
-    li('update dependencies'),
-    li('version now tests spec and lib in a single run.'),
-  ]),
+  ul([li('update dependencies'), li('version now tests spec and lib in a single run.')]),
 
   h2({}, '0.1.77'),
   ul([li('update dependencies')]),
@@ -408,7 +435,9 @@ export const View = () => [
   ul([
     li('update dependencies'),
     li('testing of @magic-modules is now built in.'),
-    li('if @magic/core is installed, the tests will "just work" and return html for @magic-modules'),
+    li(
+      'if @magic/core is installed, the tests will "just work" and return html for @magic-modules',
+    ),
   ]),
 
   h2({}, '0.1.64'),
@@ -427,10 +456,7 @@ export const View = () => [
   ul([li('update dependencies')]),
 
   h2({}, '0.1.60'),
-  ul([
-    li('bump required node version to 14.15.4'),
-    li('update dependencies'),
-  ]),
+  ul([li('bump required node version to 14.15.4'), li('update dependencies')]),
 
   h2({}, '0.1.59'),
   ul([li('update dependencies')]),
@@ -454,28 +480,19 @@ export const View = () => [
   ul([li('update dependencies')]),
 
   h2({}, '0.1.52'),
-  ul([
-    li('update dependencies'),
-    li('remove hyperapp from exports.'),
-  ]),
+  ul([li('update dependencies'), li('remove hyperapp from exports.')]),
 
   h2({}, '0.1.51'),
   ul([li('update dependencies')]),
 
   h2({}, '0.1.50'),
-  ul([
-    li('remove @magic/css export'),
-    li('update c8'),
-  ]),
+  ul([li('remove @magic/css export'), li('update c8')]),
 
   h2({}, '0.1.49'),
   ul([li('update @magic/css')]),
 
   h2({}, '0.1.48'),
-  ul([
-    li('bump required node version to 14.2.0'),
-    li('update dependencies'),
-  ]),
+  ul([li('bump required node version to 14.2.0'), li('update dependencies')]),
 
   h2({}, '0.1.47'),
   ul([li('update c8, yargs-parser')]),
@@ -514,10 +531,7 @@ export const View = () => [
   ul([li('c8: --exclude, --include and --all get applied correctly.')]),
 
   h2({}, '0.1.35'),
-  ul([
-    li('fix: c8 errored if coverage dir did not exist'),
-    li('update dependencies'),
-  ]),
+  ul([li('fix: c8 errored if coverage dir did not exist'), li('update dependencies')]),
 
   h2({}, '0.1.34'),
   ul([li('fix: c8 needs "report" command now')]),
@@ -541,10 +555,7 @@ export const View = () => [
   ul([li('help text can show up when --help is used')]),
 
   h2({}, '0.1.28'),
-  ul([
-    li('package: engineStrict: true'),
-    li('update cli: missing @magic/cases dependency'),
-  ]),
+  ul([li('package: engineStrict: true'), li('update cli: missing @magic/cases dependency')]),
 
   h2({}, '0.1.27'),
   ul([li('remove prettier from deps')]),
@@ -578,10 +589,7 @@ export const View = () => [
   ul([li('update dependencies')]),
 
   h2({}, '0.1.18'),
-  ul([
-    li('update dependencies'),
-    li('require node 12.13.0'),
-  ]),
+  ul([li('update dependencies'), li('require node 12.13.0')]),
 
   h2({}, '0.1.17'),
   ul([li('add node 13 json support for coverage reports.')]),
@@ -602,10 +610,7 @@ export const View = () => [
   ul([li('update dependencies')]),
 
   h2({}, '0.1.11'),
-  ul([
-    li('update prettier, coveralls'),
-    li('add and export @magic/css to test css validity'),
-  ]),
+  ul([li('update prettier, coveralls'), li('add and export @magic/css to test css validity')]),
 
   h2({}, '0.1.10'),
   ul([li('node 12.4.0 does not use --experimental-json-modules flag. removed it in 12.4+.')]),
@@ -614,7 +619,9 @@ export const View = () => [
   ul([
     li('test/beforeAll.js gets loaded separately if it exists and executed before all tests'),
     li('test/afterAll.js gets loaded separately if it exists and executed after all tests'),
-    li('if the function exported from test/beforeAll.js returns another function, this returned function will also be executed after all tests'),
+    li(
+      'if the function exported from test/beforeAll.js returns another function, this returned function will also be executed after all tests',
+    ),
     li('export hyperapp beta 18'),
   ]),
 
@@ -622,10 +629,7 @@ export const View = () => [
   ul([li('update @magic/cli')]),
 
   h2({}, '0.1.7'),
-  ul([
-    li('readded calls npm run script'),
-    li('updated c8'),
-  ]),
+  ul([li('readded calls npm run script'), li('updated c8')]),
 
   h2({}, '0.1.6'),
   ul([

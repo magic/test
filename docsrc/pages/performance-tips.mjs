@@ -5,9 +5,7 @@ export const View = () => [
 
   h2({}, 'Use the -p Flag'),
 
-  p([
-    'Run tests in production mode to skip coverage and get faster output:',
-  ]),
+  p(['Run tests in production mode to skip coverage and get faster output:']),
 
   Pre(`
 # Fast mode - no coverage, only shows failures
@@ -18,24 +16,18 @@ t -p
 
   h2({}, 'Shard Large Test Suites'),
 
-  p([
-    'Split tests across multiple processes to speed up large suites:',
-  ]),
+  p(['Split tests across multiple processes to speed up large suites:']),
 
   Pre(`
 # Split tests across 4 processes
 t --shards 4 --shard-id 0
 `),
 
-  p([
-    'Tests are distributed deterministically using a hash of the test file path.',
-  ]),
+  p(['Tests are distributed deterministically using a hash of the test file path.']),
 
   h2({}, 'Minimize Async Overhead'),
 
-  p([
-    'Async tests are slower than sync tests. Use sync where possible:',
-  ]),
+  p(['Async tests are slower than sync tests. Use sync where possible:']),
 
   Pre(`
 # Slower: unnecessary async
@@ -53,9 +45,7 @@ export default {
 
   h2({}, 'Use Local State Instead of Globals'),
 
-  p([
-    'Global state requires isolation overhead. Local state is naturally isolated:',
-  ]),
+  p(['Global state requires isolation overhead. Local state is naturally isolated:']),
 
   Pre(`
 # Slower: global state requires isolation
@@ -75,9 +65,7 @@ export default [
 
   h2({}, 'Batch Related Tests'),
 
-  p([
-    'Single suite with multiple tests is faster than multiple suites:',
-  ]),
+  p(['Single suite with multiple tests is faster than multiple suites:']),
 
   Pre(`
 # Faster: single suite with multiple tests
@@ -101,9 +89,5 @@ export default [
 t -p --workers 2
 `),
 
-  p([
-    'Link: ',
-    Link({ to: '/cli/' }, 'CLI & Usage'),
-    ' for full flag reference.',
-  ]),
+  p(['Link: ', Link({ to: '/cli/' }, 'CLI & Usage'), ' for full flag reference.']),
 ]

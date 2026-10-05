@@ -101,19 +101,37 @@ export default [
 
   ul([
     li([Link({ to: '/getting-started/' }, 'Getting Started'), ' - install, setup, first test']),
-    li([Link({ to: '/writing-tests/' }, 'Writing Tests'), ' - hooks, promises, types, multiple tests']),
-    li([Link({ to: '/lib/' }, 'Utility Functions'), ' - deep, fs, curry, log, vals, env, http, mock, has']),
+    li([
+      Link({ to: '/writing-tests/' }, 'Writing Tests'),
+      ' - hooks, promises, types, multiple tests',
+    ]),
+    li([
+      Link({ to: '/lib/' }, 'Utility Functions'),
+      ' - deep, fs, curry, log, vals, env, http, mock, has',
+    ]),
     li([Link({ to: '/svelte/' }, 'Svelte Testing'), ' - mount components, interact, assert']),
     li([Link({ to: '/svelte-4-vs-5/' }, 'Svelte 4 vs 5'), ' - feature comparison']),
-    li([Link({ to: '/svelte-auto-export-faq/' }, 'Svelte Auto-Export FAQ'), ' - $state and $derived exports']),
+    li([
+      Link({ to: '/svelte-auto-export-faq/' }, 'Svelte Auto-Export FAQ'),
+      ' - $state and $derived exports',
+    ]),
     li([Link({ to: '/cli/' }, 'CLI & Usage'), ' - flags, sharding, performance tips']),
     li([Link({ to: '/cli-flags-reference/' }, 'CLI Flags Reference'), ' - detailed flag table']),
-    li([Link({ to: '/cli-sharding-cheatsheet/' }, 'CLI Sharding Cheat-Sheet'), ' - CI/CD examples']),
+    li([
+      Link({ to: '/cli-sharding-cheatsheet/' }, 'CLI Sharding Cheat-Sheet'),
+      ' - CI/CD examples',
+    ]),
     li([Link({ to: '/performance-tips/' }, 'Performance Tips'), ' - optimization techniques']),
     li([Link({ to: '/common-pitfalls/' }, 'Common Pitfalls'), ' - troubleshooting tips']),
-    li([Link({ to: '/test-isolation/' }, 'Test Isolation'), ' - prevent state leakage between tests']),
+    li([
+      Link({ to: '/test-isolation/' }, 'Test Isolation'),
+      ' - prevent state leakage between tests',
+    ]),
     li([Link({ to: '/error-codes/' }, 'Error Codes'), ' - programmatic error handling']),
-    li([Link({ to: '/error-codes-quicklook/' }, 'Error Codes Quick Look'), ' - quick reference table']),
+    li([
+      Link({ to: '/error-codes-quicklook/' }, 'Error Codes Quick Look'),
+      ' - quick reference table',
+    ]),
     li([Link({ to: '/version-history/' }, 'Version History'), ' - release overview']),
     li(Link({ to: '/changelog/' }, 'Changelog'), ' - detailed release history'),
   ]),

@@ -32,10 +32,7 @@ export const View = () => [
 
   h2({}, 'Svelte 5 Only'),
 
-  ul([
-    li('Auto-export of $state and $derived runes'),
-    li('Rune-based reactivity'),
-  ]),
+  ul([li('Auto-export of $state and $derived runes'), li('Rune-based reactivity')]),
 
   p([
     'Svelte 5 automatically exports $state and $derived variables,',

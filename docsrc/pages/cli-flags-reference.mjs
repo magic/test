@@ -46,6 +46,9 @@ t -p --shards 4 --shard-id 2 --workers 2
   ul([
     li([Link({ to: '/cli/' }, 'CLI & Usage'), ' - detailed usage guide']),
     li([Link({ to: '/performance-tips/' }, 'Performance Tips'), ' - optimization techniques']),
-    li([Link({ to: '/cli-sharding-cheatsheet/' }, 'CLI Sharding Cheat-Sheet'), ' - CI/CD examples']),
+    li([
+      Link({ to: '/cli-sharding-cheatsheet/' }, 'CLI Sharding Cheat-Sheet'),
+      ' - CI/CD examples',
+    ]),
   ]),
 ]

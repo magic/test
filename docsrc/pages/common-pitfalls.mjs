@@ -5,9 +5,7 @@ export const View = () => [
 
   h2({}, '1. Forgetting to Return in Async Tests'),
 
-  p([
-    'The test finishes before the promise resolves. Always return the promise:',
-  ]),
+  p(['The test finishes before the promise resolves. Always return the promise:']),
 
   Pre(`
 # Wrong: promise resolves before test checks result

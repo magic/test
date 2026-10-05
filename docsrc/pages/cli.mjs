@@ -200,9 +200,9 @@ t --shards 4 --shard-id 0
   ]),
 
   h3({}, 'Quick Reference'),
-  
+
   p('Avoid these common mistakes:'),
-  
+
   ul([
     li('Forgetting to return in async tests'),
     li('Not wrapping callback functions'),
