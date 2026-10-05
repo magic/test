@@ -1,7 +1,4 @@
-/**
- * @param {unknown} state
- */
-export const View = state => [
+export const View = () => [
   h1({ id: 'test-isolation' }, 'Test Isolation'),
 
   p([

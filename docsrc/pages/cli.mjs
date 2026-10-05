@@ -1,7 +1,4 @@
-/**
- * @param {unknown} state
- */
-export const View = state => [
+export const View = () => [
   h1({ id: 'cli' }, 'CLI & Usage'),
 
   h2({ id: 'cli-packagejson' }, 'package.json (recommended)'),
@@ -178,202 +175,40 @@ Ran 7 tests in 12ms. Passed 7/7 100%
 
   h2({ id: 'performance-tips' }, 'Performance Tips'),
 
-  p('Follow these tips to get the most out of @magic/test:'),
+  p([
+    'For a detailed guide, see the ',
+    Link({ to: '/performance-tips/' }, 'Performance Tips'),
+    ' page.',
+  ]),
 
-  h3({}, 'Use the -p flag for development'),
+  h3({}, 'Quick Reference'),
 
   Pre(`
-# Fast mode - no coverage, only shows failures
-npm test
-# or
+# Fast mode - no coverage
 t -p
-`),
 
-  h3({}, 'Shard large test suites'),
-
-  Pre(`
-# Split tests across multiple processes
+# Shard across 4 processes
 t --shards 4 --shard-id 0
-`),
-
-  h3({}, 'Minimize async overhead'),
-
-  Pre(`
-# Slower: unnecessary async
-export default {
-  fn: async () => {
-    return true
-  },
-  expect: true,
-}
-
-# Faster: sync test
-export default {
-  fn: () => true,
-  expect: true,
-}
-`),
-
-  h3({}, 'Use local state instead of globals'),
-
-  Pre(`
-# Slower: global state requires isolation
-export const __isolate = true
-
-# Faster: local state is naturally isolated
-export default [
-  {
-    fn: () => {
-      const counter = 0
-      return ++counter
-    },
-    expect: 1,
-  },
-]
-`),
-
-  h3({}, 'Batch related tests'),
-
-  Pre(`
-# Faster: single suite with multiple tests
-export default [
-  { fn: () => add(1, 2), expect: 3 },
-  { fn: () => add(0, 0), expect: 0 },
-  { fn: () => add(-1, 1), expect: 0 },
-]
 `),
 
   h2({ id: 'common-pitfalls' }, 'Common Pitfalls'),
 
-  p('Avoid these common mistakes when writing tests:'),
+  p([
+    'For a detailed guide, see the ',
+    Link({ to: '/common-pitfalls/' }, 'Common Pitfalls'),
+    ' page.',
+  ]),
 
-  h3({}, '1. Forgetting to return in async tests'),
-
-  Pre(`
-# Wrong: promise resolves before test checks result
-export default {
-  fn: async () => {
-    const result = await someAsyncFunction()
-    // missing return!
-  },
-  expect: true,
-}
-
-# Correct:
-export default {
-  fn: async () => {
-    return await someAsyncFunction()
-  },
-  expect: true,
-}
-`),
-
-  h3({}, '2. Not wrapping callback functions'),
-
-  Pre(`
-# Wrong: function gets called immediately
-export default {
-  fn: doSomething(),  // executes immediately!
-  expect: true,
-}
-
-# Correct: wrap in function to defer execution
-export default {
-  fn: () => doSomething(),
-  expect: true,
-}
-`),
-
-  h3({}, '3. Mutating shared state between tests'),
-
-  Pre(`
-# Wrong: counter persists between tests
-let counter = 0
-export default [
-  { fn: () => ++counter, expect: 1 },
-  { fn: () => ++counter, expect: 2 }, // fails! counter is now 1
-]
-
-# Correct: use local state or reset in beforeEach
-let counter = 0
-const beforeEach = () => { counter = 0 }
-export default {
-  beforeEach,
-  tests: [
-    { fn: () => ++counter, expect: 1 },
-    { fn: () => ++counter, expect: 1 }, // passes - reset before each
-  ],
-}
-`),
-
-  h3({}, '4. Using the wrong equality check'),
-
-  Pre(`
-# Wrong: checks reference equality
-export default {
-  fn: () => [1, 2, 3],
-  expect: [1, 2, 3], // fails! different arrays
-}
-
-# Correct: use @magic/types for deep comparison
-import { is } from '@magic/test'
-export default {
-  fn: () => [1, 2, 3],
-  expect: is.deep.equal([1, 2, 3]),
-}
-`),
-
-  h3({}, '5. Not awaiting async operations'),
-
-  Pre(`
-# Wrong: test finishes before promise resolves
-export default {
-  fn: () => {
-    setTimeout(() => {
-      // This never gets checked!
-    }, 100)
-  },
-  expect: true,
-}
-
-# Correct: return the promise
-export default {
-  fn: () => new Promise(resolve => {
-    setTimeout(() => resolve(true), 100)
-  }),
-  expect: true,
-}
-
-# Or use the promise helper:
-import { promise } from '@magic/test'
-export default {
-  fn: promise(cb => setTimeout(() => cb(null, true), 100)),
-  expect: true,
-}
-`),
-
-  h3({}, '6. Incorrect hook usage'),
-
-  Pre(`
-# Wrong: before/after hooks on individual tests, not suites
-export default [
-  {
-    fn: () => true,
-    beforeAll: () => {}, // wrong! beforeAll is for suites
-    afterAll: () => {},
-    expect: true,
-  },
-]
-
-# Correct: hooks at suite level
-const beforeAll = () => {}
-const afterAll = () => {}
-export default {
-  beforeAll,
-  afterAll,
-  tests: [
-    { fn: () => true, expect: true },
-  ],
-}
-`),
+  h3({}, 'Quick Reference'),
+  
+  p('Avoid these common mistakes:'),
+  
+  ul([
+    li('Forgetting to return in async tests'),
+    li('Not wrapping callback functions'),
+    li('Mutating shared state between tests'),
+    li('Using the wrong equality check'),
+    li('Not awaiting async operations'),
+    li('Incorrect hook usage'),
+  ]),
 ]

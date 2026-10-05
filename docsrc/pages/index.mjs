@@ -14,50 +14,19 @@ export const View = state => [
 
   h2({ id: 'getting-started' }, 'Getting Started'),
 
-  p('Be in a nodejs project.'),
-
-  h3({}, 'Install'),
+  p([
+    'See the ',
+    Link({ to: '/getting-started/' }, 'Getting Started'),
+    ' guide for full instructions.',
+  ]),
 
   Pre({ lines: 'false' }, 'npm i --save-dev --save-exact @magic/test'),
-
-  h3({}, 'Create a test'),
 
   Pre(`
 // test/yourFileToTest.js
 export default [
   { fn: () => true, expect: true, info: 'true is true' },
 ]
-`),
-
-  h3({}, 'Add npm scripts'),
-
-  Pre(`
-{
-  "scripts": {
-    "test": "t -p",
-    "coverage": "t"
-  }
-}
-`),
-
-  h3({}, 'Run tests'),
-
-  Pre(`
-npm test
-`),
-
-  p('Example output:'),
-
-  Pre(`
-### Testing package: @magic/test
-Ran 2 tests. Passed 2/2 100%
-`),
-
-  p('Faster output from a bigger project:'),
-
-  Pre(`
-### Testing package: @artificialmuseum/engine
-Ran 90307 tests in 274.5ms. Passed 90307/90307 100%
 `),
 
   h2({ id: 'features' }, 'Features'),
@@ -131,22 +100,22 @@ export default [
   h2({ id: 'learn-more' }, 'Learn More'),
 
   ul([
-    li(
-      Link({ to: '/writing-tests/' }, 'Writing Tests'),
-      ' - hooks, promises, types, multiple tests',
-    ),
-    li(
-      Link({ to: '/lib/' }, 'Utility Functions'),
-      ' - deep, fs, curry, log, vals, env, http, mock, has',
-    ),
-    li(Link({ to: '/svelte/' }, 'Svelte Testing'), ' - mount components, interact, assert'),
-    li(Link({ to: '/cli/' }, 'CLI & Usage'), ' - flags, sharding, performance tips'),
-    li(
-      Link({ to: '/test-isolation/' }, 'Test Isolation'),
-      ' - prevent state leakage between tests',
-    ),
-    li(Link({ to: '/error-codes/' }, 'Error Codes'), ' - programmatic error handling'),
-    li(Link({ to: '/changelog/' }, 'Changelog'), ' - release history'),
+    li([Link({ to: '/getting-started/' }, 'Getting Started'), ' - install, setup, first test']),
+    li([Link({ to: '/writing-tests/' }, 'Writing Tests'), ' - hooks, promises, types, multiple tests']),
+    li([Link({ to: '/lib/' }, 'Utility Functions'), ' - deep, fs, curry, log, vals, env, http, mock, has']),
+    li([Link({ to: '/svelte/' }, 'Svelte Testing'), ' - mount components, interact, assert']),
+    li([Link({ to: '/svelte-4-vs-5/' }, 'Svelte 4 vs 5'), ' - feature comparison']),
+    li([Link({ to: '/svelte-auto-export-faq/' }, 'Svelte Auto-Export FAQ'), ' - $state and $derived exports']),
+    li([Link({ to: '/cli/' }, 'CLI & Usage'), ' - flags, sharding, performance tips']),
+    li([Link({ to: '/cli-flags-reference/' }, 'CLI Flags Reference'), ' - detailed flag table']),
+    li([Link({ to: '/cli-sharding-cheatsheet/' }, 'CLI Sharding Cheat-Sheet'), ' - CI/CD examples']),
+    li([Link({ to: '/performance-tips/' }, 'Performance Tips'), ' - optimization techniques']),
+    li([Link({ to: '/common-pitfalls/' }, 'Common Pitfalls'), ' - troubleshooting tips']),
+    li([Link({ to: '/test-isolation/' }, 'Test Isolation'), ' - prevent state leakage between tests']),
+    li([Link({ to: '/error-codes/' }, 'Error Codes'), ' - programmatic error handling']),
+    li([Link({ to: '/error-codes-quicklook/' }, 'Error Codes Quick Look'), ' - quick reference table']),
+    li([Link({ to: '/version-history/' }, 'Version History'), ' - release overview']),
+    li(Link({ to: '/changelog/' }, 'Changelog'), ' - detailed release history'),
   ]),
 
   p([

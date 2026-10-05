@@ -11,7 +11,7 @@ export const state = {
 
   menu: [
     { to: '/', text: 'Home' },
-    { to: '/#getting-started', text: 'Getting Started' },
+    { to: '/getting-started/', text: 'Getting Started' },
     {
       to: '/writing-tests/',
       text: 'Writing Tests',
@@ -61,6 +61,8 @@ export const state = {
         { to: '/svelte/#lib-sveltekit-mocks', text: 'SvelteKit Mocks' },
         { to: '/svelte/#lib-create-static-page', text: 'createStaticPage' },
         { to: '/svelte/#lib-compile-svelte', text: 'compileSvelte' },
+        { to: '/svelte-4-vs-5/', text: 'Svelte 4 vs 5' },
+        { to: '/svelte-auto-export-faq/', text: 'Auto-Export FAQ' },
       ],
     },
     {
@@ -75,6 +77,10 @@ export const state = {
         { to: '/cli/#verbose-output', text: 'Verbose Output' },
         { to: '/cli/#performance-tips', text: 'Performance Tips' },
         { to: '/cli/#common-pitfalls', text: 'Common Pitfalls' },
+        { to: '/cli-flags-reference/', text: 'CLI Flags Reference' },
+        { to: '/cli-sharding-cheatsheet/', text: 'Sharding Cheat-Sheet' },
+        { to: '/performance-tips/', text: 'Performance Tips' },
+        { to: '/common-pitfalls/', text: 'Common Pitfalls' },
       ],
     },
     {
@@ -85,6 +91,10 @@ export const state = {
     {
       to: '/error-codes/',
       text: 'Error Codes',
+    },
+    {
+      to: '/error-codes-quicklook/',
+      text: 'Error Codes Quick Look',
     },
     {
       to: '/changelog/',
