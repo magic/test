@@ -1,3 +1,6 @@
+/**
+ * @param {unknown} state
+ */
 export const View = state => [
   h1({ id: 'error-codes' }, 'Error Codes'),
 
