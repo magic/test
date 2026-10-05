@@ -13,6 +13,7 @@ import { computeRelativePath } from './computeRelativePath.js'
 import { classifyImport } from '../viteConfig/classifyImport.js'
 import { getTempFilePath } from './getTempFilePath.js'
 import { compileBarrel } from './compileBarrel.js'
+import { resolveImportMapSpecifier, findNearestPackageJson } from './resolveImportMap.js'
 import { resolvePackageExport } from './resolvePackageExport.js'
 import { compileSvelteOnlyExport } from './resolveSvelteOnlyExports.js'
 import { tryStat } from '#src/lib/fs.js'
@@ -76,105 +77,14 @@ const resolveAndCompileImportImplCore = async (
 ) => {
   const importType = classifyImport(importPath)
   let resolvedPath
-  // Resolve "#-prefixed" imports against the tested package's own
-  // package.json "imports" mappings (e.g. "#lib/*": "./src/lib/*",
-  // "#client": "./src/internal/client.js").
+  // Resolve "#-prefixed" imports against the importing file's own package
+  // scope (nearest package.json), matching Node's ESM semantics for
+  // import-map specifiers (e.g. "#lib/*": "./src/lib/*").
   if (importPath.startsWith('#')) {
-    const pkgJsonPath = path.resolve(CWD, 'package.json')
-    if (await existsCached(pkgJsonPath)) {
-      try {
-        const pkgRaw = await fs.readFile(pkgJsonPath, 'utf-8')
-        const pkg = JSON.parse(pkgRaw)
-        const imports = pkg.imports
-        if (imports && typeof imports === 'object') {
-          let target
-          let suffix
-          // 1) Exact match: "#client": "./src/internal/client.js"
-          if (typeof imports[importPath] === 'string') {
-            target = imports[importPath]
-          } else {
-            // 2) Wildcard match, longest prefix wins:
-            //    "#lib/*": "./src/lib/*"
-            // 3) Parent-key base-dir match, longest prefix wins:
-            //    "#lib": "./src/lib/index.js" resolves "#lib/forms/Button.svelte"
-            //    to "./src/lib/forms/Button.svelte"
-            let bestLen = -1
-            for (const [key, value] of Object.entries(imports)) {
-              if (typeof value !== 'string') {
-                continue
-              }
-              if (key.endsWith('*')) {
-                const prefix = key.slice(0, -1)
-                if (importPath.startsWith(prefix) && prefix.length > bestLen) {
-                  target = value
-                  suffix = importPath.slice(prefix.length)
-                  bestLen = prefix.length
-                }
-              } else if (key !== importPath) {
-                const sep = key + '/'
-                if (importPath.startsWith(sep) && key.length > bestLen) {
-                  target = value
-                  suffix = importPath.slice(sep.length)
-                  bestLen = key.length
-                }
-              }
-            }
-          }
-          if (target) {
-            // A file target (has extension) implies its directory as the base;
-            // a directory target is used as the base directly.
-            const isFile = path.extname(target) !== ''
-            const local =
-              suffix === undefined
-                ? target
-                : target.includes('*')
-                  ? target.replace('*', suffix)
-                  : path.join(isFile ? path.dirname(target) : target, suffix)
-            const fullResolvedPath = path.resolve(CWD, local)
-            if (await existsCached(fullResolvedPath)) {
-              resolvedPath = fullResolvedPath
-            } else {
-              // If the resolved path has .js extension but the file is .ts, try .ts instead
-              if (path.extname(fullResolvedPath) === '.js') {
-                const tsPath = fullResolvedPath.slice(0, -3) + '.ts'
-                if (await existsCached(tsPath)) {
-                  resolvedPath = tsPath
-                } else {
-                  // Try with extensions
-                  for (const ext of ['.svelte', '.js', '.ts']) {
-                    const candidate = fullResolvedPath + ext
-                    if (await existsCached(candidate)) {
-                      resolvedPath = candidate
-                      break
-                    }
-                  }
-                }
-              } else {
-                // Try with extensions
-                for (const ext of ['.svelte', '.js', '.ts']) {
-                  const candidate = fullResolvedPath + ext
-                  if (await existsCached(candidate)) {
-                    resolvedPath = candidate
-                    break
-                  }
-                }
-              }
-              // Try as directory with index
-              if (!resolvedPath) {
-                for (const ext of ['/index.svelte', '/index.js', '/index.ts']) {
-                  const candidate = fullResolvedPath + ext
-                  if (await existsCached(candidate)) {
-                    resolvedPath = candidate
-                    break
-                  }
-                }
-              }
-            }
-          }
-        }
-      } catch {
-        // ignore - fallback to other resolution
-      }
+    const pkgJsonPath = await findNearestPackageJson(path.resolve(sourceFilePath))
+    const importMapPath = await resolveImportMapSpecifier(importPath, pkgJsonPath)
+    if (importMapPath) {
+      resolvedPath = importMapPath
     }
   }
   // Direct handling of $app imports - resolve to shims

@@ -11,6 +11,7 @@ import { hasSvelteRunes, extractImportsSync } from '#src/lib/svelte/compile/astP
 import { getTempFilePath } from '#src/lib/svelte/compile/getTempFilePath.js'
 import { transpileWithTypescript } from './tsTranspile.js'
 import { compileSvelteWithWrite } from '#src/lib/svelte/compile/compileSvelteWithWrite.js'
+import { findNearestPackageJson } from '#src/lib/svelte/compile/resolveImportMap.js'
 import { writeTempFile } from '#src/lib/svelte/compile/resolveSvelteOnlyExports.js'
 import { processImports } from '#src/lib/svelte/compile/processImports.js'
 import { transformForNode } from '#src/lib/svelte/compile/transformForNode.js'
@@ -70,6 +71,18 @@ const compileSvelteFile = async filePath => {
     traceEnd(id, `ERROR: ${e.message}`)
     throw e
   }
+}
+// Node cannot load raw .svelte sources - if the resolved file is a .svelte
+// component, compile it first and return the compiled module URL instead of
+// the raw file URL (the load hook has no handler for .svelte URLs).
+const returnFileUrl = async filePath => {
+  if (svelteAvailable && filePath.endsWith('.svelte')) {
+    const importUrl = await compileSvelteFile(filePath)
+    if (importUrl) {
+      return { url: importUrl, shortCircuit: true }
+    }
+  }
+  return { url: pathToFileURL(filePath).href, shortCircuit: true }
 }
 export const resolve = async (specifier, context, nextResolve) => {
   const id = traceStart(`tsLoader.resolve ${specifier.split('/').pop() || specifier}`)
@@ -134,10 +147,10 @@ const resolveImpl = async (specifier, context, nextResolve) => {
           const withExtensions = ['', '.ts', '.svelte.ts', '.js', '/index.ts', '/index.js']
           for (const ext of withExtensions) {
             if (await fs.exists(aliasResolved + ext)) {
-              return { url: pathToFileURL(aliasResolved + ext).href, shortCircuit: true }
+              return await returnFileUrl(aliasResolved + ext)
             }
           }
-          return { url: pathToFileURL(aliasResolved).href, shortCircuit: true }
+          return await returnFileUrl(aliasResolved)
         }
       } catch (e) {
         log.error('Error', e)
@@ -277,31 +290,10 @@ const resolveImpl = async (specifier, context, nextResolve) => {
     if (specifier.startsWith('#')) {
       // Use the nearest package.json to the importing module (not process.cwd())
       // so import maps from nested packages (e.g. node_modules/@magic/test) work too.
-      let pkgJsonPath = null
+      let pkgJsonPath
       if (context.parentURL && !context.parentURL.startsWith('data:')) {
-        let dir
-        try {
-          dir = path.dirname(new URL(context.parentURL).pathname)
-        } catch {
-          dir = ''
-        }
-        let stopped = false
-        while (dir && !stopped) {
-          const candidate = path.join(dir, 'package.json')
-          if (await fs.exists(candidate)) {
-            pkgJsonPath = candidate
-            stopped = true
-          } else {
-            const parent = path.dirname(dir)
-            if (parent === dir) {
-              stopped = true
-            } else {
-              dir = parent
-            }
-          }
-        }
-      }
-      if (!pkgJsonPath) {
+        pkgJsonPath = await findNearestPackageJson(new URL(context.parentURL).pathname)
+      } else {
         pkgJsonPath = path.resolve(process.cwd(), 'package.json')
       }
       const packageRoot = path.dirname(pkgJsonPath)
@@ -355,31 +347,38 @@ const resolveImpl = async (specifier, context, nextResolve) => {
                     ? target.replace('*', suffix)
                     : path.join(isFile ? path.dirname(target) : target, suffix)
               const fullResolvedPath = path.resolve(packageRoot, local)
+              let finalPath
               if (await fs.exists(fullResolvedPath)) {
-                return { url: pathToFileURL(fullResolvedPath).href, shortCircuit: true }
-              } else {
+                finalPath = fullResolvedPath
+              } else if (path.extname(fullResolvedPath) === '.js') {
                 // If the resolved path has .js extension but the file is .ts, try .ts instead
-                if (path.extname(fullResolvedPath) === '.js') {
-                  const tsPath = fullResolvedPath.slice(0, -3) + '.ts'
-                  if (await fs.exists(tsPath)) {
-                    return { url: pathToFileURL(tsPath).href, shortCircuit: true }
-                  }
-                } else {
-                  // Try with extensions
-                  for (const ext of ['.svelte', '.js', '.ts']) {
-                    const candidate = fullResolvedPath + ext
-                    if (await fs.exists(candidate)) {
-                      return { url: pathToFileURL(candidate).href, shortCircuit: true }
-                    }
+                const tsPath = fullResolvedPath.slice(0, -3) + '.ts'
+                if (await fs.exists(tsPath)) {
+                  finalPath = tsPath
+                }
+              }
+              if (!finalPath) {
+                // Try with extensions
+                for (const ext of ['.svelte', '.js', '.ts']) {
+                  const candidate = fullResolvedPath + ext
+                  if (await fs.exists(candidate)) {
+                    finalPath = candidate
+                    break
                   }
                 }
-                // Try as directory with index
+              }
+              // Try as directory with index
+              if (!finalPath) {
                 for (const ext of ['/index.svelte', '/index.js', '/index.ts']) {
                   const candidate = fullResolvedPath + ext
                   if (await fs.exists(candidate)) {
-                    return { url: pathToFileURL(candidate).href, shortCircuit: true }
+                    finalPath = candidate
+                    break
                   }
                 }
+              }
+              if (finalPath) {
+                return await returnFileUrl(finalPath)
               }
             }
           }
