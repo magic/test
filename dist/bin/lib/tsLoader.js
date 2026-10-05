@@ -273,7 +273,7 @@ const resolveImpl = async (specifier, context, nextResolve) => {
       }
     }
     // Handle #-prefixed import map specifiers (defined in package.json imports field)
-    // e.g. #src/lib/stats/info.js -> src/lib/stats/info.ts, #lib/actions/clickOutside.svelte.js -> src/lib/actions/clickOutside.svelte.js
+    // e.g. #src/lib/stats/info.js -> src/lib/stats/info.ts, #lib/actions/clickOutside.svelte.js -> src/lib/actions/clickOutside.svelte.ts
     if (specifier.startsWith('#')) {
       // Use the nearest package.json to the importing module (not process.cwd())
       // so import maps from nested packages (e.g. node_modules/@magic/test) work too.

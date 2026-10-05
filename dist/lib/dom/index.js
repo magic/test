@@ -1,3 +1,4 @@
+export {} from './types.js'
 export { parsePngDimensions, createImagePolyfill } from './image.js'
 export { createCanvasPolyfill } from './canvas.js'
 import { initGlobals } from './globals.js'

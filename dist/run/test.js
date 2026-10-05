@@ -1,6 +1,7 @@
 import is from '@magic/types'
 import log from '@magic/log'
 import { cleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/index.js'
+import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
 import { runSuite } from './suite.js'
 import {

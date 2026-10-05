@@ -1,6 +1,8 @@
 import is from '@magic/types'
 import {
   Element,
+  Document,
+  Window,
   Event,
   MouseEvent,
   KeyboardEvent,
@@ -10,6 +12,11 @@ import {
   ClipboardEvent,
   AnimationEvent,
   CustomEvent,
+  HTMLInputElement,
+  HTMLTextAreaElement,
+  HTMLSelectElement,
+  HTMLFormElement,
+  HTMLMediaElement,
   WheelEvent,
 } from 'happy-dom'
 export class DragEvent extends Event {

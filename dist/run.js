@@ -1,6 +1,6 @@
 import is from '@magic/types'
 import log from '@magic/log'
-import { stats, createStore, ERRORS } from './lib/index.js'
+import { stats, createStore, ERRORS, Store } from './lib/index.js'
 import { runSuite } from './run/suite.js'
 import { printTraceSummary, isTraceEnabled } from './lib/trace/timing.js'
 import { clearCache as clearPersistentCache } from './lib/caches/persistentCache.js'
