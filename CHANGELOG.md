@@ -1,5 +1,9 @@
 ### Changelog
 
+#### 0.3.37
+
+- svelte mount now correctly resolves # imports map from package.json
+
 #### 0.3.36
 
 - fix: add null guards for TypeScript strict mode in getSvelteExports tests
