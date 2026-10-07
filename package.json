@@ -13,7 +13,8 @@
     "#src": "./dist/index.js",
     "#src/*": "./dist/*",
     "#test/*": "./test/*",
-    "#docsrc/*": "./docsrc/*"
+    "#docsrc/*": "./docsrc/*",
+    "#lib/*": "./src/lib/*"
   },
   "exports": {
     ".": "./dist/index.js",
@@ -85,7 +86,7 @@
     "@types/node": "26.6.4",
     "eslint": "10.12.0",
     "prettier-plugin-svelte": "4.1.1",
-    "svelte": "5.57.1"
+    "svelte": "5.57.2"
   },
   "overrides": {
     "cookie": "^1.0.0",
