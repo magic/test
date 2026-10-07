@@ -7,6 +7,10 @@ import log from '@magic/log'
 import is from '@magic/types'
 
 import { compileSvelteWithWrite } from './compile/index.ts'
+import {
+  findNearestPackageJson,
+  resolveImportMapSpecifier,
+} from '#src/lib/svelte/compile/resolveImportMap.js'
 import { initDOM, getDocument, getWindow } from '#src/lib/dom/index.js'
 import type { CssObject, ComponentProps } from '#src/types.js'
 import { createContext, runWithContext } from './shims/$app/state.ts'
@@ -211,7 +215,21 @@ const mountWithMutex = async (
   // when tests run in parallel
   await safeUnmount()
 
-  const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
+  // Resolve #lib/ or other #-prefixed import map specifiers for component paths
+  // e.g. component: '#lib/MyComponent.svelte' should resolve via the package.json imports
+  let resolvedPath: string
+  if (filePath.startsWith('#')) {
+    const pkgJsonPath = await findNearestPackageJson(filePath)
+    const resolved = await resolveImportMapSpecifier(filePath, pkgJsonPath)
+    if (resolved) {
+      resolvedPath = resolved
+    } else {
+      // Fall back to treating # as a literal path component if import map resolution fails
+      resolvedPath = path.resolve(process.cwd(), filePath)
+    }
+  } else {
+    resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
+  }
 
   const exists = await fs.exists(resolvedPath)
   if (!exists) {
