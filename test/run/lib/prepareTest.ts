@@ -76,4 +76,15 @@ export default [
     expect: 'component must be a string or [string, props]',
     info: 'throws for invalid component type',
   },
+  {
+    fn: () =>
+      prepareTest({
+        name: 'test',
+        pkg: 'pkg',
+        parent: 'parent',
+        component: '#lib/Component.svelte',
+      }),
+    expect: { componentFile: '#lib/Component.svelte', componentProps: {} },
+    info: 'preserves #lib import map paths for components',
+  },
 ] satisfies TestCase[]

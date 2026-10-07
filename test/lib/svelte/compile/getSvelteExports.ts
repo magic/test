@@ -93,7 +93,12 @@ export default [
       const expected = path.join(fixtureBase, '..', 'importMapPkg', 'src', 'Foo.svelte')
       const exports = await getSvelteExports(barrelPath)
       const firstExport = exports[0]
-      return exports.length === 1 && firstExport != null && firstExport.name === 'Foo' && firstExport.path === expected
+      return (
+        exports.length === 1 &&
+        firstExport != null &&
+        firstExport.name === 'Foo' &&
+        firstExport.path === expected
+      )
     },
     expect: true,
     info: 'getSvelteExports resolves #-prefixed sources against the nearest package.json (not CWD)',

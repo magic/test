@@ -91,6 +91,20 @@ export default [
   },
   {
     fn: async () => {
+      // "#lib/*" maps to "./src/lib/*" in repo package.json
+      const resolved = await resolveImportMapSpecifier(
+        '#lib/svelte/compile/resolveImportMap.ts',
+        repoPkgJson,
+      )
+      return (
+        resolved === path.join(repoRoot, 'src', 'lib', 'svelte', 'compile', 'resolveImportMap.ts')
+      )
+    },
+    expect: true,
+    info: 'resolveImportMapSpecifier resolves #lib/* to src/lib/*',
+  },
+  {
+    fn: async () => {
       // Non-absolute input -> CWD package.json fallback
       const pkgJson = await findNearestPackageJson('relative/file.ts')
       return pkgJson === path.resolve(process.cwd(), 'package.json')

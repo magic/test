@@ -100,6 +100,21 @@ const tests: TestCase[] = [
     expect: true,
     info: 'executeTest passes props to component (renders danger variant)',
   },
+  // #lib import map path resolves via package.json "imports" mapping
+  {
+    fn: async () => {
+      try {
+        await executeTest(() => 42, 'key', '#lib/svelte/mount.ts')
+        return false // should not reach here
+      } catch (err) {
+        // Should fail during Svelte compilation (not file not found)
+        // since mount.ts exists but is not a .svelte component
+        return err instanceof Error && !err.message.includes('Svelte component not found')
+      }
+    },
+    expect: true,
+    info: 'executeTest resolves #lib import map paths for component files',
+  },
   // unmount is called even if fn throws
   {
     fn: async () => {
