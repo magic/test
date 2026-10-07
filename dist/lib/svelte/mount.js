@@ -23,6 +23,10 @@ import fs from '@magic/fs'
 import log from '@magic/log'
 import is from '@magic/types'
 import { compileSvelteWithWrite } from './compile/index.js'
+import {
+  findNearestPackageJson,
+  resolveImportMapSpecifier,
+} from '#src/lib/svelte/compile/resolveImportMap.js'
 import { initDOM, getDocument, getWindow } from '#src/lib/dom/index.js'
 import { createContext, runWithContext } from './shims/$app/state.js'
 import { detectSvelteKitImports, needsSvelteKitContext } from './detect-sveltekit-imports.js'
@@ -185,7 +189,21 @@ const mountWithMutex = async (filePath, options, releaseMutex) => {
   // This prevents issues with Svelte's internal state (listeners Map) getting corrupted
   // when tests run in parallel
   await safeUnmount()
-  const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
+  // Resolve #lib/ or other #-prefixed import map specifiers for component paths
+  // e.g. component: '#lib/MyComponent.svelte' should resolve via the package.json imports
+  let resolvedPath
+  if (filePath.startsWith('#')) {
+    const pkgJsonPath = await findNearestPackageJson(filePath)
+    const resolved = await resolveImportMapSpecifier(filePath, pkgJsonPath)
+    if (resolved) {
+      resolvedPath = resolved
+    } else {
+      // Fall back to treating # as a literal path component if import map resolution fails
+      resolvedPath = path.resolve(process.cwd(), filePath)
+    }
+  } else {
+    resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
+  }
   const exists = await fs.exists(resolvedPath)
   if (!exists) {
     throw new Error(`Svelte component not found: ${resolvedPath}`)
