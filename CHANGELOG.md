@@ -1,5 +1,10 @@
 ### Changelog
 
+#### 0.0.38
+
+- fix imports of svelte components, they only have a default export. resolveSvelteExports now handles this correctly.
+- update dependencies
+
 #### 0.3.37
 
 - svelte mount now correctly resolves # imports map from package.json
