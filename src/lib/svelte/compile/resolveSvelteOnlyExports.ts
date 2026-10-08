@@ -771,7 +771,7 @@ export const resolveSvelteOnlyExports = async (
               const barrelContent = compiledSvelteFiles
                 .map(({ name, compiledPath: cp }) => {
                   const url = pathToFileURL(cp).href
-                  return `export { ${name} } from '${url}'`
+                  return `export { default as ${name} } from '${url}'`
                 })
                 .join('\n')
 
