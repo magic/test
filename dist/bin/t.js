@@ -66,7 +66,7 @@ const run = async () => {
   const isWin = process.platform === 'win32'
   let cmd = 'node'
   let argv = []
-  const includeArgs = res.args.include || ['src', 'dist']
+  const includeArgs = res.args.include || ['src']
   const userExclude = res.args.exclude
   const { shards, shardId, errorLength, timeout, workers } = res.args
   const include = is.array(includeArgs) ? includeArgs : [includeArgs]
@@ -118,6 +118,7 @@ const run = async () => {
       '--extension',
       '.svelte',
       '--exclude-after-remap',
+      '--all',
     ]
     c8Excludes.forEach(ex => {
       c8Args.unshift('--exclude', ex)
