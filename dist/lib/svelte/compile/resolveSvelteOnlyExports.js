@@ -661,7 +661,7 @@ export const resolveSvelteOnlyExports = async (code, sourceDir) => {
               const barrelContent = compiledSvelteFiles
                 .map(({ name, compiledPath: cp }) => {
                   const url = pathToFileURL(cp).href
-                  return `export { ${name} } from '${url}'`
+                  return `export { default as ${name} } from '${url}'`
                 })
                 .join('\n')
               const barrelPath = resolved.resolvedPath.replace(/\.js$/, '.svelte-only-barrel.js')
