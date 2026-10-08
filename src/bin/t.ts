@@ -81,7 +81,7 @@ const run = async () => {
 
   let argv: string[] = []
 
-  const includeArgs = res.args.include || ['src', 'dist']
+  const includeArgs = res.args.include || ['src']
   const userExclude = res.args.exclude
 
   const { shards, shardId, errorLength, timeout, workers } = res.args
@@ -142,6 +142,7 @@ const run = async () => {
       '--extension',
       '.svelte',
       '--exclude-after-remap',
+      '--all',
     ]
 
     c8Excludes.forEach(ex => {
