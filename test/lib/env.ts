@@ -1,4 +1,4 @@
-import { env } from '#src/lib/env.js'
+import { env } from '#lib/env.js'
 import type { TestCase } from '#src/types.js'
 
 // Store original env

@@ -1,4 +1,4 @@
-import { parseFile, extractExports, extractImports } from '#src/lib/svelte/compile/astParse.js'
+import { parseFile, extractExports, extractImports } from '#lib/svelte/compile/astParse.js'
 
 const extractNamedImportsFromCode = (code: string, spec: string): string[] => {
   const namedImports: string[] = []

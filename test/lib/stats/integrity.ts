@@ -1,5 +1,5 @@
-import { test } from '#src/lib/stats/test.js'
-import { createStore } from '#src/lib/store.js'
+import { test } from '#lib/stats/test.js'
+import { createStore } from '#lib/store.js'
 import type { Test, TestResults } from '#src/types.js'
 
 export default [

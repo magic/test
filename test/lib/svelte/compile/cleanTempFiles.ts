@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { cleanTempFiles, cleanupDone } from '#src/lib/svelte/compile/cleanTempFiles.js'
+import { cleanTempFiles, cleanupDone } from '#lib/svelte/compile/cleanTempFiles.js'
 
 export default [
   {

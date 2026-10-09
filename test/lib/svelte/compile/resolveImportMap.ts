@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import {
   resolveImportMapSpecifier,
   findNearestPackageJson,
-} from '#src/lib/svelte/compile/resolveImportMap.js'
+} from '#lib/svelte/compile/resolveImportMap.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.join(__dirname, '..', '..', '..', '..')
@@ -14,8 +14,10 @@ const fixturePkgDir = path.join(
   '..',
   '..',
   '..',
-  'test',
-  '.fixtures',
+  'src',
+  'lib',
+  'svelte',
+  'testFixtures',
   'importMapPkg',
 )
 const fixturePkgJson = path.join(fixturePkgDir, 'package.json')
@@ -82,7 +84,15 @@ export default [
     fn: async () => {
       // No package.json between the file and the repo root -> repo root.
       const pkgJson = await findNearestPackageJson(
-        path.join(repoRoot, 'test', '.fixtures', 'barrelFixtures', 'Index.svelte.js'),
+        path.join(
+          repoRoot,
+          'src',
+          'lib',
+          'svelte',
+          'testFixtures',
+          'barrelFixtures',
+          'Index.svelte.js',
+        ),
       )
       return pkgJson === repoPkgJson
     },

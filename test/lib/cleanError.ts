@@ -1,4 +1,4 @@
-import { cleanError } from '#src/lib/cleanError.js'
+import { cleanError } from '#lib/cleanError.js'
 import type { Test } from '#src/types.js'
 import is from '@magic/types'
 

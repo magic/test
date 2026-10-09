@@ -1,7 +1,7 @@
 import { flushSync } from 'svelte'
 import type { TestContext, TestCase } from '#src/types.js'
 
-const component = 'test/.fixtures/components/Derived.svelte'
+const component = '#lib/svelte/testFixtures/components/Derived.svelte'
 
 type ComponentInstance = {
   count: number

@@ -1,7 +1,7 @@
 import type { SvelteComponent } from 'svelte'
 
-const counterComponent = 'test/.fixtures/components/Counter.svelte'
-const derivedComponent = 'test/.fixtures/components/Derived.svelte'
+const counterComponent = '#lib/svelte/testFixtures/components/Counter.svelte'
+const derivedComponent = '#lib/svelte/testFixtures/components/Derived.svelte'
 
 export default [
   {

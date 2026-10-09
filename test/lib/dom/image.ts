@@ -1,4 +1,4 @@
-import { parsePngDimensions } from '#src/lib/dom/image.js'
+import { parsePngDimensions } from '#lib/dom/image.js'
 import type { TestCase } from '#src/types.js'
 
 export default [

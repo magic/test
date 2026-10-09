@@ -9,7 +9,7 @@ import {
   printTraceSummary,
   getTraceSummary,
   getTraceData,
-} from '#src/lib/trace/timing.js'
+} from '#lib/trace/timing.js'
 import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [

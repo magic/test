@@ -1,7 +1,7 @@
-import { mount, html } from '#src/lib/svelte/index.js'
+import { mount, html } from '#lib/svelte/index.js'
 import type { TestContext, TestCase } from '#src/types.js'
 
-const component = 'test/.fixtures/components/Toggle.svelte'
+const component = '#lib/svelte/testFixtures/components/Toggle.svelte'
 
 export default [
   {

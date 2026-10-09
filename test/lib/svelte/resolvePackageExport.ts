@@ -1,4 +1,8 @@
-import { resolvePackageExport } from '#src/lib/svelte/compile/resolvePackageExport.js'
+import { resolvePackageExport } from '#lib/svelte/compile/resolvePackageExport.js'
+// NOTE: the cache must be imported via #src (dist) to match the instance
+// used by the source under test - src files import their caches via
+// "#src/lib/caches/cache.js", and "#lib/caches/cache.js" would resolve to a
+// separate module instance (src/lib/caches/cache.ts) that is never written to.
 import { packageExportCache } from '#src/lib/caches/cache.js'
 import { CWD } from '#src/constants.js'
 import type { TestCase } from '#src/types.js'

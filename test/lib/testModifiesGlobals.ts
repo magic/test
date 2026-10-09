@@ -1,9 +1,9 @@
-import { testModifiesGlobals, suiteModifiesGlobals } from '#src/lib/globalCheck.js'
+import { testModifiesGlobals, suiteModifiesGlobals } from '#lib/globalCheck.js'
 import {
   testImportsMutableModuleState,
   testUsesFixedPorts,
   testUsesSharedFiles,
-} from '#src/lib/mutableStateCheck.js'
+} from '#lib/mutableStateCheck.js'
 import type { TestCase } from '#src/types.js'
 
 export default [

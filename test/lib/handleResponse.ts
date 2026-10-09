@@ -6,7 +6,7 @@ import {
   HttpStatusError,
   SizeLimitError,
   NetworkError,
-} from '#src/lib/handleResponse.js'
+} from '#lib/handleResponse.js'
 
 export default [
   // parseHttpResponseContent

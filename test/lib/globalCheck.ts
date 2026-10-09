@@ -2,7 +2,7 @@ import {
   functionModifiesGlobals,
   testModifiesGlobals,
   suiteModifiesGlobals,
-} from '#src/lib/globalCheck.js'
+} from '#lib/globalCheck.js'
 import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [

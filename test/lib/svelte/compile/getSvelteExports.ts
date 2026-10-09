@@ -2,7 +2,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
-import { getSvelteExports } from '#src/lib/svelte/compile/getSvelteExports.js'
+import { getSvelteExports } from '#lib/svelte/compile/getSvelteExports.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtureBase = path.join(
@@ -11,8 +11,10 @@ const fixtureBase = path.join(
   '..',
   '..',
   '..',
-  'test',
-  '.fixtures',
+  'src',
+  'lib',
+  'svelte',
+  'testFixtures',
   'barrelFixtures',
 )
 
@@ -69,7 +71,7 @@ export default [
       // "#-prefixed" re-export sources are package.json import-map entries
       // ("#test/*": "./test/*" in package.json), not relative paths -
       // resolving them against the barrel directory produced bogus paths
-      // like "test/.fixtures/#test/.fixtures/...".
+      // like "#lib/svelte/testFixtures/##lib/svelte/testFixtures/...".
       const barrelPath = path.join(fixtureBase, 'ImportMapBarrel.svelte.js')
       const exports = await getSvelteExports(barrelPath)
       const firstExport = exports[0]

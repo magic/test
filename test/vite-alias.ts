@@ -2,9 +2,9 @@ import path from 'node:path'
 import { fs } from '@magic/fs'
 import { CACHE_DIR } from '#src/constants.js'
 import { mount } from '#src/svelte.js'
-import { resolveAlias } from '#src/lib/svelte/viteConfig/index.js'
-import { configCache, aliasCache, resolvedAliasCache } from '#src/lib/svelte/viteConfig/cache.js'
-import { findProjectRoot } from '#src/lib/svelte/viteConfig/findProjectRoot.js'
+import { resolveAlias } from '#lib/svelte/viteConfig/index.js'
+import { configCache, aliasCache, resolvedAliasCache } from '#lib/svelte/viteConfig/cache.js'
+import { findProjectRoot } from '#lib/svelte/viteConfig/findProjectRoot.js'
 import type { CustomError } from '@magic/error'
 
 const TEST_BASE = path.join(CACHE_DIR, 'vite-alias')

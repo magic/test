@@ -1,7 +1,7 @@
-import { html, tick } from '#src/lib/svelte/index.js'
+import { html, tick } from '#lib/svelte/index.js'
 import type { TestContext, TestCase } from '#src/types.js'
 
-const component = 'test/.fixtures/components/CounterWithProps.svelte'
+const component = '#lib/svelte/testFixtures/components/CounterWithProps.svelte'
 
 export default [
   {

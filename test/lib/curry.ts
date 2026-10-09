@@ -1,4 +1,4 @@
-import { curry } from '#src/lib/curry.js'
+import { curry } from '#lib/curry.js'
 import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [

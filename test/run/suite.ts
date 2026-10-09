@@ -1,6 +1,6 @@
 import log from '@magic/log'
 import { runSuite } from '#src/run/suite.js'
-import { createStore } from '#src/lib/store.js'
+import { createStore } from '#lib/store.js'
 import type { TestCase } from '#src/types.js'
 import is from '@magic/types'
 

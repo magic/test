@@ -1,7 +1,7 @@
-import { html, props } from '#src/lib/svelte/index.js'
+import { html, props } from '#lib/svelte/index.js'
 import type { TestContext, TestCase } from '#src/types.js'
 
-const component = 'test/.fixtures/components/Button.svelte'
+const component = '#lib/svelte/testFixtures/components/Button.svelte'
 
 export default [
   {

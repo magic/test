@@ -1,8 +1,8 @@
-import { html, trigger } from '#src/lib/svelte/index.js'
+import { html, trigger } from '#lib/svelte/index.js'
 import { flushSync } from 'svelte'
 import type { TestContext, TestCase } from '#src/types.js'
 
-const component = 'test/.fixtures/components/Input.svelte'
+const component = '#lib/svelte/testFixtures/components/Input.svelte'
 
 export default [
   {

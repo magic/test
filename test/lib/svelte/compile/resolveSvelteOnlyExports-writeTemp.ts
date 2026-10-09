@@ -4,7 +4,7 @@ import is from '@magic/types'
 import {
   writeTempFile,
   compileSvelteOnlyExport,
-} from '#src/lib/svelte/compile/resolveSvelteOnlyExports.js'
+} from '#lib/svelte/compile/resolveSvelteOnlyExports.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixturePath = path.join(
@@ -13,8 +13,10 @@ const fixturePath = path.join(
   '..',
   '..',
   '..',
-  'test',
-  '.fixtures',
+  'src',
+  'lib',
+  'svelte',
+  'testFixtures',
   'barrelFixtures',
   'Index.svelte.js',
 )
@@ -74,8 +76,11 @@ export default [
         '..',
         '..',
         '..',
-        'test',
-        '.fixtures',
+        'src',
+        'lib',
+        'svelte',
+        'testFixtures',
+
         'components',
         'Counter.svelte',
       )

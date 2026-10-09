@@ -3,7 +3,7 @@ import {
   testUsesFixedPorts,
   testUsesSharedFiles,
   testImportsMutableModuleState,
-} from '#src/lib/analysis/isolationChecks.js'
+} from '#lib/analysis/isolationChecks.js'
 import type { TestCase } from '#src/types.js'
 
 const CWD = process.cwd()

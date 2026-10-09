@@ -1,7 +1,7 @@
-import { html } from '#src/lib/svelte/index.js'
+import { html } from '#lib/svelte/index.js'
 import type { TestContext } from '#src/types.js'
 
-const component = 'test/.fixtures/components/Modal.svelte'
+const component = '#lib/svelte/testFixtures/components/Modal.svelte'
 
 export default [
   {

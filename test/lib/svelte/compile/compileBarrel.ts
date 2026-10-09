@@ -1,9 +1,14 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { compileBarrel } from '#src/lib/svelte/compile/compileBarrel.js'
+import { compileBarrel } from '#lib/svelte/compile/compileBarrel.js'
+// NOTE: the cache must be imported via #src (dist) to match the instance
+// used by the source under test - src files import their caches via
+// "#src/lib/caches/cache.js", and "#lib/caches/cache.js" would resolve to a
+// separate module instance (src/lib/caches/cache.ts) that is never written to.
 import { barrelCache } from '#src/lib/caches/cache.js'
 import type { TestCase } from '#src/types.js'
+import { has } from '#src/lib/has.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtureBase = path.join(
@@ -12,8 +17,10 @@ const fixtureBase = path.join(
   '..',
   '..',
   '..',
-  'test',
-  '.fixtures',
+  'src',
+  'lib',
+  'svelte',
+  'testFixtures',
   'barrelFixtures',
 )
 
@@ -44,9 +51,9 @@ export default [
     fn: async () => {
       barrelCache.delete(barrelFixturePath)
       const result = await compileBarrel(barrelFixturePath)
-      return result.js.includes('TitleComponent')
+      return result.js
     },
-    expect: true,
+    expect: has.includes('TitleComponent'),
     info: 'compileBarrel generates wrapper code with TitleComponent',
   },
   {
@@ -57,10 +64,10 @@ export default [
         return false
       } catch (e) {
         const error = e as Error
-        return error.message.includes('Circular dependency detected')
+        return error.message
       }
     },
-    expect: true,
+    expect: has.includes('Circular dependency detected'),
     info: 'compileBarrel throws error on circular dependency',
   },
   {
@@ -70,18 +77,18 @@ export default [
         return false
       } catch (e) {
         const error = e as Error
-        return error.message.includes('No Svelte exports found')
+        return error.message
       }
     },
-    expect: true,
+    expect: has.includes('No Svelte exports found'),
     info: 'compileBarrel throws error when no Svelte exports found',
   },
   {
     fn: async () => {
       const result = await compileBarrel(barrelWithDefaultPath)
-      return result.js.includes('export { default }')
+      return result.js
     },
-    expect: true,
+    expect: has.includes('export { default }'),
     info: 'compileBarrel handles default exports correctly',
   },
   {

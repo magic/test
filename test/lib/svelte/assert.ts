@@ -1,5 +1,5 @@
-import { initDOM } from '#src/lib/dom/index.js'
-import { html, text, props } from '#src/lib/svelte/assert.js'
+import { initDOM } from '#lib/dom/index.js'
+import { html, text, props } from '#lib/svelte/assert.js'
 
 initDOM()
 

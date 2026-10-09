@@ -1,5 +1,5 @@
 import type { Test } from '#src/types.js'
-import { version } from '#src/lib/version.js'
+import { version } from '#lib/version.js'
 import is from '@magic/types'
 import type { TestCase } from '#src/types.js'
 

@@ -1,4 +1,4 @@
-import { stringify } from '#src/lib/stringify.js'
+import { stringify } from '#lib/stringify.js'
 import type { TestCase } from '#src/types.js'
 import is from '@magic/types'
 

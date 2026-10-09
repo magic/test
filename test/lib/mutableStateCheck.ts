@@ -2,7 +2,7 @@ import {
   testUsesFixedPorts,
   testUsesSharedFiles,
   testImportsMutableModuleState,
-} from '#src/lib/mutableStateCheck.js'
+} from '#lib/mutableStateCheck.js'
 import fs from '@magic/fs'
 import type { TestCase, TestObject, WrappedTest } from '#src/types.js'
 

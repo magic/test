@@ -1,5 +1,5 @@
-import { Store } from '#src/lib/store.js'
-import { reset } from '#src/lib/stats/reset.js'
+import { Store } from '#lib/store.js'
+import { reset } from '#lib/stats/reset.js'
 import type { TestCase } from '#src/types.js'
 
 export default [

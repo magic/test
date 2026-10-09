@@ -1,4 +1,4 @@
-import { getFNS } from '#src/lib/getFNS.js'
+import { getFNS } from '#lib/getFNS.js'
 import type { TestCase } from '#src/types.js'
 
 export default [

@@ -1,8 +1,8 @@
 import path from 'node:path'
 import fs from '@magic/fs'
 import { CACHE_DIR } from '#src/constants.js'
-import { findConfigFile } from '#src/lib/svelte/viteConfig/findConfigFile.js'
-import { VITE_CONFIG_NAMES } from '#src/lib/svelte/viteConfig/VITE_CONFIG_NAMES.js'
+import { findConfigFile } from '#lib/svelte/viteConfig/findConfigFile.js'
+import { VITE_CONFIG_NAMES } from '#lib/svelte/viteConfig/VITE_CONFIG_NAMES.js'
 
 const TEST_ROOT = path.join(CACHE_DIR, 'viteConfig', 'findConfigFile')
 
@@ -12,7 +12,7 @@ const run3Dir = path.join(TEST_ROOT, 'run3')
 
 export default {
   beforeAll: async () => {
-    await fs.mkdir(TEST_ROOT, { recursive: true })
+    await fs.mkdirp(TEST_ROOT)
   },
   afterAll: async () => {
     await fs.rmrf(TEST_ROOT)

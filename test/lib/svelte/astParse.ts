@@ -8,7 +8,7 @@ import {
   hasExportStar,
   getExportNamedTargets,
   clearAstCache,
-} from '#src/lib/svelte/compile/astParse.js'
+} from '#lib/svelte/compile/astParse.js'
 import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [

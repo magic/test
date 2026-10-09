@@ -1,101 +1,71 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-
-import { mount } from '#src/svelte.js'
+import type { Test } from '#src/types.js'
 import is from '@magic/types'
+import { has } from '#src/lib/has.js'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const fixtureBase = path.join(
-  __dirname,
-  '..',
-  '..',
-  '..',
-  '..',
-  'test',
-  '.fixtures',
-  'barrelFixtures',
-)
-
-const IndexSvelteJsPath = path.join(fixtureBase, 'Index.svelte.js')
-const DefaultBarrelPath = path.join(fixtureBase, 'DefaultBarrel.svelte.js')
-const TypeExportsPath = path.join(fixtureBase, 'TypeExports.svelte.js')
-const EmptyBarrelPath = path.join(fixtureBase, 'EmptyBarrel.svelte.js')
-const DefaultExportPath = path.join(fixtureBase, 'DefaultExport.svelte')
-const TestComponentPath = path.join(fixtureBase, 'TestComponent.svelte')
-const TitleComponentPath = path.join(fixtureBase, 'TitleComponent.svelte')
-
-const IndexSvelteJs = await import(IndexSvelteJsPath)
-const DefaultBarrel = await import(DefaultBarrelPath)
-const TypeExports = await import(TypeExportsPath)
-const EmptyBarrel = await import(EmptyBarrelPath)
-
-const defaultExportResult = await mount(DefaultExportPath)
-const defaultExportHtml = defaultExportResult.target.innerHTML
-await defaultExportResult.unmount()
-
-const testComponentResult = await mount(TestComponentPath)
-const testComponentHtml = testComponentResult.target.innerHTML
-await testComponentResult.unmount()
-
-const titleComponentResult = await mount(TitleComponentPath)
-const titleComponentHtml = titleComponentResult.target.innerHTML
-await titleComponentResult.unmount()
+import * as IndexSvelteJs from '#lib/svelte/testFixtures/barrelFixtures/Index.svelte.js'
+import * as DefaultBarrel from '#lib/svelte/testFixtures/barrelFixtures/DefaultBarrel.svelte.js'
+import * as TypeExports from '#lib/svelte/testFixtures/barrelFixtures/TypeExports.svelte.js'
 
 export default [
   {
-    fn: () => is.object(IndexSvelteJs),
-    expect: true,
+    fn: () => IndexSvelteJs,
+    expect: is.module,
     info: 'Index.svelte.js module loads correctly',
   },
   {
-    fn: () => is.object(DefaultBarrel),
-    expect: true,
+    fn: () => DefaultBarrel,
+    expect: is.module,
     info: 'DefaultBarrel.svelte.js module loads correctly',
   },
   {
-    fn: () => is.object(TypeExports),
-    expect: true,
+    fn: () => TypeExports,
+    expect: is.module,
     info: 'TypeExports.svelte.js module loads correctly',
   },
   {
-    fn: () => is.object(EmptyBarrel),
-    expect: true,
-    info: 'EmptyBarrel.svelte.js module loads correctly',
+    fn: () => IndexSvelteJs,
+    expect: has.key('TestComponent'),
+    info: 'Index.svelte.js has expected TestComponent export',
   },
   {
-    fn: async () => {
-      return 'TestComponent' in IndexSvelteJs || 'TitleComponent' in IndexSvelteJs
-    },
-    expect: true,
-    info: 'Index.svelte.js has expected exports',
+    fn: async () => IndexSvelteJs,
+    expect: has.key('TitleComponent'),
+    info: 'Index.svelte.js has expected TitleComponent export',
   },
   {
-    fn: async () => {
+    fn: () => {
       return 'default' in DefaultBarrel || 'NamedComponent' in DefaultBarrel
     },
     expect: true,
     info: 'DefaultBarrel.svelte.js has expected exports',
   },
   {
-    fn: async () => {
-      return 'Component' in TypeExports || 'TitleComponent' in TypeExports
-    },
-    expect: true,
-    info: 'TypeExports.svelte.js has expected exports',
+    fn: () => TypeExports,
+    expect: has.key('TitleComponent'),
+    info: 'TypeExports.svelte.js has expected TitleComponent export',
+  },
+
+  {
+    fn: () => TypeExports,
+    expect: has.key('Component'),
+    info: 'TypeExports.svelte.js has expected Component export',
   },
   {
-    fn: () => is.string(defaultExportHtml) && defaultExportHtml.length > 0,
+    component: '#lib/svelte/testFixtures/components/DefaultExport.svelte',
+    fn: ({ target }) => target.innerHTML.length > 0,
     expect: true,
     info: 'DefaultExport.svelte renders to html',
   },
   {
-    fn: () => is.string(testComponentHtml) && testComponentHtml.length > 0,
+    component: '#lib/svelte/testFixtures/components/TestComponent.svelte',
+    fn: ({ target }) => target.innerHTML.length > 0,
     expect: true,
     info: 'TestComponent.svelte renders to html',
   },
   {
-    fn: () => is.string(titleComponentHtml) && titleComponentHtml.length > 0,
+    component: '#lib/svelte/testFixtures/components/TitleComponent.svelte',
+    fn: ({ target }) => target.innerHTML.length > 0,
     expect: true,
     info: 'TitleComponent.svelte renders to html',
   },
-]
+] satisfies Test[]

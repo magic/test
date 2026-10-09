@@ -1,0 +1,9 @@
+{
+  "name": "import-map-fixture",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#fix/*": "./src/*",
+    "#fix-ts/*": "./ts/*"
+  }
+}

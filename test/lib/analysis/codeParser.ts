@@ -3,7 +3,7 @@ import {
   mutatesImportedState,
   getPortPatterns,
   getFilePaths,
-} from '#src/lib/analysis/codeParser.js'
+} from '#lib/analysis/codeParser.js'
 import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [

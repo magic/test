@@ -1,4 +1,4 @@
-import { CacheManager } from '#src/lib/caches/cache.js'
+import { CacheManager } from '#lib/caches/cache.js'
 import type { TestCase } from '#src/types.js'
 
 // TestCache for generic type

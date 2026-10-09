@@ -11,7 +11,7 @@ import {
   oneOf,
   matches,
   at,
-} from '#src/lib/has.js'
+} from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
 
 export default [

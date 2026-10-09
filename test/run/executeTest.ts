@@ -78,7 +78,7 @@ const tests: TestCase[] = [
           return 123
         },
         'key',
-        './test/.fixtures/components/Button.svelte',
+        '#lib/svelte/testFixtures/components/Button.svelte',
       )
       return result === 123 && sawContext
     },
@@ -92,7 +92,7 @@ const tests: TestCase[] = [
         (ctx: { target?: { innerHTML: string } }) =>
           (ctx as { target?: { innerHTML: string } }).target?.innerHTML ?? '',
         'key',
-        './test/.fixtures/components/Button.svelte',
+        '#lib/svelte/testFixtures/components/Button.svelte',
         { variant: 'danger' },
       )
       return (result as string).includes('btn danger')
@@ -124,7 +124,7 @@ const tests: TestCase[] = [
             throw new Error('in test')
           },
           'key',
-          './test/.fixtures/components/Button.svelte',
+          '#lib/svelte/testFixtures/components/Button.svelte',
         )
       } catch {
         // expected

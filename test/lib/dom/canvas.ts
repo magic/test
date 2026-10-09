@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { createCanvasPolyfill } from '#src/lib/dom/canvas.js'
+import { createCanvasPolyfill } from '#lib/dom/canvas.js'
 import type { TestCase } from '#src/types.js'
 
 export default [

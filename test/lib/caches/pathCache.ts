@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { statCached, existsCached, clearPathCache } from '#src/lib/caches/pathCache.js'
+import { statCached, existsCached, clearPathCache } from '#lib/caches/pathCache.js'
 import type { TestCase } from '#src/types.js'
 
 const CWD = process.cwd()

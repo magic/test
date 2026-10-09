@@ -1,4 +1,4 @@
-import { getTestKey } from '#src/lib/getTestKey.js'
+import { getTestKey } from '#lib/getTestKey.js'
 import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [

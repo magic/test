@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { Store, createStore } from '#src/lib/store.js'
+import { Store, createStore } from '#lib/store.js'
 import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [

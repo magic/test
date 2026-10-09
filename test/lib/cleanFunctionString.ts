@@ -1,4 +1,4 @@
-import { cleanFunctionString } from '#src/lib/cleanFunctionString.js'
+import { cleanFunctionString } from '#lib/cleanFunctionString.js'
 import type { Test } from '#src/types.js'
 
 export default [

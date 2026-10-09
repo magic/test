@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { get, post, http } from '#src/lib/http.js'
+import { get, post, http } from '#lib/http.js'
 import type { TestCase } from '#src/types.js'
 
 // Store original env

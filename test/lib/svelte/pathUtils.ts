@@ -4,7 +4,7 @@ import {
   resolveFilePath,
   EXTENSION_CANDIDATES,
   FALLBACK_CANDIDATES,
-} from '#src/lib/svelte/compile/pathUtils.js'
+} from '#lib/svelte/compile/pathUtils.js'
 import { CWD } from '#src/constants.js'
 import type { TestCase } from '#src/types.js'
 
@@ -78,9 +78,9 @@ const tests: TestCase[] = [
   },
   {
     fn: async () => {
-      // .js base with .svelte sibling: test/.fixtures/components/Button.svelte
+      // .js base with .svelte sibling: #lib/svelte/testFixtures/components/Button.svelte
       // base ends in .js: .../Button.js -> strip to Button + .svelte
-      const base = path.join(CWD, 'test', '.fixtures', 'components', 'Button.js')
+      const base = path.join(CWD, 'src', 'lib', 'svelte', 'testFixtures', 'components', 'Button.js')
       return (await resolveFilePath(base)) === base.slice(0, -3) + '.svelte'
     },
     expect: true,

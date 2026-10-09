@@ -1,4 +1,4 @@
-import { getWorkerPool, getEffectiveWorkerLimit } from '#src/lib/workerPool.js'
+import { getWorkerPool, getEffectiveWorkerLimit } from '#lib/workerPool.js'
 import type { TestCase } from '#src/types.js'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))

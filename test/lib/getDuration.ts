@@ -1,5 +1,5 @@
-import { getDuration } from '#src/lib/getDuration.js'
-import { createStore } from '#src/lib/store.js'
+import { getDuration } from '#lib/getDuration.js'
+import { createStore } from '#lib/store.js'
 import type { Test } from '#src/types.js'
 
 export default [

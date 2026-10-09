@@ -1,5 +1,5 @@
-import { suiteNeedsIsolation } from '#src/lib/suiteNeedsIsolation.js'
-import { walkTests } from '#src/lib/analysis/testWalker.js'
+import { suiteNeedsIsolation } from '#lib/suiteNeedsIsolation.js'
+import { walkTests } from '#lib/analysis/testWalker.js'
 import type { Test } from '#src/types.js'
 
 export default [

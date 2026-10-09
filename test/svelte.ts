@@ -1,44 +1,41 @@
-import { mount, html, click, trigger, scroll, props } from '#src/svelte.js'
+import { html, click, trigger, scroll, props } from '#src/svelte.js'
 import { flushSync } from 'svelte'
-import type { TestCase } from '#src/types.js'
+import type { Test } from '#src/types.js'
 
 export default [
   {
-    fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/Counter.svelte')
+    component: 'src/lib/svelte/testFixtures/components/Counter.svelte',
+    fn: async ({ target }) => {
       const result = html(target)
-      await unmount()
       return result
     },
     expect: '<div class="count">0</div> <button>increment</button>',
     info: 'mount returns component with initial html',
   },
   {
-    fn: async () => {
-      const { component, unmount } = await mount('./test/.fixtures/components/Counter.svelte')
+    component: 'src/lib/svelte/testFixtures/components/Counter.svelte',
+    fn: async ({ component }) => {
       const result = component.count
-      await unmount()
       return result
     },
     expect: 0,
     info: 'component returns exported state',
   },
   {
-    fn: async () => {
-      const { component, unmount } = await mount('./test/.fixtures/components/Counter.svelte')
+    component: 'src/lib/svelte/testFixtures/components/Counter.svelte',
+    fn: async ({ component }) => {
       component.count = 5
       flushSync()
       const result = component.count
-      await unmount()
       return result
     },
     expect: 5,
     info: 'component state can be modified directly',
   },
   {
-    fn: async () => {
+    component: 'src/lib/svelte/testFixtures/components/Counter.svelte',
+    fn: async ({ target }) => {
       let called = false
-      const { target, unmount } = await mount('./test/.fixtures/components/Counter.svelte')
       const button = target.querySelector('button')
       button?.addEventListener('click', () => {
         called = true
@@ -46,31 +43,29 @@ export default [
       if (button) {
         trigger(button, 'click')
       }
-      await unmount()
       return called
     },
     expect: true,
     info: 'trigger dispatches click event',
   },
   {
-    fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/Counter.svelte')
+    component: 'src/lib/svelte/testFixtures/components/Counter.svelte',
+    fn: async ({ target }) => {
       const div = target.querySelector('.count')
       if (div) {
         scroll(div, 0, 100)
       }
       flushSync()
       const result = div?.scrollTop
-      await unmount()
       return result
     },
     expect: 100,
     info: 'scroll sets scroll position',
   },
   {
-    fn: async () => {
+    component: 'src/lib/svelte/testFixtures/components/Counter.svelte',
+    fn: async ({ target }) => {
       let clicked = false
-      const { target, unmount } = await mount('./test/.fixtures/components/Counter.svelte')
       const button = target.querySelector('button')
       button?.addEventListener('click', () => {
         clicked = true
@@ -78,25 +73,23 @@ export default [
       if (target) {
         click(target, 'button')
       }
-      await unmount()
       return clicked
     },
     expect: true,
     info: 'click triggers click on element by selector',
   },
   {
-    fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/Counter.svelte')
+    component: 'src/lib/svelte/testFixtures/components/Counter.svelte',
+    fn: async ({ target }) => {
       const button = target.querySelector('button')!
       const result = props(button)
-      await unmount()
       return result
     },
     expect: {},
     info: 'props returns element attributes',
   },
   {
-    component: './test/.fixtures/components/SvelteKit.svelte',
+    component: 'src/lib/svelte/testFixtures/components/SvelteKit.svelte',
     fn: async ({ target }) => {
       const result = html(target)
       return result
@@ -106,7 +99,7 @@ export default [
     info: 'SvelteKit wrapper provides correct $app/environment values (dev mode)',
   },
   {
-    component: 'test/.fixtures/components/SvelteKit.svelte',
+    component: 'src/lib/svelte/testFixtures/components/SvelteKit.svelte',
     fn: async ({ target }) => {
       return html(target)
     },
@@ -115,7 +108,7 @@ export default [
     info: 'SvelteKit component initial state',
   },
   {
-    component: 'test/.fixtures/components/SvelteKit.svelte',
+    component: 'src/lib/svelte/testFixtures/components/SvelteKit.svelte',
     fn: async ({ target }) => {
       click(target, 'button')
       await flushSync()
@@ -124,4 +117,4 @@ export default [
     expect: '<!----><!----> <button>Toggle</button>',
     info: 'SvelteKit component state after toggle',
   },
-] satisfies TestCase[]
+] satisfies Test[]

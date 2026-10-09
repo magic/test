@@ -1,13 +1,13 @@
 import { mount, html, tick } from '#src/svelte.js'
 import { flushSync as flushSyncSvelte } from 'svelte'
-import { reset as resetPage } from '#src/lib/svelte/shims/$app/state.js'
+import { reset as resetPage } from '#lib/svelte/shims/$app/state.js'
 import type { TestCase } from '#src/types.js'
 
 export default [
   // $app/environment
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/EnvTest.svelte')
+      const { target, unmount } = await mount('#lib/svelte/testFixtures/components/EnvTest.svelte')
       const result = html(target)
       await unmount()
       return result
@@ -19,7 +19,9 @@ export default [
   // $app/state defaults
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/StateTest.svelte')
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/StateTest.svelte',
+      )
       await tick()
       const result = html(target)
       await unmount()
@@ -31,9 +33,12 @@ export default [
   // goto updates URL
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/NavTest.svelte', {
-        props: { triggerGoto: true },
-      })
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/NavTest.svelte',
+        {
+          props: { triggerGoto: true },
+        },
+      )
       await flushSyncSvelte()
       await tick()
       const url = html(target).match(/<span class="url">([^<]*)<\/span>/)?.[1]
@@ -46,9 +51,12 @@ export default [
   // goto updates navigating
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/NavTest.svelte', {
-        props: { triggerGoto: true },
-      })
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/NavTest.svelte',
+        {
+          props: { triggerGoto: true },
+        },
+      )
       await flushSyncSvelte()
       await tick()
       const nav = html(target).match(/<span class="navigating">([^<]*)<\/span>/)?.[1]
@@ -61,9 +69,12 @@ export default [
   // callbacks fire
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/NavTest.svelte', {
-        props: { triggerGoto: true },
-      })
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/NavTest.svelte',
+        {
+          props: { triggerGoto: true },
+        },
+      )
       // Navigation callbacks are async, wait for them to fully complete
       await new Promise(r => setTimeout(r, 20))
       const logs = html(target).match(/<span class="logs">([^<]*)<\/span>/)?.[1]
@@ -76,9 +87,12 @@ export default [
   // pushState updates page.url
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/NavTest.svelte', {
-        props: { triggerPush: true },
-      })
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/NavTest.svelte',
+        {
+          props: { triggerPush: true },
+        },
+      )
       await flushSyncSvelte()
       await tick()
       const url = html(target).match(/<span class="url">([^<]*)<\/span>/)?.[1]
@@ -91,7 +105,9 @@ export default [
   // $app/paths resolve and match
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/PathsTest.svelte')
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/PathsTest.svelte',
+      )
       await flushSyncSvelte()
       await Promise.resolve()
       const result = html(target)
@@ -106,7 +122,9 @@ export default [
   {
     fn: async () => {
       resetPage()
-      const { target, unmount } = await mount('./test/.fixtures/components/UsesAppImports.svelte')
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/UsesAppImports.svelte',
+      )
       const result = html(target)
       await unmount()
       return result
@@ -118,9 +136,12 @@ export default [
   // Wrapper routeId propagation
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/ChildWithPage.svelte', {
-        props: { routeId: '/parent/[id]' },
-      })
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/ChildWithPage.svelte',
+        {
+          props: { routeId: '/parent/[id]' },
+        },
+      )
       await flushSyncSvelte()
       const result = html(target)
       await unmount()
@@ -132,7 +153,9 @@ export default [
   // Multiple $app modules
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/SvelteKit.svelte')
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/SvelteKit.svelte',
+      )
       const result = html(target)
       await unmount()
       return result
@@ -144,7 +167,7 @@ export default [
   // Multiple mount cycles
   {
     fn: async () => {
-      const { unmount } = await mount('./test/.fixtures/components/NavTest.svelte')
+      const { unmount } = await mount('#lib/svelte/testFixtures/components/NavTest.svelte')
       await unmount()
       return true
     },
@@ -154,7 +177,9 @@ export default [
   // $app/forms
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/FormsTest.svelte')
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/FormsTest.svelte',
+      )
       const result = html(target)
       await unmount()
       return result
@@ -166,7 +191,9 @@ export default [
   // $app/stores
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/StoresTest.svelte')
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/StoresTest.svelte',
+      )
       const result = html(target)
       await unmount()
       return result
@@ -178,7 +205,9 @@ export default [
   // $app/server
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/ServerTest.svelte')
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/ServerTest.svelte',
+      )
       const result = html(target)
       await unmount()
       return result
@@ -190,7 +219,9 @@ export default [
   // $app/types
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/TypesTest.svelte')
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/TypesTest.svelte',
+      )
       const result = html(target)
       await unmount()
       return result.includes('class="types"')
@@ -201,7 +232,9 @@ export default [
   // $app/forms deserialize error case
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/FormsTest2.svelte')
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/FormsTest2.svelte',
+      )
       const result = html(target)
       await unmount()
       return result
@@ -213,7 +246,9 @@ export default [
   // $app/paths resolve with pathname only
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/PathsTest2.svelte')
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/PathsTest2.svelte',
+      )
       const result = html(target)
       await unmount()
       return result
@@ -225,9 +260,12 @@ export default [
   // $app/navigation replaceState
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/NavTest2.svelte', {
-        props: { triggerReplace: true },
-      })
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/NavTest2.svelte',
+        {
+          props: { triggerReplace: true },
+        },
+      )
       await flushSyncSvelte()
       await tick()
       const result = html(target)
@@ -241,9 +279,12 @@ export default [
   // $app/navigation invalidate
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/NavTest2.svelte', {
-        props: { triggerInvalidate: true },
-      })
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/NavTest2.svelte',
+        {
+          props: { triggerInvalidate: true },
+        },
+      )
       await flushSyncSvelte()
       await tick()
       const result = html(target)
@@ -256,9 +297,12 @@ export default [
   // $app/navigation preload
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/NavTest2.svelte', {
-        props: { triggerPreload: true },
-      })
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/NavTest2.svelte',
+        {
+          props: { triggerPreload: true },
+        },
+      )
       await flushSyncSvelte()
       await tick()
       const result = html(target)
@@ -278,7 +322,9 @@ export default [
       }
     },
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/ServerTest2.svelte')
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/ServerTest2.svelte',
+      )
       const result = html(target)
       await unmount()
       return result
@@ -290,7 +336,9 @@ export default [
   // $app/forms applyAction and enhance
   {
     fn: async () => {
-      const { target, unmount } = await mount('./test/.fixtures/components/FormsTest3.svelte')
+      const { target, unmount } = await mount(
+        '#lib/svelte/testFixtures/components/FormsTest3.svelte',
+      )
       const result = html(target)
       await unmount()
       return result
