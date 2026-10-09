@@ -1,5 +1,10 @@
 ### Changelog
 
+#### 0.0.39
+
+- change c8 to use --all flag
+- change c8 to not includ dist by default
+
 #### 0.0.38
 
 - fix imports of svelte components, they only have a default export. resolveSvelteExports now handles this correctly.
