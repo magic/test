@@ -257,6 +257,28 @@ export default [
     info: 'string returns false when substring not found',
   },
   {
+    fn: () => string('hello', 'world')('hello world'),
+    expect: true,
+    info: 'string arguments can be arrays',
+  },
+  {
+    fn: () => string('hello2', 'world')('hello world'),
+    expect: false,
+    info: 'string arguments can be arrays but if one fails, the function fails',
+  },
+  {
+    // @ts-expect-error make sure we also handle numbers, even if typecheck fails
+    fn: () => string(23, 'world')('hello world 23'),
+    expect: true,
+    info: 'string arguments can be arrays and values can include numbers',
+  },
+  {
+    // @ts-expect-error make sure we also handle numbers, even if typecheck fails
+    fn: () => string(24, 'world')('hello world 23'),
+    expect: false,
+    info: 'strings can be arrays and include numbers, but if one fails, the function fails',
+  },
+  {
     fn: () => string('hello')(123),
     expect: false,
     info: 'string returns false when value is not a string',
@@ -472,6 +494,16 @@ export default [
     expect: false,
     info: 'includes returns false for null',
   },
+  {
+    fn: () => includes('a', 'b', 'c')(['a', 'b', 'c']),
+    expect: true,
+    info: 'includes test arguments can be an array',
+  },
+  {
+    fn: () => includes('a', 'b', 'd')(['a', 'b', 'c']),
+    expect: false,
+    info: 'includes accepts array, but if one item fails, it returns false',
+  },
 
   // has.includes predicate tests
   {
@@ -523,6 +555,38 @@ export default [
   },
   {
     fn: () => oneOf(['a', 'b'])(123),
+    expect: false,
+    info: 'oneOf returns false for number not in options',
+  },
+
+  // oneOf multiple arguments tests
+  {
+    fn: () => oneOf('a', 'b', 'c')('b'),
+    expect: true,
+    info: 'oneOf returns true when value is in options',
+  },
+  {
+    fn: () => oneOf('a', 'b', 'c')('d'),
+    expect: false,
+    info: 'oneOf returns false when value is not in options',
+  },
+  {
+    fn: () => oneOf(1, 2, 3)(2),
+    expect: true,
+    info: 'oneOf works with numbers',
+  },
+  {
+    fn: () => oneOf({ a: 1 }, { b: 2 })({ a: 1 }),
+    expect: true,
+    info: 'oneOf works with objects using deep.equal',
+  },
+  {
+    fn: () => oneOf()(null),
+    expect: false,
+    info: 'oneOf returns false for empty options',
+  },
+  {
+    fn: () => oneOf('a', 'b')(123),
     expect: false,
     info: 'oneOf returns false for number not in options',
   },

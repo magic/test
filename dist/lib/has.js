@@ -57,15 +57,17 @@ export const nested = (path, check) => {
     return checkValue(current, check)
   }
 }
-export const string = substring => {
+export const string = (...substring) => {
   return result => {
     if (!is.string(result)) {
       return false
     }
-    if (is.function(substring)) {
-      return substring(result)
-    }
-    return result.includes(substring)
+    return substring.every(str => {
+      if (is.function(str)) {
+        return str(result)
+      }
+      return result.includes(str)
+    })
   }
 }
 export const at = (index, check) => {
@@ -98,16 +100,27 @@ export const keys = keyNames => {
     return true
   }
 }
-export const includes = item => result => {
-  if (is.array(result)) {
-    return result.some(v => (is.function(item) ? item(v) : is.deep.equal(v, item)))
+export const includes =
+  (...items) =>
+  result => {
+    return items.every(item => {
+      if (is.array(result)) {
+        return result.some(v => (is.function(item) ? item(v) : is.deep.equal(v, item)))
+      }
+      if (is.string(result) && is.string(item)) {
+        return result.includes(item)
+      }
+      return false
+    })
   }
-  if (is.string(result) && is.string(item)) {
-    return result.includes(item)
+export const oneOf =
+  (...options) =>
+  result => {
+    if (options.length === 1 && is.array(options[0])) {
+      return oneOf(...options[0])(result)
+    }
+    return options.some(opt => is.deep.equal(result, opt))
   }
-  return false
-}
-export const oneOf = options => result => options.some(opt => is.deep.equal(result, opt))
 export const matches = pattern => result => is.string(result) && pattern.test(result)
 export const has = {
   property,

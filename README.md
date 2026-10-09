@@ -1019,6 +1019,12 @@ import { has, is } from '@magic/test'
   fn: () => error.message,
   expect: has.string('failed to connect'),
   info: 'error message contains helpful context',
+},
+// can also check multiple args
+{
+  fn: () => error.message,
+  expect: has.string('failed', 'to', 'connect'),
+  info: 'error message contains helpful context',
 }
 ```
 
@@ -1045,21 +1051,29 @@ import { has, is } from '@magic/test'
 **has.includes(item)** - Check if array or string contains item (uses deep.equal for arrays)
 
 ```js
+const roles = ['admin', 'root', 'user']
 {
   fn: () => roles,
-  expect: has.includes('admin'),
+  expect: has.includes('admin', 'root'),
   info: 'user has admin role',
 }
 ```
 
-**has.oneOf(options[])** - Check if value equals one of the options (uses deep.equal)
+**has.oneOf(...options[])** - Check if value equals one of the options (uses deep.equal)
 
 ```js
+// if only one arg and first arg is an array:
 {
   fn: () => status,
   expect: has.oneOf(['pending', 'done', 'failed']),
   info: 'status is a valid value',
-}
+},
+// also valid
+{
+  fn: () => status,
+  expect: has.oneOf('pending', 'done', 'failed'),
+  info: 'status is a valid value',
+},
 ```
 
 **has.matches(regex)** - Check if string matches regex pattern
