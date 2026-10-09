@@ -1,5 +1,10 @@
 ### Changelog
 
+#### 0.0.41
+
+- svelte component coverage fully fixed, 0.0.40 was using the wrong paths
+- move test/.fixtures to src/lib/svelte/testFixtures to make them exposed to c8 coverage
+
 #### 0.0.40
 
 - fix svelte component coverage by pointing sourcemaps back to .svelte components
