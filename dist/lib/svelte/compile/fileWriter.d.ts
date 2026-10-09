@@ -3,6 +3,7 @@ export declare const writeCompiledFile: (
   code: string,
   map?: string,
   sourceMapRef?: boolean,
+  sourcePath?: string,
 ) => Promise<{
   tmpFile: string
   importUrl: string

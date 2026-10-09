@@ -26,6 +26,7 @@ export const compileSvelteWithWrite = async filePath => {
       transformedCode + `//# sourceMappingURL=${path.basename(tmpFileAbs)}.map\n`,
       map,
       true,
+      resolvedPath,
     )
     return { js: transformedCode, css, tmpFile: writtenTmpFile, importUrl }
   } catch (e) {
