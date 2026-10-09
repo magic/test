@@ -1,5 +1,9 @@
 ### Changelog
 
+#### 0.0.40
+
+- fix svelte component coverage by pointing sourcemaps back to .svelte components
+
 #### 0.0.39
 
 - change c8 to use --all flag
