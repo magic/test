@@ -1,6 +1,32 @@
 export const View = () => [
   h1({ id: 'changelog' }, 'Changelog'),
 
+  h2({}, '0.3.41'),
+  ul([
+    li('svelte component coverage fully fixed, 0.0.40 was using the wrong paths'),
+    li('move test/.fixtures to src/lib/svelte/testFixtures to make them exposed to c8 coverage'),
+  ]),
+
+  h2({}, '0.3.40'),
+  ul([li('fix svelte component coverage by pointing sourcemaps back to .svelte components')]),
+
+  h2({}, '0.3.39'),
+  ul([li('change c8 to use --all flag'), li('change c8 to not include dist by default')]),
+
+  h2({}, '0.3.38'),
+  ul([
+    li(
+      'fix imports of svelte components, they only have a default export. resolveSvelteExports now handles this correctly.',
+    ),
+    li('update dependencies'),
+  ]),
+
+  h2({}, '0.3.37'),
+  ul([li('svelte mount now correctly resolves # imports map from package.json')]),
+
+  h2({}, '0.3.36'),
+  ul([li('fix: add null guards for TypeScript strict mode in getSvelteExports tests')]),
+
   h2({}, '0.3.35'),
   ul([
     li('works with sveltekit ^3.0.0'),

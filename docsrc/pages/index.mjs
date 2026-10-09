@@ -129,7 +129,6 @@ export default [
       Link({ to: '/error-codes-quicklook/' }, 'Error Codes Quick Look'),
       ' - quick reference table',
     ]),
-    li([Link({ to: '/version-history/' }, 'Version History'), ' - release overview']),
     li(Link({ to: '/changelog/' }, 'Changelog'), ' - detailed release history'),
   ]),
 

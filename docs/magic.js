@@ -1,14 +1,14 @@
-const __MAGIC__=()=>{var e,t,s,i,r,o,n,a,l,c,d,u,m,h,f,g,v,x,b,y;let{h:w,app:k}=(e={},s=(t=[]).map,i=Array.isArray,r="u">typeof requestAnimationFrame?requestAnimationFrame:setTimeout,o=function(e){var t="";if("string"==typeof e)return e;if(i(e)&&e.length>0)for(var s,r=0;r<e.length;r++)""!==(s=o(e[r]))&&(t+=(t&&" ")+s);else for(var r in e)e[r]&&(t+=(t&&" ")+r);return t},n=function(e,t){var s={};for(var i in e)s[i]=e[i];for(var i in t)s[i]=t[i];return s},a=function(e){return e.reduce(function(e,t){return e.concat(t&&!0!==t?"function"==typeof t[0]?[t]:a(t):0)},t)},l=function(e,t){if(e!==t)for(var s in n(e,t)){var r,o;if(e[s]!==t[s]&&(r=e[s],o=t[s],!(i(r)&&i(o))||r[0]!==o[0]||"function"!=typeof r[0]))return!0;t[s]=e[s]}},c=function(e,t,s){for(var i,r,o=0,n=[];o<e.length||o<t.length;o++)i=e[o],n.push((r=t[o])?!i||r[0]!==i[0]||l(r[1],i[1])?[r[0],r[1],r[0](s,r[1]),i&&i[2]()]:i:i&&i[2]());return n},d=function(e,t,s,i,r,a){if("key"===t);else if("style"===t)for(var l in n(s,i))s=null==i||null==i[l]?"":i[l],"-"===l[0]?e[t].setProperty(l,s):e[t][l]=s;else"o"===t[0]&&"n"===t[1]?((e.actions||(e.actions={}))[t=t.slice(2)]=i)?s||e.addEventListener(t,r):e.removeEventListener(t,r):!a&&"list"!==t&&"children"!==t&&t in e?e[t]=null==i?"":i:null!=i&&!1!==i&&("class"!==t||(i=o(i)))?"children"!==t&&e.setAttribute(t,i):e.removeAttribute(t)},u=function(e,t,s){var i=e.props,r=3===e.type?document.createTextNode(e.name):(s=s||"svg"===e.name)?document.createElementNS("http://www.w3.org/2000/svg",e.name,{is:i.is}):document.createElement(e.name,{is:i.is});for(var o in i)d(r,o,null,i[o],t,s);for(var n=0,a=e.children.length;n<a;n++)r.appendChild(u(e.children[n]=v(e.children[n]),t,s));return e.node=r},m=function(e){return null==e?null:e.key},h=function(e,t,s,i,r,o){if(s===i);else if(null!=s&&3===s.type&&3===i.type)s.name!==i.name&&(t.nodeValue=i.name);else if(null==s||s.name!==i.name)t=e.insertBefore(u(i=v(i),r,o),t),null!=s&&e.removeChild(s.node);else{var a,l,c,f,g=s.props,x=i.props,b=s.children,y=i.children,w=0,k=0,E=b.length-1,S=y.length-1;for(var T in o=o||"svg"===i.name,n(g,x))("value"===T||"selected"===T||"checked"===T?t[T]:g[T])!==x[T]&&d(t,T,g[T],x[T],r,o);for(;k<=S&&w<=E&&null!=(c=m(b[w]))&&c===m(y[k]);)h(t,b[w].node,b[w],y[k]=v(y[k++],b[w++]),r,o);for(;k<=S&&w<=E&&null!=(c=m(b[E]))&&c===m(y[S]);)h(t,b[E].node,b[E],y[S]=v(y[S--],b[E--]),r,o);if(w>E)for(;k<=S;)t.insertBefore(u(y[k]=v(y[k++]),r,o),(l=b[w])&&l.node);else if(k>S)for(;w<=E;)t.removeChild(b[w++].node);else{for(var T=w,P={},R={};T<=E;T++)null!=(c=b[T].key)&&(P[c]=b[T]);for(;k<=S;){if(c=m(l=b[w]),f=m(y[k]=v(y[k],l)),R[c]||null!=f&&f===m(b[w+1])){null==c&&t.removeChild(l.node),w++;continue}null==f||1===s.type?(null==c&&(h(t,l&&l.node,l,y[k],r,o),k++),w++):(c===f?(h(t,l.node,l,y[k],r,o),R[f]=!0,w++):null!=(a=P[f])?(h(t,t.insertBefore(a.node,l&&l.node),a,y[k],r,o),R[f]=!0):h(t,l&&l.node,null,y[k],r,o),k++)}for(;w<=E;)null==m(l=b[w++])&&t.removeChild(l.node);for(var T in P)null==R[T]&&t.removeChild(P[T].node)}}return i.node=t},f=function(e,t){for(var s in e)if(e[s]!==t[s])return!0;for(var s in t)if(e[s]!==t[s])return!0},g=function(e){return"object"==typeof e?e:b(e)},v=function(e,t){return 2===e.type?((!t||!t.lazy||f(t.lazy,e.lazy))&&((t=g(e.lazy.view(e.lazy))).lazy=e.lazy),t):e},x=function(e,t,s,i,r,o){return{name:e,props:t,children:s,node:i,type:o,key:r}},b=function(s,i){return x(s,e,t,i,void 0,3)},y=function(t){return 3===t.nodeType?b(t.nodeValue,t):x(t.nodeName.toLowerCase(),e,s.call(t.childNodes,y),t,void 0,1)},{h:function(t,s){for(var r,o=[],n=[],a=arguments.length;a-- >2;)o.push(arguments[a]);for(;o.length>0;)if(i(r=o.pop()))for(var a=r.length;a-- >0;)o.push(r[a]);else!1===r||!0===r||null==r||n.push(g(r));return s=s||e,"function"==typeof t?t(s,n):x(t,s,n,void 0,s.key)},app:function(e){var t={},s=!1,o=e.view,n=e.node,l=n&&y(n),d=e.subscriptions,u=[],m=function(e){x(this.actions[e.type],e)},f=function(e){return t!==e&&(t=e,d&&(u=c(u,a([d(t)]),x)),o&&!s&&r(b,s=!0)),t};let{middleware:v=e=>e}=e,x=v((e,s)=>"function"==typeof e?x(e(t,s)):i(e)?"function"==typeof e[0]||i(e[0])?x(e[0],"function"==typeof e[1]?e[1](s):e[1]):(a(e.slice(1)).map(function(e){e&&e[0](x,e[1])},f(e[0])),t):f(e));var b=function(){s=!1,n=h(n.parentNode,n,l,l=g(o(t)),m)};x(e.init)}});Pre.Comment=e=>span({class:"comment"},e),Pre.Line=e=>code({class:"line"},Pre.Words(e)),Pre.Word=e=>{if(!e)return"";let t=e.includes("://"),s=e.startsWith("mailto:")||e.includes("@")&&e.includes(".");if(t||s)return Link({to:e,text:e});let i="";return("state"===e?i="state":"actions"===e?i="actions":"effects"===e?i="effects":"subscriptions"===e?i="subscriptions":E.pre.keywords.includes(e)?i="keyword":E.pre.builtins.includes(e)?i="builtin":E.pre.booleans.includes(e)&&(i="boolean"),i)?span({class:i},e):e},Pre.Words=e=>{let[t,...s]=e.split(E.pre.commentRegex);if(!t.endsWith(":")&&s.length)return[Pre.Words(t),Pre.Comment(s.join("").split(E.pre.wordRegex).map(Pre.Word))];let i=[],r=e;return(e.replace(E.pre.stringRegex,e=>{if(r){let[t,s]=r.split(e);t&&i.push(t.split(E.pre.wordRegex).map(Pre.Word).filter(e=>e)),r=s}i.push(span({class:"string"},e))}),r!==e)?(r&&i.push(r.split(E.pre.wordRegex).map(Pre.Word).filter(e=>e)),i):e.split(E.pre.wordRegex).filter(e=>e).map(Pre.Word)};let E={pre:{booleans:["true","false"],builtins:["Array","Object","String","Number","RegExp","Null","Symbol","Set","WeakSet","Map","WeakMap","setInterval","setTimeout","Promise","JSON","Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array"],commentRegex:/(\/\/)/gim,keywords:["let","this","long","package","float","goto","private","class","if","short","while","protected","with","debugger","case","continue","volatile","interface","instanceof","super","synchronized","throw","extends","final","export","throws","try","import","double","enum","boolean","abstract","function","implements","typeof","transient","break","default","do","static","void","int","new","async","native","switch","else","delete","null","public","var","await","byte","finally","catch","in","return","for","get","const","char","module","exports","require","npm","install","=>"],stringRegex:/("|')(.*?)\1/gim,wordRegex:/( )/gim}},S=(e,t)=>{let{pathname:s,hash:i}=window.location;i=i.substring(1);let r=0;return t.state&&(s=t.state.url,i=t.state.hash,r=t.state.scrollY||0),i?window.location.hash=i:window.scroll({top:r}),{...e,url:s,hash:i}},T=(e,t)=>{let s=s=>e(t,s);return addEventListener("popstate",s),()=>removeEventListener("popstate",s)},P={"/test/":e=>[h1({id:"magictest"},"@magic/test"),p(["Declaratively test your ecmascript module files."," No transpiling of either your codebase nor the tests."," Incredibly fast."]),GitBadges("@magic/test"),h2({id:"getting-started"},"Getting Started"),p(["See the ",Link({to:"/getting-started/"},"Getting Started")," guide for full instructions."]),Pre({lines:"false"},"npm i --save-dev --save-exact @magic/test"),Pre(`
+const __MAGIC__=()=>{var e,t,s,o,r,i,n,a,l,c,p,d,u,m,f,g,h,v,x,b;let{h:y,app:w}=(e={},s=(t=[]).map,o=Array.isArray,r="u">typeof requestAnimationFrame?requestAnimationFrame:setTimeout,i=function(e){var t="";if("string"==typeof e)return e;if(o(e)&&e.length>0)for(var s,r=0;r<e.length;r++)""!==(s=i(e[r]))&&(t+=(t&&" ")+s);else for(var r in e)e[r]&&(t+=(t&&" ")+r);return t},n=function(e,t){var s={};for(var o in e)s[o]=e[o];for(var o in t)s[o]=t[o];return s},a=function(e){return e.reduce(function(e,t){return e.concat(t&&!0!==t?"function"==typeof t[0]?[t]:a(t):0)},t)},l=function(e,t){if(e!==t)for(var s in n(e,t)){var r,i;if(e[s]!==t[s]&&(r=e[s],i=t[s],!(o(r)&&o(i))||r[0]!==i[0]||"function"!=typeof r[0]))return!0;t[s]=e[s]}},c=function(e,t,s){for(var o,r,i=0,n=[];i<e.length||i<t.length;i++)o=e[i],n.push((r=t[i])?!o||r[0]!==o[0]||l(r[1],o[1])?[r[0],r[1],r[0](s,r[1]),o&&o[2]()]:o:o&&o[2]());return n},p=function(e,t,s,o,r,a){if("key"===t);else if("style"===t)for(var l in n(s,o))s=null==o||null==o[l]?"":o[l],"-"===l[0]?e[t].setProperty(l,s):e[t][l]=s;else"o"===t[0]&&"n"===t[1]?((e.actions||(e.actions={}))[t=t.slice(2)]=o)?s||e.addEventListener(t,r):e.removeEventListener(t,r):!a&&"list"!==t&&"children"!==t&&t in e?e[t]=null==o?"":o:null!=o&&!1!==o&&("class"!==t||(o=i(o)))?"children"!==t&&e.setAttribute(t,o):e.removeAttribute(t)},d=function(e,t,s){var o=e.props,r=3===e.type?document.createTextNode(e.name):(s=s||"svg"===e.name)?document.createElementNS("http://www.w3.org/2000/svg",e.name,{is:o.is}):document.createElement(e.name,{is:o.is});for(var i in o)p(r,i,null,o[i],t,s);for(var n=0,a=e.children.length;n<a;n++)r.appendChild(d(e.children[n]=h(e.children[n]),t,s));return e.node=r},u=function(e){return null==e?null:e.key},m=function(e,t,s,o,r,i){if(s===o);else if(null!=s&&3===s.type&&3===o.type)s.name!==o.name&&(t.nodeValue=o.name);else if(null==s||s.name!==o.name)t=e.insertBefore(d(o=h(o),r,i),t),null!=s&&e.removeChild(s.node);else{var a,l,c,f,g=s.props,v=o.props,x=s.children,b=o.children,y=0,w=0,k=x.length-1,E=b.length-1;for(var S in i=i||"svg"===o.name,n(g,v))("value"===S||"selected"===S||"checked"===S?t[S]:g[S])!==v[S]&&p(t,S,g[S],v[S],r,i);for(;w<=E&&y<=k&&null!=(c=u(x[y]))&&c===u(b[w]);)m(t,x[y].node,x[y],b[w]=h(b[w++],x[y++]),r,i);for(;w<=E&&y<=k&&null!=(c=u(x[k]))&&c===u(b[E]);)m(t,x[k].node,x[k],b[E]=h(b[E--],x[k--]),r,i);if(y>k)for(;w<=E;)t.insertBefore(d(b[w]=h(b[w++]),r,i),(l=x[y])&&l.node);else if(w>E)for(;y<=k;)t.removeChild(x[y++].node);else{for(var S=y,T={},C={};S<=k;S++)null!=(c=x[S].key)&&(T[c]=x[S]);for(;w<=E;){if(c=u(l=x[y]),f=u(b[w]=h(b[w],l)),C[c]||null!=f&&f===u(x[y+1])){null==c&&t.removeChild(l.node),y++;continue}null==f||1===s.type?(null==c&&(m(t,l&&l.node,l,b[w],r,i),w++),y++):(c===f?(m(t,l.node,l,b[w],r,i),C[f]=!0,y++):null!=(a=T[f])?(m(t,t.insertBefore(a.node,l&&l.node),a,b[w],r,i),C[f]=!0):m(t,l&&l.node,null,b[w],r,i),w++)}for(;y<=k;)null==u(l=x[y++])&&t.removeChild(l.node);for(var S in T)null==C[S]&&t.removeChild(T[S].node)}}return o.node=t},f=function(e,t){for(var s in e)if(e[s]!==t[s])return!0;for(var s in t)if(e[s]!==t[s])return!0},g=function(e){return"object"==typeof e?e:x(e)},h=function(e,t){return 2===e.type?((!t||!t.lazy||f(t.lazy,e.lazy))&&((t=g(e.lazy.view(e.lazy))).lazy=e.lazy),t):e},v=function(e,t,s,o,r,i){return{name:e,props:t,children:s,node:o,type:i,key:r}},x=function(s,o){return v(s,e,t,o,void 0,3)},b=function(t){return 3===t.nodeType?x(t.nodeValue,t):v(t.nodeName.toLowerCase(),e,s.call(t.childNodes,b),t,void 0,1)},{h:function(t,s){for(var r,i=[],n=[],a=arguments.length;a-- >2;)i.push(arguments[a]);for(;i.length>0;)if(o(r=i.pop()))for(var a=r.length;a-- >0;)i.push(r[a]);else!1===r||!0===r||null==r||n.push(g(r));return s=s||e,"function"==typeof t?t(s,n):v(t,s,n,void 0,s.key)},app:function(e){var t={},s=!1,i=e.view,n=e.node,l=n&&b(n),p=e.subscriptions,d=[],u=function(e){v(this.actions[e.type],e)},f=function(e){return t!==e&&(t=e,p&&(d=c(d,a([p(t)]),v)),i&&!s&&r(x,s=!0)),t};let{middleware:h=e=>e}=e,v=h((e,s)=>"function"==typeof e?v(e(t,s)):o(e)?"function"==typeof e[0]||o(e[0])?v(e[0],"function"==typeof e[1]?e[1](s):e[1]):(a(e.slice(1)).map(function(e){e&&e[0](v,e[1])},f(e[0])),t):f(e));var x=function(){s=!1,n=m(n.parentNode,n,l,l=g(i(t)),u)};v(e.init)}}),k=e=>(t={},s)=>{let o=(e,...t)=>t.some(t=>t===typeof e);if(o(s,"undefined")){if(t.props)return y(e,{},[t]);o(t,"string","number","function")||Array.isArray(t)?(s=t,t={}):o(t.View,"function")&&(s=t.View,t={})}return y(e,t,s)},E=k("a"),S=k("button"),T=k("circle"),C=k("code");k("description");let R=k("div"),N=k("footer"),A=k("g"),_=k("h1"),O=k("h2"),j=k("h3"),M=k("h4"),P=k("header"),I=k("img"),D=k("input"),F=k("li");k("link");let L=k("main");k("meta");let q=k("nav"),U=k("p"),$=k("path"),W=k("pre");k("script");let H=k("span"),V=k("svg");k("title");let z=k("ul"),G=({to:e,action:t=Y.go,text:s,...o},r)=>{let{href:i,nofollow:n,noreferrer:a,...l}=o;return l.href=e=e||i||"",s&&r?s=[s,r]:s||(s=r||e),"/"===e[0]||"#"===e[0]?l.onclick=[t,Q.preventDefault]:(l.target="_blank",l.rel="noopener",n&&(l.rel+=" nofollow"),a&&(l.rel+=" noreferrer")),E(l,s)},B=e=>{let{collapse:t,items:s=[],text:o,url:r,...i}=e,n={class:{}},{to:a}=i;a===r&&(n.class.active=!0);let l=[];return(!t||r.includes(a))&&s.length&&(l=z(s.map(e=>B({url:r,collapse:t,...e})))),F(n,[a?G(i,o):H(i,o),l])},K=(e,t)=>{"string"==typeof e?e={content:e}:t?e={content:t,...e}:Array.isArray(e)&&(e={content:e.join("")});let{content:s,lines:o=!0}=e;return R({class:{Pre:!0,lines:o&&"false"!==o}},[R({class:"menu"},[S({onclick:[Y.pre.clip,e=>({e,content:s})]},"copy")]),W(s.trim().split("\n").map(K.Line))])};K.Comment=e=>H({class:"comment"},e),K.Line=e=>C({class:"line"},K.Words(e)),K.Word=e=>{if(!e)return"";let t=e.includes("://"),s=e.startsWith("mailto:")||e.includes("@")&&e.includes(".");if(t||s)return G({to:e,text:e});let o="";return("state"===e?o="state":"actions"===e?o="actions":"effects"===e?o="effects":"subscriptions"===e?o="subscriptions":Q.pre.keywords.includes(e)?o="keyword":Q.pre.builtins.includes(e)?o="builtin":Q.pre.booleans.includes(e)&&(o="boolean"),o)?H({class:o},e):e},K.Words=e=>{let[t,...s]=e.split(Q.pre.commentRegex);if(!t.endsWith(":")&&s.length)return[K.Words(t),K.Comment(s.join("").split(Q.pre.wordRegex).map(K.Word))];let o=[],r=e;return(e.replace(Q.pre.stringRegex,e=>{if(r){let[t,s]=r.split(e);t&&o.push(t.split(Q.pre.wordRegex).map(K.Word).filter(e=>e)),r=s}o.push(H({class:"string"},e))}),r!==e)?(r&&o.push(r.split(Q.pre.wordRegex).map(K.Word).filter(e=>e)),o):e.split(Q.pre.wordRegex).filter(e=>e).map(K.Word)};let Q={pre:{booleans:["true","false"],builtins:["Array","Object","String","Number","RegExp","Null","Symbol","Set","WeakSet","Map","WeakMap","setInterval","setTimeout","Promise","JSON","Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array"],commentRegex:/(\/\/)/gim,keywords:["let","this","long","package","float","goto","private","class","if","short","while","protected","with","debugger","case","continue","volatile","interface","instanceof","super","synchronized","throw","extends","final","export","throws","try","import","double","enum","boolean","abstract","function","implements","typeof","transient","break","default","do","static","void","int","new","async","native","switch","else","delete","null","public","var","await","byte","finally","catch","in","return","for","get","const","char","module","exports","require","npm","install","=>"],stringRegex:/("|')(.*?)\1/gim,wordRegex:/( )/gim},preventDefault:e=>(e.preventDefault(),e)},Y={changeTheme:e=>({...e,pageClass:{...e.pageClass,light:"dark"===e.theme},theme:"dark"===e.theme?"light":"dark"}),go:(e,t)=>{if(!t||!t.currentTarget)return e;let s=t.currentTarget.href.replace(window.location.origin,""),[o,r=""]=s.split("#");if(o===e.url&&r===e.hash)return r&&(window.location.hash=r),e;let i=e.pages&&e.pages[o]&&e.pages[o].title;i&&(document.title=e.title=i),o!==e.url?r||window.scrollTo({top:0}):window.location.hash=r;let{scrollY:n}=window;return window.history.pushState({url:o,hash:r,scrollY:n},e.title,s),{...e,url:o,hash:r,prev:e.url}},nospy:{toggle:e=>(e.nospy.show=!e.nospy.show,{...e})},pop:(e,t)=>{let{pathname:s,hash:o}=window.location;o=o.substring(1);let r=0;return t.state&&(s=t.state.url,o=t.state.hash,r=t.state.scrollY||0),o?window.location.hash=o:window.scroll({top:r}),{...e,url:s,hash:o}},pre:{clip:(e,{content:t})=>{if("u">typeof document&&"function"==typeof document.execCommand){let e=document.createElement("textarea");e.id="copy",e.innerHTML=t,document.body.appendChild(e);let s=document.getElementById("copy");s.select(),document.execCommand("copy"),document.body.removeChild(s)}return e}}},J=(e,t)=>{let s=s=>e(t,s);return addEventListener("popstate",s),()=>removeEventListener("popstate",s)},X={"/test/":()=>[_({id:"magictest"},"@magic/test"),U(["Declaratively test your ecmascript module files."," No transpiling of either your codebase nor the tests."," Incredibly fast."]),(e=>{if("string"==typeof e)e={project:e};else if(!e.project)return;let{branch:t="master",host:s="github"}=e,{project:o=!1}=e,r="",i=o;o.startsWith("@")?(r="@",o=o.substr(1)):i=o.split("/")[1];let n=[["npm",(e=o)=>e&&{to:`https://www.npmjs.com/package/${i}`,src:`https://img.shields.io/npm/v/${r}${e}?color=blue`}],["node",(e=o)=>e&&{src:`https://img.shields.io/node/v/${r}${e}?color=blue`}],["license",(e=o)=>e&&{src:`https://img.shields.io/npm/l/${r}${e}?color=blue`}],["travis",(e=o)=>e&&{to:`https://travis-ci.com/${e}`,src:`https://img.shields.io/travis/com/${e}/${t}`}],["appveyor",(e=o)=>{if(e){let[s,o]=e.split("/");return s=s.replace(/-/g,""),{to:`https://ci.appveyor.com/project/${s}/${o}/branch/${t}`,src:`https://img.shields.io/appveyor/ci/${s}/${o}/${t}.svg`}}}],["coveralls",(e=o)=>({to:`https://coveralls.io/${s}/${e}`,src:`https://img.shields.io/coveralls/${s}/${e}/${t}.svg`})],["snyk",(e=o)=>e&&{to:`https://snyk.io/test/${s}/${e}`,src:`https://img.shields.io/snyk/vulnerabilities/github/${e}.svg`}]].map(([t,s])=>s(e[t]));if(n.length)return z({class:"GitBadges"},n.map(({to:e,src:t})=>{if(!t)return;let s=(e=>{"string"==typeof e&&(e={src:e});let{loading:t="lazy"}=e;if(e.src)return e.hasOwnProperty("alt")||(e.title?e.alt=e.title:e.alt=""),e.loading=t,I(e)})({src:t,height:"23"});return e?F(G({to:e},s)):F(s)}))})("@magic/test"),O({id:"getting-started"},"Getting Started"),U(["See the ",G({to:"/getting-started/"},"Getting Started")," guide for full instructions."]),K({lines:"false"},"npm i --save-dev --save-exact @magic/test"),K(`
 // test/yourFileToTest.js
 export default [
   { fn: () => true, expect: true, info: 'true is true' },
 ]
-`),h2({id:"features"},"Features"),ul([li([Link({to:"/writing-tests/"},"Write tests")," in plain JavaScript or TypeScript"]),li([Link({to:"/lib/"},"Utility functions")," for deep equality, mocking, HTTP, and more"]),li([Link({to:"/svelte/"},"Svelte 5")," component testing built-in"]),li([Link({to:"/cli/"},"CLI tools")," with sharding for parallel test execution"]),li([Link({to:"/test-isolation/"},"Test isolation")," for preventing state leakage"]),li([Link({to:"/error-codes/"},"Error codes")," for programmatic error handling"])]),h2({id:"quick-examples"},"Quick Examples"),h3({},"Simple test"),Pre(`
+`),O({id:"features"},"Features"),z([F([G({to:"/writing-tests/"},"Write tests")," in plain JavaScript or TypeScript"]),F([G({to:"/lib/"},"Utility functions")," for deep equality, mocking, HTTP, and more"]),F([G({to:"/svelte/"},"Svelte 5")," component testing built-in"]),F([G({to:"/cli/"},"CLI tools")," with sharding for parallel test execution"]),F([G({to:"/test-isolation/"},"Test isolation")," for preventing state leakage"]),F([G({to:"/error-codes/"},"Error codes")," for programmatic error handling"])]),O({id:"quick-examples"},"Quick Examples"),j({},"Simple test"),K(`
 export default [
   { fn: () => 1 + 1, expect: 2 },
   { fn: () => 'hello', expect: 'hello' },
 ]
-`),h3({},"Async test"),Pre(`
+`),j({},"Async test"),K(`
 import { promise } from '@magic/test'
 
 export default [
@@ -18,7 +18,7 @@ export default [
     info: 'handle promises',
   },
 ]
-`),h3({},"Deep equality"),Pre(`
+`),j({},"Deep equality"),K(`
 import { is } from '@magic/test'
 
 export default [
@@ -28,7 +28,7 @@ export default [
     info: 'deep compare objects',
   },
 ]
-`),h3({},"Mock function"),Pre(`
+`),j({},"Mock function"),K(`
 import { mock } from '@magic/test'
 
 export default [
@@ -42,11 +42,11 @@ export default [
     info: 'mock tracks calls',
   },
 ]
-`),h2({id:"learn-more"},"Learn More"),ul([li([Link({to:"/getting-started/"},"Getting Started")," - install, setup, first test"]),li([Link({to:"/writing-tests/"},"Writing Tests")," - hooks, promises, types, multiple tests"]),li([Link({to:"/lib/"},"Utility Functions")," - deep, fs, curry, log, vals, env, http, mock, has"]),li([Link({to:"/svelte/"},"Svelte Testing")," - mount components, interact, assert"]),li([Link({to:"/svelte-4-vs-5/"},"Svelte 4 vs 5")," - feature comparison"]),li([Link({to:"/svelte-auto-export-faq/"},"Svelte Auto-Export FAQ")," - $state and $derived exports"]),li([Link({to:"/cli/"},"CLI & Usage")," - flags, sharding, performance tips"]),li([Link({to:"/cli-flags-reference/"},"CLI Flags Reference")," - detailed flag table"]),li([Link({to:"/cli-sharding-cheatsheet/"},"CLI Sharding Cheat-Sheet")," - CI/CD examples"]),li([Link({to:"/performance-tips/"},"Performance Tips")," - optimization techniques"]),li([Link({to:"/common-pitfalls/"},"Common Pitfalls")," - troubleshooting tips"]),li([Link({to:"/test-isolation/"},"Test Isolation")," - prevent state leakage between tests"]),li([Link({to:"/error-codes/"},"Error Codes")," - programmatic error handling"]),li([Link({to:"/error-codes-quicklook/"},"Error Codes Quick Look")," - quick reference table"]),li([Link({to:"/version-history/"},"Version History")," - release overview"]),li(Link({to:"/changelog/"},"Changelog")," - detailed release history")]),p(["This library tests itself. Have a look at ",Link({to:"https://github.com/magic/test/tree/master/test",text:"the tests"})," on GitHub."])],"/test/404/":()=>div("404 - not found."),"/test/changelog/":()=>[h1({id:"changelog"},"Changelog"),h2({},"0.3.25"),ul([li("expect: arrays with predicates — functions call with result, values compare directly, all must pass"),li("value checks in predicate arrays support primitives and objects (deep.equal)"),li("docs: predicates and values section in writing-tests")]),h2({},"0.3.34"),p("new documentation pages added"),h2({},"0.3.24"),p("unreleased"),h2({},"0.3.21"),ul([li("various build performance improvements, especially for svelte components"),li("add timing traces with MAGIC_TEST_TRACE env var and --trace CLI flag"),li("add promise-based caching via CacheManager"),li("consolidate worker pool into single source"),li("centralize caching in CacheManager at tsLoader level"),li("increase default test timeout to 30s"),li("fixed tsLoader .ts file handling"),li("add more tests for @magic/test itself"),li("implement persistent disk cache in node_modules/.magic-test-cache"),li("parallelize import resolution, barrel exports, and fs.exists checks"),li("cache fs.exists results, processImports results, and resolveViteAlias results"),li("skip writing unchanged files during compilation"),li("consolidate caches into single pendingPromises map"),li("update dependencies")]),h2({},"0.3.20"),ul([li("prevent double-compilation of svelte components"),li("update dependencies")]),h2({},"0.3.19"),ul([li("svelte edge cases"),li("custom test defines for globals")]),h2({},"0.3.18"),ul([li("better resolution for imported dependencies in tests"),li("especially <script> tags in svelte components that export functions/variables"),li("update dependencies")]),h2({},"0.3.17"),ul([li("better test discovery, had edge cases where tests were not found")]),h2({},"0.3.16"),ul([li("better kill handling for workers and child_process"),li("README fixes"),li("remove @systemkollektiv devDependencies"),li("update dependencies")]),h2({},"0.3.15"),ul([li("fix import of .svelte.js/.ts files if js/ts extension is omitted")]),h2({},"0.3.14"),ul([li("fireEvent function now correctly handles various addEventListener event types")]),h2({},"0.3.13"),ul([li("update dependencies")]),h2({},"0.3.12"),ul([li("performance improvements, better checks if tests need to be isolated"),li("fix timing issues in isolation code"),li("replace regex code checks with ast checks"),li("add `has` functionality for object checks"),li("update dependencies")]),h2({},"0.3.10"),ul([li("fix more edge cases in svelte compilation steps"),li("add .css import support"),li("update dependencies")]),h2({},"0.3.9"),ul([li("fix imports of test/index.(mjs|ts|js) files")]),h2({},"0.3.8"),ul([li("add --workers flag to control max parallel workers (default: auto-detect CPU count)"),li("canvas polyfill works properly in happy-dom environment"),li("svelte: resolve svelte-only package exports"),li("svelte: fix import chain handling for components"),li("version: check if Lib is missing exports"),li("worker isolation: beforeAll and afterAll run in workers directly"),li("before fields in tests get awaited if they return a raw promise")]),h2({},"0.3.7"),ul([li("advanced worker isolation"),li("executing minimum number of needed workers for tests"),li("lots of internal changes to achieve this")]),h2({},"0.3.6"),p("broken - tried implementing better isolation"),h2({},"0.3.5"),ul([li("better tsLoader resolve mechanism")]),h2({},"0.3.4"),ul([li("also run registerLoader in workers")]),h2({},"0.3.3"),ul([li("replace all import .ts with .js"),li("some test output fixes")]),h2({},"0.3.2"),p("broken: some .ts references for worker.ts and unit.ts"),ul([li("publish dist dir with .js files for consumers")]),h2({},"0.3.1"),p("broken, dist dir missing"),h2({},"0.3.0"),p("broken. node can not strip types in node_modules..."),ul([li("added html support (using happy-dom, experimental!)"),li("added svelte support (experimental!)"),li("various improvements to test logic and structure of internal lib"),li("more tests")]),h2({},"0.2.30"),ul([li("allow tests to be written using typescript, .ts files can be test files now"),li("add some internal tests"),li("update dependencies")]),h2({},"0.2.29"),ul([li("update dependencies")]),h2({},"0.2.28"),ul([li("use node:module register function for loader"),li("allowing use of the --import flag instead of soon deprecated --loader")]),h2({},"0.2.27"),ul([li("allow resolving .js files as .ts files"),li("this mimics typescript .js file resolver"),li("update @types/node")]),h2({},"0.2.26"),ul([li("update dependencies")]),h2({},"0.2.25"),ul([li("update dependencies")]),h2({},"0.2.24"),ul([li("fix @magic/core tests on windows")]),h2({},"0.2.23"),ul([li("readd npm run prepublishOnly task"),li("update dependencies")]),h2({},"0.2.22"),ul([li("add comprehensive typescript types"),li("rework some functionality to be typesafe and typeguarded"),li("update dependencies")]),h2({},"0.2.21"),ul([li("update dependencies")]),h2({},"0.2.20"),ul([li("update dependencies")]),h2({},"0.2.19"),ul([li("update dependencies"),li("add unused http.post"),li("probably should replace http with fetch...")]),h2({},"0.2.18"),ul([li("add missing fs.statfs, fs.statfsSync and fs.promises.constants to test/spec"),li("update dependencies")]),h2({},"0.2.17"),ul([li("remove calls and coveralls-next, c8 takes care of coverage"),li("update dependencies")]),h2({},"0.2.16"),ul([li("update dependencies")]),h2({},"0.2.15"),ul([li("update dependencies"),li("percentage outputs print nicer numbers"),li("added http export that allows http requests in tests"),li("only supports get requests for now")]),h2({},"0.2.14"),ul([li("update dependencies")]),h2({},"0.2.13"),ul([li("update dependencies")]),h2({},"0.2.12"),ul([li("update dependencies")]),h2({},"0.2.11"),ul([li("update dependencies")]),h2({},"0.2.10"),ul([li("@magic/test can now test @magic/core again")]),h2({},"0.2.9"),ul([li("update dependencies")]),h2({},"0.2.8"),ul([li("update dependencies")]),h2({},"0.2.7"),ul([li("update dependencies"),li("replace coveralls with coveralls-next")]),h2({},"0.2.6"),ul([li("update dependencies")]),h2({},"0.2.5"),ul([li("update dependencies")]),h2({},"0.2.54"),ul([li("update dependencies")]),h2({},"0.2.52"),ul([li("update dependencies"),li("remove hyperapp from exports")]),h2({},"0.2.51"),ul([li("update dependencies")]),h2({},"0.2.50"),ul([li("remove @magic/css export"),li("update c8")]),h2({},"0.2.49"),ul([li("update @magic/css")]),h2({},"0.2.48"),ul([li("bump required node version to 14.2.0"),li("update dependencies")]),h2({},"0.2.47"),ul([li("update c8, yargs-parser")]),h2({},"0.2.46"),ul([li("update @magic/css")]),h2({},"0.2.45"),ul([li("security fix: update dependencies, yargs-parser")]),h2({},"0.2.44"),ul([li("update dependencies")]),h2({},"0.2.43"),ul([li("update dependencies")]),h2({},"0.2.42"),ul([li("update dependencies")]),h2({},"0.2.41"),ul([li("update dependencies")]),h2({},"0.2.40"),ul([li("update dependencies")]),h2({},"0.2.39"),ul([li("update coveralls, fix minimist issue above")]),h2({},"0.2.38"),ul([li("update dependencies, minimist sec issue")]),h2({},"0.2.37"),ul([li("fix: arguments for both node and c8 tests work"),li("broken in 0.1.36")]),h2({},"0.2.36"),ul([li("c8: --exclude, --include and --all get applied correctly")]),h2({},"0.2.35"),ul([li("fix: c8 errored if coverage dir did not exist"),li("update dependencies")]),h2({},"0.2.34"),ul([li('fix: c8 needs "report" command now')]),h2({},"0.2.33"),ul([li("update exported dependencies")]),h2({},"0.2.32"),ul([li("tests now work on windows"),li("uncaught errors will cause tests to fail with process.exit(1)")]),h2({},"0.2.31"),ul([li("update dependencies")]),h2({},"0.2.30"),ul([li("export @magic/fs")]),h2({},"0.2.29"),ul([li("help text can show up when --help is used")]),h2({},"0.2.28"),ul([li("package: engineStrict: true"),li("update cli: missing @magic/cases dependency")]),h2({},"0.2.27"),ul([li("remove prettier from deps")]),h2({},"0.2.26"),ul([li("remove commonjs support"),li("node 13+ required. awesome.")]),h2({},"0.2.25"),ul([li("currying now throws errors instead of returning them"),li("update @magic/css"),li("update @magic/types which now uses @magic/deep for is.deep.eq and is.deep.diff")]),h2({},"0.2.24"),ul([li("update @magic/css"),li("update c8")]),h2({},"0.2.23"),ul([li("update @magic dependencies to use npm packages instead of github")]),h2({},"0.2.22"),ul([li("update dependencies")]),h2({},"0.2.21"),ul([li("update @magic/cli to allow default args")]),h2({},"0.2.20"),ul([li("update broken dependencies")]),h2({},"0.2.19"),ul([li("update dependencies")]),h2({},"0.2.18"),ul([li("update dependencies"),li("require node 12.13.0")]),h2({},"0.2.17"),ul([li("add node 13 json support for coverage reports")]),h2({},"0.2.15"),ul([li("update dependencies")]),h2({},"0.2.14"),ul([li("windows support now supports index.js files that provide test structure")]),h2({},"0.2.13"),ul([li("windows support is back")]),h2({},"0.2.12"),ul([li("update dependencies")]),h2({},"0.2.11"),ul([li("update prettier, coveralls"),li("add and export @magic/css to test css validity")]),h2({},"0.2.10"),ul([li("node 12.4.0 does not use --experimental-json-modules flag"),li("removed it in 12.4+")]),h2({},"0.2.9"),ul([li("test/beforeAll.js gets loaded separately if it exists"),li("test/afterAll.js gets loaded separately if it exists"),li("if the function exported from test/beforeAll.js returns another function, it will also be executed after all tests"),li("export hyperapp beta 18")]),h2({},"0.2.8"),ul([li("update @magic/cli")]),h2({},"0.2.7"),ul([li("readded calls npm run script"),li("updated c8")]),h2({},"0.2.6"),ul([li("update this readme and html docs"),li("tests should always process.exit(1) if they errored")]),h2({},"0.2.5"),ul([li("use ecmascript version of @magic/deep")]),h2({},"0.2.4"),ul([li("npm run scripts of @magic/test itself can be run on windows")]),h2({},"0.2.3"),ul([li("cli now works everywhere")]),h2({},"0.2.2"),ul([li("cli now works on windows again"),p("(actually, this version is broken on all platforms)")]),h2({},"0.2.1"),ul([li("rework of bin scripts and update dependencies to esmodules")]),h2({},"0.1.0"),ul([li("use esmodules instead of commonjs")])],"/test/cli-flags-reference/":()=>[h1({id:"cli-flags-reference"},"CLI Flags Reference"),p("Available command-line flags for @magic/test:"),h2({},"Flag Reference Table"),Pre('| Flag | Aliases | Default | Env Var | Description | Example |\n| :--- | :----- | :-----: | :------ | :---------- | :------ |\n| -p, --production, --prod |  |  |  | Run tests without coverage (faster) | t -p |\n| -l, --verbose, --loud |  |  |  | Show detailed output including passing tests | t -l |\n| -i, --include |  |  |  | Files to include in coverage | t -i "src/*.js" |\n| -e, --exclude |  |  |  | Files to exclude from coverage | t -e "src/test.js" |\n| --shards N |  |  |  | Total number of shards to split tests across | t --shards 4 --shard-id 0 |\n| --shard-id N |  |  |  | Shard ID (0-indexed) to run | t --shards 4 --shard-id 2 |\n| -w, --workers N |  | auto |  | Max parallel workers (default: auto-detect CPU count) | t -p --workers 2 |\n| --help |  |  |  | Show help text | t --help |\n| --trace |  |  | MAGIC_TEST_TRACE | Enable timing traces for performance debugging | t --trace |'),h2({},"Flag Notes"),ul([li("--shards and --shard-id must be used together"),li("--shard-id is 0-indexed (0 to N-1)"),li("Use -p flag for faster development runs (no coverage)"),li("--workers controls parallel test execution")]),h2({},"Example Usage"),h3({},"Basic Test Run"),Pre(`
+`),O({id:"learn-more"},"Learn More"),z([F([G({to:"/getting-started/"},"Getting Started")," - install, setup, first test"]),F([G({to:"/writing-tests/"},"Writing Tests")," - hooks, promises, types, multiple tests"]),F([G({to:"/lib/"},"Utility Functions")," - deep, fs, curry, log, vals, env, http, mock, has"]),F([G({to:"/svelte/"},"Svelte Testing")," - mount components, interact, assert"]),F([G({to:"/svelte-4-vs-5/"},"Svelte 4 vs 5")," - feature comparison"]),F([G({to:"/svelte-auto-export-faq/"},"Svelte Auto-Export FAQ")," - $state and $derived exports"]),F([G({to:"/cli/"},"CLI & Usage")," - flags, sharding, performance tips"]),F([G({to:"/cli-flags-reference/"},"CLI Flags Reference")," - detailed flag table"]),F([G({to:"/cli-sharding-cheatsheet/"},"CLI Sharding Cheat-Sheet")," - CI/CD examples"]),F([G({to:"/performance-tips/"},"Performance Tips")," - optimization techniques"]),F([G({to:"/common-pitfalls/"},"Common Pitfalls")," - troubleshooting tips"]),F([G({to:"/test-isolation/"},"Test Isolation")," - prevent state leakage between tests"]),F([G({to:"/error-codes/"},"Error Codes")," - programmatic error handling"]),F([G({to:"/error-codes-quicklook/"},"Error Codes Quick Look")," - quick reference table"]),F(G({to:"/changelog/"},"Changelog")," - detailed release history")]),U(["This library tests itself. Have a look at ",G({to:"https://github.com/magic/test/tree/master/test",text:"the tests"})," on GitHub."])],"/test/404/":()=>R("404 - not found."),"/test/changelog/":()=>[_({id:"changelog"},"Changelog"),O({},"0.3.41"),z([F("svelte component coverage fully fixed, 0.0.40 was using the wrong paths"),F("move test/.fixtures to src/lib/svelte/testFixtures to make them exposed to c8 coverage")]),O({},"0.3.40"),z([F("fix svelte component coverage by pointing sourcemaps back to .svelte components")]),O({},"0.3.39"),z([F("change c8 to use --all flag"),F("change c8 to not include dist by default")]),O({},"0.3.38"),z([F("fix imports of svelte components, they only have a default export. resolveSvelteExports now handles this correctly."),F("update dependencies")]),O({},"0.3.37"),z([F("svelte mount now correctly resolves # imports map from package.json")]),O({},"0.3.36"),z([F("fix: add null guards for TypeScript strict mode in getSvelteExports tests")]),O({},"0.3.35"),z([F("works with sveltekit ^3.0.0"),F("feat: add package.json imports support and module resolution (feat)"),F("feat: add svelte shims: $app/env added, also resolves as $app/environment"),F("move test fixtures to test/.fixtures"),F("chore: update dependencies")]),O({},"0.3.34"),U("has subfunctions now allow either predicate functions OR literal values to be checked"),O({},"0.3.33"),z([F("update dependencies")]),O({},"0.3.32"),z([F("make svelte optional again")]),O({},"0.3.31"),z([F("feat: add deadlock detection system (ddl)"),F("feat: integrate ddl into cache, compile, and import pipeline"),F("feat: integrate ddl into resolve and package export pipeline"),F("feat: add loader init, warmup, and $app resolution"),F("feat: add addEventListener/removeEventListener to globals"),F("fix(svelte): remove console.error from pathUtils"),F("fix: add null guard and directory fallback in pathUtils"),F("fix: update registerLoader usage"),F("fix: remove REGISTERED message from tsLoader"),F("fix: fix tsc and eslint errors")]),O({},"0.3.30"),z([F("fix(svelte): resolve $app imports to shims instead of @sveltejs/kit runtime (fixes ERR_MODULE_NOT_FOUND in tests)"),F("fix(svelte): skip non-default exports from .svelte files in barrel compilation (TypeScript types erased at runtime)"),F("fix(vite): inject $app alias into vite aliases for resolveAlias fallback"),F("style(svelte): use @magic/fs instead of node:fs for consistency"),F("fix(c8): correctly order argv for c8 runs.")]),O({},"0.3.29"),z([F("feat(svelte): extract pathUtils with shared path resolution helpers (resolveFilePath, EXTENSION_CANDIDATES, FALLBACK_CANDIDATES, isSkipPattern)"),F("feat(svelte): extract fileWriter module for compiled file output with source map support"),F("feat(svelte): add resolveNodeModulesRelativeImportsPreprocessor for fixing '..' imports in node_modules"),F("feat(cache): add dedup function for concurrent promise deduplication"),F("refactor(svelte): extract loadViteConfig to shared module, consolidate getViteDefine and loadViteDefine"),F("refactor(svelte): remove resolveViteAlias, consolidate into resolveAlias"),F("refactor(svelte): use visitor pattern in resolveSvelteOnlyExports (traverseExports + ExportVisitor)"),F("refactor(svelte): use pathUtils in resolvePackageExport, fix .mjs resolution"),F("refactor(svelte): update tsLoader to use resolveAlias with includeShims and extractImportsSync"),F("refactor(svelte): use shared helpers across compile modules (getTempFilePath, fileWriter, processImports)"),F("fix(svelte): add includeShims option to resolveAlias for bare imports"),F("fix(vite): vite defines now correctly set in globalThis, by calling JSON.parse during assign.")]),O({},"0.3.28"),z([F("fix: $lib/types.js -> the .js gets removed before appending the correct extension"),F("regression fix: version spec check now correctly errors with expected type again."),F("update dependencies")]),O({},"0.3.27"),z([F("fix: exclude .d.ts files from test discovery (passed .ts filter, caused import failures)"),F("fix: always exclude .d.ts from c8 coverage (user --exclude can no longer remove it)"),F("refactor: restructure c8 exclude logic in t.ts"),F("chore: move changelog from README.md to CHANGELOG.md (650 lines extracted)")]),O({},"0.3.26"),z([F("add customElements to happy-dom globals")]),O({},"0.3.25"),z([F("fix: use @magic/types for more type comparisons"),F("feat: make expect accept an array of typechecks"),F("test: make more files testable by extracting pure functions"),F("update dependencies")]),O({},"0.3.24"),z([F("feat: show total time including test discovery overhead"),F("feat: add progress tracking for test discovery"),F("feat: add DISCOVERY_TIMEOUT env var to control test discovery timeout (default: 30s)"),F("perf: cache getViteDefine results")]),O({},"0.3.23"),z([F("0.3.22 caused tests to fail because viteconfig was not loaded correctly and lead to recursive imports")]),O({},"0.3.22"),z([F("feat: make restoreProperties method public on Isolation class"),F("fix: move BigInt check before other type checks in makeSafeClone"),F("refactor: use pathToFileURL for ESM config imports"),F("refactor: use wrapTest helper consistently in suite"),F("refactor: simplify suiteHasBeforeAllOrAfterAll condition"),F("refactor: extract hasFixedPort helper in isolationChecks"),F("refactor: extract restoreProperties helper"),F("refactor: deduplicate evaluateWorkerResult by re-exporting evaluateTestResult"),F("refactor: use CACHE_DIR constant for test temp files"),F("refactor: use dynamic imports instead of manual config parsing"),F("refactor(http): extract makeRequest helper to deduplicate get/post"),F("refactor(mount): handle Svelte 5 snippets properly"),F("test: fix test type errors for HTMLElement click function"),F("test: update fixtures for improved test harness"),F("update dependencies")]),O({},"0.3.21"),z([F("various build performance improvements, especially for svelte components"),F("add timing traces with MAGIC_TEST_TRACE env var and --trace CLI flag"),F("add promise-based caching via CacheManager"),F("consolidate worker pool into single source"),F("centralize caching in CacheManager at tsLoader level"),F("increase default test timeout to 30s"),F("fixed tsLoader .ts file handling"),F("add more tests for @magic/test itself"),F("implement persistent disk cache in node_modules/.magic-test-cache"),F("parallelize import resolution, barrel exports, and fs.exists checks"),F("cache fs.exists results, processImports results, and resolveViteAlias results"),F("skip writing unchanged files during compilation"),F("consolidate caches into single pendingPromises map"),F("add more tests for @magic/test itself"),F("update dependencies")]),O({},"0.3.20"),z([F("prevent double-compilation of svelte components"),F("update dependencies")]),O({},"0.3.19"),z([F("svelte edge cases"),F("custom test defines for globals")]),O({},"0.3.18"),z([F("better resolution for imported dependencies in tests"),F("especially <script> tags in svelte components that export functions/variables"),F("update dependencies")]),O({},"0.3.17"),z([F("better test discovery, had edge cases where tests were not found")]),O({},"0.3.16"),z([F("better kill handling for workers and child_process"),F("README fixes"),F("remove @systemkollektiv devDependencies, those packages are private for now"),F("update dependencies")]),O({},"0.3.15"),z([F("fix import of .svelte.js/.ts files if js/ts extension is omitted")]),O({},"0.3.14"),z([F("fireEvent function now correctly handles various addEventListener event types")]),O({},"0.3.13"),z([F("update dependencies")]),O({},"0.3.12"),z([F("make svelte optional for consumers"),F("update dependencies")]),O({},"0.3.11"),z([F("performance improvements, better checks if tests need to be isolated"),F("fix timing issues in isolation code"),F("replace regex code checks with ast checks"),F("add `has` functionality for object checks"),F("update dependencies")]),O({},"0.3.10"),z([F("fix more edge cases in svelte compilation steps"),F("add .css import support"),F("update dependencies")]),O({},"0.3.9"),z([F("fix imports of test/index.(mjs|ts|js) files")]),O({},"0.3.8"),z([F("add --workers flag to control max parallel workers (default: auto-detect CPU count)"),F("canvas polyfill works properly in happy-dom environment"),F("svelte: resolve svelte-only package exports"),F("svelte: fix import chain handling for components"),F("version: check if Lib is missing exports"),F("worker isolation: beforeAll and afterAll run in workers directly"),F("before fields in tests get awaited if they return a raw promise")]),O({},"0.3.7"),z([F("advanced worker isolation, executing minimum number of needed workers for tests. lots of internal changes to achieve this.")]),O({},"0.3.6"),U("broken - tried implementing better isolation"),O({},"0.3.5"),z([F("better tsLoader resolve mechanism")]),O({},"0.3.4"),z([F("also run registerLoader in workers")]),O({},"0.3.3"),z([F("replace all import .ts with .js"),F("some test output fixes")]),O({},"0.3.2"),U("broken: some .ts references for worker.ts and unit.ts"),z([F("publish dist dir with .js files for consumers.")]),O({},"0.3.1"),U("broken, dist dir missing"),O({},"0.3.0"),U("broken. node can not strip types in node_modules..."),z([F("added html support (using happy-dom, experimental!)"),F("added svelte support (experimental!)"),F("various improvements to test logic and structure of internal lib"),F("more tests.")]),O({},"0.2.30"),z([F("allow tests to be written using typescript, .ts files can be test files now."),F("add some internal tests"),F("update dependencies")]),O({},"0.2.29"),z([F("tryCatch: pass on empty args"),F("update dependencies")]),O({},"0.2.28"),z([F("use node:module register function for loader, allowing use of the --import flag instead of soon deprecated --loader.")]),O({},"0.2.27"),z([F("allow resolving .js files as .ts files, this mimics typescript .js file resolver"),F("update @types/node")]),O({},"0.2.26"),z([F("update dependencies")]),O({},"0.2.25"),z([F("update dependencies")]),O({},"0.2.24"),z([F("fix @magic/core tests on windows.")]),O({},"0.2.23"),z([F("readd npm run prepublishOnly task"),F("update dependencies")]),O({},"0.2.22"),z([F("add comprehensive typescript types"),F("rework some functionality to be typesafe and typeguarded"),F("update dependencies")]),O({},"0.2.21"),z([F("update dependencies")]),O({},"0.2.20"),z([F("update dependencies")]),O({},"0.2.19"),z([F("update dependencies"),F("add unused http.post. probably should replace http with fetch...")]),O({},"0.2.18"),z([F("add missing fs.statfs, fs.statfsSync and fs.promises.constants to test/spec"),F("update dependencies")]),O({},"0.2.17"),z([F("remove calls and coveralls-next, c8 takes care of coverage."),F("update dependencies")]),O({},"0.2.16"),z([F("update dependencies")]),O({},"0.2.15"),z([F("update dependencies"),F("percentage outputs print nicer numbers"),F("added http export that allows http requests in tests. only supports get requests for now.")]),O({},"0.2.14"),z([F("update dependencies")]),O({},"0.2.13"),z([F("update dependencies")]),O({},"0.2.12"),z([F("update dependencies")]),O({},"0.2.11"),z([F("update dependencies")]),O({},"0.2.10"),z([F("@magic/test can now test @magic/core again")]),O({},"0.2.9"),z([F("update dependencies")]),O({},"0.2.8"),z([F("update dependencies")]),O({},"0.2.7"),z([F("update dependencies"),F("replace coveralls with coveralls-next")]),O({},"0.2.6"),z([F("update dependencies")]),O({},"0.2.5"),z([F("update dependencies"),F("@magic/core is a dev dependency now.")]),O({},"0.2.4"),z([F("lib/version: spec can have objects defined with ['obj', false], which will test the parent to be an object, but does not test the key/value pairs in the object."),F("maybeInjectMagic: made magic injection more robust and much faster if magic is not being used."),F("t -p now does not show the coverage information")]),O({},"0.2.3"),z([F("update dependencies")]),O({},"0.2.2"),z([F("spec values can be functions, allowing arbitrary equality testing to be executed by @magic/test.version")]),O({},"0.2.1"),z([F("internal restructuring"),F("tests now output their run duration"),F("add @magic/error dependency and export it from index"),F("index.js files have the same functionality as index.js files"),F("update dependencies")]),O({},"0.2.0"),z([F("update dependencies"),F("version now tests spec and lib in a single run.")]),O({},"0.1.77"),z([F("update dependencies")]),O({},"0.1.76"),z([F("update dependencies")]),O({},"0.1.75"),z([F("update dependencies")]),O({},"0.1.74"),z([F("update dependencies")]),O({},"0.1.73"),z([F("update dependencies")]),O({},"0.1.72"),z([F("update @magic/types and intermediate deps to avoid circular dependency")]),O({},"0.1.71"),z([F("update dependencies")]),O({},"0.1.70"),z([F("update dependencies")]),O({},"0.1.69"),z([F("import of magic config should work on windows")]),O({},"0.1.68"),z([F("update @magic/core to fix tests if magic.js does not exist")]),O({},"0.1.67"),z([F("silence errors if magic.js does not exist")]),O({},"0.1.66"),z([F("better handling if magic is not in use")]),O({},"0.1.65"),z([F("update dependencies"),F("testing of @magic-modules is now built in."),F('if @magic/core is installed, the tests will "just work" and return html for @magic-modules')]),O({},"0.1.64"),z([F("update dependencies (@magic/fs)")]),O({},"0.1.63"),z([F("update dependencies (c8)")]),O({},"0.1.62"),z([F("add html flag to tests, now @magic-modules can be tested \\o/"),F("update dependencies")]),O({},"0.1.61"),z([F("update dependencies")]),O({},"0.1.60"),z([F("bump required node version to 14.15.4"),F("update dependencies")]),O({},"0.1.59"),z([F("update dependencies")]),O({},"0.1.58"),z([F("update dependencies")]),O({},"0.1.57"),z([F("update dependencies")]),O({},"0.1.56"),z([F("update dependencies")]),O({},"0.1.55"),z([F("update dependencies")]),O({},"0.1.54"),z([F("update dependencies")]),O({},"0.1.53"),z([F("update dependencies")]),O({},"0.1.52"),z([F("update dependencies"),F("remove hyperapp from exports.")]),O({},"0.1.51"),z([F("update dependencies")]),O({},"0.1.50"),z([F("remove @magic/css export"),F("update c8")]),O({},"0.1.49"),z([F("update @magic/css")]),O({},"0.1.48"),z([F("bump required node version to 14.2.0"),F("update dependencies")]),O({},"0.1.47"),z([F("update c8, yargs-parser")]),O({},"0.1.46"),z([F("update @magic/css")]),O({},"0.1.45"),z([F("security fix: update dependencies, yargs-parser.")]),O({},"0.1.44"),z([F("update dependencies")]),O({},"0.1.43"),z([F("update dependencies")]),O({},"0.1.42"),z([F("update dependencies")]),O({},"0.1.41"),z([F("update dependencies")]),O({},"0.1.40"),z([F("update dependencies")]),O({},"0.1.39"),z([F("update coveralls, fix minimist issue above.")]),O({},"0.1.38"),z([F("update dependencies, minimist sec issue.")]),O({},"0.1.37"),z([F("fix: arguments for both node and c8 tests work. broken in 0.1.36")]),O({},"0.1.36"),z([F("c8: --exclude, --include and --all get applied correctly.")]),O({},"0.1.35"),z([F("fix: c8 errored if coverage dir did not exist"),F("update dependencies")]),O({},"0.1.34"),z([F('fix: c8 needs "report" command now')]),O({},"0.1.33"),z([F("update exported dependencies")]),O({},"0.1.32"),z([F("tests now work on windows \\o/"),F("uncaught errors will cause tests to fail with process.exit(1)")]),O({},"0.1.31"),z([F("update dependencies")]),O({},"0.1.30"),z([F("export @magic/fs")]),O({},"0.1.29"),z([F("help text can show up when --help is used")]),O({},"0.1.28"),z([F("package: engineStrict: true"),F("update cli: missing @magic/cases dependency")]),O({},"0.1.27"),z([F("remove prettier from deps")]),O({},"0.1.26"),z([F("remove commonjs support. node 13+ required. awesome.")]),O({},"0.1.25"),z([F("currying now throws errors instead of returning them."),F("update @magic/css"),F("update @magic/types which now uses @magic/deep for is.deep.eq and is.deep.diff")]),O({},"0.1.24"),z([F("update @magic/css"),F("update c8")]),O({},"0.1.23"),z([F("update @magic dependencies to use npm packages instead of github")]),O({},"0.1.22"),z([F("update dependencies")]),O({},"0.1.21"),z([F("update @magic/cli to allow default args")]),O({},"0.1.20"),z([F("update broken dependencies")]),O({},"0.1.19"),z([F("update dependencies")]),O({},"0.1.18"),z([F("update dependencies"),F("require node 12.13.0")]),O({},"0.1.17"),z([F("add node 13 json support for coverage reports.")]),O({},"0.1.16"),z([F("update @magic/cli for node 13 support.")]),O({},"0.1.15"),z([F("update dependencies")]),O({},"0.1.14"),z([F("windows support now supports index.js files that provide test structure")]),O({},"0.1.13"),z([F("windows support is back")]),O({},"0.1.12"),z([F("update dependencies")]),O({},"0.1.11"),z([F("update prettier, coveralls"),F("add and export @magic/css to test css validity")]),O({},"0.1.10"),z([F("node 12.4.0 does not use --experimental-json-modules flag. removed it in 12.4+.")]),O({},"0.1.9"),z([F("test/beforeAll.js gets loaded separately if it exists and executed before all tests"),F("test/afterAll.js gets loaded separately if it exists and executed after all tests"),F("if the function exported from test/beforeAll.js returns another function, this returned function will also be executed after all tests"),F("export hyperapp beta 18")]),O({},"0.1.8"),z([F("update @magic/cli")]),O({},"0.1.7"),z([F("readded calls npm run script"),F("updated c8")]),O({},"0.1.6"),z([F("update this readme and html docs."),F("tests should always process.exit(1) if they errored.")]),O({},"0.1.5"),z([F("use ecmascript version of @magic/deep")]),O({},"0.1.4"),z([F("npm run scripts of @magic/test itself can be run on windows.")]),O({},"0.1.3"),z([F("cli now works everywhere")]),O({},"0.1.2"),z([F("cli now works on windows again (actually, this version is broken on all platforms.)")]),O({},"0.1.1"),z([F("rework of bin scripts and update dependencies to esmodules")]),O({},"0.1.0"),z([F("use esmodules instead of commonjs.")])],"/test/cli-flags-reference/":()=>[_({id:"cli-flags-reference"},"CLI Flags Reference"),U("Available command-line flags for @magic/test:"),O({},"Flag Reference Table"),K('| Flag | Aliases | Default | Env Var | Description | Example |\n| :--- | :----- | :-----: | :------ | :---------- | :------ |\n| -p, --production, --prod |  |  |  | Run tests without coverage (faster) | t -p |\n| -l, --verbose, --loud |  |  |  | Show detailed output including passing tests | t -l |\n| -i, --include |  |  |  | Files to include in coverage | t -i "src/*.js" |\n| -e, --exclude |  |  |  | Files to exclude from coverage | t -e "src/test.js" |\n| --shards N |  |  |  | Total number of shards to split tests across | t --shards 4 --shard-id 0 |\n| --shard-id N |  |  |  | Shard ID (0-indexed) to run | t --shards 4 --shard-id 2 |\n| -w, --workers N |  | auto |  | Max parallel workers (default: auto-detect CPU count) | t -p --workers 2 |\n| --help |  |  |  | Show help text | t --help |\n| --trace |  |  | MAGIC_TEST_TRACE | Enable timing traces for performance debugging | t --trace |'),O({},"Flag Notes"),z([F("--shards and --shard-id must be used together"),F("--shard-id is 0-indexed (0 to N-1)"),F("Use -p flag for faster development runs (no coverage)"),F("--workers controls parallel test execution")]),O({},"Example Usage"),j({},"Basic Test Run"),K(`
 npm test  # runs with coverage
 
 npm test  # runs without coverage (faster)
-`),h3({},"Shard Large Test Suite"),Pre(`
+`),j({},"Shard Large Test Suite"),K(`
 # Run 4 shards, this is shard 0 (of 0-3)
 t --shards 4 --shard-id 0
 
@@ -55,7 +55,7 @@ t --shards 4 --shard-id 1
 
 # Combine with other flags
 t -p --shards 4 --shard-id 2 --workers 2
-`),h2({},"See Also"),ul([li([Link({to:"/cli/"},"CLI & Usage")," - detailed usage guide"]),li([Link({to:"/performance-tips/"},"Performance Tips")," - optimization techniques"]),li([Link({to:"/cli-sharding-cheatsheet/"},"CLI Sharding Cheat-Sheet")," - CI/CD examples"])])],"/test/cli-sharding-cheatsheet/":()=>[h1({id:"cli-sharding-cheatsheet"},"CLI Sharding Cheat-Sheet"),p("Run tests in parallel across multiple processes to speed up large test suites:"),h2({},"Basic Sharding Commands"),Pre(`
+`),O({},"See Also"),z([F([G({to:"/cli/"},"CLI & Usage")," - detailed usage guide"]),F([G({to:"/performance-tips/"},"Performance Tips")," - optimization techniques"]),F([G({to:"/cli-sharding-cheatsheet/"},"CLI Sharding Cheat-Sheet")," - CI/CD examples"])])],"/test/cli-sharding-cheatsheet/":()=>[_({id:"cli-sharding-cheatsheet"},"CLI Sharding Cheat-Sheet"),U("Run tests in parallel across multiple processes to speed up large test suites:"),O({},"Basic Sharding Commands"),K(`
 # Run 4 shards, this is shard 0 (of 0-3)
 t --shards 4 --shard-id 0
 
@@ -67,7 +67,7 @@ t --shards 4 --shard-id 2
 
 # Run shard 3
 t --shards 4 --shard-id 3
-`),p(["Tests are distributed deterministically using a hash of the test file path,"," ensuring each test always runs in the same shard."]),h2({},"Combine with Other Flags"),Pre(`
+`),U(["Tests are distributed deterministically using a hash of the test file path,"," ensuring each test always runs in the same shard."]),O({},"Combine with Other Flags"),K(`
 # Run with production mode (no coverage)
 t -p --shards 4 --shard-id 2
 
@@ -76,7 +76,7 @@ t -l --shards 4 --shard-id 1
 
 # Custom worker count
 t --shards 4 --shard-id 0 --workers 2
-`),h2({},"Package.json for CI/CD"),p("Add these scripts to your package.json:"),Pre(`
+`),O({},"Package.json for CI/CD"),U("Add these scripts to your package.json:"),K(`
 {
   "scripts": {
     "test": "t -p",
@@ -86,12 +86,12 @@ t --shards 4 --shard-id 0 --workers 2
     "test:shard:3": "t -p --shards 4 --shard-id 3"
   }
 }
-`),h2({},"Run All Shards in Parallel"),p("Use a single command to run all shards in parallel:"),Pre(`
+`),O({},"Run All Shards in Parallel"),U("Use a single command to run all shards in parallel:"),K(`
 # Run all 4 shards in parallel and wait for all to complete
 npm run test:shard:0 & npm run test:shard:1 & npm run test:shard:2 & npm run test:shard:3 & wait
-`),p("Or with production mode:"),Pre(`
+`),U("Or with production mode:"),K(`
 npm run test:shard:0 & npm run test:shard:1 & npm run test:shard:2 & npm run test:shard:3 & wait
-`),h2({},"Deterministic Distribution"),p(["Test distribution is deterministic - the same test file will always run in the same shard."," This ensures consistent behavior across CI runs."]),h2({},"See Also"),ul([li([Link({to:"/cli/"},"CLI & Usage")," - full CLI documentation"]),li([Link({to:"/cli-flags-reference/"},"CLI Flags Reference")," - detailed flag list"]),li([Link({to:"/performance-tips/"},"Performance Tips")," - optimization techniques"])])],"/test/cli/":()=>[h1({id:"cli"},"CLI & Usage"),h2({id:"cli-packagejson"},"package.json (recommended)"),p("Add the magic/test bin scripts to package.json:"),Pre(`
+`),O({},"Deterministic Distribution"),U(["Test distribution is deterministic - the same test file will always run in the same shard."," This ensures consistent behavior across CI runs."]),O({},"See Also"),z([F([G({to:"/cli/"},"CLI & Usage")," - full CLI documentation"]),F([G({to:"/cli-flags-reference/"},"CLI Flags Reference")," - detailed flag list"]),F([G({to:"/performance-tips/"},"Performance Tips")," - optimization techniques"])])],"/test/cli/":()=>[_({id:"cli"},"CLI & Usage"),O({id:"cli-packagejson"},"package.json (recommended)"),U("Add the magic/test bin scripts to package.json:"),K(`
 {
   "scripts": {
     "test": "t -p",
@@ -101,10 +101,10 @@ npm run test:shard:0 & npm run test:shard:1 & npm run test:shard:2 & npm run tes
     "@magic/test": "github:magic/test"
   }
 }
-`),p("Then use the npm run scripts:"),Pre(`
+`),U("Then use the npm run scripts:"),K(`
 npm test
 npm run coverage
-`),h2({id:"cli-global"},"Globally (not recommended)"),p(["You can install this library globally,"," but the recommendation is to add the dependency and scripts to the package.json file."]),p(["This both explains to everyone that your app has these dependencies"," as well as keeping your bash free of clutter."]),Pre(`
+`),O({id:"cli-global"},"Globally (not recommended)"),U(["You can install this library globally,"," but the recommendation is to add the dependency and scripts to the package.json file."]),U(["This both explains to everyone that your app has these dependencies"," as well as keeping your bash free of clutter."]),K(`
 npm i -g @magic/test
 
 // run tests in production mode
@@ -112,7 +112,7 @@ t -p
 
 // run tests and get coverage in verbose mode
 t
-`),h2({id:"cli-flags"},"CLI Flags"),p("Available command-line flags:"),ul([li("-p, --production, --prod - Run tests without coverage (faster)"),li("-l, --verbose, --loud - Show detailed output including passing tests"),li("-i, --include - Files to include in coverage"),li("-e, --exclude - Files to exclude from coverage"),li("--shards N - Total number of shards to split tests across"),li("--shard-id N - Shard ID (0-indexed) to run"),li("-w, --workers N - Max parallel workers (default: auto)"),li("--help - Show help text")]),p(["Note: `--shards` and `--shard-id` must be used together."," `--shard-id` is 0-indexed (0 to N-1)."]),h2({id:"sharding"},"Sharding Tests"),p("Run tests in parallel across multiple processes to speed up large test suites:"),Pre(`
+`),O({id:"cli-flags"},"CLI Flags"),U("Available command-line flags:"),z([F("-p, --production, --prod - Run tests without coverage (faster)"),F("-l, --verbose, --loud - Show detailed output including passing tests"),F("-i, --include - Files to include in coverage"),F("-e, --exclude - Files to exclude from coverage"),F("--shards N - Total number of shards to split tests across"),F("--shard-id N - Shard ID (0-indexed) to run"),F("-w, --workers N - Max parallel workers (default: auto)"),F("--help - Show help text")]),U(["Note: `--shards` and `--shard-id` must be used together."," `--shard-id` is 0-indexed (0 to N-1)."]),O({id:"sharding"},"Sharding Tests"),U("Run tests in parallel across multiple processes to speed up large test suites:"),K(`
 # Run 4 shards, this is shard 0 (of 0-3)
 t --shards 4 --shard-id 0
 
@@ -121,7 +121,7 @@ t --shards 4 --shard-id 1
 
 # Combine with other flags
 t -p --shards 4 --shard-id 2
-`),p(["Tests are distributed deterministically using a hash of the test file path,"," ensuring each test always runs in the same shard."]),p("Add to your package.json for CI/CD:"),Pre(`
+`),U(["Tests are distributed deterministically using a hash of the test file path,"," ensuring each test always runs in the same shard."]),U("Add to your package.json for CI/CD:"),K(`
 {
   "scripts": {
     "test": "t -p",
@@ -131,22 +131,22 @@ t -p --shards 4 --shard-id 2
     "test:shard:3": "t -p --shards 4 --shard-id 3"
   }
 }
-`),p("Or use a single command to run all shards in parallel:"),Pre(`
+`),U("Or use a single command to run all shards in parallel:"),K(`
 # Run all 4 shards in parallel and wait for all to complete
 npm run test:shard:0 & npm run test:shard:1 & npm run test:shard:2 & npm run test:shard:3 & wait
-`),h2({id:"exit-codes"},"Exit Codes"),p("@magic/test returns specific exit codes to indicate test results:"),p("| Exit Code | Meaning |"),p("| --------- | ------- |"),p("| 0 | All tests passed |"),p("| 1 | One or more tests failed |"),Pre(`
+`),O({id:"exit-codes"},"Exit Codes"),U("@magic/test returns specific exit codes to indicate test results:"),U("| Exit Code | Meaning |"),U("| --------- | ------- |"),U("| 0 | All tests passed |"),U("| 1 | One or more tests failed |"),K(`
 # Run tests and check exit code
 npm test
 echo "Exit code: $?"  # 0 = success, 1 = failure
-`),h2({id:"verbose-output"},"Verbose Output"),p("The -l (or --verbose, --loud) flag enables detailed output:"),Pre(`
+`),O({id:"verbose-output"},"Verbose Output"),U("The -l (or --verbose, --loud) flag enables detailed output:"),K(`
 # Shows all tests including passing ones
 t -l
-`),p("What verbose mode shows:"),ul([li("All test results (not just failures)"),li("Individual test execution time"),li("Full test names with suite hierarchy"),li("Detailed error messages with stack traces")]),p("Default mode (without -l):"),ul([li("Only shows failing tests"),li("Shows summary only for passing suites"),li("Faster output for large test suites")]),p("Example output without -l:"),Pre(`
+`),U("What verbose mode shows:"),z([F("All test results (not just failures)"),F("Individual test execution time"),F("Full test names with suite hierarchy"),F("Detailed error messages with stack traces")]),U("Default mode (without -l):"),z([F("Only shows failing tests"),F("Shows summary only for passing suites"),F("Faster output for large test suites")]),U("Example output without -l:"),K(`
 ### Testing package: my-lib
 /addition.js => Pass: 3/3 100%
 /multiplication.js => Pass: 4/4 100%
 Ran 7 tests in 12ms. Passed 7/7 100%
-`),p("Example output with -l:"),Pre(`
+`),U("Example output with -l:"),K(`
 ### Testing package: my-lib
 ▶ addition
   ✔ adds two positive numbers (1.2ms)
@@ -158,13 +158,13 @@ Ran 7 tests in 12ms. Passed 7/7 100%
   ✔ multiplies two positives (0.8ms)
   ✔ handles negative numbers (0.9ms)
 Ran 7 tests in 12ms. Passed 7/7 100%
-`),h2({id:"performance-tips"},"Performance Tips"),p(["For a detailed guide, see the ",Link({to:"/performance-tips/"},"Performance Tips")," page."]),h3({},"Quick Reference"),Pre(`
+`),O({id:"performance-tips"},"Performance Tips"),U(["For a detailed guide, see the ",G({to:"/performance-tips/"},"Performance Tips")," page."]),j({},"Quick Reference"),K(`
 # Fast mode - no coverage
 t -p
 
 # Shard across 4 processes
 t --shards 4 --shard-id 0
-`),h2({id:"common-pitfalls"},"Common Pitfalls"),p(["For a detailed guide, see the ",Link({to:"/common-pitfalls/"},"Common Pitfalls")," page."]),h3({},"Quick Reference"),p("Avoid these common mistakes:"),ul([li("Forgetting to return in async tests"),li("Not wrapping callback functions"),li("Mutating shared state between tests"),li("Using the wrong equality check"),li("Not awaiting async operations"),li("Incorrect hook usage")])],"/test/common-pitfalls/":()=>[h1({id:"common-pitfalls"},"Common Pitfalls"),p("Avoid these common mistakes when writing tests:"),h2({},"1. Forgetting to Return in Async Tests"),p(["The test finishes before the promise resolves. Always return the promise:"]),Pre(`
+`),O({id:"common-pitfalls"},"Common Pitfalls"),U(["For a detailed guide, see the ",G({to:"/common-pitfalls/"},"Common Pitfalls")," page."]),j({},"Quick Reference"),U("Avoid these common mistakes:"),z([F("Forgetting to return in async tests"),F("Not wrapping callback functions"),F("Mutating shared state between tests"),F("Using the wrong equality check"),F("Not awaiting async operations"),F("Incorrect hook usage")])],"/test/common-pitfalls/":()=>[_({id:"common-pitfalls"},"Common Pitfalls"),U("Avoid these common mistakes when writing tests:"),O({},"1. Forgetting to Return in Async Tests"),U(["The test finishes before the promise resolves. Always return the promise:"]),K(`
 # Wrong: promise resolves before test checks result
 export default {
   fn: async () => {
@@ -181,7 +181,7 @@ export default {
   },
   expect: true,
 }
-`),h2({},"2. Not Wrapping Callback Functions"),Pre(`
+`),O({},"2. Not Wrapping Callback Functions"),K(`
 # Wrong: function gets called immediately
 export default {
   fn: doSomething(),  // executes immediately!
@@ -193,7 +193,7 @@ export default {
   fn: () => doSomething(),
   expect: true,
 }
-`),h2({},"3. Mutating Shared State Between Tests"),Pre(`
+`),O({},"3. Mutating Shared State Between Tests"),K(`
 # Wrong: counter persists between tests
 let counter = 0
 export default [
@@ -209,7 +209,7 @@ export default {
     { fn: () => ++counter, expect: 1 }, // passes - reset before each
   ],
 }
-`),h2({},"4. Using the Wrong Equality Check"),Pre(`
+`),O({},"4. Using the Wrong Equality Check"),K(`
 # Wrong: checks reference equality
 export default {
   fn: () => [1, 2, 3],
@@ -222,7 +222,7 @@ export default {
   fn: () => [1, 2, 3],
   expect: is.deep.equal([1, 2, 3]),
 }
-`),h2({},"5. Not Awaiting Async Operations"),Pre(`
+`),O({},"5. Not Awaiting Async Operations"),K(`
 # Wrong: test finishes before promise resolves
 export default {
   fn: () => {
@@ -247,7 +247,7 @@ export default {
   fn: promise(cb => setTimeout(() => cb(null, true), 100)),
   expect: true,
 }
-`),h2({},"6. Incorrect Hook Usage"),Pre(`
+`),O({},"6. Incorrect Hook Usage"),K(`
 # Wrong: before/after hooks on individual tests, not suites
 export default [
   {
@@ -266,9 +266,9 @@ export default {
     { fn: () => true, expect: true },
   ],
 }
-`)],"/test/error-codes-quicklook/":()=>[h1({id:"error-codes-quicklook"},"Error Codes Quick Look"),p("Quick reference for @magic/test error codes. Import from `@magic/test`:"),Pre(`
+`)],"/test/error-codes-quicklook/":()=>[_({id:"error-codes-quicklook"},"Error Codes Quick Look"),U("Quick reference for @magic/test error codes. Import from `@magic/test`:"),K(`
 import { ERRORS, createError } from '@magic/test'
-`),h2({},"Error Codes Reference Table"),Pre('| Code | Description | Example Usage |\n| :--- | :---------- | :------------ |\n| ERRORS.E_EMPTY_SUITE | Test suite is not exporting any tests | createError(ERRORS.E_EMPTY_SUITE, "Empty test suite") |\n| ERRORS.E_RUN_SUITE_UNKNOWN | Unknown error occurred while running a suite | createError(ERRORS.E_RUN_SUITE_UNKNOWN, "Unexpected execution error") |\n| ERRORS.E_TEST_NO_FN | Test object is missing the `fn` property | createError(ERRORS.E_TEST_NO_FN, "Missing test function") |\n| ERRORS.E_TEST_EXPECT | Test expectation failed | createError(ERRORS.E_TEST_EXPECT, "Expected value does not match") |\n| ERRORS.E_TEST_BEFORE | Before hook failed | createError(ERRORS.E_TEST_BEFORE, "Setup hook threw error") |\n| ERRORS.E_TEST_AFTER | After hook failed | createError(ERRORS.E_TEST_AFTER, "Cleanup hook threw error") |\n| ERRORS.E_TEST_FN | Test function threw an error | createError(ERRORS.E_TEST_FN, "Test function crashed") |\n| ERRORS.E_NO_TESTS | No test suites found | createError(ERRORS.E_NO_TESTS, "No test files discovered") |\n| ERRORS.E_IMPORT | Failed to import a test file | createError(ERRORS.E_IMPORT, "Cannot resolve test file path") |\n| ERRORS.E_MAGIC_TEST | General test execution error | createError(ERRORS.E_MAGIC_TEST, "Internal test runner error") |'),h2({},"Usage Example"),p("Create custom errors with specific codes and messages:"),Pre(`
+`),O({},"Error Codes Reference Table"),K('| Code | Description | Example Usage |\n| :--- | :---------- | :------------ |\n| ERRORS.E_EMPTY_SUITE | Test suite is not exporting any tests | createError(ERRORS.E_EMPTY_SUITE, "Empty test suite") |\n| ERRORS.E_RUN_SUITE_UNKNOWN | Unknown error occurred while running a suite | createError(ERRORS.E_RUN_SUITE_UNKNOWN, "Unexpected execution error") |\n| ERRORS.E_TEST_NO_FN | Test object is missing the `fn` property | createError(ERRORS.E_TEST_NO_FN, "Missing test function") |\n| ERRORS.E_TEST_EXPECT | Test expectation failed | createError(ERRORS.E_TEST_EXPECT, "Expected value does not match") |\n| ERRORS.E_TEST_BEFORE | Before hook failed | createError(ERRORS.E_TEST_BEFORE, "Setup hook threw error") |\n| ERRORS.E_TEST_AFTER | After hook failed | createError(ERRORS.E_TEST_AFTER, "Cleanup hook threw error") |\n| ERRORS.E_TEST_FN | Test function threw an error | createError(ERRORS.E_TEST_FN, "Test function crashed") |\n| ERRORS.E_NO_TESTS | No test suites found | createError(ERRORS.E_NO_TESTS, "No test files discovered") |\n| ERRORS.E_IMPORT | Failed to import a test file | createError(ERRORS.E_IMPORT, "Cannot resolve test file path") |\n| ERRORS.E_MAGIC_TEST | General test execution error | createError(ERRORS.E_MAGIC_TEST, "Internal test runner error") |'),O({},"Usage Example"),U("Create custom errors with specific codes and messages:"),K(`
 import { createError, ERRORS } from '@magic/test'
 
 export default [
@@ -278,9 +278,9 @@ export default [
     info: 'createError creates errors with code and message',
   },
 ]
-`),h2({},"Error Object Properties"),ul([li('code - The error code string (e.g., "E_TEST_NO_FN")'),li("message - Human-readable error message"),li("stack - Stack trace for debugging")]),p("See also: "),[Link({to:"/error-codes/"},"Full Error Codes Reference")]],"/test/error-codes/":()=>[h1({id:"error-codes"},"Error Codes"),p(["@magic/test uses error codes to help with debugging and programmatic error handling."," You can import these constants from `@magic/test`:"]),Pre(`
+`),O({},"Error Object Properties"),z([F('code - The error code string (e.g., "E_TEST_NO_FN")'),F("message - Human-readable error message"),F("stack - Stack trace for debugging")]),U("See also: "),[G({to:"/error-codes/"},"Full Error Codes Reference")]],"/test/error-codes/":()=>[_({id:"error-codes"},"Error Codes"),U(["@magic/test uses error codes to help with debugging and programmatic error handling."," You can import these constants from `@magic/test`:"]),K(`
 import { ERRORS, createError } from '@magic/test'
-`),h2({},"Available Error Codes"),p("| Code | Description |"),p("| ---- | ----------- |"),p("| ERRORS.E_EMPTY_SUITE | Test suite is not exporting any tests |"),p("| ERRORS.E_RUN_SUITE_UNKNOWN | Unknown error occurred while running a suite |"),p("| ERRORS.E_TEST_NO_FN | Test object is missing the `fn` property |"),p("| ERRORS.E_TEST_EXPECT | Test expectation failed |"),p("| ERRORS.E_TEST_BEFORE | Before hook failed |"),p("| ERRORS.E_TEST_AFTER | After hook failed |"),p("| ERRORS.E_TEST_FN | Test function threw an error |"),p("| ERRORS.E_NO_TESTS | No test suites found |"),p("| ERRORS.E_IMPORT | Failed to import a test file |"),p("| ERRORS.E_MAGIC_TEST | General test execution error |"),h2({},"createError"),p("Create custom errors with specific codes and messages:"),Pre(`
+`),O({},"Available Error Codes"),U("| Code | Description |"),U("| ---- | ----------- |"),U("| ERRORS.E_EMPTY_SUITE | Test suite is not exporting any tests |"),U("| ERRORS.E_RUN_SUITE_UNKNOWN | Unknown error occurred while running a suite |"),U("| ERRORS.E_TEST_NO_FN | Test object is missing the `fn` property |"),U("| ERRORS.E_TEST_EXPECT | Test expectation failed |"),U("| ERRORS.E_TEST_BEFORE | Before hook failed |"),U("| ERRORS.E_TEST_AFTER | After hook failed |"),U("| ERRORS.E_TEST_FN | Test function threw an error |"),U("| ERRORS.E_NO_TESTS | No test suites found |"),U("| ERRORS.E_IMPORT | Failed to import a test file |"),U("| ERRORS.E_MAGIC_TEST | General test execution error |"),O({},"createError"),U("Create custom errors with specific codes and messages:"),K(`
 import { createError, ERRORS } from '@magic/test'
 
 export default [
@@ -290,7 +290,7 @@ export default [
     info: 'createError creates errors with code and message',
   },
 ]
-`),h2({},"Usage Example"),Pre(`
+`),O({},"Usage Example"),K(`
 try {
   // run tests
 } catch (e) {
@@ -302,28 +302,28 @@ try {
     console.error('Failed to import test file:', e.message)
   }
 }
-`),h2({},"Error Object Properties"),ul([li('code - The error code string (e.g., "E_TEST_NO_FN")'),li("message - Human-readable error message"),li("stack - Stack trace for debugging")])],"/test/getting-started/":()=>[h1({id:"getting-started"},"Getting Started"),p("Be in a nodejs project."),h2({},"Install"),Pre({lines:"false"},"npm i --save-dev --save-exact @magic/test"),h2({},"Create a Test File"),p(["Create a test file in the ","test/"," directory. The filename is used in test output, and the path should mirror your source structure:"]),Pre(`
+`),O({},"Error Object Properties"),z([F('code - The error code string (e.g., "E_TEST_NO_FN")'),F("message - Human-readable error message"),F("stack - Stack trace for debugging")])],"/test/getting-started/":()=>[_({id:"getting-started"},"Getting Started"),U("Be in a nodejs project."),O({},"Install"),K({lines:"false"},"npm i --save-dev --save-exact @magic/test"),O({},"Create a Test File"),U(["Create a test file in the ","test/"," directory. The filename is used in test output, and the path should mirror your source structure:"]),K(`
 // test/yourFileToTest.js
 export default [
   { fn: () => true, expect: true, info: 'true is true' },
   { fn: () => 1 + 1, expect: 2, info: 'basic math' },
 ]
-`),p(["Note: the test function is called automatically. ","expect: true ","is optional."]),h2({},"Add npm Scripts"),p("Add test scripts to your package.json:"),Pre(`
+`),U(["Note: the test function is called automatically. ","expect: true ","is optional."]),O({},"Add npm Scripts"),U("Add test scripts to your package.json:"),K(`
 {
   "scripts": {
     "test": "t -p",
     "coverage": "t"
   }
 }
-`),p(["t -p ","runs tests in production mode (no coverage, faster). ","t"," runs with coverage."]),h2({},"Run Tests"),Pre(`
+`),U(["t -p ","runs tests in production mode (no coverage, faster). ","t"," runs with coverage."]),O({},"Run Tests"),K(`
 npm test
-`),h2({},"Example Output"),Pre(`
+`),O({},"Example Output"),K(`
 ### Testing package: @magic/test
 Ran 2 tests. Passed 2/2 100%
-`),p("Faster output from a bigger project:"),Pre(`
+`),U("Faster output from a bigger project:"),K(`
 ### Testing package: @artificialmuseum/engine
 Ran 90307 tests in 274.5ms. Passed 90307/90307 100%
-`),h2({id:"next-steps"},"Next Steps"),ul([li([Link({to:"/writing-tests/"},"Writing Tests")," - hooks, promises, types, multiple tests"]),li([Link({to:"/lib/"},"Utility Functions")," - deep, fs, curry, log, vals, env, http, mock, has"]),li([Link({to:"/svelte/"},"Svelte Testing")," - mount components, interact, assert"]),li([Link({to:"/cli/"},"CLI & Usage")," - flags, sharding, performance tips"]),li([Link({to:"/test-isolation/"},"Test Isolation")," - prevent state leakage between tests"]),li([Link({to:"/error-codes/"},"Error Codes")," - programmatic error handling"])])],"/test/lib/":e=>[h1({id:"lib"},"Utility Belt"),p(["@magic/test exports some utility functions"," that make working with complex test workflows simpler."]),h2({id:"lib-deep"},"deep"),p(["Exported from ",Link({to:"https://github.com/magic/deep",text:"@magic/deep"}),", deep equality and comparison utilities."]),Pre(`
+`),O({id:"next-steps"},"Next Steps"),z([F([G({to:"/writing-tests/"},"Writing Tests")," - hooks, promises, types, multiple tests"]),F([G({to:"/lib/"},"Utility Functions")," - deep, fs, curry, log, vals, env, http, mock, has"]),F([G({to:"/svelte/"},"Svelte Testing")," - mount components, interact, assert"]),F([G({to:"/cli/"},"CLI & Usage")," - flags, sharding, performance tips"]),F([G({to:"/test-isolation/"},"Test Isolation")," - prevent state leakage between tests"]),F([G({to:"/error-codes/"},"Error Codes")," - programmatic error handling"])])],"/test/lib/":()=>[_({id:"lib"},"Utility Belt"),U(["@magic/test exports some utility functions"," that make working with complex test workflows simpler."]),O({id:"lib-deep"},"deep"),U(["Exported from ",G({to:"https://github.com/magic/deep",text:"@magic/deep"}),", deep equality and comparison utilities."]),K(`
 import { deep, is } from '@magic/test'
 
 export default [
@@ -343,7 +343,7 @@ export default [
     info: 'nested deep equality',
   },
 ]
-`),p("Available functions:"),ul([li("deep.equal(a, b) - deep equality check"),li("deep.different(a, b) - deep difference check"),li("deep.contains(container, item) - deep inclusion check"),li("deep.changes(a, b) - get differences between objects")]),h2({id:"lib-fs"},"fs"),p(["Exported from ",Link({to:"https://github.com/magic/fs",text:"@magic/fs"}),", file system utilities."]),Pre(`
+`),U("Available functions:"),z([F("deep.equal(a, b) - deep equality check"),F("deep.different(a, b) - deep difference check"),F("deep.contains(container, item) - deep inclusion check"),F("deep.changes(a, b) - get differences between objects")]),O({id:"lib-fs"},"fs"),U(["Exported from ",G({to:"https://github.com/magic/fs",text:"@magic/fs"}),", file system utilities."]),K(`
 import { fs } from '@magic/test'
 
 export default [
@@ -356,7 +356,7 @@ export default [
     info: 'read file content',
   },
 ]
-`),p("Common methods:"),ul([li("fs.readFile(path, encoding) - read file content"),li("fs.writeFile(path, data) - write file content"),li("fs.exists(path) - check if file exists"),li("fs.mkdir(path, options) - create directory"),li("fs.rmdir(path) - remove directory"),li("fs.stat(path) - get file stats"),li("fs.readdir(path) - read directory contents"),li("Plus async versions in fs.promises")]),h2({id:"lib-curry"},"curry"),p(["Currying can be used to split the arguments of a function into multiple nested functions."," This helps if you have a function with complicated arguments that you just want to quickly shim."]),Pre(`
+`),U("Common methods:"),z([F("fs.readFile(path, encoding) - read file content"),F("fs.writeFile(path, data) - write file content"),F("fs.exists(path) - check if file exists"),F("fs.mkdir(path, options) - create directory"),F("fs.rmdir(path) - remove directory"),F("fs.stat(path) - get file stats"),F("fs.readdir(path) - read directory contents"),F("Plus async versions in fs.promises")]),O({id:"lib-curry"},"curry"),U(["Currying can be used to split the arguments of a function into multiple nested functions."," This helps if you have a function with complicated arguments that you just want to quickly shim."]),K(`
 import { curry } from '@magic/test'
 
 const compare = (a, b) => a === b
@@ -368,7 +368,7 @@ export default {
   expect: true,
   info: 'expect will be called with a and b and a will equal b',
 }
-`),h2({id:"lib-log"},"log"),p("Logging utility for test output. Colors supported automatically."),Pre(`
+`),O({id:"lib-log"},"log"),U("Logging utility for test output. Colors supported automatically."),K(`
 import { log } from '@magic/test'
 
 log.debug('Debug info')
@@ -376,9 +376,9 @@ log.info('Something happened')
 log.warn('Heads up')
 log.error('Something went wrong')
 log.critical('Game over')
-`),p("Supports multiple arguments:"),Pre(`
+`),U("Supports multiple arguments:"),K(`
 log.info('Testing', library, 'at version', version)
-`),h2({id:"lib-vals"},"vals"),p(["Exports JavaScript type constants for testing against any value."," Useful for fuzzing and property-based testing."]),Pre(`
+`),O({id:"lib-vals"},"vals"),U(["Exports JavaScript type constants for testing against any value."," Useful for fuzzing and property-based testing."]),K(`
 import { vals, is } from '@magic/test'
 
 export default [
@@ -387,7 +387,7 @@ export default [
   { fn: () => vals.email, expect: is.email, info: 'valid email format' },
   { fn: () => vals.error, expect: is.error, info: 'error instance' },
 ]
-`),p("Available Constants:"),ul([li("Primitives: true, false, number, num, float, int, string, str"),li("Empty values: nil, emptystr, emptyobject, emptyarray, undef"),li("Collections: array, object, obj"),li("Time: date, time"),li("Errors: error, err"),li("Colors: rgb, rgba, hex3, hex6, hexa4, hexa8"),li("Other: func, truthy, falsy, email, regexp")]),h2({id:"lib-env"},"env"),p("Environment detection utilities for conditional test behavior."),p("Available utilities:"),ul([li("isNodeProd - checks if NODE_ENV is set to production"),li("isNodeDev - checks if NODE_ENV is set to development"),li("isProd - checks if -p flag is passed to the CLI"),li("isVerbose - checks if -l flag is passed to the CLI"),li("getErrorLength - returns error length limit from MAGIC_TEST_ERROR_LENGTH env var (0 = unlimited)")]),Pre(`
+`),U("Available Constants:"),z([F("Primitives: true, false, number, num, float, int, string, str"),F("Empty values: nil, emptystr, emptyobject, emptyarray, undef"),F("Collections: array, object, obj"),F("Time: date, time"),F("Errors: error, err"),F("Colors: rgb, rgba, hex3, hex6, hexa4, hexa8"),F("Other: func, truthy, falsy, email, regexp")]),O({id:"lib-env"},"env"),U("Environment detection utilities for conditional test behavior."),U("Available utilities:"),z([F("isNodeProd - checks if NODE_ENV is set to production"),F("isNodeDev - checks if NODE_ENV is set to development"),F("isProd - checks if -p flag is passed to the CLI"),F("isVerbose - checks if -l flag is passed to the CLI"),F("getErrorLength - returns error length limit from MAGIC_TEST_ERROR_LENGTH env var (0 = unlimited)")]),K(`
 import { env, isProd, isTest, isDev } from '@magic/test'
 
 export default [
@@ -417,7 +417,7 @@ export default [
     info: 'get error length limit',
   },
 ]
-`),h3({id:"lib-env-constants"},"Environment Constants"),p("These boolean constants reflect the current NODE_ENV:"),Pre(`
+`),j({id:"lib-env-constants"},"Environment Constants"),U("These boolean constants reflect the current NODE_ENV:"),K(`
 import { isProd, isTest, isDev } from '@magic/test'
 
 export default [
@@ -425,7 +425,7 @@ export default [
   { fn: isTest, expect: process.env.NODE_ENV === 'test' },
   { fn: isDev, expect: process.env.NODE_ENV === 'development' },
 ]
-`),h2({id:"lib-promises"},"promises"),p(["Helper function to wrap nodejs callback functions and promises with ease."," Handles the try/catch steps internally and returns a resolved or rejected promise."]),Pre(`
+`),O({id:"lib-promises"},"promises"),U(["Helper function to wrap nodejs callback functions and promises with ease."," Handles the try/catch steps internally and returns a resolved or rejected promise."]),K(`
 import { promise, is } from '@magic/test'
 
 export default [
@@ -440,7 +440,7 @@ export default [
     info: 'handle promise errors in a nice way',
   },
 ]
-`),h2({id:"lib-http"},"http"),p("HTTP utility for making requests in tests. Supports both HTTP and HTTPS."),Pre(`
+`),O({id:"lib-http"},"http"),U("HTTP utility for making requests in tests. Supports both HTTP and HTTPS."),K(`
 import { http } from '@magic/test'
 
 export default [
@@ -460,7 +460,7 @@ export default [
     info: 'posts raw string data',
   },
 ]
-`),p("Error Handling:"),Pre(`
+`),U("Error Handling:"),K(`
 import { http, is } from '@magic/test'
 
 export default [
@@ -475,9 +475,9 @@ export default [
     info: 'handles 404 responses',
   },
 ]
-`),p("Note: HTTP module automatically handles:"),ul([li("Protocol detection (HTTP vs HTTPS)"),li("JSON parsing for responses with Content-Type: application/json"),li("Raw string returns for non-JSON responses"),li("rejectUnauthorized: false for self-signed certificates")]),h3({},"HttpOptions"),Pre(`
+`),U("Note: HTTP module automatically handles:"),z([F("Protocol detection (HTTP vs HTTPS)"),F("JSON parsing for responses with Content-Type: application/json"),F("Raw string returns for non-JSON responses"),F("rejectUnauthorized: false for self-signed certificates")]),j({},"HttpOptions"),K(`
 import type { HttpOptions } from '@magic/test'
-`),p("| Option | Type | Default | Description |"),p("| ------ | ---- | ------- | ----------- |"),p("| timeout | number | 30000 | Request timeout in milliseconds |"),p("| rejectUnauthorized | boolean | true | Reject self-signed certs |"),p("| maxSize | number | - | Maximum response size in bytes |"),p("| requestOptions | RequestOptions | - | Additional request options |"),h2({id:"lib-trycatch"},"trycatch"),p("allows to catch and test functions without bubbling the errors up into the runtime"),Pre(`
+`),U("| Option | Type | Default | Description |"),U("| ------ | ---- | ------- | ----------- |"),U("| timeout | number | 30000 | Request timeout in milliseconds |"),U("| rejectUnauthorized | boolean | true | Reject self-signed certs |"),U("| maxSize | number | - | Maximum response size in bytes |"),U("| requestOptions | RequestOptions | - | Additional request options |"),O({id:"lib-trycatch"},"trycatch"),U("allows to catch and test functions without bubbling the errors up into the runtime"),K(`
 import { is, tryCatch } from '@magic/test'
 
 const throwing = () => throw new Error('oops')
@@ -495,7 +495,7 @@ export default [
     info: 'function does not throw',
   },
 ]
-`),h2({id:"lib-error"},"error"),p(["exports ",Link({to:"https://github.com/magic/error",text:"@magic/error"})," which returns errors with optional names."]),Pre(`
+`),O({id:"lib-error"},"error"),U(["exports ",G({to:"https://github.com/magic/error",text:"@magic/error"})," which returns errors with optional names."]),K(`
 import { error } from '@magic/test'
 
 export default [
@@ -505,7 +505,7 @@ export default [
     info: 'Errors have messages and (optional) names.',
   },
 ]
-`),h2({id:"lib-mock"},"mock"),p("Mock and spy utilities for function testing."),Pre(`
+`),O({id:"lib-mock"},"mock"),U("Mock and spy utilities for function testing."),K(`
 import { mock, tryCatch } from '@magic/test'
 
 export default [
@@ -547,7 +547,7 @@ export default [
     info: 'mock.spy replaces and restores methods',
   },
 ]
-`),h3({},"mock.fn properties"),ul([li("calls - Array of all call arguments"),li("returns - Array of all return values"),li("errors - Array of all thrown errors (null for non-throwing calls)"),li("callCount - Number of times called")]),h3({},"mock.fn methods"),ul([li("mockReturnValue(value) - Set return value (chainable)"),li("mockThrow(error) - Set error to throw (chainable)"),li("getCalls() - Get all call arguments"),li("getReturns() - Get all return values"),li("getErrors() - Get all thrown errors")]),h3({id:"lib-mock-log"},"mock.log"),p("Logging utilities that respect NODE_ENV for conditional output:"),Pre(`
+`),j({},"mock.fn properties"),z([F("calls - Array of all call arguments"),F("returns - Array of all return values"),F("errors - Array of all thrown errors (null for non-throwing calls)"),F("callCount - Number of times called")]),j({},"mock.fn methods"),z([F("mockReturnValue(value) - Set return value (chainable)"),F("mockThrow(error) - Set error to throw (chainable)"),F("getCalls() - Get all call arguments"),F("getReturns() - Get all return values"),F("getErrors() - Get all thrown errors")]),j({id:"lib-mock-log"},"mock.log"),U("Logging utilities that respect NODE_ENV for conditional output:"),K(`
 import { mock } from '@magic/test'
 
 mock.log.log('Debug info')      // Logs if not NODE_ENV=production
@@ -555,9 +555,9 @@ mock.log.warn('Heads up')       // Logs if not NODE_ENV=production
 mock.log.error('Something went wrong')  // Always logs
 mock.log.time('operation')     // Logs timing if not NODE_ENV=production
 mock.log.timeEnd('operation')   // Logs timing end if not NODE_ENV=production
-`),h2({id:"lib-has"},"has"),p(["Functions for asserting object properties without needing explicit type annotations"," or stringifying functions."]),Pre(`
+`),O({id:"lib-has"},"has"),U(["Functions for asserting object properties without needing explicit type annotations"," or stringifying functions."]),K(`
 import { has, is } from '@magic/test'
-`),h3({},"has.property(key, check)"),p("Check a single property. Accepts either a predicate or a literal value."),Pre(`
+`),j({},"has.property(key, check)"),U("Check a single property. Accepts either a predicate or a literal value."),K(`
 // With predicate
 {
   fn: () => getUser(),
@@ -571,31 +571,31 @@ import { has, is } from '@magic/test'
   expect: has.property('age', 25),
   info: 'user age is 25',
 }
-`),h3({},"has.properties(spec)"),p("Check multiple properties. Mix predicates and literal values."),Pre(`
+`),j({},"has.properties(spec)"),U("Check multiple properties. Mix predicates and literal values."),K(`
 {
   fn: () => getUser(),
   expect: has.properties({ name: is.string, age: is.num }),
   info: 'user has required properties',
 }
-`),h3({},"has.any(spec)"),p("Check at least one property matches. Accepts predicates or literals."),Pre(`
+`),j({},"has.any(spec)"),U("Check at least one property matches. Accepts predicates or literals."),K(`
 {
   fn: () => parseResult(),
   expect: has.any({ error: is.error, data: is.object }),
   info: 'result has either error or data',
 }
-`),h3({},"has.nested(path, predicate)"),p("Check a nested property path."),Pre(`
+`),j({},"has.nested(path, predicate)"),U("Check a nested property path."),K(`
 {
   fn: () => getData(),
   expect: has.nested('user.profile.name', is.string),
   info: 'deep nested property exists',
 }
-`),h3({},"has.string(substring)"),p("Check if value is a string containing substring."),Pre(`
+`),j({},"has.string(substring)"),U("Check if value is a string containing substring."),K(`
 {
   fn: () => error.message,
   expect: has.string('failed to connect'),
   info: 'error message contains helpful context',
 }
-`),h3({},"has.key(keyName)"),p("Check if object has a specific key."),h3({},"has.keys(keyNames[])"),p("Check if object has all specified keys."),h3({},"has.includes(item)"),p("Check if array or string contains item (uses deep.equal for arrays)."),h3({},"has.oneOf(options[])"),p("Check if value equals one of the options (uses deep.equal)."),h3({},"has.matches(regex)"),p("Check if string matches regex pattern."),h2({id:"lib-version"},"version"),p(["The version plugin checks your code according to a spec defined by you."," This is designed to warn you on changes to your exports."]),p(["Internally, the version function calls ",Link({to:"https://github.com/magic/types",text:"@magic/types"})," and all functions exported from it are valid type strings in version specs."]),Pre(`
+`),j({},"has.key(keyName)"),U("Check if object has a specific key."),j({},"has.keys(keyNames[])"),U("Check if object has all specified keys."),j({},"has.includes(item)"),U("Check if array or string contains item (uses deep.equal for arrays)."),j({},"has.oneOf(options[])"),U("Check if value equals one of the options (uses deep.equal)."),j({},"has.matches(regex)"),U("Check if string matches regex pattern."),O({id:"lib-version"},"version"),U(["The version plugin checks your code according to a spec defined by you."," This is designed to warn you on changes to your exports."]),U(["Internally, the version function calls ",G({to:"https://github.com/magic/types",text:"@magic/types"})," and all functions exported from it are valid type strings in version specs."]),K(`
 import { version } from '@magic/test'
 
 // import your lib as your codebase requires
@@ -617,7 +617,7 @@ const spec = {
 }
 
 export default version(lib, spec)
-`),p(["Using `['obj', false]` in a spec will test that the parent is an object"," without checking the key/value pairs inside."]),h2({id:"lib-dom"},"DOM Environment"),p(["@magic/test automatically initializes a DOM environment when imported,"," making browser APIs available in Node.js."]),h3({},"Available globals"),ul([li("Core: document, window, self, navigator, location, history"),li("DOM types: Node, Element, HTMLElement, SVGElement, Document, DocumentFragment"),li("Events: Event, CustomEvent, MouseEvent, KeyboardEvent, InputEvent, TouchEvent, PointerEvent"),li("Forms: FormData, File, FileList, Blob"),li("Networking: URL, URLSearchParams, XMLHttpRequest, fetch, WebSocket"),li("Storage: Storage, sessionStorage, localStorage"),li("Observers: MutationObserver, IntersectionObserver, ResizeObserver"),li("Timers: setTimeout, setInterval, requestAnimationFrame")]),h3({},"DOM Utilities"),Pre(`
+`),U(["Using `['obj', false]` in a spec will test that the parent is an object"," without checking the key/value pairs inside."]),O({id:"lib-dom"},"DOM Environment"),U(["@magic/test automatically initializes a DOM environment when imported,"," making browser APIs available in Node.js."]),j({},"Available globals"),z([F("Core: document, window, self, navigator, location, history"),F("DOM types: Node, Element, HTMLElement, SVGElement, Document, DocumentFragment"),F("Events: Event, CustomEvent, MouseEvent, KeyboardEvent, InputEvent, TouchEvent, PointerEvent"),F("Forms: FormData, File, FileList, Blob"),F("Networking: URL, URLSearchParams, XMLHttpRequest, fetch, WebSocket"),F("Storage: Storage, sessionStorage, localStorage"),F("Observers: MutationObserver, IntersectionObserver, ResizeObserver"),F("Timers: setTimeout, setInterval, requestAnimationFrame")]),j({},"DOM Utilities"),K(`
 import { initDOM, getDocument, getWindow } from '@magic/test'
 
 // Get the document and window instances
@@ -626,15 +626,15 @@ const win = getWindow()
 
 // Manually re-initialize if needed
 initDOM()
-`),h3({},"Canvas/Image Polyfills"),ul([li("new Image() - Parses PNG data URLs to extract dimensions"),li('canvas.getContext("2d") - Returns node-canvas context'),li("canvas.toDataURL() - Serializes canvas to data URL")])],"/test/performance-tips/":()=>[h1({id:"performance-tips"},"Performance Tips"),p("Follow these tips to get the most out of @magic/test:"),h2({},"Use the -p Flag"),p(["Run tests in production mode to skip coverage and get faster output:"]),Pre(`
+`),j({},"Canvas/Image Polyfills"),z([F("new Image() - Parses PNG data URLs to extract dimensions"),F('canvas.getContext("2d") - Returns node-canvas context'),F("canvas.toDataURL() - Serializes canvas to data URL")])],"/test/performance-tips/":()=>[_({id:"performance-tips"},"Performance Tips"),U("Follow these tips to get the most out of @magic/test:"),O({},"Use the -p Flag"),U(["Run tests in production mode to skip coverage and get faster output:"]),K(`
 # Fast mode - no coverage, only shows failures
 npm test
 # or
 t -p
-`),h2({},"Shard Large Test Suites"),p(["Split tests across multiple processes to speed up large suites:"]),Pre(`
+`),O({},"Shard Large Test Suites"),U(["Split tests across multiple processes to speed up large suites:"]),K(`
 # Split tests across 4 processes
 t --shards 4 --shard-id 0
-`),p(["Tests are distributed deterministically using a hash of the test file path."]),h2({},"Minimize Async Overhead"),p(["Async tests are slower than sync tests. Use sync where possible:"]),Pre(`
+`),U(["Tests are distributed deterministically using a hash of the test file path."]),O({},"Minimize Async Overhead"),U(["Async tests are slower than sync tests. Use sync where possible:"]),K(`
 # Slower: unnecessary async
 export default {
   fn: async () => true,
@@ -646,7 +646,7 @@ export default {
   fn: () => true,
   expect: true,
 }
-`),h2({},"Use Local State Instead of Globals"),p(["Global state requires isolation overhead. Local state is naturally isolated:"]),Pre(`
+`),O({},"Use Local State Instead of Globals"),U(["Global state requires isolation overhead. Local state is naturally isolated:"]),K(`
 # Slower: global state requires isolation
 export const __isolate = true
 
@@ -660,17 +660,17 @@ export default [
     expect: 1,
   },
 ]
-`),h2({},"Batch Related Tests"),p(["Single suite with multiple tests is faster than multiple suites:"]),Pre(`
+`),O({},"Batch Related Tests"),U(["Single suite with multiple tests is faster than multiple suites:"]),K(`
 # Faster: single suite with multiple tests
 export default [
   { fn: () => add(1, 2), expect: 3 },
   { fn: () => add(0, 0), expect: 0 },
   { fn: () => add(-1, 1), expect: 0 },
 ]
-`),h2({},"Worker Concurrency"),p(["Control max parallel workers with the"," --workers ","flag. Default is auto-detect CPU count:"]),Pre(`
+`),O({},"Worker Concurrency"),U(["Control max parallel workers with the"," --workers ","flag. Default is auto-detect CPU count:"]),K(`
 # Use 2 workers
 t -p --workers 2
-`),p(["Link: ",Link({to:"/cli/"},"CLI & Usage")," for full flag reference."])],"/test/svelte-4-vs-5/":()=>[h1({id:"svelte-4-vs-5"},"Svelte 4 vs 5"),p(["Testing Svelte components with @magic/test has different"," capabilities depending on the Svelte version."]),h2({},"Feature Comparison"),Pre(`
+`),U(["Link: ",G({to:"/cli/"},"CLI & Usage")," for full flag reference."])],"/test/svelte-4-vs-5/":()=>[_({id:"svelte-4-vs-5"},"Svelte 4 vs 5"),U(["Testing Svelte components with @magic/test has different"," capabilities depending on the Svelte version."]),O({},"Feature Comparison"),K(`
 | Feature | Svelte 4 | Svelte 5 |
 | :------ | :------: | :------: |
 | Component mounting | ✅ | ✅ |
@@ -680,7 +680,7 @@ t -p --workers 2
 | compileSvelte | ✅ | ✅ |
 | createStaticPage | ✅ | ✅ |
 | SvelteKit mocks | ✅ | ✅ |
-`),h2({},"What Works in Both"),ul([li("Mounting components with mount()"),li("Component interaction via events (click, input, etc.)"),li("HTML assertions with html() and text()"),li("compileSvelte for source compilation"),li("createStaticPage for SvelteKit testing")]),h2({},"Svelte 5 Only"),ul([li("Auto-export of $state and $derived runes"),li("Rune-based reactivity")]),p(["Svelte 5 automatically exports $state and $derived variables,"," making them accessible in tests without manual exports."]),h2({},"Workarounds for Svelte 4"),p(["Svelte 4 does not support automatic export of reactive state."," To access component state in tests:"]),h3({},"Manual Export in Svelte 4"),Pre(`
+`),O({},"What Works in Both"),z([F("Mounting components with mount()"),F("Component interaction via events (click, input, etc.)"),F("HTML assertions with html() and text()"),F("compileSvelte for source compilation"),F("createStaticPage for SvelteKit testing")]),O({},"Svelte 5 Only"),z([F("Auto-export of $state and $derived runes"),F("Rune-based reactivity")]),U(["Svelte 5 automatically exports $state and $derived variables,"," making them accessible in tests without manual exports."]),O({},"Workarounds for Svelte 4"),U(["Svelte 4 does not support automatic export of reactive state."," To access component state in tests:"]),j({},"Manual Export in Svelte 4"),K(`
 <!-- Component.svelte -->
 <script>
   export let count = 0;
@@ -689,7 +689,7 @@ t -p --workers 2
 <button on:click={() => count++}>
   {count}
 </button>
-`),Pre(`
+`),K(`
 import { mount } from '@magic/test'
 
 export default [
@@ -700,7 +700,7 @@ export default [
     info: 'access exported count prop',
   },
 ]
-`),h3({},"Svelte 5 Auto-Export"),Pre(`
+`),j({},"Svelte 5 Auto-Export"),K(`
 <!-- Component.svelte (Svelte 5) -->
 <script>
   let count = $state(0)
@@ -708,7 +708,7 @@ export default [
 
 <button class="inc">+</button>
 <span>{count}</span>
-`),Pre(`
+`),K(`
 import { mount } from '@magic/test'
 
 export default [
@@ -719,7 +719,7 @@ export default [
     info: 'access $state without manual export',
   },
 ]
-`),h2({},"See Also"),ul([li([Link({to:"/svelte/"},"Svelte Testing Guide")]),li([Link({to:"/svelte-auto-export-faq/"},"Svelte Auto-Export FAQ")])])],"/test/svelte-auto-export-faq/":()=>[h1({id:"svelte-auto-export-faq"},"Svelte Auto-Export FAQ"),h2({},"What is Auto-Export?"),p(["When testing Svelte 5 components, @magic/test automatically exports ","$state and $derived variables, making them accessible in tests"," without requiring manual exports from the component."]),h2({},"Why is it Svelte 5 Only?"),p(["The auto-export feature relies on Svelte 5 runes ($state, $derived),"," which use a different reactivity model from Svelte 4."," Svelte 5 compiles runes in a way that makes them discoverable"," at runtime, enabling automatic export during testing."]),p(["Svelte 4 uses a traditional prop-driven or script-tag state model"," that does not expose internal state the same way."]),h2({},"How to Manual-Export for Svelte 4"),p(["In Svelte 4, you must explicitly export variables to access them in tests:"]),Pre(`
+`),O({},"See Also"),z([F([G({to:"/svelte/"},"Svelte Testing Guide")]),F([G({to:"/svelte-auto-export-faq/"},"Svelte Auto-Export FAQ")])])],"/test/svelte-auto-export-faq/":()=>[_({id:"svelte-auto-export-faq"},"Svelte Auto-Export FAQ"),O({},"What is Auto-Export?"),U(["When testing Svelte 5 components, @magic/test automatically exports ","$state and $derived variables, making them accessible in tests"," without requiring manual exports from the component."]),O({},"Why is it Svelte 5 Only?"),U(["The auto-export feature relies on Svelte 5 runes ($state, $derived),"," which use a different reactivity model from Svelte 4."," Svelte 5 compiles runes in a way that makes them discoverable"," at runtime, enabling automatic export during testing."]),U(["Svelte 4 uses a traditional prop-driven or script-tag state model"," that does not expose internal state the same way."]),O({},"How to Manual-Export for Svelte 4"),U(["In Svelte 4, you must explicitly export variables to access them in tests:"]),K(`
 <!-- Component.svelte -->
 <script>
   export let count = 0;
@@ -731,7 +731,7 @@ export default [
 <button on:click={increment}>
   {count}
 </button>
-`),Pre(`
+`),K(`
 import { mount } from '@magic/test'
 
 export default [
@@ -742,7 +742,7 @@ export default [
     info: 'access exported count prop',
   },
 ]
-`),h2({},"Examples"),h3({},"Svelte 5 - No Export Needed"),Pre(`
+`),O({},"Examples"),j({},"Svelte 5 - No Export Needed"),K(`
 <!-- Component.svelte -->
 <script>
   let count = $state(0)
@@ -751,7 +751,7 @@ export default [
 
 <button class="inc">+</button>
 <span>{doubled}</span>
-`),p("Test - works automatically!"),Pre(`
+`),U("Test - works automatically!"),K(`
 import { mount } from '@magic/test'
 
 export default [
@@ -768,7 +768,7 @@ export default [
     info: 'access $derived without manual export',
   },
 ]
-`),h2({},"See Also"),ul([li([Link({to:"/svelte/"},"Svelte Testing Guide")]),li([Link({to:"/svelte-4-vs-5/"},"Svelte 4 vs 5 Feature Comparison")])])],"/test/svelte/":()=>[h1({id:"svelte"},"Svelte Testing"),p(["@magic/test includes built-in support for testing Svelte 5 components."," It compiles Svelte components, mounts them in a DOM environment,"," and provides utilities for interacting with and asserting on component behavior."]),p(["Internally uses js-dom to create the DOM and HTML elements."]),h2({id:"lib-svelte"},"mount"),Pre(`
+`),O({},"See Also"),z([F([G({to:"/svelte/"},"Svelte Testing Guide")]),F([G({to:"/svelte-4-vs-5/"},"Svelte 4 vs 5 Feature Comparison")])])],"/test/svelte/":()=>[_({id:"svelte"},"Svelte Testing"),U(["@magic/test includes built-in support for testing Svelte 5 components."," It compiles Svelte components, mounts them in a DOM environment,"," and provides utilities for interacting with and asserting on component behavior."]),U(["Internally uses js-dom to create the DOM and HTML elements."]),O({id:"lib-svelte"},"mount"),K(`
 import { mount, html, tryCatch } from '@magic/test'
 
 const component = './path/to/MyComponent.svelte'
@@ -782,7 +782,7 @@ export default [
     info: 'renders the message prop',
   },
 ]
-`),h3({},"Exported Functions"),ul([li("mount(filePath, options) - Mounts a Svelte component and returns { target, component, unmount }"),li("html(target) - Returns innerHTML of a mounted component's target element"),li("text(target) - Returns textContent of a target element"),li("component(instance) - Returns the component instance for accessing exported values"),li("props(target) - Returns an object of attribute name/value pairs from the target element")]),h3({},"Interaction Functions"),ul([li("click(target, selector?) - Clicks an element (optionally filtered by CSS selector)"),li("dblClick(target) - Double clicks"),li("contextMenu(target) - Right click"),li("mouseDown(target) - Mouse down"),li("mouseUp(target) - Mouse up"),li("mouseMove(target) - Mouse move"),li("mouseEnter(target) - Mouse enter"),li("mouseLeave(target) - Mouse leave"),li("mouseOver(target) - Mouse over"),li("mouseOut(target) - Mouse out"),li("keyDown(target, key) - Key down"),li("keyPress(target, key) - Key press"),li("keyUp(target, key) - Key up"),li("type(target, text) - Type text into input"),li("input(target, value) - Input value"),li("change(target, value) - Change event"),li("blur(target) - Blur event"),li("focus(target) - Focus event"),li("submit(target) - Submit form"),li("pointerDown(target) - Pointer down"),li("pointerUp(target) - Pointer up"),li("pointerMove(target) - Pointer move"),li("touchStart(target) - Touch start"),li("touchMove(target) - Touch move"),li("touchEnd(target) - Touch end"),li("copy(target) - Copy event"),li("cut(target) - Cut event"),li("paste(target) - Paste event"),li("dragStart(target) - Drag start"),li("drag(target) - Drag"),li("dragEnd(target) - Drag end"),li("dragEnter(target) - Drag enter"),li("dragLeave(target) - Drag leave"),li("dragOver(target) - Drag over"),li("drop(target) - Drop"),li("resize(target, w, h) - Resize"),li("scroll(target, x, y) - Scroll"),li("animationStart(target) - Animation start"),li("animationEnd(target) - Animation end"),li("transitionEnd(target) - Transition end"),li("play(target) - Play media"),li("pause(target) - Pause media"),li("trigger(target, eventType, options?) - Custom event"),li("checked(target) - Checkbox state")]),h3({},"Test Properties"),ul([li("component - Path to the .svelte file"),li("props - Props to pass to the component"),li("fn - Test function receiving { target, component, unmount }")]),h2({id:"svelte-state"},"Accessing Component State"),Pre(`
+`),j({},"Exported Functions"),z([F("mount(filePath, options) - Mounts a Svelte component and returns { target, component, unmount }"),F("html(target) - Returns innerHTML of a mounted component's target element"),F("text(target) - Returns textContent of a target element"),F("component(instance) - Returns the component instance for accessing exported values"),F("props(target) - Returns an object of attribute name/value pairs from the target element")]),j({},"Interaction Functions"),z([F("click(target, selector?) - Clicks an element (optionally filtered by CSS selector)"),F("dblClick(target) - Double clicks"),F("contextMenu(target) - Right click"),F("mouseDown(target) - Mouse down"),F("mouseUp(target) - Mouse up"),F("mouseMove(target) - Mouse move"),F("mouseEnter(target) - Mouse enter"),F("mouseLeave(target) - Mouse leave"),F("mouseOver(target) - Mouse over"),F("mouseOut(target) - Mouse out"),F("keyDown(target, key) - Key down"),F("keyPress(target, key) - Key press"),F("keyUp(target, key) - Key up"),F("type(target, text) - Type text into input"),F("input(target, value) - Input value"),F("change(target, value) - Change event"),F("blur(target) - Blur event"),F("focus(target) - Focus event"),F("submit(target) - Submit form"),F("pointerDown(target) - Pointer down"),F("pointerUp(target) - Pointer up"),F("pointerMove(target) - Pointer move"),F("touchStart(target) - Touch start"),F("touchMove(target) - Touch move"),F("touchEnd(target) - Touch end"),F("copy(target) - Copy event"),F("cut(target) - Cut event"),F("paste(target) - Paste event"),F("dragStart(target) - Drag start"),F("drag(target) - Drag"),F("dragEnd(target) - Drag end"),F("dragEnter(target) - Drag enter"),F("dragLeave(target) - Drag leave"),F("dragOver(target) - Drag over"),F("drop(target) - Drop"),F("resize(target, w, h) - Resize"),F("scroll(target, x, y) - Scroll"),F("animationStart(target) - Animation start"),F("animationEnd(target) - Animation end"),F("transitionEnd(target) - Transition end"),F("play(target) - Play media"),F("pause(target) - Pause media"),F("trigger(target, eventType, options?) - Custom event"),F("checked(target) - Checkbox state")]),j({},"Test Properties"),z([F("component - Path to the .svelte file"),F("props - Props to pass to the component"),F("fn - Test function receiving { target, component, unmount }")]),O({id:"svelte-state"},"Accessing Component State"),K(`
 import { mount, html } from '@magic/test'
 
 const component = './src/lib/svelte/components/Counter.svelte'
@@ -797,7 +797,7 @@ export default [
     info: 'initial count is 0',
   },
 ]
-`),h2({id:"svelte-auto-export"},"Automatic Test Exports"),p(["When testing Svelte 5 components, @magic/test automatically exports ","$state and $derived variables, making them accessible in tests"," without requiring manual exports."]),p(["**Note:** This automatic export feature is specific to **Svelte 5** only."," Svelte 4 components do not have this capability."]),Pre(`
+`),O({id:"svelte-auto-export"},"Automatic Test Exports"),U(["When testing Svelte 5 components, @magic/test automatically exports ","$state and $derived variables, making them accessible in tests"," without requiring manual exports."]),U(["**Note:** This automatic export feature is specific to **Svelte 5** only."," Svelte 4 components do not have this capability."]),K(`
 <!-- Component.svelte -->
 <script>
   let count = $state(0)
@@ -807,7 +807,7 @@ export default [
 
 <button class="inc">+</button>
 <span>{doubled}</span>
-`),p("Test - works automatically!"),Pre(`
+`),U("Test - works automatically!"),K(`
 import { mount } from '@magic/test'
 
 export default [
@@ -824,7 +824,7 @@ export default [
     info: 'access $derived without manual export',
   },
 ]
-`),p("This works automatically for all $state and $derived runes. No configuration needed!"),h2({id:"svelte-error"},"Testing Error Handling"),Pre(`
+`),U("This works automatically for all $state and $derived runes. No configuration needed!"),O({id:"svelte-error"},"Testing Error Handling"),K(`
 import { mount, tryCatch } from '@magic/test'
 
 const component = './src/lib/svelte/components/MyComponent.svelte'
@@ -836,7 +836,7 @@ export default [
     info: 'throws when props is null',
   },
 ]
-`),h2({id:"lib-sveltekit-mocks"},"SvelteKit Mocks"),p("Mocks SvelteKit $app modules:"),Pre(`
+`),O({id:"lib-sveltekit-mocks"},"SvelteKit Mocks"),U("Mocks SvelteKit $app modules:"),K(`
 import { browser, dev, prod, createStaticPage } from '@magic/test'
 
 export default [
@@ -856,7 +856,7 @@ export default [
     info: 'not in prod by default',
   },
 ]
-`),h2({id:"lib-create-static-page"},"createStaticPage"),p("Creates a static page mock for SvelteKit testing:"),Pre(`
+`),O({id:"lib-create-static-page"},"createStaticPage"),U("Creates a static page mock for SvelteKit testing:"),K(`
 import { createStaticPage } from '@magic/test'
 
 export default [
@@ -866,7 +866,7 @@ export default [
     info: 'createStaticPage returns html string and render function',
   },
 ]
-`),h2({id:"lib-compile-svelte"},"compileSvelte"),p("Compile Svelte component source to a module for testing:"),Pre(`
+`),O({id:"lib-compile-svelte"},"compileSvelte"),U("Compile Svelte component source to a module for testing:"),K(`
 import { compileSvelte } from '@magic/test'
 
 export default [
@@ -880,7 +880,7 @@ export default [
     info: 'compiles Svelte source to module',
   },
 ]
-`),p("Available functions:"),ul([li("compileSvelte(source, filename) - Compiles Svelte source to JS/CSS modules"),li("ensureSvelte() - Lazy-loads the Svelte package, throws if not installed")]),h2({id:"svelte-ensure"},"ensureSvelte"),p("Lazy-loads the Svelte package. Throws if Svelte is not installed:"),Pre(`
+`),U("Available functions:"),z([F("compileSvelte(source, filename) - Compiles Svelte source to JS/CSS modules"),F("ensureSvelte() - Lazy-loads the Svelte package, throws if not installed")]),O({id:"svelte-ensure"},"ensureSvelte"),U("Lazy-loads the Svelte package. Throws if Svelte is not installed:"),K(`
 import { ensureSvelte } from '@magic/test'
 
 export default [
@@ -893,7 +893,7 @@ export default [
     info: 'loads svelte package',
   },
 ]
-`)],"/test/test-isolation/":()=>[h1({id:"test-isolation"},"Test Isolation"),p(["@magic/test supports test isolation to prevent tests from affecting each other."," Tests in the same suite can share state, but you can isolate them:"]),Pre(`
+`)],"/test/test-isolation/":()=>[_({id:"test-isolation"},"Test Isolation"),U(["@magic/test supports test isolation to prevent tests from affecting each other."," Tests in the same suite can share state, but you can isolate them:"]),K(`
 export default [
   // This test runs in isolation from others
   {
@@ -906,319 +906,18 @@ export default [
     info: 'isolated test with local state',
   },
 ]
-`),h2({id:"isolate"},"__isolate"),p("Global Isolation Mode:"),p(["By default, tests in the same file share global state."," To enable strict isolation where each test gets a fresh environment,"," set `export const __isolate = true` at the top of your test file."]),Pre(`
+`),O({id:"isolate"},"__isolate"),U("Global Isolation Mode:"),U(["By default, tests in the same file share global state."," To enable strict isolation where each test gets a fresh environment,"," set `export const __isolate = true` at the top of your test file."]),K(`
 export const __isolate = true
 
 export default [
   { fn: () => (global.test = 1), expect: 1 },
   { fn: () => global.test === undefined, expect: true, info: 'fresh global state' },
 ]
-`),p(["This ensures each test runs with a fresh global environment,"," preventing state leakage between tests."]),h2({},"Programmatic Detection"),p(["You can programmatically check if a suite requires isolation"," using the `suiteNeedsIsolation` utility:"]),Pre(`
+`),U(["This ensures each test runs with a fresh global environment,"," preventing state leakage between tests."]),O({},"Programmatic Detection"),U(["You can programmatically check if a suite requires isolation"," using the `suiteNeedsIsolation` utility:"]),K(`
 import { suiteNeedsIsolation } from '@magic/test'
 
 const needsIsolation = suiteNeedsIsolation(tests)
-`),p("This is useful for custom runners or when building test tooling.")],"/test/version-history/":()=>[h1({id:"version-history"},"Version History"),h2({},"Quick Overview"),p(["Version history is automatically generated from the changelog."," This page provides a concise overview of what changed in each version."]),Pre(`
-## @magic/test Versions
-
-**0.3.34** - Current version (not yet released)
-
-**0.3.25** - expect: arrays with predicates
-  - functions call with result, values compare directly
-  - all must pass
-  - value checks support primitives and objects (deep.equal)
-  - docs: predicates and values section in writing-tests
-
-**0.3.24** - unreleased
-
-**0.3.21** - various build performance improvements
-  - especially for svelte components
-  - add timing traces with MAGIC_TEST_TRACE env var and --trace CLI flag
-  - add promise-based caching via CacheManager
-  - consolidate worker pool into single source
-  - centralize caching in CacheManager at tsLoader level
-  - increase default test timeout to 30s
-  - fixed tsLoader .ts file handling
-  - add more tests for @magic/test itself
-  - implement persistent disk cache in node_modules/.magic-test-cache
-  - parallelize import resolution, barrel exports, and fs.exists checks
-  - cache fs.exists results, processImports results, and resolveViteAlias results
-  - skip writing unchanged files during compilation
-  - consolidate caches into single pendingPromises map
-  - update dependencies
-
-**0.3.20** - prevent double-compilation of svelte components
-
-**0.3.19** - svelte edge cases, custom test defines for globals
-
-**0.3.18** - better resolution for imported dependencies in tests
-  - especially <script> tags in svelte components that export functions/variables
-
-**0.3.17** - update test discovery, fix edge cases where tests were not found
-
-**0.3.16** - better kill handling for workers and child_process
-  - README fixes
-  - remove @systemkollektiv devDependencies
-
-**0.3.15** - fix import of .svelte.js/.ts files if js/ts extension is omitted
-
-**0.3.14** - fireEvent function now correctly handles various addEventListener event types
-
-**0.3.13** - update dependencies
-
-**0.3.12** - make svelte optional for consumers
-
-**0.3.11** - performance improvements, better checks if tests need to be isolated
-  - fix timing issues in isolation code
-  - replace regex code checks with ast checks
-  - add \`has\` functionality for object checks
-
-**0.3.10** - fix more edge cases in svelte compilation steps
-  - add .css import support
-
-**0.3.9** - fix imports of test/index.(mjs|ts|js) files
-
-**0.3.8** - add --workers flag, canvas polyfill, svelte fixes
-  - advanced worker isolation
-  - executing minimum number of needed workers for tests
-
-**0.3.7** - advanced worker isolation
-  - lots of internal changes to achieve this
-
-**0.3.6** - broken - tried implementing better isolation
-
-**0.3.5** - better tsLoader resolve mechanism
-
-**0.3.4** - also run registerLoader in workers
-
-**0.3.3** - replace all import .ts with .js, some test output fixes
-
-**0.3.2** - node 12.4.0 - publish dist dir with .js files for consumers
-
-**0.3.1** - broken, dist dir missing
-
-**0.3.0** - broken. node can not strip types in node_modules... Added html support (using happy-dom, experimental!)
-
-**0.2.30** - allow tests to be written using typescript
-
-**0.2.29** - tryCatch: pass on empty args
-
-**0.2.28** - use node:module register function for loader
-
-**0.2.27** - allow resolving .js files as .ts files
-
-**0.2.26** - update dependencies
-
-**0.2.25** - currying now throws errors instead of returning them
-
-**0.2.24** - fix @magic/core tests on windows
-
-**0.2.23** - readd npm run prepublishOnly task
-
-**0.2.22** - add comprehensive typescript types
-
-**0.2.21** - update @magic/cli to allow default args
-
-**0.2.20** - update broken dependencies
-
-**0.2.19** - add unused http.post, probably should replace http with fetch...
-
-**0.2.18** - add missing fs.statfs, fs.statfsSync and fs.promises.constants
-
-**0.2.17** - remove calls and coveralls-next, c8 takes care of coverage
-
-**0.2.16** - update dependencies
-
-**0.2.15** - percentage outputs print nicer numbers
-  - added http export that allows http requests in tests
-
-**0.2.14** - update dependencies
-
-**0.2.13** - update dependencies
-
-**0.2.12** - update dependencies
-
-**0.2.11** - update dependencies
-
-**0.2.10** - @magic/test can now test @magic/core again
-
-**0.2.9** - update dependencies
-
-**0.2.8** - update dependencies
-
-**0.2.7** - readded calls npm run script, updated c8
-
-**0.2.6** - update this readme and html docs
-  - tests should always process.exit(1) if they errored
-
-**0.2.5** - use ecmascript version of @magic/deep
-
-**0.2.4** - npm run scripts of @magic/test itself can be run on windows
-
-**0.2.3** - update dependencies
-
-**0.2.2** - spec values can be functions
-
-**0.2.1** - internal restructuring
-
-**0.2.0** - update dependencies
-
-**0.1.77** - update dependencies
-
-**0.1.76** - update dependencies
-
-**0.1.75** - update dependencies
-
-**0.1.74** - update dependencies
-
-**0.1.73** - update dependencies
-
-**0.1.72** - update @types/node
-
-**0.1.71** - update dependencies
-
-**0.1.70** - update dependencies
-
-**0.1.69** - import of magic config should work on windows
-
-**0.1.68** - update @magic/core to fix tests if magic.js does not exist
-
-**0.1.67** - silence errors if magic.js does not exist
-
-**0.1.66** - better handling if magic is not in use
-
-**0.1.65** - testing of @magic-modules is now built in
-
-**0.1.64** - update @magic/fs
-
-**0.1.63** - update c8
-
-**0.1.62** - add html flag to tests, now @magic-modules can be tested
-
-**0.1.61** - update dependencies
-
-**0.1.60** - bump required node version to 14.15.4
-
-**0.1.59** - update dependencies
-
-**0.1.58** - update dependencies
-
-**0.1.57** - update dependencies
-
-**0.1.56** - update dependencies
-
-**0.1.55** - update dependencies
-
-**0.1.54** - update dependencies
-
-**0.1.53** - update dependencies
-
-**0.1.52** - remove @magic/css export
-
-**0.1.51** - update dependencies
-
-**0.1.50** - remove @magic/css export
-
-**0.1.49** - update @magic/css
-
-**0.1.48** - bump required node version to 14.2.0
-
-**0.1.47** - update c8, yargs-parser
-
-**0.1.46** - update @magic/css
-
-**0.1.45** - security fix: update dependencies
-
-**0.1.44** - update dependencies
-
-**0.1.43** - update dependencies
-
-**0.1.42** - update dependencies
-
-**0.1.41** - update dependencies
-
-**0.1.40** - update dependencies
-
-**0.1.39** - update coveralls, fix minimist issue above
-
-**0.1.38** - update dependencies, minimist sec issue
-
-**0.1.37** - fix: arguments for both node and c8 tests work
-
-**0.1.36** - c8: --exclude, --include and --all get applied correctly
-
-**0.1.35** - fix: c8 errored if coverage dir did not exist
-
-**0.1.34** - fix: c8 needs "report" command now
-
-**0.1.33** - update exported dependencies
-
-**0.1.32** - tests now work on windows
-  - uncaught errors will cause tests to fail with process.exit(1)
-
-**0.1.31** - update dependencies
-
-**0.1.30** - export @magic/fs
-
-**0.1.29** - help text can show up when --help is used
-
-**0.1.28** - package: engineStrict: true
-
-**0.1.27** - remove prettier from deps
-
-**0.1.26** - remove commonjs support, node 13+ required
-
-**0.1.25** - currying now throws errors instead of returning them
-
-**0.1.24** - update @magic/css
-
-**0.1.23** - update @magic dependencies to use npm packages instead of github
-
-**0.1.22** - update dependencies
-
-**0.1.21** - update @magic/cli to allow default args
-
-**0.1.20** - update broken dependencies
-
-**0.1.19** - update dependencies
-
-**0.1.18** - require node 12.13.0
-
-**0.1.17** - add node 13 json support for coverage reports
-
-**0.1.16** - update @magic/cli for node 13 support
-
-**0.1.15** - update dependencies
-
-**0.1.14** - windows support now supports index.js files that provide test structure
-
-**0.1.13** - windows support is back
-
-**0.1.12** - update dependencies
-
-**0.1.11** - update prettier, coveralls, add and export @magic/css
-
-**0.1.10** - node 12.4.0 does not use --experimental-json-modules flag
-
-**0.1.9** - test/beforeAll.js gets loaded separately if it exists
-
-**0.1.8** - update @magic/cli
-
-**0.1.7** - readded calls npm run script, updated c8
-
-**0.1.6** - update this readme and html docs
-
-**0.1.5** - use ecmascript version of @magic/deep
-
-**0.1.4** - npm run scripts of @magic/test itself can be run on windows
-
-**0.1.3** - cli now works everywhere
-
-**0.1.2** - cli now works on windows again
-
-**0.1.1** - rework of bin scripts and update dependencies to esmodules
-
-**0.1.0** - use esmodules instead of commonjs
-`),h2({},"Update Changelog"),p(["To update this version history page, update the ",Link({to:"/changelog/"},"Changelog")," page with the latest version."])],"/test/writing-tests/":()=>[h1({id:"writing-tests"},"Writing Tests"),h2({id:"tests"},"Single Test"),p("A test can be a literal value, function, or promise:"),Pre(`
+`),U("This is useful for custom runners or when building test tooling.")],"/test/writing-tests/":()=>[_({id:"writing-tests"},"Writing Tests"),O({id:"tests"},"Single Test"),U("A test can be a literal value, function, or promise:"),K(`
 export default { fn: true, expect: true, info: 'expect true to be true' }
 
 // expect: true is the default and can be omitted
@@ -1240,19 +939,19 @@ export default { fn: true, expect: new Promise(r => r(true)), info: 'expect is a
 import { promise } from '@magic/test'
 const fnWithCallback = (err, arg, cb) => cb(err, arg)
 export default { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect: 'arg' }
-`),h2({id:"tests-multiple"},"Multiple Tests"),p("Multiple tests can be created by exporting an array or object of single test objects."),Pre(`
+`),O({id:"tests-multiple"},"Multiple Tests"),U("Multiple tests can be created by exporting an array or object of single test objects."),K(`
 export default [
   { fn: () => true, expect: true, info: 'expect true to be true' },
   { fn: () => false, expect: false, info: 'expect false to be false' },
 ]
-`),p("Or exporting an object with named test arrays:"),Pre(`
+`),U("Or exporting an object with named test arrays:"),K(`
 export default {
   multipleTests: [
     { fn: () => true, expect: true, info: 'expect true to be true' },
     { fn: () => false, expect: false, info: 'expect false to be false' },
   ]
 }
-`),h2({id:"tests-runs"},"Running Tests Multiple Times"),p("Use the `runs` property to run a test multiple times:"),Pre(`
+`),O({id:"tests-runs"},"Running Tests Multiple Times"),U("Use the `runs` property to run a test multiple times:"),K(`
 import { is } from '@magic/test'
 
 export default [
@@ -1263,7 +962,7 @@ export default [
     info: 'runs the test 5 times and expects all returns to be numbers',
   },
 ]
-`),h2({id:"tests-types"},"Testing Types"),p(["Types can be compared using ",Link({to:"https://github.com/magic/types",text:"@magic/types"})]),p(["@magic/types is a richly featured and thoroughly tested type library without dependencies."," It is exported from this library for convenience."]),Pre(`
+`),O({id:"tests-types"},"Testing Types"),U(["Types can be compared using ",G({to:"https://github.com/magic/types",text:"@magic/types"})]),U(["@magic/types is a richly featured and thoroughly tested type library without dependencies."," It is exported from this library for convenience."]),K(`
 import { is } from '@magic/test'
 
 export default [
@@ -1288,7 +987,7 @@ export default [
     info: 'deep compare arrays/objects for difference',
   },
 ]
-`),h3({id:"predicates-and-values"},"Predicates & Values Array"),p(["Combine type checks with value checks in a single expect array."," Each element is checked independently against the test result."," All must pass (AND semantics):"]),Pre(`
+`),j({id:"predicates-and-values"},"Predicates & Values Array"),U(["Combine type checks with value checks in a single expect array."," Each element is checked independently against the test result."," All must pass (AND semantics):"]),K(`
 import { is } from '@magic/test'
 
 export default [
@@ -1308,13 +1007,13 @@ export default [
     info: 'is an object AND deep equals',
   },
 ]
-`),p("Mix as many predicates and values as needed:"),Pre(`
+`),U("Mix as many predicates and values as needed:"),K(`
 export default {
   fn: () => 42,
   expect: [is.number, v => v > 0, 42],
   info: 'is number, is greater than 0, equals 42',
 }
-`),p(["Predicate elements are functions — evaluated with the test result."," Non-predicates are compared with strict equality (primitives) or deep equality (objects/arrays)."," Pure value arrays without functions, like `expect: [1, 2, 3]`, still use deep equality as before."]),h3({id:"caveat"},"Caveat"),p(["If you want to test if a function is a function, you need to wrap the function in a function."," This is because functions passed to fn get executed automatically."]),Pre(`
+`),U(["Predicate elements are functions — evaluated with the test result."," Non-predicates are compared with strict equality (primitives) or deep equality (objects/arrays)."," Pure value arrays without functions, like `expect: [1, 2, 3]`, still use deep equality as before."]),j({id:"caveat"},"Caveat"),U(["If you want to test if a function is a function, you need to wrap the function in a function."," This is because functions passed to fn get executed automatically."]),K(`
 import { is } from '@magic/test'
 
 const fnToTest = () => {}
@@ -1326,13 +1025,13 @@ export default [
     info: 'function is a function',
   },
 ]
-`),h2({id:"tests-typescript"},"TypeScript Support"),p(["@magic/test supports TypeScript test files."," You can write tests in .ts files and they will be executed directly without transpilation."]),Pre(`
+`),O({id:"tests-typescript"},"TypeScript Support"),U(["@magic/test supports TypeScript test files."," You can write tests in .ts files and they will be executed directly without transpilation."]),K(`
 import type { Test } from '@magic/test'
 
 export default [
   { fn: () => true, expect: true, info: 'TypeScript test works!' }
 ] satisfies Test[]
-`),p("This requires Node.js 22.18.0 or later."),h2({id:"tests-promises"},"Promises"),Pre(`
+`),U("This requires Node.js 22.18.0 or later."),O({id:"tests-promises"},"Promises"),K(`
 import { promise, is } from '@magic/test'
 
 export default [
@@ -1354,7 +1053,7 @@ export default [
     info: 'handle promise errors in a nice way',
   },
 ]
-`),h2({id:"tests-cb"},"Callback Functions"),Pre(`
+`),O({id:"tests-cb"},"Callback Functions"),K(`
 import { promise, is } from '@magic/test'
 
 const fnWithCallback = (err, arg, cb) => cb(err, arg)
@@ -1371,7 +1070,7 @@ export default [
     info: 'handle callback function error as promise',
   },
 ]
-`),h2({id:"tests-hooks"},"Hooks"),h3({},"Individual Test Hooks"),p("Run functions before and/or after individual tests:"),Pre(`
+`),O({id:"tests-hooks"},"Hooks"),j({},"Individual Test Hooks"),U("Run functions before and/or after individual tests:"),K(`
 const after = () => {
   global.testing = 'Test has finished, cleanup.'
 }
@@ -1392,7 +1091,7 @@ export default [
     expect: () => global.testing === 'changed in test',
   },
 ]
-`),h3({id:"tests-suite-hooks"},"Suite Hooks"),p("Run functions before and/or after a suite of tests:"),Pre(`
+`),j({id:"tests-suite-hooks"},"Suite Hooks"),U("Run functions before and/or after a suite of tests:"),K(`
 const afterAll = () => {
   global.testing = undefined
 }
@@ -1416,7 +1115,7 @@ export default {
     },
   ],
 }
-`),p(["Note: Suites that use beforeAll, afterAll, beforeEach or afterEach"," will run in a worker to make sure globals are not polluted for other suites."]),h4({},"File-based Hooks"),p(["You can also create test/beforeAll.js and test/afterAll.js files"," that run before/after all tests."]),p("**Note:** These files must be placed at the **root** `test/` directory (not in subdirectories)."),Pre(`
+`),U(["Note: Suites that use beforeAll, afterAll, beforeEach or afterEach"," will run in a worker to make sure globals are not polluted for other suites."]),M({},"File-based Hooks"),U(["You can also create test/beforeAll.js and test/afterAll.js files"," that run before/after all tests."]),U("**Note:** These files must be placed at the **root** `test/` directory (not in subdirectories)."),K(`
 // test/beforeAll.js
 export default () => {
   global.setup = true
@@ -1425,12 +1124,12 @@ export default () => {
     global.setup = false
   }
 }
-`),Pre(`
+`),K(`
 // test/afterAll.js
 export default () => {
   // cleanup after all tests
 }
-`),h3({id:"tests-each-hooks"},"beforeEach and afterEach"),p("Define beforeEach and afterEach hooks that run before/after each individual test:"),Pre(`
+`),j({id:"tests-each-hooks"},"beforeEach and afterEach"),U("Define beforeEach and afterEach hooks that run before/after each individual test:"),K(`
 const beforeEach = () => {
   // Runs before each test in this suite
   global.testState = { initialized: true }
@@ -1449,7 +1148,7 @@ export default {
     { fn: () => true, expect: true },
   ],
 }
-`),h2({id:"tests-magic-modules"},"Magic Modules"),p(["@magic-modules assume all HTML tags to be globally defined."," To create those globals for your test and check if a @magic-module returns the correct markup,"," just use one of those tags in your tests."]),Pre(`
+`),O({id:"tests-magic-modules"},"Magic Modules"),U(["@magic-modules assume all HTML tags to be globally defined."," To create those globals for your test and check if a @magic-module returns the correct markup,"," just use one of those tags in your tests."]),K(`
 const expect = [
   'i',
   [
@@ -1467,16 +1166,16 @@ export default [
     info: 'magic/test can now test html',
   },
 ]
-`),h2({id:"test-suites"},"Test Suites"),p("Expectations for optimal test messages:"),ul([li("src and test directories have the same structure and files"),li("tests one src file per test file"),li("tests one function per suite"),li("tests one feature per test")]),h3({},"Filesystem Based Naming"),p("The following directory structure:"),Pre(`./test/
+`),O({id:"test-suites"},"Test Suites"),U("Expectations for optimal test messages:"),z([F("src and test directories have the same structure and files"),F("tests one src file per test file"),F("tests one function per suite"),F("tests one feature per test")]),j({},"Filesystem Based Naming"),U("The following directory structure:"),K(`./test/
   ./suite1.js
-  ./suite2.js`),p("yields the same result as exporting the following from ./test/index.js:"),Pre(`import suite1 from './suite1'
+  ./suite2.js`),U("yields the same result as exporting the following from ./test/index.js:"),K(`import suite1 from './suite1'
 import suite2 from './suite2'
 
 export default {
   suite1,
   suite2,
 }
-`),h3({},"Data Driven Naming"),p("Export test structure directly from index.js:"),Pre(`
+`),j({},"Data Driven Naming"),U("Export test structure directly from index.js:"),K(`
 export default {
   suite1: [
     { fn: () => true, expect: true },
@@ -1485,4 +1184,16 @@ export default {
     { fn: () => false, expect: false },
   ],
 }
-`),h3({id:"tests-file-mappings"},"Important File Mappings"),p(["If test/index.js exists, no other files will be loaded."," If test/lib/index.js exists, no other files from that subdirectory will be loaded."," Instead, the exports of those index.js will be expected to be tests."])]};k({init:{...{description:["Declaratively test your ecmascript module files."," No transpiling required."," Incredibly fast."],logotext:"@magic/test",menu:[{text:"Home",to:"/test/"},{text:"Getting Started",to:"/test/getting-started/"},{items:[{text:"Single Test",to:"/test/writing-tests/#tests"},{text:"Multiple Tests",to:"/test/writing-tests/#tests-multiple"},{text:"Running Multiple Times",to:"/test/writing-tests/#tests-runs"},{text:"Testing Types",to:"/test/writing-tests/#tests-types"},{text:"Promises",to:"/test/writing-tests/#tests-promises"},{text:"Callbacks",to:"/test/writing-tests/#tests-cb"},{text:"Hooks",to:"/test/writing-tests/#tests-hooks"},{text:"Suite Hooks",to:"/test/writing-tests/#tests-suite-hooks"},{text:"beforeEach/afterEach",to:"/test/writing-tests/#tests-each-hooks"},{text:"Magic Modules",to:"/test/writing-tests/#tests-magic-modules"},{text:"Test Suites",to:"/test/writing-tests/#test-suites"}],text:"Writing Tests",to:"/test/writing-tests/"},{items:[{text:"deep",to:"/test/lib/#lib-deep"},{text:"fs",to:"/test/lib/#lib-fs"},{text:"curry",to:"/test/lib/#lib-curry"},{text:"log",to:"/test/lib/#lib-log"},{text:"vals",to:"/test/lib/#lib-vals"},{text:"env",to:"/test/lib/#lib-env"},{text:"promises",to:"/test/lib/#lib-promises"},{text:"http",to:"/test/lib/#lib-http"},{text:"tryCatch",to:"/test/lib/#lib-trycatch"},{text:"error",to:"/test/lib/#lib-error"},{text:"mock",to:"/test/lib/#lib-mock"},{text:"mock.log",to:"/test/lib/#lib-mock-log"},{text:"has",to:"/test/lib/#lib-has"},{text:"version",to:"/test/lib/#lib-version"},{text:"DOM Environment",to:"/test/lib/#lib-dom"}],text:"Utilities",to:"/test/lib/"},{items:[{text:"mount",to:"/test/svelte/#lib-svelte"},{text:"Component State",to:"/test/svelte/#svelte-state"},{text:"Auto Exports",to:"/test/svelte/#svelte-auto-export"},{text:"Error Handling",to:"/test/svelte/#svelte-error"},{text:"SvelteKit Mocks",to:"/test/svelte/#lib-sveltekit-mocks"},{text:"createStaticPage",to:"/test/svelte/#lib-create-static-page"},{text:"compileSvelte",to:"/test/svelte/#lib-compile-svelte"},{text:"Svelte 4 vs 5",to:"/test/svelte-4-vs-5/"},{text:"Auto-Export FAQ",to:"/test/svelte-auto-export-faq/"}],text:"Svelte",to:"/test/svelte/"},{items:[{text:"package.json Setup",to:"/test/cli/#cli-packagejson"},{text:"Global Install",to:"/test/cli/#cli-global"},{text:"CLI Flags",to:"/test/cli/#cli-flags"},{text:"Sharding Tests",to:"/test/cli/#sharding"},{text:"Exit Codes",to:"/test/cli/#exit-codes"},{text:"Verbose Output",to:"/test/cli/#verbose-output"},{text:"Performance Tips",to:"/test/cli/#performance-tips"},{text:"Common Pitfalls",to:"/test/cli/#common-pitfalls"},{text:"CLI Flags Reference",to:"/test/cli-flags-reference/"},{text:"Sharding Cheat-Sheet",to:"/test/cli-sharding-cheatsheet/"},{text:"Performance Tips",to:"/test/performance-tips/"},{text:"Common Pitfalls",to:"/test/common-pitfalls/"}],text:"CLI & Usage",to:"/test/cli/"},{items:[{text:"__isolate",to:"/test/test-isolation/#isolate"}],text:"Test Isolation",to:"/test/test-isolation/"},{text:"Error Codes",to:"/test/error-codes/"},{text:"Error Codes Quick Look",to:"/test/error-codes-quicklook/"},{text:"Version History",to:"/test/version-history/"},{text:"Changelog",to:"/test/changelog/"}],nospy:{show:!1},pageClass:{},pages:{"/test/404/":{description:"404 - not found.",title:"404 - not found"}},root:"/test/",theme:"dark",title:"@magic/test",url:"/test/"},url:window.location.pathname,hash:window.location.hash.substr(1)},subscriptions:e=>[[T,S]],view:e=>{let t=P[e.url]?e.url:"/404/",s=P[t],i=e.pages&&e.pages[t];return i&&Object.keys(i).forEach(t=>{e[t]=i[t]}),e.url=t,Page({page:s,state:e},[LightSwitch(e),NoSpy(e)])},node:document.getElementById("Magic")})};__MAGIC__();
+`),j({id:"tests-file-mappings"},"Important File Mappings"),U(["If test/index.js exists, no other files will be loaded."," If test/lib/index.js exists, no other files from that subdirectory will be loaded."," Instead, the exports of those index.js will be expected to be tests."])]};w({init:{...{description:["Declaratively test your ecmascript module files."," No transpiling required."," Incredibly fast."],logotext:"@magic/test",menu:[{text:"Home",to:"/test/"},{text:"Getting Started",to:"/test/getting-started/"},{items:[{text:"Single Test",to:"/test/writing-tests/#tests"},{text:"Multiple Tests",to:"/test/writing-tests/#tests-multiple"},{text:"Running Multiple Times",to:"/test/writing-tests/#tests-runs"},{text:"Testing Types",to:"/test/writing-tests/#tests-types"},{text:"Promises",to:"/test/writing-tests/#tests-promises"},{text:"Callbacks",to:"/test/writing-tests/#tests-cb"},{text:"Hooks",to:"/test/writing-tests/#tests-hooks"},{text:"Suite Hooks",to:"/test/writing-tests/#tests-suite-hooks"},{text:"beforeEach/afterEach",to:"/test/writing-tests/#tests-each-hooks"},{text:"Magic Modules",to:"/test/writing-tests/#tests-magic-modules"},{text:"Test Suites",to:"/test/writing-tests/#test-suites"}],text:"Writing Tests",to:"/test/writing-tests/"},{items:[{text:"deep",to:"/test/lib/#lib-deep"},{text:"fs",to:"/test/lib/#lib-fs"},{text:"curry",to:"/test/lib/#lib-curry"},{text:"log",to:"/test/lib/#lib-log"},{text:"vals",to:"/test/lib/#lib-vals"},{text:"env",to:"/test/lib/#lib-env"},{text:"promises",to:"/test/lib/#lib-promises"},{text:"http",to:"/test/lib/#lib-http"},{text:"tryCatch",to:"/test/lib/#lib-trycatch"},{text:"error",to:"/test/lib/#lib-error"},{text:"mock",to:"/test/lib/#lib-mock"},{text:"mock.log",to:"/test/lib/#lib-mock-log"},{text:"has",to:"/test/lib/#lib-has"},{text:"version",to:"/test/lib/#lib-version"},{text:"DOM Environment",to:"/test/lib/#lib-dom"}],text:"Utilities",to:"/test/lib/"},{items:[{text:"mount",to:"/test/svelte/#lib-svelte"},{text:"Component State",to:"/test/svelte/#svelte-state"},{text:"Auto Exports",to:"/test/svelte/#svelte-auto-export"},{text:"Error Handling",to:"/test/svelte/#svelte-error"},{text:"SvelteKit Mocks",to:"/test/svelte/#lib-sveltekit-mocks"},{text:"createStaticPage",to:"/test/svelte/#lib-create-static-page"},{text:"compileSvelte",to:"/test/svelte/#lib-compile-svelte"},{text:"Svelte 4 vs 5",to:"/test/svelte-4-vs-5/"},{text:"Auto-Export FAQ",to:"/test/svelte-auto-export-faq/"}],text:"Svelte",to:"/test/svelte/"},{items:[{text:"package.json Setup",to:"/test/cli/#cli-packagejson"},{text:"Global Install",to:"/test/cli/#cli-global"},{text:"CLI Flags",to:"/test/cli/#cli-flags"},{text:"Sharding Tests",to:"/test/cli/#sharding"},{text:"Exit Codes",to:"/test/cli/#exit-codes"},{text:"Verbose Output",to:"/test/cli/#verbose-output"},{text:"Performance Tips",to:"/test/cli/#performance-tips"},{text:"Common Pitfalls",to:"/test/cli/#common-pitfalls"},{text:"CLI Flags Reference",to:"/test/cli-flags-reference/"},{text:"Sharding Cheat-Sheet",to:"/test/cli-sharding-cheatsheet/"},{text:"Performance Tips",to:"/test/performance-tips/"},{text:"Common Pitfalls",to:"/test/common-pitfalls/"}],text:"CLI & Usage",to:"/test/cli/"},{items:[{text:"__isolate",to:"/test/test-isolation/#isolate"}],text:"Test Isolation",to:"/test/test-isolation/"},{text:"Error Codes",to:"/test/error-codes/"},{text:"Error Codes Quick Look",to:"/test/error-codes-quicklook/"},{text:"Changelog",to:"/test/changelog/"}],nospy:{show:!1},pageClass:{},pages:{"/test/404/":{description:"404 - not found.",title:"404 - not found"}},root:"/test/",theme:"dark",title:"@magic/test",url:"/test/"},url:window.location.pathname,hash:window.location.hash.substr(1)},subscriptions:e=>[[J,Y.pop]],view:e=>{let t=X[e.url]?e.url:"/404/",s=X[t],o=e.pages&&e.pages[t];return o&&Object.keys(o).forEach(t=>{e[t]=o[t]}),e.url=t,(({page:e,state:t},s)=>L({id:"Magic",class:t.pageClass},R({class:{Wrapper:!0}},[((e={},t=[])=>{let{logo:s,menu:o,logotext:r,hash:i,url:n}=e;if(s||o||r)return P({class:"Header"},[G({to:"/",class:"Logo"},[V({viewBox:"0 0 512 444"},[$({d:"M512 444L256 0 0 444z",fill:"#663695"}),T({cx:"256",cy:"294",r:"130",fill:"#fff"}),T({cx:"256",cy:"281",r:"40",fill:"#663695"}),$({d:"M256 350v44m24-44l1 13c1 27 29 27 29-7m-160-72s46-47 106-47c59 0 106 47 106 47s-47 43-106 43c-60 0-106-43-106-43zm65-75a134 134 0 0189 2",class:"stroke"}),$({d:"M256 81v53m184 270l-43-29M72 404l43-29",class:"stroke white"})])]),r&&U(r),o&&((e={})=>{let{collapse:t=!0,menu:s,hash:o}=e,{class:r="",url:i}=e;return r.includes("Menu")||(r=`Menu ${r}`.trim()),o&&!i.endsWith(o)&&(i+=`#${o}`),q({className:r},z(s.map(e=>B({...e,url:i,collapse:t}))))})({url:n,hash:i,menu:o}),t])})(t),R({class:"Page",id:"page"},e(t)),((e=[])=>N({class:"Footer"},[R({class:"Container"},[R({class:"Credits"},["made with a few bits of ",G({to:"https://magic.github.io/",target:"_blank",rel:"noopener"},"magic")]),e])]))(),s])))({page:s,state:e},[((e={})=>V({class:"LightSwitch icon",onclick:Y.changeTheme,height:25,width:25,viewBox:"0 0 352 460"},[$({d:"M149 48C96 48 48 95 47 143c-1 13 19 17 20 0-1-35 48-75 83-75 15 0 12-22-1-20z"}),$({d:"M176 0C74 0 0 83 0 176c9 91 84 118 100 204h20c-16-92-97-138-100-204C22 70 105 21 176 20zM95 400c2 68 20 48 40 60h82c20-12 38 8 40-60z"}),$({d:"M175 0c102 0 177 83 177 176-9 91-86 118-102 204h-20c16-92 99-138 102-204-2-106-86-155-157-156z"})]))(e),(({nospy:e={},cookies:t=[]})=>{let{show:s,title:o="Privacy Notice",content:r="This app neither saves, collects, nor shares any data about you.",buttonText:i="Awesome!"}=e;return s?R({class:"NoSpy"},[R({class:"Background",onclick:Y.nospy.toggle}),R({class:"Container"},[o&&j(o),r&&U(r),D({onclick:Y.nospy.toggle,value:i,type:"button"})])]):R({class:"NoSpy"},V({class:"icon",onclick:Y.nospy.toggle,width:"25",height:"25",viewBox:"0 0 512 512"},[A([$({d:`
+M507,208c-1-7-7-12-14-13c-7-1-13,3-16,9
+c-5,11-16,19-29,19c-14,0-26-10-30-23c-2-8-11-13-19-11
+C393,191,389,192,384,192c-35-0-64-29-64-64c0-5,1-9,2-14
+c2-8-3-16-11-19C297,90,288,78,288,64c-0-13,8-24,19-29
+c6-3,10-9,9-16c-1-7-6-12-13-14C288,2,272,0,256,0
+C115,0,0,115,0,256c0,141,115,256,256,256c141-0,256-115,256-256
+C512,239,510,224,507,209z M414,414C374,455,318,480,256,480s-118-25-158-66
+C57,374,32,318,32,256S57,138,98,98C138,57,194,32,256,32c3,0,6,0,9,0
+C259,42,256,52,256,64c0,24,13,44,33,55C288,122,288,125,288,128
+c0,53,43,96,96,96c3,0,6-0,8-0C403,242,424,256,448,256
+c11-0,22-3,32-8c0,3,0,6,0,9C480,318,455,374,414,414z
+`}),T({cx:"192",cy:"128",r:"32"}),T({cx:"128",cy:"256",r:"32"}),T({cx:"288",cy:"384",r:"32"}),T({cx:"272",cy:"272",r:"16"}),T({cx:"400",cy:"336",r:"16"}),T({cx:"176",cy:"368",r:"16"})])]))})(e)])},node:document.getElementById("Magic")})};__MAGIC__();

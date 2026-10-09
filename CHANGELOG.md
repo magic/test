@@ -1,20 +1,20 @@
 ### Changelog
 
-#### 0.0.41
+#### 0.3.41
 
 - svelte component coverage fully fixed, 0.0.40 was using the wrong paths
 - move test/.fixtures to src/lib/svelte/testFixtures to make them exposed to c8 coverage
 
-#### 0.0.40
+#### 0.3.40
 
 - fix svelte component coverage by pointing sourcemaps back to .svelte components
 
-#### 0.0.39
+#### 0.3.39
 
 - change c8 to use --all flag
-- change c8 to not includ dist by default
+- change c8 to not include dist by default
 
-#### 0.0.38
+#### 0.3.38
 
 - fix imports of svelte components, they only have a default export. resolveSvelteExports now handles this correctly.
 - update dependencies
@@ -482,10 +482,6 @@ update dependencies
 - update dependencies
 
 ##### 0.1.59
-
-update dependencies
-
-##### 0.1.58
 
 update dependencies
 
