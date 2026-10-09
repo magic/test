@@ -69,7 +69,7 @@
     "@magic/types": "0.1.40",
     "c8": "12.0.0",
     "canvas": "3.2.3",
-    "happy-dom": "20.14.5",
+    "happy-dom": "20.14.6",
     "magic-string": "1.4.3",
     "typescript": "npm:@typescript/typescript6",
     "typescript-eslint": "8.71.1"
@@ -83,7 +83,7 @@
     "@magic-themes/docs": "0.0.15",
     "@magic/core": "0.0.161",
     "@magic/format": "0.0.75",
-    "@types/node": "26.6.4",
+    "@types/node": "26.6.5",
     "eslint": "10.12.0",
     "prettier-plugin-svelte": "4.1.1",
     "svelte": "5.57.2"
