@@ -182,7 +182,7 @@ const compileBarrelImpl = async (
 
   // Write all files in parallel, creating directories once
   const dirsToCreate = new Set(filesToWrite.map(f => path.dirname(f.path)))
-  await Promise.all([...dirsToCreate].map(d => fs.mkdir(d, { recursive: true })))
+  await Promise.all([...dirsToCreate].map(d => fs.mkdirp(d)))
   await Promise.all(filesToWrite.map(f => fs.writeFile(f.path, f.content)))
   traceEnd(writeId)
 
