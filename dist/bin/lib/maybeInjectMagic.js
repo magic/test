@@ -68,11 +68,13 @@ export const maybeInjectMagic = async () => {
     }
   }
   if (!renderToString) {
-    log.error(
-      'E_NO_INSTALL',
+    // Don't exit the process here — library code should report, the CLI
+    // (bin/unit.ts) catches and decides the exit code.
+    const err = new Error(
       'maybeInjectMagic: @magic/core import failed. please run "npm install --save-exact @magic/core".',
     )
-    process.exit(1)
+    err.code = 'E_NO_INSTALL'
+    throw err
   }
   if (config) {
     const runAppModule = await import(

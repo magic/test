@@ -8,5 +8,5 @@ export interface RunnerSuite {
   tests: TestItem[]
   hooks: TestHooks | Record<string, unknown>
 }
-declare const run: () => Promise<void>
-export default run
+declare const main: () => Promise<void>
+export default main

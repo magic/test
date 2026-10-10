@@ -27,28 +27,19 @@ import { describe, before, after, it } from 'node:test'
 import fs from '@magic/fs'
 import is from '@magic/types'
 import { maybeInjectMagic } from './lib/index.js'
+import { evaluateTestResult } from '../run/lib/index.js'
+import {
+  isBeforeAllFile,
+  isAfterAllFile,
+  beforeAllFileNames,
+  afterAllFileNames,
+} from '../lib/hookFiles.js'
 const cwd = process.cwd()
 const testDir = path.join(cwd, 'test')
 const EXCLUDED_DIRS = ['node_modules', '.tmp', '.git']
 const INCLUDED_EXTENSIONS = ['.js', '.ts', '.mjs']
 const discoveredFiles = []
-// Ordered lists matching run.ts - hooks run in this order
-const BEFORE_ALL_FILES = [
-  '/beforeAll.mjs',
-  '/beforeall.mjs',
-  '/beforeAll.js',
-  '/beforeall.js',
-  '/beforeAll.ts',
-  '/beforeall.ts',
-]
-const AFTER_ALL_FILES = [
-  '/afterAll.mjs',
-  '/afterall.mjs',
-  '/afterAll.js',
-  '/afterall.js',
-  '/afterAll.ts',
-  '/afterall.ts',
-]
+// Hook file names/order: canonical list lives in src/lib/hookFiles.ts
 const scanDir = async dir => {
   const exists = await fs.exists(dir)
   if (!exists) {
@@ -69,9 +60,6 @@ const scanDir = async dir => {
     }
   }
 }
-await maybeInjectMagic()
-await scanDir(testDir)
-discoveredFiles.sort()
 const extractExport = async filePath => {
   try {
     const mod = await import(__rewriteRelativeImportExtension(filePath))
@@ -89,14 +77,7 @@ const processHookFiles = async () => {
   for (const filePath of filesToProcess) {
     const fileName = path.basename(filePath)
     // Check if this is a beforeAll variant (case-sensitive matching)
-    if (
-      fileName === 'beforeAll.js' ||
-      fileName === 'beforeall.js' ||
-      fileName === 'beforeAll.ts' ||
-      fileName === 'beforeall.ts' ||
-      fileName === 'beforeAll.mjs' ||
-      fileName === 'beforeall.mjs'
-    ) {
+    if (isBeforeAllFile(fileName)) {
       const mod = await extractExport(filePath)
       if (mod && is.function(mod.default)) {
         beforeAllHooks.push({
@@ -107,14 +88,7 @@ const processHookFiles = async () => {
       discoveredFiles.splice(discoveredFiles.indexOf(filePath), 1)
     }
     // Check if this is an afterAll variant (case-sensitive matching)
-    else if (
-      fileName === 'afterAll.js' ||
-      fileName === 'afterAll.ts' ||
-      fileName === 'afterAll.mjs' ||
-      fileName === 'afterall.js' ||
-      fileName === 'afterall.ts' ||
-      fileName === 'afterall.mjs'
-    ) {
+    else if (isAfterAllFile(fileName)) {
       const mod = await extractExport(filePath)
       if (mod && is.function(mod.default)) {
         afterAllHooks.push({
@@ -126,7 +100,6 @@ const processHookFiles = async () => {
     }
   }
 }
-await processHookFiles()
 const getTestName = (testObj, filePath, index) => {
   if (testObj.info) {
     return String(testObj.info)
@@ -139,42 +112,6 @@ const getTestName = (testObj, filePath, index) => {
   }
   const baseName = path.basename(filePath, path.extname(filePath))
   return `${baseName} ${index + 1}`
-}
-const runAssertion = async (result, expect) => {
-  // If expect is a Promise, resolve it first and use the resolved value for comparison
-  if (is.promise(expect)) {
-    const resolved = await expect
-    return runAssertion(result, resolved)
-  }
-  // If expect is exactly true, result must be exactly true
-  if (expect === true) {
-    return result === true
-  }
-  // If expect is exactly false, result must be exactly false
-  if (expect === false) {
-    return result === false
-  }
-  // If expect is function, run it against result
-  if (is.fn(expect)) {
-    const exp = await expect(result)
-    // Match t.ts behavior exactly: when result !== true, check if exp === result OR exp === true
-    if (result !== true) {
-      return exp === result || exp === true
-    }
-    return exp === true
-  }
-  // For other cases (including undefined), use same logic as run/test.ts
-  let pass = false
-  if (is.undefined(expect)) {
-    pass = is.undefined(result)
-  } else if (is.sameType(expect, result)) {
-    if (is.arr(expect) || is.obj(expect)) {
-      pass = is.deep.equal(result, expect)
-    } else {
-      pass = result === expect
-    }
-  }
-  return pass
 }
 const convertTest = async (testObj, filePath, index) => {
   const testName = getTestName(testObj, filePath, index)
@@ -218,8 +155,9 @@ const convertTest = async (testObj, filePath, index) => {
     }
     const hasExpect = 'expect' in testObj
     const expect = hasExpect ? testObj.expect : true
-    const pass = await runAssertion(result, expect)
-    if (!pass) {
+    // Use the shared evaluator so semantics stay in sync with the main runner
+    const evalResult = await evaluateTestResult(result, expect)
+    if (!evalResult.pass) {
       throw new Error(`Expected: ${JSON.stringify(expect)}\nGot: ${JSON.stringify(result)}`)
     }
   }
@@ -315,7 +253,7 @@ const processFile = async filePath => {
   }
   return suites
 }
-const run = async () => {
+const registerTests = async () => {
   const allSuites = []
   for (const filePath of discoveredFiles) {
     const suites = await processFile(filePath)
@@ -323,8 +261,8 @@ const run = async () => {
   }
   // Run all beforeAll hooks in the defined order AFTER suites are collected
   // (matching t.ts/run.ts behavior - beforeAll runs once after all test files are loaded)
-  for (const beforeAllEntry of BEFORE_ALL_FILES) {
-    const hook = beforeAllHooks.find(h => h.file === path.basename(beforeAllEntry))
+  for (const fileName of beforeAllFileNames) {
+    const hook = beforeAllHooks.find(h => h.file === fileName)
     if (hook) {
       const result = await hook.fn()
       if (is.function(result)) {
@@ -384,8 +322,8 @@ const run = async () => {
   }
   after(async () => {
     // 1. Run all afterAll hooks in order
-    for (const afterAllEntry of AFTER_ALL_FILES) {
-      const hook = afterAllHooks.find(h => h.file === path.basename(afterAllEntry))
+    for (const fileName of afterAllFileNames) {
+      const hook = afterAllHooks.find(h => h.file === fileName)
       if (hook) {
         await hook.fn()
       }
@@ -402,6 +340,21 @@ const run = async () => {
     }
   })
 }
-run()
-export default run
+const main = async () => {
+  try {
+    await maybeInjectMagic()
+  } catch (e) {
+    console.error(e)
+    process.exit(1)
+  }
+  await scanDir(testDir)
+  discoveredFiles.sort()
+  await processHookFiles()
+  await registerTests()
+}
+main().catch(e => {
+  console.error(e)
+  process.exit(1)
+})
+export default main
 //# sourceMappingURL=node-test-runner.js.map

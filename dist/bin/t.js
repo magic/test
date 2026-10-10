@@ -64,34 +64,20 @@ const run = async () => {
   }
   const binFile = path.join(binPath, 'unit.js')
   const isWin = process.platform === 'win32'
-  let cmd = 'node'
-  let argv = []
   const includeArgs = res.args.include || ['src']
   const userExclude = res.args.exclude
   const { shards, shardId, errorLength, timeout, workers } = res.args
-  const include = is.array(includeArgs) ? includeArgs : [includeArgs]
-  const c8Excludes = userExclude ? (is.array(userExclude) ? userExclude : [userExclude]) : ['test']
-  // Always exclude .d.ts from coverage
-  if (!c8Excludes.includes('.d.ts')) {
-    c8Excludes.push('.d.ts')
+  const include = (is.array(includeArgs) ? includeArgs : [includeArgs]).map(String)
+  // Forward verbose to the child process via env (argv is not inherited)
+  if (res.args.verbose) {
+    process.env.MAGIC_TEST_VERBOSE = '1'
   }
-  // Enable Node.js source map capture for c8 coverage remapping
-  process.env.NODE_OPTIONS = (process.env.NODE_OPTIONS || '')
-    .split(' ')
-    .filter(Boolean)
-    .concat(['--enable-source-maps'])
-    .join(' ')
-  if (!isProd) {
-    include.forEach(inc => {
-      argv = ['--include', inc, ...argv]
-    })
-  }
-  // Set shard environment variables
+  // Set env vars (read by the unit.js child process and the worker pool)
   if (shards) {
-    process.env.MAGIC_TEST_SHARDING_SHARDS = shards
+    process.env.MAGIC_TEST_SHARDING_SHARDS = String(shards)
   }
   if (shardId) {
-    process.env.MAGIC_TEST_SHARDING_ID = shardId
+    process.env.MAGIC_TEST_SHARDING_ID = String(shardId)
   }
   if (errorLength !== undefined) {
     process.env.MAGIC_TEST_ERROR_LENGTH = String(errorLength)
@@ -102,12 +88,31 @@ const run = async () => {
   if (workers !== undefined) {
     process.env.MAGIC_TEST_WORKERS = String(workers)
   }
-  argv.push(binFile)
-  if (!isProd) {
-    const c8Cmd = isWin ? 'c8.cmd' : 'c8'
-    cmd = path.join(cwd, 'node_modules', '.bin', c8Cmd)
-    // Build c8 args
-    const c8Args = [
+  // Enable Node.js source map capture for c8 coverage remapping
+  process.env.NODE_OPTIONS = (process.env.NODE_OPTIONS || '')
+    .split(' ')
+    .filter(Boolean)
+    .concat(['--enable-source-maps'])
+    .join(' ')
+  // Build the child command in one place:
+  //   prod:  node unit.js
+  //   other: c8 --exclude ... --source-maps ... --include ... node unit.js
+  let cmd
+  let argv
+  if (isProd) {
+    cmd = 'node'
+    argv = [binFile]
+  } else {
+    const c8Excludes = (
+      userExclude ? (is.array(userExclude) ? userExclude : [userExclude]) : ['test']
+    ).map(String)
+    // Always exclude .d.ts from coverage
+    if (!c8Excludes.includes('.d.ts')) {
+      c8Excludes.push('.d.ts')
+    }
+    cmd = path.join(cwd, 'node_modules', '.bin', isWin ? 'c8.cmd' : 'c8')
+    argv = [
+      ...c8Excludes.flatMap(ex => ['--exclude', ex]),
       '--source-maps',
       '--extension',
       '.js',
@@ -119,22 +124,26 @@ const run = async () => {
       '.svelte',
       '--exclude-after-remap',
       '--all',
+      ...include.flatMap(inc => ['--include', inc]),
+      'node',
+      binFile,
     ]
-    c8Excludes.forEach(ex => {
-      c8Args.unshift('--exclude', ex)
-    })
-    // Insert 'node' before binFile
-    const binIndex = argv.indexOf(binFile)
-    if (binIndex !== -1) {
-      argv.splice(binIndex, 0, 'node')
-    }
-    // Insert c8 args before 'node' keyword
-    const nodeIndex = argv.indexOf('node')
-    if (nodeIndex !== -1) {
-      argv.splice(nodeIndex, 0, ...c8Args)
-    }
   }
   childProcess = await cli.spawn(cmd, argv)
+  // Wait for the child and adopt its exit code. Without ref() the parent
+  // exits immediately after spawn and reports 0 no matter what unit.js did.
+  childProcess.ref()
+  childProcess.on('exit', (code, signal) => {
+    if (code === null && signal) {
+      process.exitCode = 1
+    } else if (code !== null && code !== 0) {
+      process.exitCode = code
+    }
+  })
+  childProcess.on('error', err => {
+    log.error(err)
+    process.exitCode = 1
+  })
 }
 run()
 const gracefulShutdown = async () => {
