@@ -8,10 +8,6 @@ export const evaluateTestResult = async (res, expect) => {
   let expString
   let pass = false
   if (is.function(expect)) {
-    const combinedRes = [res]
-    if (combinedRes.length > 1) {
-      res = combinedRes
-    }
     exp = await expect(res)
     expString = cleanFunctionString(expect)
     if (res !== true) {

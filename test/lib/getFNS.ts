@@ -4,28 +4,28 @@ import type { TestCase } from '#src/types.js'
 export default [
   {
     fn: () => getFNS({}),
-    expect: '',
-    info: 'returns empty string when no FN env var',
+    expect: [],
+    info: 'returns empty array when no FN env var',
   },
   {
     fn: () => getFNS({ FN: '' }),
-    expect: '',
-    info: 'returns empty string for empty FN',
+    expect: [],
+    info: 'returns empty array for empty FN',
   },
   {
     fn: () => getFNS({ FN: 'single' }),
-    expect: 'single',
-    info: 'returns single function name without space',
+    expect: ['single'],
+    info: 'returns single function name as array',
   },
   {
     fn: () => getFNS({ FN: 'fn1,fn2,fn3' }),
-    expect: 'fn1,fn2,fn3',
-    info: 'returns comma-separated string as-is (no space trigger)',
+    expect: ['fn1', 'fn2', 'fn3'],
+    info: 'splits comma-separated names even without space',
   },
   {
     fn: () => getFNS({ FN: 'fn1;fn2' }),
-    expect: 'fn1;fn2',
-    info: 'returns semicolon-separated string as-is (no space trigger)',
+    expect: ['fn1', 'fn2'],
+    info: 'splits semicolon-separated names even without space',
   },
   {
     fn: () => getFNS({ FN: 'fn1 fn2' }),

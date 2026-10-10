@@ -97,6 +97,6 @@ export const info = (suites, store, useLogging = true) => {
       log(`Ran ${all} tests in ${duration}. Passed ${pass}/${all} ${percentage}%\n`)
     }
   }
-  return true
+  return pass === all
 }
 //# sourceMappingURL=info.js.map

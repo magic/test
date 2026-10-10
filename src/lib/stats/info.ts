@@ -117,5 +117,5 @@ export const info = (suites: unknown[], store: Store, useLogging: boolean = true
       log(`Ran ${all} tests in ${duration}. Passed ${pass}/${all} ${percentage}%\n`)
     }
   }
-  return true
+  return pass === all
 }

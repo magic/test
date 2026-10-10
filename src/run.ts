@@ -2,6 +2,7 @@ import is from '@magic/types'
 import log from '@magic/log'
 
 import { stats, createStore, ERRORS, Store } from './lib/index.ts'
+import { BEFORE_ALL_KEYS, AFTER_ALL_KEYS } from './lib/hookFiles.ts'
 import { runSuite } from './run/suite.ts'
 import type { TestSuites, TestCollection, CleanupFunction, TestResult } from './types.ts'
 import { printTraceSummary, isTraceEnabled } from './lib/trace/timing.ts'
@@ -98,6 +99,14 @@ type RunOptions = {
 }
 
 /**
+ * Outcome of a completed test run.
+ */
+export type RunResult = {
+  /** true if any test failed */
+  failed: boolean
+}
+
+/**
  * FNV-1a hash function for sharding
  * @param {string} testPath
  * @param {number} totalShards
@@ -122,12 +131,12 @@ const getShardForTest = (testPath: string, totalShards: number): number => {
  * Run all test suites
  * @param {TestSuites | (() => TestSuites)} tests - Test suites object or function that returns one
  * @param {RunOptions} [options] - Run options including sharding
- * @returns {Promise<Error | void>}
+ * @returns {Promise<RunResult | Error | void>} - Run result, an error if no tests were found, or void if aborted
  */
 export const run = async (
   tests: TestSuites | (() => TestSuites),
   options: RunOptions = {},
-): Promise<Error | void> => {
+): Promise<RunResult | Error | void> => {
   const { shards = 1, shardId = 0, workers, clearCache, globalStartTime } = options
 
   // Clear persistent cache if requested
@@ -135,7 +144,8 @@ export const run = async (
     await clearPersistentCache()
   }
 
-  // Set environment variables for sharding (used by unit.js and t.js)
+  // Set environment variables for sharding (user-facing override; the values
+  // are also passed directly as options below)
   if (shards > 1) {
     process.env.MAGIC_TEST_SHARDING_SHARDS = String(shards)
     process.env.MAGIC_TEST_SHARDING_ID = String(shardId)
@@ -162,23 +172,10 @@ export const run = async (
   }
 
   // Define all beforeAll/afterAll file variants in execution order
-  const beforeAllFiles = [
-    '/beforeAll.js',
-    '/beforeall.js',
-    '/beforeAll.ts',
-    '/beforeall.ts',
-    '/beforeAll.mjs',
-    '/beforeall.mjs',
-  ]
+  // (canonical list lives in lib/hookFiles.ts)
+  const beforeAllFiles = [...BEFORE_ALL_KEYS]
 
-  const afterAllFiles = [
-    '/afterAll.js',
-    '/afterall.js',
-    '/afterAll.ts',
-    '/afterall.ts',
-    '/afterAll.mjs',
-    '/afterall.mjs',
-  ]
+  const afterAllFiles = [...AFTER_ALL_KEYS]
 
   // Collect beforeAll functions and their cleanup handlers
   const beforeAllCleanup: CleanupFunction[] = []
@@ -261,12 +258,14 @@ export const run = async (
 
   // Persistent cache saves on each write, no need for explicit save here
 
-  stats.info(suites, store)
+  const allPassed = stats.info(suites, store)
 
   // Print compile trace summary if enabled
   if (isTraceEnabled()) {
     printTraceSummary()
   }
 
-  process.exit(0)
+  // The library must not terminate the process — the CLI (bin/unit.ts)
+  // decides the exit code from this result.
+  return { failed: !allPassed }
 }

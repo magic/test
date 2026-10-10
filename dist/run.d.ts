@@ -20,6 +20,13 @@ type RunOptions = {
   globalStartTime?: [number, number]
 }
 /**
+ * Outcome of a completed test run.
+ */
+export type RunResult = {
+  /** true if any test failed */
+  failed: boolean
+}
+/**
  * @typedef {Object} RunOptions
  * @property {number} [shards] - Number of shards to split tests into
  * @property {number} [shardId] - Which shard to run (0-indexed)
@@ -28,10 +35,10 @@ type RunOptions = {
  * Run all test suites
  * @param {TestSuites | (() => TestSuites)} tests - Test suites object or function that returns one
  * @param {RunOptions} [options] - Run options including sharding
- * @returns {Promise<Error | void>}
+ * @returns {Promise<RunResult | Error | void>} - Run result, an error if no tests were found, or void if aborted
  */
 export declare const run: (
   tests: TestSuites | (() => TestSuites),
   options?: RunOptions,
-) => Promise<Error | void>
+) => Promise<RunResult | Error | void>
 export {}

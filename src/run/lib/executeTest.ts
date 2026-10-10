@@ -15,11 +15,12 @@ export const executeTest = async (
       target,
       component: instance,
       unmount,
+      css,
     } = await mount(componentFile, { props: componentProps })
 
     try {
       if (is.function(fn)) {
-        return await fn({ target, component: instance, unmount })
+        return await fn({ target, component: instance, unmount, css })
       }
     } finally {
       await unmount()

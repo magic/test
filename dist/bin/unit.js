@@ -53,10 +53,15 @@ const init = async () => {
     }
     if (!tests) {
       log.error('NO tests specified')
-      return
+      process.exit(1)
     }
     const { shards, shardId, workers } = getShardConfig()
-    await run(tests, { shards, shardId, workers, globalStartTime })
+    const outcome = await run(tests, { shards, shardId, workers, globalStartTime })
+    // run() no longer exits the process — the CLI decides the exit code.
+    if (outcome instanceof Error || (outcome && outcome.failed)) {
+      process.exit(1)
+    }
+    process.exit(0)
   } catch (e) {
     const err = e
     err.code = 'E_MAGIC_TEST'

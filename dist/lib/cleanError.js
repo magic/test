@@ -18,4 +18,9 @@ export const cleanError = e => {
   const stack = [err || '', file.replace('    ', '')]
   return stack
 }
+/**
+ * Normalize any thrown value into a clean error (2-line stack) for logging.
+ * Wraps non-Error values so callers don't repeat the is.error() dance.
+ */
+export const toCleanError = e => cleanError(is.error(e) ? e : new Error(String(e)))
 //# sourceMappingURL=cleanError.js.map
