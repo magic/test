@@ -1,11 +1,7 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { compileBarrel } from '#lib/svelte/compile/compileBarrel.js'
-// NOTE: the cache must be imported via #src (dist) to match the instance
-// used by the source under test - src files import their caches via
-// "#src/lib/caches/cache.js", and "#lib/caches/cache.js" would resolve to a
-// separate module instance (src/lib/caches/cache.ts) that is never written to.
+import { compileBarrel } from '#src/lib/svelte/compile/compileBarrel.js'
 import { barrelCache } from '#src/lib/caches/cache.js'
 import type { TestCase } from '#src/types.js'
 import { has } from '#src/lib/has.js'

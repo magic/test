@@ -1,3 +1,4 @@
+import { has } from '../src/lib/has.js'
 import { mount, html, tick } from '#src/svelte.js'
 import { flushSync as flushSyncSvelte } from 'svelte'
 import { reset as resetPage } from '#lib/svelte/shims/$app/state.js'
@@ -6,10 +7,9 @@ import type { TestCase } from '#src/types.js'
 export default [
   // $app/environment
   {
-    fn: async () => {
-      const { target, unmount } = await mount('#lib/svelte/testFixtures/components/EnvTest.svelte')
+    component: 'src/lib/svelte/testFixtures/components/EnvTest.svelte',
+    fn: async ({ target }) => {
       const result = html(target)
-      await unmount()
       return result
     },
     expect:
@@ -18,31 +18,21 @@ export default [
   },
   // $app/state defaults
   {
-    fn: async () => {
-      const { target, unmount } = await mount(
-        '#lib/svelte/testFixtures/components/StateTest.svelte',
-      )
-      await tick()
-      const result = html(target)
-      await unmount()
-      return result.includes('class="state"')
+   component: '#lib/svelte/testFixtures/components/StateTest.svelte',
+    fn: async ({target }) => {
+      return html(target)
     },
-    expect: true,
+    expect: has.includes('class="state"'),
     info: '$app/state page has correct default values',
   },
   // goto updates URL
   {
-    fn: async () => {
-      const { target, unmount } = await mount(
-        '#lib/svelte/testFixtures/components/NavTest.svelte',
-        {
-          props: { triggerGoto: true },
-        },
-      )
+    component: '#lib/svelte/testFixtures/components/NavTest.svelte',
+    props: { triggerGoto: true },
+    fn: async ({ target }) => {
       await flushSyncSvelte()
       await tick()
       const url = html(target).match(/<span class="url">([^<]*)<\/span>/)?.[1]
-      await unmount()
       return url
     },
     expect: '/target',
@@ -50,17 +40,12 @@ export default [
   },
   // goto updates navigating
   {
-    fn: async () => {
-      const { target, unmount } = await mount(
-        '#lib/svelte/testFixtures/components/NavTest.svelte',
-        {
-          props: { triggerGoto: true },
-        },
-      )
+    component: '#lib/svelte/testFixtures/components/NavTest.svelte',
+    props: { triggerGoto: true },
+    fn: async ({ target }) => {
       await flushSyncSvelte()
       await tick()
       const nav = html(target).match(/<span class="navigating">([^<]*)<\/span>/)?.[1]
-      await unmount()
       return nav
     },
     expect: 'busy',
@@ -68,17 +53,12 @@ export default [
   },
   // callbacks fire
   {
-    fn: async () => {
-      const { target, unmount } = await mount(
-        '#lib/svelte/testFixtures/components/NavTest.svelte',
-        {
-          props: { triggerGoto: true },
-        },
-      )
+    component:    '#lib/svelte/testFixtures/components/NavTest.svelte',
+    props: { triggerGoto: true },
+    fn: async ({ target }) => {
       // Navigation callbacks are async, wait for them to fully complete
       await new Promise(r => setTimeout(r, 20))
       const logs = html(target).match(/<span class="logs">([^<]*)<\/span>/)?.[1]
-      await unmount()
       return logs
     },
     expect: 'before:goto|after:goto|on:goto|on:cleanup',
@@ -86,17 +66,12 @@ export default [
   },
   // pushState updates page.url
   {
-    fn: async () => {
-      const { target, unmount } = await mount(
-        '#lib/svelte/testFixtures/components/NavTest.svelte',
-        {
-          props: { triggerPush: true },
-        },
-      )
+    component: '#lib/svelte/testFixtures/components/NavTest.svelte',
+    props: { triggerPush: true },
+    fn: async ({ target }) => {
       await flushSyncSvelte()
       await tick()
       const url = html(target).match(/<span class="url">([^<]*)<\/span>/)?.[1]
-      await unmount()
       return url
     },
     expect: '/',
@@ -104,14 +79,11 @@ export default [
   },
   // $app/paths resolve and match
   {
-    fn: async () => {
-      const { target, unmount } = await mount(
-        '#lib/svelte/testFixtures/components/PathsTest.svelte',
-      )
+    component: '#lib/svelte/testFixtures/components/PathsTest.svelte',
+    fn: async ({ target }) => {
       await flushSyncSvelte()
       await Promise.resolve()
       const result = html(target)
-      await unmount()
       return result
     },
     expect:
@@ -135,16 +107,11 @@ export default [
   },
   // Wrapper routeId propagation
   {
-    fn: async () => {
-      const { target, unmount } = await mount(
-        '#lib/svelte/testFixtures/components/ChildWithPage.svelte',
-        {
-          props: { routeId: '/parent/[id]' },
-        },
-      )
-      await flushSyncSvelte()
+    component: '#lib/svelte/testFixtures/components/ChildWithPage.svelte',
+    props: { routeId: '/parent/[id]' },
+    fn: ({ target }) => {
+      flushSyncSvelte()
       const result = html(target)
-      await unmount()
       return result
     },
     expect: '<div>/parent/[id]</div>',
@@ -278,17 +245,12 @@ export default [
   },
   // $app/navigation invalidate
   {
-    fn: async () => {
-      const { target, unmount } = await mount(
-        '#lib/svelte/testFixtures/components/NavTest2.svelte',
-        {
-          props: { triggerInvalidate: true },
-        },
-      )
+    component: '#lib/svelte/testFixtures/components/NavTest2.svelte',
+    props: { triggerInvalidate: true },
+    fn: async ({ target }) => {
       await flushSyncSvelte()
       await tick()
       const result = html(target)
-      await unmount()
       return result.includes('invalidate')
     },
     expect: true,
@@ -296,17 +258,12 @@ export default [
   },
   // $app/navigation preload
   {
-    fn: async () => {
-      const { target, unmount } = await mount(
-        '#lib/svelte/testFixtures/components/NavTest2.svelte',
-        {
-          props: { triggerPreload: true },
-        },
-      )
+    component: '#lib/svelte/testFixtures/components/NavTest2.svelte',
+    props: { triggerPreload: true },
+    fn: async ({target}) => {
       await flushSyncSvelte()
       await tick()
       const result = html(target)
-      await unmount()
       return result.includes('preload')
     },
     expect: true,
@@ -321,12 +278,9 @@ export default [
         console.warn = originalWarn
       }
     },
-    fn: async () => {
-      const { target, unmount } = await mount(
-        '#lib/svelte/testFixtures/components/ServerTest2.svelte',
-      )
+    component: '#lib/svelte/testFixtures/components/ServerTest2.svelte',
+    fn: ({ target }) => {
       const result = html(target)
-      await unmount()
       return result
     },
     expect:
@@ -335,12 +289,9 @@ export default [
   },
   // $app/forms applyAction and enhance
   {
-    fn: async () => {
-      const { target, unmount } = await mount(
-        '#lib/svelte/testFixtures/components/FormsTest3.svelte',
-      )
+    component: '#lib/svelte/testFixtures/components/FormsTest3.svelte',
+    fn: async ({ target }) => {
       const result = html(target)
-      await unmount()
       return result
     },
     expect:
