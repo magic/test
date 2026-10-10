@@ -79,7 +79,7 @@ export default [
         exports.length === 1 &&
         firstExport != null &&
         firstExport.name === 'TestComponent' &&
-        firstExport.path === path.join(fixtureBase, 'TestComponent.svelte') &&
+        firstExport.path === path.join(fixtureBase, '..', 'components', 'TestComponent.svelte') &&
         fs.existsSync(firstExport.path)
       )
     },
