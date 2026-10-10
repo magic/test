@@ -2,10 +2,9 @@ import { parentPort, workerData } from 'node:worker_threads'
 
 import is from '@magic/types'
 
-import { toCleanError } from '../lib/index.ts'
 import { restoreFromSnapshot } from './isolation.ts'
 import { createFailResult } from './lib/index.ts'
-import type { TestResult, WrappedTest } from '../types.ts'
+import type { TestResult } from '../types.ts'
 
 import { runSingleTestFromFileInWorker, importFileInWorker, makeSafeClone } from './lib/index.ts'
 

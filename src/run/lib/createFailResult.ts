@@ -1,4 +1,3 @@
-import is from '@magic/types'
 import type { WrappedTest, TestResult } from '#src/types.js'
 import { getTestKey, toCleanError } from '#src/lib/index.js'
 
