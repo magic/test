@@ -4,16 +4,40 @@ import path from 'node:path'
 import { stripJsonComments } from './stripJsonComments.js'
 import { escapeRegex } from './escapeRegex.js'
 import { aliasCache } from './cache.js'
+// mtime + size of the tsconfig last parsed per root (null = no tsconfig.json).
+// This module keeps per-thread state — the ESM loader runs in its own
+// thread with its own cache — so cached entries are validated against the
+// filesystem on every lookup: a tsconfig may appear or change after the
+// first lookup (e.g. SvelteKit scaffolds one during a run).
+const loadedTsconfigMeta = new Map()
 export const parseTsConfig = async rootDir => {
   const cacheKey = rootDir + ':tsconfig'
   const cached = aliasCache.get(cacheKey)
   if (cached) {
-    return cached
+    if (loadedTsconfigMeta.has(rootDir)) {
+      const tsconfigPath = path.join(rootDir, 'tsconfig.json')
+      const recorded = loadedTsconfigMeta.get(rootDir)
+      if (!recorded) {
+        if (!(await fs.exists(tsconfigPath))) {
+          return cached
+        }
+      } else {
+        try {
+          const stat = await fs.stat(tsconfigPath)
+          if (stat.mtimeMs === recorded.mtime && stat.size === recorded.size) {
+            return cached
+          }
+        } catch {
+          // Unreadable — fall through and re-parse
+        }
+      }
+    }
   }
   const tsconfigPath = path.join(rootDir, 'tsconfig.json')
   const exists = await fs.exists(tsconfigPath)
   if (!exists) {
     aliasCache.set(cacheKey, [])
+    loadedTsconfigMeta.set(rootDir, null)
     return []
   }
   try {
@@ -80,6 +104,8 @@ export const parseTsConfig = async rootDir => {
     })
     const filteredAliases = aliases.filter(x => x !== null)
     aliasCache.set(cacheKey, filteredAliases)
+    const stat = await fs.stat(tsconfigPath)
+    loadedTsconfigMeta.set(rootDir, { mtime: stat.mtimeMs, size: stat.size })
     return filteredAliases
   } catch (e) {
     const message = is.error(e) ? e.message : String(e)

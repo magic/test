@@ -4,6 +4,7 @@ export { type AliasEntry } from '#src/types.js'
 export declare const configCache: LRUCache<{
   config: ViteConfig
   mtime: number
+  size: number
 }>
 export declare const aliasCache: LRUCache<AliasEntry[]>
 export declare const defineCache: LRUCache<Record<string, unknown>>
