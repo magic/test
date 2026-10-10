@@ -15,20 +15,17 @@ import {
 } from '../lib/index.js'
 import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
-import { getWorkerPool } from '../lib/workerPool.js'
 import {
   handleSuiteHooks,
-  handleWorkerError,
-  processWorkerResults,
   suiteHasBeforeAllOrAfterAll,
-  testNeedsIsolation,
+  runIsolatedArray,
+  runSequentialHooked,
+  runParallelArray,
 } from './lib/index.js'
 /**
- * Type guard to check if an Error has a `code` property.
+ * Type guard to check if an Error has a string `code` property.
  */
-const hasErrorCode = err => {
-  return 'code' in err
-}
+const hasErrorCode = err => typeof err.code === 'string'
 const defaultSuite = {
   pass: 0,
   fail: 0,
@@ -39,132 +36,118 @@ const defaultSuite = {
   tests: [],
 }
 /**
- * Wrap a test with suite metadata
+ * Check whether a beforeAll hook references globals (globalThis/global).
  */
-const wrapTest = (t, name, parent, pkg) => ({
-  ...t,
-  name,
-  parent,
-  pkg,
-})
+const beforeAllModifiesGlobal = fn => is.function(fn) && /globalThis|^global\b/.test(fn.toString())
 /**
- * Run an array of tests
+ * Single source of truth for suite isolation decisions.
+ * Used for both array and object suites so behavior stays consistent.
+ *
+ * Uses workers ONLY for tests that modify globals OR imported module state
+ * OR use fixed ports/files. Each worker has its own globalThis and fresh
+ * module imports, providing better isolation. Tests with hooks but no
+ * global modification run in the main thread for better performance.
+ */
+const analyzeSuite = async (tests, testFilePath) => {
+  const needsIsolation = suiteNeedsIsolation(tests)
+  const hasBeforeAll = suiteHasBeforeAllOrAfterAll(tests)
+  const modifiesGlobals = suiteModifiesGlobals(tests)
+  // Check for module import mutations
+  const usesModuleMutation = testFilePath
+    ? await testImportsMutableModuleState(tests, testFilePath)
+    : false
+  // Check for fixed port usage
+  const usesFixedPorts = testUsesFixedPorts(tests)
+  // Check for shared file usage
+  const usesSharedFiles = testUsesSharedFiles(tests)
+  let useWorkers = false
+  let suiteSnapshot
+  if (modifiesGlobals || usesModuleMutation || usesFixedPorts || usesSharedFiles) {
+    useWorkers = true
+    if (is.objectNative(tests) && beforeAllModifiesGlobal(tests.beforeAll)) {
+      suiteSnapshot = isolation.buildSnapshot()
+      try {
+        structuredClone(suiteSnapshot)
+      } catch {
+        // Snapshot not cloneable, workers still work without snapshot
+      }
+    }
+  }
+  return { needsIsolation, hasBeforeAll, useWorkers, suiteSnapshot }
+}
+/**
+ * Count pass/fail across a suite's results, recursing into nested suites.
+ */
+const countTestResults = items => {
+  let pass = 0
+  let fail = 0
+  for (const item of items) {
+    if (!is.objectNative(item)) {
+      continue
+    }
+    if (Array.isArray(item.tests)) {
+      const sub = countTestResults(item.tests)
+      pass += sub.pass
+      fail += sub.fail
+    } else if (item.pass) {
+      pass++
+    } else {
+      fail++
+    }
+  }
+  return { pass, fail }
+}
+/**
+ * Run an array of tests. Thin dispatcher that picks one execution strategy:
+ *
+ * - isolated (workers) when the suite modifies globals / module state / ports / files
+ * - sequential with hooks when the suite has beforeEach/afterEach
+ * - plain parallel otherwise
  */
 const runTestArray = async (
   tests,
-  needsIsolation,
+  analysis,
   name,
   parent,
   pkg,
   store,
   rawResults = [],
   testFileUrl,
-  useWorkers,
-  hasBeforeAll,
-  suiteSnapshot,
   suiteObj,
 ) => {
+  const { needsIsolation, useWorkers, hasBeforeAll, suiteSnapshot } = analysis
   if (needsIsolation && useWorkers) {
-    const allResults = []
-    const testsWithHooks = []
-    const testsWithoutHooks = []
-    tests.forEach((t, i) => {
-      const test = wrapTest(t, name, parent, pkg)
-      if (testNeedsIsolation(test, suiteObj)) {
-        testsWithHooks.push({ test: test, index: i })
-      } else {
-        testsWithoutHooks.push({ test: test, index: i })
-      }
+    return runIsolatedArray({
+      tests,
+      name,
+      parent,
+      pkg,
+      store,
+      rawResults,
+      testFileUrl,
+      suiteObj,
+      suiteSnapshot,
+      hasBeforeAll,
     })
-    // Rule 1 & 3: hasBeforeAll → batch in one worker
-    if (hasBeforeAll && testsWithoutHooks.length > 0) {
-      try {
-        const batchResults = await isolation.executeBatchInWorker({
-          testFileUrl,
-          testIndices: testsWithoutHooks.map(t => t.index),
-          testPkg: pkg,
-          testParent: parent,
-          testNames: testsWithoutHooks.map(t => t.test.name),
-          suiteSnapshot,
-        })
-        allResults.push(...processWorkerResults(batchResults, rawResults))
-      } catch (err) {
-        for (const { test } of testsWithoutHooks) {
-          allResults.push(handleWorkerError(test, err, rawResults))
-        }
-      }
-    }
-    // Rule 2: no beforeAll → parallel on main thread
-    if (!hasBeforeAll && testsWithoutHooks.length > 0) {
-      const promises = testsWithoutHooks.map(t => runTest(t.test, store, rawResults))
-      const resolved = await Promise.all(promises)
-      const testResults = resolved.filter(r => !!r && 'pass' in r)
-      allResults.push(...testResults)
-    }
-    // Rules 2 & 3: tests with hooks → individual workers
-    if (testsWithHooks.length > 0) {
-      const pool = getWorkerPool()
-      const individualPromises = testsWithHooks.map(({ test, index }) =>
-        pool(() => {
-          if (test.component && !needsIsolation) {
-            return runTest(test, store, rawResults).then(r => ({ result: r, index }))
-          }
-          return isolation
-            .executeInWorker({
-              testFileUrl,
-              testIndex: index,
-              testPkg: test.pkg,
-              testParent: test.parent,
-              testName: test.name,
-              suiteSnapshot,
-            })
-            .then(
-              result => {
-                rawResults.push(result)
-                return { result: result, index }
-              },
-              err => ({ result: handleWorkerError(test, err, rawResults), index }),
-            )
-        }),
-      )
-      const individualResults = await Promise.all(individualPromises)
-      const resultsMap = new Map(individualResults.map(r => [r.index, r.result]))
-      for (let i = 0; i < tests.length; i++) {
-        const r = resultsMap.get(i)
-        if (r) {
-          allResults.push(r)
-        }
-      }
-    }
-    return allResults
   }
-  // No isolation needed: run in parallel without isolation
-  // But when needsIsolation is true, run sequentially to ensure proper hook execution
   if (needsIsolation && (suiteObj?.beforeEach || suiteObj?.afterEach)) {
-    const results = []
-    for (const t of tests) {
-      const test = wrapTest(t, name, parent, pkg)
-      if (suiteObj && is.function(suiteObj.beforeEach)) {
-        await suiteObj.beforeEach()
-      }
-      const result = await runTest(test, store, rawResults)
-      if (result) {
-        results.push(result)
-      }
-      if (suiteObj && is.function(suiteObj.afterEach)) {
-        await suiteObj.afterEach()
-      }
-    }
-    return results
+    return runSequentialHooked({ tests, name, parent, pkg, store, rawResults, suiteObj })
   }
-  const promises = tests.map(t => runTest(wrapTest(t, name, parent, pkg), store, rawResults))
-  const resolved = await Promise.all(promises)
-  return resolved.filter(r => !!r)
+  return runParallelArray({ tests, name, parent, pkg, store, rawResults })
 }
 /**
  * Run object-based tests
  */
-const runTestObject = async (testsObj, name, parent, pkg, store, rawResults = []) => {
+const runTestObject = async (
+  testsObj,
+  analysis,
+  name,
+  parent,
+  pkg,
+  store,
+  rawResults = [],
+  testFileUrl,
+) => {
   if (is.function(testsObj.fn)) {
     const fns = getFNS()
     if (!fns.includes(name)) {
@@ -177,39 +160,16 @@ const runTestObject = async (testsObj, name, parent, pkg, store, rawResults = []
   // Check if this is a test object with a tests array (e.g., { beforeAll, tests: [...] })
   // Note: handleSuiteHooks is called in runSuite, not here, to avoid double execution
   if (is.arr(testsObj.tests)) {
-    const testArray = testsObj.tests
-    const needsIsolation = suiteNeedsIsolation(testArray)
-    const hasBeforeAll = suiteHasBeforeAllOrAfterAll(testsObj)
-    const modifiesGlobals = suiteModifiesGlobals(testsObj)
-    // Hooks are handled in runSuite.executeSuite - removed duplicate call here
-    // Compute test file URL for worker
-    const testFileUrl = pathToFileURL(path.join(process.cwd(), 'test', pkg)).href
-    // Determine if workers needed
-    let useWorkers = false
-    let suiteSnapshot
-    if (modifiesGlobals) {
-      useWorkers = true
-      if (needsIsolation && testsObj.beforeAll) {
-        const beforeAllModifiesGlobal = /globalThis|^global\b/.test(
-          testsObj.beforeAll?.toString() || '',
-        )
-        if (beforeAllModifiesGlobal) {
-          suiteSnapshot = isolation.buildSnapshot()
-        }
-      }
-    }
+    // Worker/snapshot decisions come from analyzeSuite (computed in runSuite)
     const results = await runTestArray(
-      testArray,
-      needsIsolation,
+      testsObj.tests,
+      analysis,
       name,
       parent,
       pkg,
       store,
       rawResults,
       testFileUrl,
-      useWorkers,
-      hasBeforeAll,
-      suiteSnapshot,
       testsObj,
     )
     // Note: afterAllCleanup and afterAll hooks are handled in runSuite.executeSuite
@@ -262,62 +222,42 @@ export const runSuite = async props => {
       throw error(`Error running Suite: ${suiteName} is not exporting tests.`, ERRORS.E_EMPTY_SUITE)
     }
     const suiteKey = `${pkg}.${parent}.${name}`
-    const needsIsolation = suiteNeedsIsolation(tests)
-    const hasBeforeAll = suiteHasBeforeAllOrAfterAll(tests)
-    const modifiesGlobals = suiteModifiesGlobals(tests)
+    // Compute test file URL for potential worker usage
+    const testFileUrl = pathToFileURL(path.join(process.cwd(), 'test', pkg)).href
+    const testFilePath = testFileUrl ? new URL(testFileUrl).pathname : ''
+    // Single source of truth for isolation decisions (array and object suites alike)
+    const analysis = await analyzeSuite(tests, testFilePath)
     const executeSuite = async () => {
       const { afterAllCleanup } = await handleSuiteHooks(tests)
-      // Compute test file URL for potential worker usage
-      const testFileUrl = pathToFileURL(path.join(process.cwd(), 'test', pkg)).href
-      const testFilePath = testFileUrl ? new URL(testFileUrl).pathname : ''
-      // Check for module import mutations
-      const usesModuleMutation = testFilePath
-        ? await testImportsMutableModuleState(tests, testFilePath)
-        : false
-      // Check for fixed port usage
-      const usesFixedPorts = testUsesFixedPorts(tests)
-      // Check for shared file usage
-      const usesSharedFiles = testUsesSharedFiles(tests)
-      // Use workers ONLY for tests that modify globals OR imported module state OR use fixed ports/files
-      // Each worker has its own globalThis and fresh module imports, providing better isolation
-      // Tests with hooks but no global modification run in main thread for better performance
-      let useWorkers = false
-      let suiteSnapshot
-      if (modifiesGlobals || usesModuleMutation || usesFixedPorts || usesSharedFiles) {
-        useWorkers = true
-        if (is.objectNative(tests) && hasBeforeAll) {
-          const beforeAllFn = tests.beforeAll
-          const beforeAllModifiesGlobal =
-            beforeAllFn && /globalThis|^global\b/.test(beforeAllFn.toString())
-          if (beforeAllModifiesGlobal) {
-            suiteSnapshot = isolation.buildSnapshot()
-            try {
-              structuredClone(suiteSnapshot)
-            } catch {
-              // Snapshot not cloneable, workers still work without snapshot
-            }
-          }
-        }
-      }
       if (is.array(tests)) {
         results = await runTestArray(
           tests,
-          needsIsolation,
+          analysis,
           name,
           parent,
           pkg,
           store,
           rawResults,
           testFileUrl,
-          useWorkers,
-          hasBeforeAll,
-          suiteSnapshot,
         )
       } else if (is.objectNative(tests)) {
-        results = await runTestObject(tests, name, parent, pkg, store, rawResults)
+        results = await runTestObject(
+          tests,
+          analysis,
+          name,
+          parent,
+          pkg,
+          store,
+          rawResults,
+          testFileUrl,
+        )
       }
       if (!is.undefined(results)) {
         suite.tests = results
+        const counts = countTestResults(results)
+        suite.pass = counts.pass
+        suite.fail = counts.fail
+        suite.all = counts.pass + counts.fail
       }
       // Run cleanup from beforeAll's returned function FIRST
       if (is.function(afterAllCleanup)) {
@@ -333,13 +273,8 @@ export const runSuite = async props => {
       }
       return suite
     }
-    if (needsIsolation) {
-      isolation.captureSuiteSnapshot(suiteKey)
-      try {
-        await executeSuite()
-      } finally {
-        isolation.restoreSuiteSnapshot(suiteKey)
-      }
+    if (analysis.needsIsolation) {
+      await isolation.executeSuiteIsolated(suiteKey, executeSuite)
     } else {
       await executeSuite()
     }
@@ -351,14 +286,8 @@ export const runSuite = async props => {
     }
     return suite
   } catch (e) {
-    if (is.error(e) && hasErrorCode(e)) {
-      if (e.code && e.code === ERRORS.E_EMPTY_SUITE) {
-        log.error(e.code, e.message)
-      } else if (e.code) {
-        log.error(ERRORS.E_RUN_SUITE_UNKNOWN, { suite: name, error: e })
-      } else {
-        log.error(ERRORS.E_RUN_SUITE_UNKNOWN, { suite: name, error: e })
-      }
+    if (is.error(e) && hasErrorCode(e) && e.code === ERRORS.E_EMPTY_SUITE) {
+      log.error(e.code, e.message)
     } else {
       log.error(ERRORS.E_RUN_SUITE_UNKNOWN, { suite: name, error: e })
     }

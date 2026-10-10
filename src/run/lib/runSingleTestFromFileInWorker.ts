@@ -4,6 +4,7 @@ import { getTestKey } from '#src/lib/index.js'
 import type { WrappedTest, TestResult } from '#src/types.js'
 
 import { hasTestProperties } from './hasTestProperties.ts'
+import { createFailResult } from './createFailResult.ts'
 import { runSingleTestInWorker } from './runSingleTestInWorker.ts'
 
 export const runSingleTestFromFileInWorker = async (
@@ -32,18 +33,11 @@ export const runSingleTestFromFileInWorker = async (
   }
 
   if (!test) {
-    return {
-      result: undefined,
-      msg: '',
-      pass: false,
-      parent: testParent || '',
+    return createFailResult({
       name: testName,
-      expect: undefined,
-      expString: undefined,
-      key: getTestKey(testPkg, testParent, testName),
-      info: '',
+      parent: testParent || '',
       pkg: testPkg,
-    }
+    })
   }
 
   const enriched = {

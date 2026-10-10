@@ -3,7 +3,6 @@ export declare class Isolation {
   private snapshots
   private suiteSnapshots
   private activeWorkers
-  private symbolCache
   constructor()
   /**
    * Terminate all active workers. Call this on shutdown.
@@ -14,22 +13,20 @@ export declare class Isolation {
    */
   deepClone<T>(value: T, seen?: WeakMap<object, unknown>): T
   /**
-   * Build a snapshot: store descriptors, values (deep-cloned), and symbol keys
+   * Build a snapshot of the current globalThis.
    */
   buildSnapshot(): Snapshot
   captureSuiteSnapshot(suiteKey: string): void
   restoreSuiteSnapshot(suiteKey: string): void
   /**
    * Restore properties from a snapshot to globalThis.
-   * Handles symbol keys, accessor properties, and falls back to direct assignment.
    */
   restoreProperties(snapshot: Snapshot): void
   restoreSnapshotFromMap(snapshotMap: Map<string, Snapshot>, key: string): void
   captureSnapshot(testKey: string): void
   restoreSnapshot(testKey: string): void
   /**
-   * helper to map stringified symbol keys back to Symbol if needed
-   * Uses cache for O(1) repeated lookups
+   * helper to map stringified symbol keys back to Symbol if needed.
    */
   _reviveKeyFromString(keyStr: string): string | symbol
   /**
@@ -41,10 +38,6 @@ export declare class Isolation {
   /**
    * Run a test in a worker thread for true isolation
    */
-  /**
-   * Create a worker promise with shared error/signal handling
-   */
-  private _createWorkerPromise
   executeInWorker(options: {
     testFileUrl: string
     testIndex: number

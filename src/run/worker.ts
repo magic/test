@@ -2,7 +2,7 @@ import { parentPort, workerData } from 'node:worker_threads'
 
 import is from '@magic/types'
 
-import { cleanError } from '../lib/index.ts'
+import { toCleanError } from '../lib/index.ts'
 import { restoreFromSnapshot } from './isolation.ts'
 import { createFailResult } from './lib/index.ts'
 import type { TestResult, WrappedTest } from '../types.ts'
@@ -34,18 +34,26 @@ const setupSuite = async (suiteSnapshot?: unknown): Promise<SuiteSetup> => {
 }
 
 const runWithHooks = async <T>(tests: unknown, fn: () => Promise<T>): Promise<T> => {
+  let started = false
   try {
     if (is.objectNative(tests) && is.function(tests.beforeEach)) {
       await tests.beforeEach()
     }
+    started = true
     const result = await fn()
     if (is.objectNative(tests) && is.function(tests.afterEach)) {
       await tests.afterEach()
     }
     return result
   } catch (e) {
-    if (is.objectNative(tests) && is.function(tests.afterEach)) {
-      await tests.afterEach()
+    // Only run afterEach when the test actually started (beforeEach succeeded).
+    // Swallow afterEach errors so they don't mask the original error.
+    if (started && is.objectNative(tests) && is.function(tests.afterEach)) {
+      try {
+        await tests.afterEach()
+      } catch {
+        // don't mask the original error
+      }
     }
     throw e
   }
@@ -63,17 +71,15 @@ const cleanupSuite = async (
   }
 }
 
-const makeErrorResult = (testName: string, error: unknown): TestResult => {
-  const test: WrappedTest = {
-    name: testName,
-    parent: workerData.testParent || '',
-    pkg: workerData.testPkg,
-    fn: undefined,
-  }
-  const result = createFailResult(test)
-  const cleanErr = cleanError(is.error(error) ? error : new Error(String(error)))
-  return { ...result, error: cleanErr } as TestResult
-}
+const makeErrorResult = (testName: string, error: unknown): TestResult =>
+  createFailResult(
+    {
+      name: testName,
+      parent: workerData.testParent || '',
+      pkg: workerData.testPkg,
+    },
+    error,
+  ) as TestResult
 
 const main = async () => {
   const batchMode = workerData.batchMode === true

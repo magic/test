@@ -1,94 +1,27 @@
 import is from '@magic/types'
 import log from '@magic/log'
-import { cleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/index.js'
+import { toCleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/index.js'
 import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
 import { runSuite } from './suite.js'
-import {
-  evaluateTestResult,
-  executeTest,
-  getTestTimeout,
-  prepareTest,
-  testNeedsIsolation,
-  withTimeout,
-} from './lib/index.js'
-const executeTestNoIsolation = async (
-  key,
-  fn,
-  expect,
-  test,
-  componentFile,
-  componentProps,
-  runs,
-  timeoutMs,
-  parent,
-  name,
-) => {
-  let result
-  let exp
-  let expString
-  let pass
-  const results = []
-  for (let i = 0; i < runs; i++) {
-    let res
-    try {
-      const testPromise = executeTest(fn, key, componentFile, componentProps)
-      res = await withTimeout(testPromise, timeoutMs, key)
-    } catch (e) {
-      log.error(ERRORS.E_TEST_FN, {
-        testKey: key,
-        testName: name,
-        parent,
-        component: componentFile,
-        error: cleanError(is.error(e) ? e : new Error(String(e))),
-      })
-      results.push({ res, pass: false })
-      continue
+import { executeTest, prepareTest, runTestCore, testNeedsIsolation } from './lib/index.js'
+/**
+ * Main-thread test execution: shared runTestCore + svelte component mounting
+ * via executeTest, with error logging (unavailable in workers).
+ */
+const executeTestNoIsolation = async (test, key, componentFile, componentProps) => {
+  const logError = (code, info) => {
+    if (code === ERRORS.E_TEST_FN) {
+      info.component = componentFile
     }
-    try {
-      const evalResult = await evaluateTestResult(res, expect)
-      const runPass = evalResult.pass
-      results.push({ res, pass: runPass, exp: evalResult.exp, expString: evalResult.expString })
-      if (!runPass) {
-        pass = false
-        result = res
-        exp = evalResult.exp
-        expString = evalResult.expString
-      }
-    } catch (e) {
-      log.error(ERRORS.E_TEST_EXPECT, {
-        testKey: key,
-        testName: name,
-        parent,
-        error: cleanError(is.error(e) ? e : new Error(String(e))),
-      })
-      results.push({ res, pass: false })
-    }
+    log.error(code, info)
   }
-  pass = results.every(r => r.pass)
-  if (pass && results.length > 0) {
-    result = runs > 1 ? results.map(r => r.res) : results[0].res
-    const lastExp = results[results.length - 1]
-    if (lastExp) {
-      exp = lastExp.exp
-      expString = lastExp.expString
-    }
-  }
-  let afterError = null
-  if (is.function(test.after)) {
-    try {
-      await test.after()
-    } catch (e) {
-      afterError = cleanError(is.error(e) ? e : new Error(String(e)))
-      log.error(ERRORS.E_TEST_AFTER, {
-        testKey: key,
-        testName: name,
-        parent,
-        error: afterError,
-      })
-    }
-  }
-  return { result, pass, exp, expString, afterError }
+  return runTestCore({
+    key,
+    test,
+    invoke: () => executeTest(test.fn, key, componentFile, componentProps),
+    logError,
+  })
 }
 /**
  * Run a test or delegate to a suite.
@@ -102,9 +35,7 @@ export const runTest = async (test, store, rawResults) => {
   const testParent = test.parent || ''
   const { componentFile, componentProps } = prepareTest(test)
   try {
-    const { fn, name, pkg, before, parent, expect, runs = 1, tests, info, timeout } = test
-    // Determine timeout: per-test override takes precedence, then env var
-    const timeoutMs = getTestTimeout(timeout)
+    const { fn, name, pkg, before, parent, tests, info } = test
     if (!is.ownProp(test, 'fn')) {
       if (is.object(test) && is.object(tests)) {
         return await runSuite({
@@ -143,37 +74,15 @@ export const runTest = async (test, store, rawResults) => {
               testKey: key,
               testName: name,
               parent,
-              error: cleanError(is.error(e) ? e : new Error(String(e))),
+              error: toCleanError(e),
             })
           }
         }
-        const execResult = await executeTestNoIsolation(
-          key,
-          fn,
-          expect,
-          test,
-          componentFile,
-          componentProps,
-          runs,
-          timeoutMs,
-          parent,
-          name,
-        )
+        const execResult = await executeTestNoIsolation(test, key, componentFile, componentProps)
         return { ...execResult, afterCleanup }
       })
     } else {
-      isolatedResult = await executeTestNoIsolation(
-        key,
-        fn,
-        expect,
-        test,
-        componentFile,
-        componentProps,
-        runs,
-        timeoutMs,
-        parent,
-        name,
-      )
+      isolatedResult = await executeTestNoIsolation(test, key, componentFile, componentProps)
     }
     if (is.function(isolatedResult.afterCleanup)) {
       try {
@@ -183,7 +92,7 @@ export const runTest = async (test, store, rawResults) => {
           testKey: key,
           testName: name,
           parent,
-          error: cleanError(is.error(e) ? e : new Error(String(e))),
+          error: toCleanError(e),
         })
       }
     }
@@ -216,7 +125,7 @@ export const runTest = async (test, store, rawResults) => {
       testName: testName,
       parent: testParent,
       component: componentFile,
-      error: cleanError(is.error(e) ? e : new Error(String(e))),
+      error: toCleanError(e),
     })
   }
   return

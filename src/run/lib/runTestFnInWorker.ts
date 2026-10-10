@@ -1,10 +1,10 @@
 import is from '@magic/types'
 
-import { cleanError } from '#src/lib/index.js'
+import { toCleanError } from '#src/lib/index.js'
 import { isolation } from '../isolation.ts'
 import type { WrappedTest, CleanupFunction, TestContext } from '#src/types.js'
 
-import { evaluateWorkerResult } from './evaluateWorkerResult.ts'
+import { runTestCore } from './runTestCore.ts'
 
 type RunFnResult = {
   result: unknown
@@ -15,15 +15,19 @@ type RunFnResult = {
   afterError: unknown
 }
 
+/**
+ * Worker-side test execution: runs `before`, the shared runTestCore (fn +
+ * expectation + timeout + after), and `afterCleanup` outside the isolation
+ * scope. No error logging — worker output is not visible in the parent.
+ */
 export const runTestFnInWorker = async (test: WrappedTest, key: string): Promise<RunFnResult> => {
-  const { fn, before, after, expect, runs = 1 } = test
+  const { before } = test
 
   let afterCleanupError = null
 
   const isolatedResult = await isolation.executeIsolated(key, async () => {
     let afterCleanup
     let innerAfterCleanupError = null
-    let innerAfterError = null
 
     if (is.function(before) || is.promise(before)) {
       try {
@@ -32,72 +36,27 @@ export const runTestFnInWorker = async (test: WrappedTest, key: string): Promise
           afterCleanup = result as CleanupFunction
         }
       } catch (e) {
-        innerAfterCleanupError = cleanError(is.error(e) ? e : new Error(String(e)))
+        innerAfterCleanupError = toCleanError(e)
       }
     }
 
-    let result
-    let exp
-    let expString
-    let pass
-
-    const results = []
-    for (let i = 0; i < runs; i++) {
-      let res
-      try {
-        if (is.function(fn)) {
-          res = await fn({} as TestContext)
-        } else if (is.promise(fn)) {
-          res = await fn
-        } else {
-          res = fn
-        }
-      } catch {
-        results.push({ res: undefined, pass: false })
-        continue
-      }
-
-      try {
-        const evalResult = await evaluateWorkerResult(res, expect)
-        const runPass = evalResult.pass
-
-        results.push({ res, pass: runPass, exp: evalResult.exp, expString: evalResult.expString })
-
-        if (!runPass) {
-          pass = false
-          result = res
-          exp = evalResult.exp
-          expString = evalResult.expString
-        }
-      } catch {
-        results.push({ res, pass: false })
-      }
-    }
-
-    pass = results.every(r => r.pass)
-    if (pass) {
-      result = runs > 1 ? results.map(r => r.res) : results[0]?.res
-      const lastExp = results[results.length - 1]
-      exp = lastExp?.exp
-      expString = lastExp?.expString
-    }
-
-    if (is.function(after)) {
-      try {
-        await after()
-      } catch (e) {
-        innerAfterError = cleanError(is.error(e) ? e : new Error(String(e)))
-      }
-    }
+    const core = await runTestCore({
+      key,
+      test,
+      invoke: () =>
+        is.function(test.fn)
+          ? Promise.resolve(test.fn({} as TestContext))
+          : Promise.resolve(test.fn),
+    })
 
     return {
-      result,
-      pass,
-      exp,
-      expString,
+      result: core.result,
+      pass: core.pass,
+      exp: core.exp,
+      expString: core.expString,
       afterCleanup,
       afterCleanupError: innerAfterCleanupError,
-      afterError: innerAfterError,
+      afterError: core.afterError,
     }
   })
 
@@ -105,7 +64,7 @@ export const runTestFnInWorker = async (test: WrappedTest, key: string): Promise
     try {
       await isolatedResult.afterCleanup()
     } catch (e) {
-      afterCleanupError = cleanError(is.error(e) ? e : new Error(String(e)))
+      afterCleanupError = toCleanError(e)
     }
   }
 

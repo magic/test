@@ -3,6 +3,7 @@ import is from '@magic/types'
 import { cleanFunctionString } from '#src/lib/index.js'
 import type { WrappedTest, TestResult } from '#src/types.js'
 
+import { createFailResult } from './createFailResult.ts'
 import { runTestFnInWorker } from './runTestFnInWorker.ts'
 
 export const runSingleTestInWorker = async (
@@ -15,18 +16,7 @@ export const runSingleTestInWorker = async (
   const { fn, info } = test
 
   if (!is.ownProp(test, 'fn')) {
-    return {
-      result: undefined,
-      msg: '',
-      pass: false,
-      parent: testParent || '',
-      name: testName,
-      expect: undefined,
-      expString: undefined,
-      key: testKey,
-      info: info || '',
-      pkg: testPkg,
-    }
+    return createFailResult({ ...test, key: testKey })
   }
 
   const msg = cleanFunctionString(fn)

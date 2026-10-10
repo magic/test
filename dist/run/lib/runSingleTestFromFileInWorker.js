@@ -1,6 +1,7 @@
 import is from '@magic/types'
 import { getTestKey } from '#src/lib/index.js'
 import { hasTestProperties } from './hasTestProperties.js'
+import { createFailResult } from './createFailResult.js'
 import { runSingleTestInWorker } from './runSingleTestInWorker.js'
 export const runSingleTestFromFileInWorker = async (
   tests,
@@ -26,18 +27,11 @@ export const runSingleTestFromFileInWorker = async (
     test = tests
   }
   if (!test) {
-    return {
-      result: undefined,
-      msg: '',
-      pass: false,
-      parent: testParent || '',
+    return createFailResult({
       name: testName,
-      expect: undefined,
-      expString: undefined,
-      key: getTestKey(testPkg, testParent, testName),
-      info: '',
+      parent: testParent || '',
       pkg: testPkg,
-    }
+    })
   }
   const enriched = {
     ...test,

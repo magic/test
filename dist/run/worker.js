@@ -1,6 +1,6 @@
 import { parentPort, workerData } from 'node:worker_threads'
 import is from '@magic/types'
-import { cleanError } from '../lib/index.js'
+import { toCleanError } from '../lib/index.js'
 import { restoreFromSnapshot } from './isolation.js'
 import { createFailResult } from './lib/index.js'
 import { runSingleTestFromFileInWorker, importFileInWorker, makeSafeClone } from './lib/index.js'
@@ -20,18 +20,26 @@ const setupSuite = async suiteSnapshot => {
   return { tests, afterAllCleanup }
 }
 const runWithHooks = async (tests, fn) => {
+  let started = false
   try {
     if (is.objectNative(tests) && is.function(tests.beforeEach)) {
       await tests.beforeEach()
     }
+    started = true
     const result = await fn()
     if (is.objectNative(tests) && is.function(tests.afterEach)) {
       await tests.afterEach()
     }
     return result
   } catch (e) {
-    if (is.objectNative(tests) && is.function(tests.afterEach)) {
-      await tests.afterEach()
+    // Only run afterEach when the test actually started (beforeEach succeeded).
+    // Swallow afterEach errors so they don't mask the original error.
+    if (started && is.objectNative(tests) && is.function(tests.afterEach)) {
+      try {
+        await tests.afterEach()
+      } catch {
+        // don't mask the original error
+      }
     }
     throw e
   }
@@ -44,17 +52,15 @@ const cleanupSuite = async (tests, afterAllCleanup) => {
     await tests.afterAll()
   }
 }
-const makeErrorResult = (testName, error) => {
-  const test = {
-    name: testName,
-    parent: workerData.testParent || '',
-    pkg: workerData.testPkg,
-    fn: undefined,
-  }
-  const result = createFailResult(test)
-  const cleanErr = cleanError(is.error(error) ? error : new Error(String(error)))
-  return { ...result, error: cleanErr }
-}
+const makeErrorResult = (testName, error) =>
+  createFailResult(
+    {
+      name: testName,
+      parent: workerData.testParent || '',
+      pkg: workerData.testPkg,
+    },
+    error,
+  )
 const main = async () => {
   const batchMode = workerData.batchMode === true
   if (batchMode) {

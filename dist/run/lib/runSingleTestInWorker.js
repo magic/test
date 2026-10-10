@@ -1,21 +1,11 @@
 import is from '@magic/types'
 import { cleanFunctionString } from '#src/lib/index.js'
+import { createFailResult } from './createFailResult.js'
 import { runTestFnInWorker } from './runTestFnInWorker.js'
 export const runSingleTestInWorker = async (test, testKey, testPkg, testParent, testName) => {
   const { fn, info } = test
   if (!is.ownProp(test, 'fn')) {
-    return {
-      result: undefined,
-      msg: '',
-      pass: false,
-      parent: testParent || '',
-      name: testName,
-      expect: undefined,
-      expString: undefined,
-      key: testKey,
-      info: info || '',
-      pkg: testPkg,
-    }
+    return createFailResult({ ...test, key: testKey })
   }
   const msg = cleanFunctionString(fn)
   let result
