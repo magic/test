@@ -7,7 +7,19 @@ export { default as error } from '@magic/error'
 export { has } from './lib/has.js'
 export { run } from './run.js'
 import { initDOM } from './lib/dom/index.js'
-export { curry, env, http, mock, promise, vals, version, tryCatch } from './lib/index.js'
+export {
+  ERRORS,
+  createError,
+  curry,
+  env,
+  http,
+  mock,
+  promise,
+  suiteNeedsIsolation,
+  vals,
+  version,
+  tryCatch,
+} from './lib/index.js'
 export { initDOM, getDocument, getWindow } from './lib/dom/index.js'
 export * from './types.js'
 // Auto-initialize DOM for all tests - makes HTMLInputElement, etc. available globally

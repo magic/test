@@ -12,7 +12,19 @@ export { run } from './run.ts'
 
 import { initDOM } from './lib/dom/index.ts'
 
-export { curry, env, http, mock, promise, vals, version, tryCatch } from './lib/index.ts'
+export {
+  ERRORS,
+  createError,
+  curry,
+  env,
+  http,
+  mock,
+  promise,
+  suiteNeedsIsolation,
+  vals,
+  version,
+  tryCatch,
+} from './lib/index.ts'
 
 export { initDOM, getDocument, getWindow } from './lib/dom/index.ts'
 

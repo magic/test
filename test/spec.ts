@@ -664,6 +664,27 @@ const spec = {
       matches: 'fn',
     },
   ],
+
+  // @magic/test error codes
+  ERRORS: [
+    'obj',
+    {
+      E_EMPTY_SUITE: 'str',
+      E_RUN_SUITE_UNKNOWN: 'str',
+      E_TEST_NO_FN: 'str',
+      E_TEST_EXPECT: 'str',
+      E_TEST_BEFORE: 'str',
+      E_TEST_BEFORE_EACH: 'str',
+      E_TEST_AFTER: 'str',
+      E_TEST_AFTER_EACH: 'str',
+      E_TEST_FN: 'str',
+      E_NO_TESTS: 'str',
+      E_IMPORT: 'str',
+      E_MAGIC_TEST: 'str',
+    },
+  ],
+  createError: 'fn',
+  suiteNeedsIsolation: 'fn',
 }
 
 export default lib.version(lib, spec)

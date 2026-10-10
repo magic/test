@@ -4,7 +4,19 @@ export { default as fs } from '@magic/fs'
 export { default as error } from '@magic/error'
 export { has } from './lib/has.js'
 export { run } from './run.ts'
-export { curry, env, http, mock, promise, vals, version, tryCatch } from './lib/index.ts'
+export {
+  ERRORS,
+  createError,
+  curry,
+  env,
+  http,
+  mock,
+  promise,
+  suiteNeedsIsolation,
+  vals,
+  version,
+  tryCatch,
+} from './lib/index.ts'
 export { initDOM, getDocument, getWindow } from './lib/dom/index.ts'
 export * from './types.ts'
 export declare const log: import('@magic/log').Log
