@@ -14,9 +14,12 @@ export const isNodeDev = () => process.env.NODE_ENV === 'development'
 export const isProd = () => process.argv.includes('-p')
 
 /**
- * Check if the '-l' argument is present in process.argv
+ * Check if verbose output is enabled.
+ * Set by `t -l/--verbose` via env (the child unit process doesn't inherit argv),
+ * with a direct-argv fallback for `node unit.js --verbose`.
  */
-export const isVerbose = () => process.argv.includes('--verbose')
+export const isVerbose = () =>
+  process.env.MAGIC_TEST_VERBOSE === '1' || process.argv.includes('--verbose')
 
 /**
  * Get the error length limit from environment variable

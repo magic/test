@@ -11,7 +11,9 @@ export declare const isNodeDev: () => boolean
  */
 export declare const isProd: () => boolean
 /**
- * Check if the '-l' argument is present in process.argv
+ * Check if verbose output is enabled.
+ * Set by `t -l/--verbose` via env (the child unit process doesn't inherit argv),
+ * with a direct-argv fallback for `node unit.js --verbose`.
  */
 export declare const isVerbose: () => boolean
 /**
