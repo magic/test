@@ -64,7 +64,7 @@ incredibly fast.
   - [DOM Environment](#lib-dom)
   - [svelte (experimental!)](#lib-svelte)
 - [svelte kit mocks](#lib-sveltekit-mocks)
-  - [createStaticPage](#lib-sveltekit-static)
+  - [compileSvelte and ensureSvelte](#lib-sveltekit-static)
 - [Cli / Js Api Usage](#usage)
   - [js api](#usage-js)
   - [cli](#usage-cli)
@@ -166,6 +166,26 @@ Ran 90307 tests in 274.5ms. Passed 90307/90307 100%
 Ran 90307 tests in 265.5ms. Passed 90307/90307 100%
 Ran 90307 tests in 268.1ms. Passed 90307/90307 100%
 ```
+
+#### self-test workflow (for contributors)
+
+this package tests **itself against its built output**: the `#src/*` import
+alias (see `"imports"` in package.json) resolves to `./dist/*`, and the test
+files in `test/` import the framework through that alias. so the workflow is:
+
+```bash
+npm run build              # tsc + format — REQUIRED after any src/ change
+node dist/bin/t.js -p      # run the self test suite (quiet, failures only)
+npm run test:native        # run the same test files on node:test (dist/bin/node-test-runner.js)
+```
+
+notes:
+
+- skipping `npm run build` means tests run against **stale** dist output.
+- test files are type-checked with `tsc -p tsconfig.test.json`; that config
+  also resolves `#src/*` against `dist/`, so build before type-checking too.
+- `dist/` is tracked in git on purpose — a rebuilt `dist/` is part of the
+  committed changeset.
 
 ### benchmarks are a lie.
 
@@ -678,8 +698,20 @@ Environment detection utilities for conditional test behavior.
 - `isNodeProd` - checks if NODE_ENV is set to production
 - `isNodeDev` - checks if NODE_ENV is set to development
 - `isProd` - checks if -p flag is passed to the CLI
-- `isVerbose` - checks if -l flag is passed to the CLI
+- `isVerbose` - checks if MAGIC_TEST_VERBOSE=1 is set or -l flag is passed
 - `getErrorLength` - returns error length limit from MAGIC_TEST_ERROR_LENGTH env var (0 = unlimited)
+
+##### <a name="lib-env-constants"></a>Environment Constants
+
+environment variables read by @magic/test:
+
+| Variable                              | Description                                                    |
+| ------------------------------------- | -------------------------------------------------------------- |
+| `MAGIC_TEST_WORKERS`                  | max parallel workers (same as `--workers`)                     |
+| `MAGIC_TEST_VERBOSE`                  | set to `1` for verbose output (same as `-l`)                   |
+| `MAGIC_TEST_ERROR_LENGTH`             | error string limit, `0` = unlimited (same as `--error-length`) |
+| `MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED` | set to `false`/`0` to accept self-signed certificates          |
+| `NODE_ENV`                            | set to `production` by the `-p` flag; defaults to `test`       |
 
 ```javascript
 import { env, isProd, isTest, isDev } from '@magic/test'
@@ -785,7 +817,7 @@ export default [
 - Protocol detection (HTTP vs HTTPS)
 - JSON parsing for responses with `Content-Type: application/json`
 - Raw string returns for non-JSON responses
-- `rejectUnauthorized: false` for self-signed certificates
+- `rejectUnauthorized` defaults to `true`; pass `rejectUnauthorized: false` (or set `MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED=false`) to accept self-signed certificates
 
 **HttpOptions:**
 
@@ -1129,10 +1161,15 @@ initDOM()
 
 @magic/test has built-in support for testing Svelte 5 components. Compiles Svelte, mounts them in a DOM, and gives you utilities to interact and assert.
 
-internally uses js-dom to create the dom and html elements.
+Svelte is an **optional** dependency: all component utilities live under the
+`@magic/test/svelte` subpath, so importing plain `@magic/test` never touches
+svelte. Install it with `npm i -D svelte` when you need component tests.
+
+internally uses happy-dom to create the dom and html elements.
 
 ```javascript
-import { mount, tryCatch } from '@magic/test'
+import { mount } from '@magic/test/svelte'
+import { tryCatch } from '@magic/test'
 
 const component = './path/to/MyComponent.svelte'
 
@@ -1167,7 +1204,7 @@ When testing Svelte 5 components, @magic/test automatically exports `$state` and
 
 ```javascript
 // Test - works automatically!
-import { mount } from '@magic/test'
+import { mount } from '@magic/test/svelte'
 
 export default [
   {
@@ -1212,7 +1249,7 @@ This works automatically for all `$state` and `$derived` runes in your component
 **Example: Accessing Component State**
 
 ```javascript
-import { mount, html } from '@magic/test'
+import { mount, html } from '@magic/test/svelte'
 import { tick } from 'svelte'
 
 const component = './src/lib/svelte/components/Counter.svelte'
@@ -1244,7 +1281,8 @@ export default [
 **Example: Testing Error Handling**
 
 ```javascript
-import { mount, tryCatch } from '@magic/test'
+import { mount } from '@magic/test/svelte'
+import { tryCatch } from '@magic/test'
 
 const component = './src/lib/svelte/components/MyComponent.svelte'
 
@@ -1267,40 +1305,43 @@ export default [
 Mocks SvelteKit's `$app` modules:
 
 ```javascript
-import { browser, dev, prod, createStaticPage } from '@magic/test'
+import { browser, dev, prod, createStaticPage } from '@magic/test/svelte'
 
 export default [
   {
-    fn: () => browser, // true if in browser environment
-    expect: false,
-    info: 'not in browser by default',
+    fn: () => browser,
+    expect: true,
+    info: 'always true (mocks a browser environment)',
   },
   {
-    fn: () => dev, // true if in dev mode
-    expect: process.env.NODE_ENV === 'development',
-    info: 'dev reflects NODE_ENV',
+    fn: () => dev,
+    expect: process.env.NODE_ENV !== 'production',
+    info: 'true unless NODE_ENV=production',
   },
   {
-    fn: () => prod, // true if in production mode
-    expect: false,
-    info: 'not in prod by default',
+    fn: () => prod,
+    expect: process.env.NODE_ENV === 'production',
+    info: 'true only when NODE_ENV=production',
   },
   {
-    fn: createStaticPage,
-    expect: t => typeof t.html === 'string' && typeof t.render === 'function',
-    info: 'createStaticPage returns html string and render function',
+    fn: () => {
+      const page = createStaticPage({ url: 'http://example.com', params: { id: '1' } })
+      return page.url.hostname === 'example.com' && page.params.id === '1'
+    },
+    expect: true,
+    info: 'createStaticPage returns a page object with url/params/state',
   },
 ]
 ```
 
-###### <a name="lib-sveltekit-static"></a>createStaticPage
+###### <a name="lib-sveltekit-static"></a>compileSvelte and ensureSvelte
 
 **compileSvelte:**
 
 Compile Svelte component source to a module for testing:
 
 ```javascript
-import { compileSvelte } from '@magic/test'
+import { compileSvelte } from '@magic/test/svelte'
 
 export default [
   {
@@ -1320,7 +1361,7 @@ export default [
 Lazy-loads the Svelte package. Throws if Svelte is not installed:
 
 ```javascript
-import { ensureSvelte } from '@magic/test'
+import { ensureSvelte } from '@magic/test/svelte'
 
 export default [
   {
@@ -1412,8 +1453,8 @@ const tests = {
   ],
 }
 
-// run returns a promise
-await run(tests)
+// run returns a promise that resolves to a result object
+const { failed } = await run(tests)
 ```
 
 #### <a name="usage-cli"></a>cli
@@ -1461,16 +1502,18 @@ and keeps your bash free of clutter
 
 **CLI Flags:**
 
-| Flag         | Aliases                  | Description                                                   |
-| ------------ | ------------------------ | ------------------------------------------------------------- |
-| `-p`         | `--production`, `--prod` | Run tests without coverage (faster)                           |
-| `-l`         | `--verbose`, `--loud`    | Show detailed output including passing tests                  |
-| `-i`         | `--include`              | Files to include in coverage                                  |
-| `-e`         | `--exclude`              | Files to exclude from coverage                                |
-| `--shards`   |                          | Total number of shards (use with `--shard-id`)                |
-| `--shard-id` |                          | Shard ID (0-indexed, use with `--shards`)                     |
-| `--workers`  | `-w`                     | Max parallel workers (default: auto, env: MAGIC_TEST_WORKERS) |
-| `--help`     |                          | Show help text                                                |
+| Flag             | Aliases                  | Description                                                   |
+| ---------------- | ------------------------ | ------------------------------------------------------------- |
+| `-p`             | `--production`, `--prod` | Run tests without coverage (faster)                           |
+| `-l`             | `--verbose`, `--loud`    | Show detailed output including passing tests                  |
+| `-i`             | `--include`              | Files to include in coverage                                  |
+| `-e`             | `--exclude`              | Files to exclude from coverage                                |
+| `--shards`       | `--shard-count`          | Total number of shards (use with `--shard-id`)                |
+| `--shard-id`     |                          | Shard ID (0-indexed, use with `--shards`)                     |
+| `--error-length` |                          | Max length for error strings (default 70, 0 = no limit)       |
+| `--timeout`      | `-t`, `--to`             | Test timeout in ms (default: 30000)                           |
+| `--workers`      | `-w`                     | Max parallel workers (default: auto, env: MAGIC_TEST_WORKERS) |
+| `--help`         |                          | Show help text                                                |
 
 **Note:** `--shards` and `--shard-id` must be used together. `--shard-id` is 0-indexed (0 to N-1).
 
@@ -1770,6 +1813,8 @@ export default {
 | `ERRORS.E_TEST_EXPECT`       | Test expectation failed                      |
 | `ERRORS.E_TEST_BEFORE`       | Before hook failed                           |
 | `ERRORS.E_TEST_AFTER`        | After hook failed                            |
+| `ERRORS.E_TEST_BEFORE_EACH`  | BeforeEach hook failed (suite)               |
+| `ERRORS.E_TEST_AFTER_EACH`   | AfterEach hook failed (suite)                |
 | `ERRORS.E_TEST_FN`           | Test function threw an error                 |
 | `ERRORS.E_NO_TESTS`          | No test suites found                         |
 | `ERRORS.E_IMPORT`            | Failed to import a test file                 |
