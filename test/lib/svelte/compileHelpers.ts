@@ -5,7 +5,7 @@ import { computeRelativePath } from '#lib/svelte/compile/computeRelativePath.js'
 import { transformForNode } from '#lib/svelte/compile/transformForNode.js'
 import { parallelMap, MAX_CONCURRENT } from '#lib/svelte/compile/parallelMap.js'
 import { acquireLock } from '#lib/svelte/compile/acquireLock.js'
-import { CACHE_DIR, CWD } from '#src/constants.js'
+import { CACHE_DIR, getCwd } from '#src/constants.js'
 import type { TestCase } from '#src/types.js'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
@@ -26,7 +26,7 @@ const tests: TestCase[] = [
   // --- getTempFilePath ---
   {
     fn: () => {
-      const src = path.join(CWD, 'src', 'Button.svelte')
+      const src = path.join(getCwd(), 'src', 'Button.svelte')
       const tmp = getTempFilePath(src)
       return tmp.startsWith(CACHE_DIR) && tmp.endsWith('Button.svelte.js')
     },
@@ -35,7 +35,7 @@ const tests: TestCase[] = [
   },
   {
     fn: () => {
-      const src = path.join(CWD, 'test', 'nested', 'Card.svelte')
+      const src = path.join(getCwd(), 'test', 'nested', 'Card.svelte')
       const tmp = getTempFilePath(src)
       return path.basename(tmp) === 'Card.svelte.js'
     },
@@ -45,18 +45,23 @@ const tests: TestCase[] = [
 
   // --- computeRelativePath ---
   {
-    fn: () => computeRelativePath(path.join(CWD, 'src', 'a'), path.join(CWD, 'src', 'b', 'c.js')),
+    fn: () =>
+      computeRelativePath(path.join(getCwd(), 'src', 'a'), path.join(getCwd(), 'src', 'b', 'c.js')),
     expect: '../b/c.js',
     info: 'computeRelativePath from sibling dir goes up one',
   },
   {
-    fn: () => computeRelativePath(path.join(CWD, 'src'), path.join(CWD, 'src', 'deep', 'x.js')),
+    fn: () =>
+      computeRelativePath(path.join(getCwd(), 'src'), path.join(getCwd(), 'src', 'deep', 'x.js')),
     expect: './deep/x.js',
     info: 'computeRelativePath relative subdir',
   },
   {
     fn: () => {
-      const result = computeRelativePath(path.join(CWD, 'a', 'b'), path.join(CWD, 'a', 'c', 'd.js'))
+      const result = computeRelativePath(
+        path.join(getCwd(), 'a', 'b'),
+        path.join(getCwd(), 'a', 'c', 'd.js'),
+      )
       return result === '../c/d.js' || result === './c/d.js'
     },
     expect: true,

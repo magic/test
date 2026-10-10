@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { CWD } from '#src/constants.js'
+import { getCwd } from '#src/constants.js'
 import { transformForNode } from './transformForNode.js'
 import { processImports } from './processImports.js'
 import { compileSvelte } from './compileSvelte.js'
@@ -10,9 +10,9 @@ export const compileSvelteWithWrite = async filePath => {
   const id = traceStart(`compileSvelteWithWrite ${path.basename(filePath)}`)
   try {
     const { js, css, map } = await compileSvelte(filePath)
-    const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
+    const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(getCwd(), filePath)
     const tmpFile = getTempFilePath(resolvedPath)
-    const tmpFileAbs = path.resolve(CWD, tmpFile)
+    const tmpFileAbs = path.resolve(getCwd(), tmpFile)
     // Transform imports (resolves $app/*, $lib/*, etc.)
     const processId = traceStart('processImports')
     const code = await processImports(js, filePath)

@@ -2,14 +2,14 @@ import path from 'node:path'
 import fs from 'node:fs'
 import os from 'node:os'
 import { importFileInWorker } from '#src/run/lib/importFileInWorker.js'
-import { CWD } from '#src/constants.js'
+import { getCwd } from '#src/constants.js'
 import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [
   // imports a module with a default export -> returns default
   {
     fn: async () => {
-      const file = path.join(CWD, 'test', 'beforeAll.ts')
+      const file = path.join(getCwd(), 'test', 'beforeAll.ts')
       const mod = await importFileInWorker(file)
       // beforeAll.ts exports a default function
       return typeof mod === 'function' || mod !== undefined

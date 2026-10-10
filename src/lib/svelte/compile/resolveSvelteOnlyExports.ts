@@ -15,23 +15,27 @@ import { transformForNode } from './transformForNode.ts'
 import { resolvePackageExport, type PackageExportResolve } from './resolvePackageExport.ts'
 import { LRUCache } from '#src/lib/caches/LRUCache.js'
 import { cache as compileCache } from '#src/lib/caches/cache.js'
-import { CWD, CACHE_DIR } from '#src/constants.js'
+import { getCwd, CACHE_DIR } from '#src/constants.js'
 import { hasSvelteRunes } from './astParse.ts'
-import { parseFile, extractExports, extractImports, extractImportsSync } from './astParse.ts'
+import { parseFile, extractExports, extractImports } from './astParse.ts'
 import { getTempFilePath } from './getTempFilePath.ts'
-import { writeQueue } from './writeQueue.ts'
 import { existsCached } from '#src/lib/caches/pathCache.js'
-import type { ExportInfo } from './types.ts'
-import { isSkipPattern } from './pathUtils.ts'
+import { isSkipPattern, resolveFilePath, SHIM_EXTENSION_CANDIDATES } from './pathUtils.ts'
+import {
+  extractNamedExportsRecursive,
+  findSvelteFileForExport,
+  extractNamedImportsFromCode,
+} from './exportAnalysis.ts'
+import { computeTempPath, writeTempFile } from './tempFiles.ts'
 import { ddl, ddlInitWatchdog, ddlHold, ddlRelease } from './ddl.ts'
+
+// Re-exported for import compatibility (tsLoader, readRecursive, tests)
+export { writeTempFile } from './tempFiles.ts'
 
 ddlInitWatchdog()
 
-const pendingWrites = new Map<string, Promise<string>>()
-
 // Resolve $app/* imports to shim files
 const shimCache = new Map<string, string | null>()
-
 const resolveAppImport = async (importPath: string): Promise<string | null> => {
   const cached = shimCache.get(importPath)
   if (cached !== undefined) {
@@ -41,17 +45,9 @@ const resolveAppImport = async (importPath: string): Promise<string | null> => {
   const shimBase = path.join(__dirname, '..', 'shims', '$app')
   const shimPath = path.join(shimBase, importPath.slice(5))
 
-  const extensions = ['.ts', '.js', '/index.ts', '/index.js']
-  for (const ext of extensions) {
-    const candidate = shimPath + ext
-    if (await existsCached(candidate)) {
-      shimCache.set(importPath, candidate)
-      return candidate
-    }
-  }
-
-  shimCache.set(importPath, null)
-  return null
+  const found = await resolveFilePath(shimPath, SHIM_EXTENSION_CANDIDATES)
+  shimCache.set(importPath, found)
+  return found
 }
 
 // Helper to resolve relative imports to file URLs
@@ -86,15 +82,6 @@ const resolveRelativeToUrl = async (
   return undefined
 }
 
-const computeTempPath = (filePath: string): string => {
-  if (filePath.includes('node_modules')) {
-    const relFromNodeModules = filePath.split('node_modules/').pop() || ''
-    return path.join(CWD, CACHE_DIR, 'node_modules_processed', relFromNodeModules)
-  }
-  const relPath = path.relative(CWD, filePath)
-  return path.join(CWD, CACHE_DIR, relPath + '.mjs')
-}
-
 // Process a `.js` file reachable via re-exports. When it was already processed in this
 // traversal (shared `visited` set, e.g. the same file re-exported both via
 // `export * from './x.js'` and `export * as X from './x.js'`), reuse the already-written
@@ -121,34 +108,6 @@ const processJsReexport = async (
   return pathToFileURL(tempFile).href
 }
 
-export const writeTempFile = async (filePath: string, code: string): Promise<string> => {
-  const tempFile = computeTempPath(filePath)
-
-  // Check for existing pending write first
-  const existing = pendingWrites.get(tempFile)
-  if (existing) {
-    await existing
-    return tempFile
-  }
-
-  // Create promise synchronously before any await to prevent race condition
-  const promise = (async () => {
-    try {
-      await writeQueue.write(tempFile, code)
-      // Flush immediately to guarantee file exists before returning.
-      // Without this, batched writes may not be flushed until batch is full or timeout.
-      await writeQueue.flushPath(tempFile)
-    } finally {
-      pendingWrites.delete(tempFile)
-    }
-    return tempFile
-  })()
-
-  // Set in map immediately (before await) to catch concurrent callers
-  pendingWrites.set(tempFile, promise)
-  return promise
-}
-
 const tmpFileCache = new LRUCache<string>(100)
 
 const compiling = new Map<string, Promise<string>>()
@@ -162,7 +121,7 @@ const compileStack = new AsyncLocalStorage<{ active: Set<string> }>()
 
 const reentryOutputPath = (p: string): string => {
   if (p.endsWith('.svelte')) {
-    return path.join(CWD, getTempFilePath(p))
+    return path.join(getCwd(), getTempFilePath(p))
   }
   return computeTempPath(p)
 }
@@ -172,7 +131,7 @@ export const compileSvelteOnlyExport = async (
   sourceDir: string,
   exportNames?: string[],
 ): Promise<string> => {
-  const normalized = path.resolve(CWD, sveltePath)
+  const normalized = path.resolve(getCwd(), sveltePath)
   const store = compileStack.getStore()
   ddl(
     'compileOnly CALL ' +
@@ -284,11 +243,11 @@ const handleJsWithSvelteReexports = async (
   if (jsFilePath.includes('node_modules_processed')) {
     // Handle paths like .magic-test-cache/node_modules_processed/package/path
     // by stripping the cache prefix and reconstructing the original node_modules path
-    const cachePrefix = path.join(CWD, CACHE_DIR, 'node_modules_processed')
+    const cachePrefix = path.join(getCwd(), CACHE_DIR, 'node_modules_processed')
     const relFromProcessed = jsFilePath
       .replace(cachePrefix + path.sep, '')
       .replace('node_modules_processed/', '')
-    jsDir = path.dirname(path.join(CWD, 'node_modules', relFromProcessed))
+    jsDir = path.dirname(path.join(getCwd(), 'node_modules', relFromProcessed))
   }
 
   const exportsByOriginalText = new Map<string, typeof exports>()
@@ -582,114 +541,6 @@ const handleJsWithSvelteReexports = async (
   return result
 }
 
-interface ExportVisitor {
-  onSvelteExport: (name: string, resolvedPath: string) => boolean // return false to stop
-  onSvelteDefault: (defaultName: string, resolvedPath: string) => boolean
-  onJsExport: (exp: ExportInfo) => boolean
-}
-
-const traverseExports = async (
-  filePath: string,
-  visitor: ExportVisitor,
-  visited: Set<string> = new Set(),
-): Promise<void> => {
-  if (visited.has(filePath)) {
-    return
-  }
-  visited.add(filePath)
-
-  const content = await fs.readFile(filePath, 'utf-8')
-  const fileInfo = await parseFile(content, filePath)
-  const exports = extractExports(fileInfo)
-  const fileDir = path.dirname(filePath)
-
-  for (const exp of exports) {
-    if (exp.isBatch && exp.source?.endsWith('.svelte')) {
-      const resolved = path.resolve(fileDir, exp.source)
-      if (!visitor.onSvelteDefault(path.basename(resolved, '.svelte'), resolved)) {
-        return
-      }
-    } else if (exp.source?.endsWith('.svelte')) {
-      const resolved = path.resolve(fileDir, exp.source)
-      if (!visitor.onSvelteExport(exp.alias || exp.name, resolved)) {
-        return
-      }
-    } else if (exp.source) {
-      const resolved = path.resolve(fileDir, exp.source)
-      if (!visitor.onJsExport(exp)) {
-        return
-      }
-      await traverseExports(resolved, visitor, visited)
-    } else if (!exp.source) {
-      if (!visitor.onJsExport(exp)) {
-        return
-      }
-    }
-  }
-}
-
-const extractNamedExportsRecursive = async (filePath: string): Promise<ExportInfo[]> => {
-  const result: ExportInfo[] = []
-  await traverseExports(filePath, {
-    onSvelteExport: name => {
-      result.push({ name, source: null, isType: false, isDefault: false, isBatch: false })
-      return true
-    },
-    onSvelteDefault: defaultName => {
-      result.push({
-        name: defaultName,
-        source: null,
-        isType: false,
-        isDefault: false,
-        isBatch: false,
-      })
-      return true
-    },
-    onJsExport: exp => {
-      if (exp.name && !exp.name.startsWith('type')) {
-        result.push(exp)
-      }
-      return true
-    },
-  })
-  return result
-}
-
-const findSvelteFileForExport = async (
-  filePath: string,
-  exportName: string,
-): Promise<string | null> => {
-  let found: string | null = null
-  await traverseExports(filePath, {
-    onSvelteExport: (name, resolvedPath) => {
-      if (name === exportName) {
-        found = resolvedPath
-        return false
-      }
-      return true
-    },
-    onSvelteDefault: (defaultName, resolvedPath) => {
-      if (defaultName === exportName) {
-        found = resolvedPath
-        return false
-      }
-      return true
-    },
-    onJsExport: () => true,
-  })
-  return found
-}
-
-const isSkipPatternLocal = (spec: string): boolean => {
-  return isSkipPattern(spec)
-}
-
-const extractNamedImportsFromCode = (code: string, spec: string): string[] => {
-  const imports = extractImportsSync(code)
-  const imp = imports.find(i => i.source === spec)
-  return imp?.localNames ?? []
-}
-
 interface ImportReplacement {
   spec: string
   resolved: PackageExportResolve
@@ -724,13 +575,13 @@ export const resolveSvelteOnlyExports = async (
   const specsToResolve = new Set<string>()
 
   for (const imp of imports) {
-    if (imp.source && !isSkipPatternLocal(imp.source)) {
+    if (imp.source && !isSkipPattern(imp.source)) {
       specsToResolve.add(imp.source)
     }
   }
 
   for (const exp of exports) {
-    if (exp.source && !isSkipPatternLocal(exp.source)) {
+    if (exp.source && !isSkipPattern(exp.source)) {
       specsToResolve.add(exp.source)
     }
   }

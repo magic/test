@@ -5,7 +5,7 @@ import {
   EXTENSION_CANDIDATES,
   FALLBACK_CANDIDATES,
 } from '#lib/svelte/compile/pathUtils.js'
-import { CWD } from '#src/constants.js'
+import { getCwd } from '#src/constants.js'
 import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [
@@ -33,8 +33,8 @@ const tests: TestCase[] = [
   // resolveFilePath
   {
     fn: async () => {
-      // an existing .js file relative to CWD
-      const base = path.join(CWD, 'test', 'beforeAll')
+      // an existing .js file relative to getCwd()
+      const base = path.join(getCwd(), 'test', 'beforeAll')
       // beforeAll.ts exists
       return (await resolveFilePath(base)) === base + '.ts'
     },
@@ -43,7 +43,7 @@ const tests: TestCase[] = [
   },
   {
     fn: async () => {
-      const base = path.join(CWD, 'test', 'nonexistent-file-xyz')
+      const base = path.join(getCwd(), 'test', 'nonexistent-file-xyz')
       return (await resolveFilePath(base)) === null
     },
     expect: true,
@@ -52,7 +52,7 @@ const tests: TestCase[] = [
   {
     fn: async () => {
       // package.json exists
-      const base = path.join(CWD, 'package.json')
+      const base = path.join(getCwd(), 'package.json')
       return (await resolveFilePath(base)) === base
     },
     expect: true,
@@ -61,7 +61,7 @@ const tests: TestCase[] = [
   {
     fn: async () => {
       // restrict to only .mjs extension -> found for beforeAll.mjs
-      const base = path.join(CWD, 'test', 'beforeAll')
+      const base = path.join(getCwd(), 'test', 'beforeAll')
       return (await resolveFilePath(base, ['.mjs'])) === base + '.mjs'
     },
     expect: true,
@@ -70,7 +70,7 @@ const tests: TestCase[] = [
   {
     fn: async () => {
       // restrict to only .svx extension -> nothing found
-      const base = path.join(CWD, 'test', 'beforeAll')
+      const base = path.join(getCwd(), 'test', 'beforeAll')
       return (await resolveFilePath(base, ['.svx'])) === null
     },
     expect: true,
@@ -80,7 +80,15 @@ const tests: TestCase[] = [
     fn: async () => {
       // .js base with .svelte sibling: #lib/svelte/testFixtures/components/Button.svelte
       // base ends in .js: .../Button.js -> strip to Button + .svelte
-      const base = path.join(CWD, 'src', 'lib', 'svelte', 'testFixtures', 'components', 'Button.js')
+      const base = path.join(
+        getCwd(),
+        'src',
+        'lib',
+        'svelte',
+        'testFixtures',
+        'components',
+        'Button.js',
+      )
       return (await resolveFilePath(base)) === base.slice(0, -3) + '.svelte'
     },
     expect: true,

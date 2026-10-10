@@ -1,4 +1,4 @@
-import { CacheManager } from '#lib/caches/cache.js'
+import { CacheManager, pendingPromises } from '#lib/caches/cache.js'
 import type { TestCase } from '#src/types.js'
 
 // TestCache for generic type
@@ -10,13 +10,11 @@ interface TestCache {
 // Helper to access private methods for testing
 function getPrivate<T>(cm: CacheManager<T>): {
   memoryCache: Map<string, unknown>
-  pendingCompiles: Map<string, unknown>
   isSvelteResult: (result: unknown) => boolean
 } {
   // Use type assertion to access private members for testing
   const privateCm = cm as unknown as {
     memoryCache: Map<string, unknown>
-    pendingCompiles: Map<string, unknown>
     isSvelteResult: (result: unknown) => boolean
   }
   return privateCm
@@ -126,15 +124,16 @@ export default [
     expect: true,
     info: 'memoryCache is initially empty',
   },
-  // pendingCompiles starts empty
+  // reset clears pending cmgr: entries from the shared pendingPromises map
   {
     fn: () => {
       const cm = new CacheManager<TestCache>()
-      const priv = getPrivate(cm)
-      return priv.pendingCompiles.size === 0
+      pendingPromises.set('cmgr:/tmp/nonexistent-test-file', Promise.resolve(undefined))
+      cm.reset()
+      return !pendingPromises.has('cmgr:/tmp/nonexistent-test-file')
     },
     expect: true,
-    info: 'pendingCompiles is initially empty',
+    info: 'reset clears cmgr: entries from shared pendingPromises',
   },
   // hit rate calculation
   {

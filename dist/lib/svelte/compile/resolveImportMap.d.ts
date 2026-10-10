@@ -5,7 +5,7 @@
  * compiling files from nested/workspace packages must use the nearest
  * package.json to find their "imports" mappings.
  *
- * Falls back to the CWD package.json if no package.json is found up the tree
+ * Falls back to the getCwd() package.json if no package.json is found up the tree
  * (or the input is not an absolute path).
  */
 export declare const findNearestPackageJson: (fromPath: string) => Promise<string>

@@ -1,7 +1,7 @@
 import path from 'node:path'
 import fs from '@magic/fs'
 import { existsCached } from '#src/lib/caches/pathCache.js'
-import { CWD } from '#src/constants.js'
+import { getCwd } from '#src/constants.js'
 /**
  * Find the nearest package.json by walking up from the directory containing
  * `fromPath`. Node resolves "#-prefixed" import-map specifiers against the
@@ -9,11 +9,11 @@ import { CWD } from '#src/constants.js'
  * compiling files from nested/workspace packages must use the nearest
  * package.json to find their "imports" mappings.
  *
- * Falls back to the CWD package.json if no package.json is found up the tree
+ * Falls back to the getCwd() package.json if no package.json is found up the tree
  * (or the input is not an absolute path).
  */
 export const findNearestPackageJson = async fromPath => {
-  const fallback = path.resolve(CWD, 'package.json')
+  const fallback = path.resolve(getCwd(), 'package.json')
   if (!path.isAbsolute(fromPath)) {
     return fallback
   }

@@ -2,12 +2,12 @@ import path from 'node:path'
 
 import fs from '@magic/fs'
 
-import { ddlHold, ddlRelease, ddlInitWatchdog } from '../svelte/compile/ddl.ts'
+import { ddlInitWatchdog } from '../svelte/compile/ddl.ts'
 
 ddlInitWatchdog()
 import { LRUCache } from './LRUCache.ts'
 
-import { CWD } from '#src/constants.js'
+import { getCwd } from '#src/constants.js'
 import type {
   CompileCacheEntry,
   ImportCacheEntry,
@@ -38,28 +38,8 @@ export const packageExportCache = new LRUCache<PackageExportResolveEntry>(200)
 export const barrelCache = new LRUCache<BarrelCacheEntry>(100)
 
 // Unified promise deduplication map
-// Keys prefixed: 'barrel:', 'svelte:', 'exports:', 'pkg:', 'resolve:'
+// Keys prefixed: 'barrel:', 'svelte:', 'exports:', 'pkg:', 'resolve:', 'cmgr:'
 export const pendingPromises = new Map<string, Promise<unknown>>()
-
-/**
- * Deduplicate concurrent promises by key.
- * If a promise for this key is already running, returns it.
- * Otherwise runs fn, caches the promise, and returns the result.
- */
-export const dedup = async <T>(key: string, fn: () => Promise<T>): Promise<T> => {
-  const pending = pendingPromises.get(key) as Promise<T> | undefined
-  if (pending) {
-    return pending
-  }
-
-  const promise = fn()
-  pendingPromises.set(key, promise)
-  try {
-    return await promise
-  } finally {
-    pendingPromises.delete(key)
-  }
-}
 
 /**
  * Generic cache entry type
@@ -71,10 +51,9 @@ interface CacheEntry<T> {
 
 /**
  * Centralized cache manager for Svelte compilation
- * Handles: promise dedup, memory cache, disk cache
+ * Handles: promise dedup (shared pendingPromises map), memory cache, disk cache
  */
 export class CacheManager<T> {
-  private pendingCompiles = new Map<string, Promise<T>>()
   private memoryCache = new Map<string, CacheEntry<T>>()
 
   // Cache stats
@@ -86,20 +65,15 @@ export class CacheManager<T> {
    * Returns result with cache status attached
    */
   async getOrCompile(filePath: string, compileFn: () => Promise<T>): Promise<CachedResult<T>> {
-    const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
+    const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(getCwd(), filePath)
+    const key = `cmgr:${absPath}`
 
-    // Check promise dedup first
-    const pending = this.pendingCompiles.get(absPath)
+    // Check shared promise dedup first
+    const pending = pendingPromises.get(key) as Promise<T> | undefined
     if (pending) {
       this.hits++
-      const key = `cmgr:${absPath}`
-      ddlHold(key, path.basename(absPath))
-      try {
-        const result = await pending
-        return { ...result, cacheStatus: { cached: true, source: 'promise' } }
-      } finally {
-        ddlRelease(key, path.basename(absPath))
-      }
+      const result = await pending
+      return { ...result, cacheStatus: { cached: true, source: 'promise' } }
     }
 
     // Check memory cache
@@ -148,11 +122,11 @@ export class CacheManager<T> {
 
         return result
       } finally {
-        this.pendingCompiles.delete(absPath)
+        pendingPromises.delete(key)
       }
     })()
 
-    this.pendingCompiles.set(absPath, compilePromise)
+    pendingPromises.set(key, compilePromise)
     const result = await compilePromise
     return { ...result, cacheStatus: { cached: false, source: null } }
   }
@@ -205,7 +179,11 @@ export class CacheManager<T> {
    * Reset all caches
    */
   reset(): void {
-    this.pendingCompiles.clear()
+    for (const key of Array.from(pendingPromises.keys())) {
+      if (key.startsWith('cmgr:')) {
+        pendingPromises.delete(key)
+      }
+    }
     this.memoryCache.clear()
     this.hits = 0
     this.misses = 0

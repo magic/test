@@ -4,10 +4,10 @@ import { resolvePackageExport } from '#lib/svelte/compile/resolvePackageExport.j
 // "#src/lib/caches/cache.js", and "#lib/caches/cache.js" would resolve to a
 // separate module instance (src/lib/caches/cache.ts) that is never written to.
 import { packageExportCache } from '#src/lib/caches/cache.js'
-import { CWD } from '#src/constants.js'
+import { getCwd } from '#src/constants.js'
 import type { TestCase } from '#src/types.js'
 
-const SRC = CWD
+const SRC = getCwd()
 
 const tests: TestCase[] = [
   // skip patterns -> null, not svelte-only

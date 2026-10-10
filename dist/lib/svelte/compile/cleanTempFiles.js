@@ -1,6 +1,6 @@
 import path from 'node:path'
 import fs from '@magic/fs'
-import { CACHE_DIR, CWD } from '#src/constants.js'
+import { CACHE_DIR, getCwd } from '#src/constants.js'
 export let cleanupDone = false
 export const cleanTempFiles = async () => {
   if (cleanupDone) {
@@ -8,7 +8,7 @@ export const cleanTempFiles = async () => {
   }
   cleanupDone = true
   try {
-    const tmpDir = path.join(CWD, CACHE_DIR)
+    const tmpDir = path.join(getCwd(), CACHE_DIR)
     const exists = await fs.exists(tmpDir)
     if (!exists) {
       return

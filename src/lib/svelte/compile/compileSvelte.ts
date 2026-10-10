@@ -12,7 +12,7 @@ import { getSvelteCompiler } from '../compiler-cache.ts'
 import { cache, pendingPromises } from '#src/lib/caches/cache.js'
 import { ddl, ddlHold, ddlRelease } from './ddl.ts'
 import { processImports } from './processImports.ts'
-import { CWD } from '#src/constants.js'
+import { getCwd } from '#src/constants.js'
 import type { CssObject } from './types.ts'
 
 export interface CompileSvelteReturn {
@@ -49,7 +49,7 @@ export const compileSvelte = async (
   const compilePromise = (async () => {
     const { compile, preprocess } = await getSvelteCompiler()
 
-    const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
+    const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(getCwd(), filePath)
 
     const source = await fs.readFile(absPath, 'utf-8')
 

@@ -2,7 +2,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import fs from '@magic/fs'
 
-import { CWD } from '#src/constants.js'
+import { getCwd } from '#src/constants.js'
 
 export const writeCompiledFile = async (
   tempPath: string,
@@ -11,7 +11,7 @@ export const writeCompiledFile = async (
   sourceMapRef = false,
   sourcePath?: string,
 ): Promise<{ tmpFile: string; importUrl: string }> => {
-  const tmpFileAbs = path.resolve(CWD, tempPath)
+  const tmpFileAbs = path.resolve(getCwd(), tempPath)
 
   await fs.mkdirp(path.dirname(tmpFileAbs), { recursive: true })
 
@@ -26,11 +26,11 @@ export const writeCompiledFile = async (
     // Do NOT replace with tempPath — that breaks coverage mapping back to source.
     // The Svelte compiler emits only the source basename in `sources` (e.g.
     // "Toggle.svelte") regardless of the `filename` option, so resolve it against
-    // the actual source file's directory — resolving against CWD would produce a
-    // bogus path like "<CWD>/Toggle.svelte" for nested components.
+    // the actual source file's directory — resolving against getCwd() would produce a
+    // bogus path like "<getCwd()>/Toggle.svelte" for nested components.
     if (mapObj.sources && mapObj.sources.length > 0) {
       if (!path.isAbsolute(mapObj.sources[0])) {
-        const baseDir = sourcePath ? path.dirname(sourcePath) : CWD
+        const baseDir = sourcePath ? path.dirname(sourcePath) : getCwd()
         mapObj.sources = [path.resolve(baseDir, mapObj.sources[0])]
       }
       mapObj.sourceRoot = ''

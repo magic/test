@@ -43,9 +43,9 @@ export default [
   {
     fn: async () => {
       const result = await compileSvelteWithImports(fixtureBase)
-      return result.js
+      return result.js.length > 0
     },
-    expect: is.len.smaller(0),
+    expect: true,
     info: 'compileSvelteWithImports js is a non-empty string',
   },
 ]

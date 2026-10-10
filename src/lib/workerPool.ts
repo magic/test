@@ -19,9 +19,21 @@ const getEffectiveLimit = (override?: number): number => {
 export const WORKER_LIMIT = getEffectiveLimit()
 export const getEffectiveWorkerLimit = getEffectiveLimit
 
+let sharedPool: ReturnType<typeof createWorkerPool> | null = null
+
+/**
+ * Get a worker pool.
+ *
+ * Pools requested without an explicit limit share one process-wide pool, so
+ * concurrently-running suites cannot multiply the worker count
+ * (N suites × limit). Explicit limits get a dedicated pool.
+ */
 export const getWorkerPool = (limit?: number) => {
-  const effectiveLimit = getEffectiveLimit(limit)
-  return createWorkerPool(effectiveLimit)
+  if (limit === undefined) {
+    sharedPool ??= createWorkerPool(getEffectiveLimit())
+    return sharedPool
+  }
+  return createWorkerPool(getEffectiveLimit(limit))
 }
 
 const createWorkerPool = (limit: number) => {

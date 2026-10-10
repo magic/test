@@ -8,6 +8,8 @@ export const EXTENSION_CANDIDATES = [
   '/index.svelte',
   '/index.ts',
 ]
+/** Extension candidates for $app/* shim files. */
+export const SHIM_EXTENSION_CANDIDATES = ['.ts', '.js', '/index.ts', '/index.js']
 export const FALLBACK_CANDIDATES = ['index.js', 'src/index.js', './dist/index.js']
 export const isSkipPattern = spec => {
   if (!spec) {

@@ -4,7 +4,7 @@ import fs from '@magic/fs'
 
 import { barrelCache, pendingPromises } from '#src/lib/caches/cache.js'
 import { traceStart, traceEnd } from '#src/lib/trace/timing.js'
-import { CACHE_DIR, CWD } from '#src/constants.js'
+import { CACHE_DIR, getCwd } from '#src/constants.js'
 import { getSvelteExports } from './getSvelteExports.ts'
 import { processImports } from './processImports.ts'
 import { compileSvelte } from './compileSvelte.ts'
@@ -116,7 +116,7 @@ const compileBarrelImpl = async (
       traceEnd(compileId)
 
       const tmpFile = getTempFilePath(sveltePath)
-      const tmpFileAbs = path.join(CWD, tmpFile)
+      const tmpFileAbs = path.join(getCwd(), tmpFile)
 
       return {
         name,
@@ -128,9 +128,9 @@ const compileBarrelImpl = async (
     MAX_CONCURRENT,
   )
 
-  const barrelRelPath = path.relative(CWD, filePath)
+  const barrelRelPath = path.relative(getCwd(), filePath)
   const wrapperFile = path.join(CACHE_DIR, barrelRelPath.replace(/\.(ts|js)$/, '.barrel.js'))
-  const wrapperAbsPath = path.join(CWD, wrapperFile)
+  const wrapperAbsPath = path.join(getCwd(), wrapperFile)
   const wrapperTmpDir = path.dirname(wrapperAbsPath)
 
   const writeId = traceStart('fs.writeFile')

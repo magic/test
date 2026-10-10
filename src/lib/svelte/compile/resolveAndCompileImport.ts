@@ -6,7 +6,7 @@ import fs from '@magic/fs'
 import { resolveAlias } from '../viteConfig/index.ts'
 
 import { importCache, pendingPromises } from '#src/lib/caches/cache.js'
-import { CWD } from '#src/constants.js'
+import { getCwd } from '#src/constants.js'
 import { acquireLock } from './acquireLock.ts'
 import { isSvelteFile } from './isSvelteFile.ts'
 import { getSvelteExports } from './getSvelteExports.ts'
@@ -27,13 +27,8 @@ import { ddl } from './ddl.ts'
 import { traceStart, traceEnd } from '#src/lib/trace/timing.js'
 import { writeQueue } from './writeQueue.ts'
 import { existsCached } from '#src/lib/caches/pathCache.js'
-import { extractImportsSync } from './astParse.ts'
-import { resolveFilePath } from './pathUtils.ts'
-const extractNamedImportsFromCode = (code: string, spec: string): string[] => {
-  const imports = extractImportsSync(code)
-  const imp = imports.find(i => i.source === spec)
-  return imp?.localNames ?? []
-}
+import { resolveFilePath, SHIM_EXTENSION_CANDIDATES } from './pathUtils.ts'
+import { extractNamedImportsFromCode } from './exportAnalysis.ts'
 export const resolveAndCompileImport = async (
   importPath: string,
   sourceDir: string,
@@ -110,17 +105,14 @@ const resolveAndCompileImportImplCore = async (
       '$app',
     )
     const shimPath = path.join(shimsDir, importPath.slice(5))
-    const withExtensions = ['.ts', '.js', '/index.ts', '/index.js']
-    for (const ext of withExtensions) {
-      const candidate = shimPath + ext
-      if (await existsCached(candidate)) {
-        return { filePath: importPath, js: '', url: candidate }
-      }
+    const candidate = await resolveFilePath(shimPath, SHIM_EXTENSION_CANDIDATES)
+    if (candidate) {
+      return { filePath: importPath, js: '', url: candidate }
     }
   }
 
   if (importPath === 'svelte') {
-    const svelteClient = path.resolve(CWD, 'node_modules/svelte/src/index-client.js')
+    const svelteClient = path.resolve(getCwd(), 'node_modules/svelte/src/index-client.js')
     if (await existsCached(svelteClient)) {
       const sourceTmpFile = getTempFilePath(sourceFilePath)
       const fromDir = path.dirname(sourceTmpFile)
@@ -361,7 +353,7 @@ const resolveAndCompileImportImplCore = async (
   }
 
   const tmpFile = getTempFilePath(resolvedPath)
-  const tmpFileAbs = path.join(CWD, tmpFile)
+  const tmpFileAbs = path.join(getCwd(), tmpFile)
 
   ddl('COMPILE-FILE start ' + path.basename(resolvedPath))
 

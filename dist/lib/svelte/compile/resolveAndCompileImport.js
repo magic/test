@@ -2,7 +2,7 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { resolveAlias } from '../viteConfig/index.js'
 import { importCache, pendingPromises } from '#src/lib/caches/cache.js'
-import { CWD } from '#src/constants.js'
+import { getCwd } from '#src/constants.js'
 import { acquireLock } from './acquireLock.js'
 import { isSvelteFile } from './isSvelteFile.js'
 import { getSvelteExports } from './getSvelteExports.js'
@@ -21,13 +21,8 @@ import { ddl } from './ddl.js'
 import { traceStart, traceEnd } from '#src/lib/trace/timing.js'
 import { writeQueue } from './writeQueue.js'
 import { existsCached } from '#src/lib/caches/pathCache.js'
-import { extractImportsSync } from './astParse.js'
-import { resolveFilePath } from './pathUtils.js'
-const extractNamedImportsFromCode = (code, spec) => {
-  const imports = extractImportsSync(code)
-  const imp = imports.find(i => i.source === spec)
-  return imp?.localNames ?? []
-}
+import { resolveFilePath, SHIM_EXTENSION_CANDIDATES } from './pathUtils.js'
+import { extractNamedImportsFromCode } from './exportAnalysis.js'
 export const resolveAndCompileImport = async (
   importPath,
   sourceDir,
@@ -99,16 +94,13 @@ const resolveAndCompileImportImplCore = async (
       '$app',
     )
     const shimPath = path.join(shimsDir, importPath.slice(5))
-    const withExtensions = ['.ts', '.js', '/index.ts', '/index.js']
-    for (const ext of withExtensions) {
-      const candidate = shimPath + ext
-      if (await existsCached(candidate)) {
-        return { filePath: importPath, js: '', url: candidate }
-      }
+    const candidate = await resolveFilePath(shimPath, SHIM_EXTENSION_CANDIDATES)
+    if (candidate) {
+      return { filePath: importPath, js: '', url: candidate }
     }
   }
   if (importPath === 'svelte') {
-    const svelteClient = path.resolve(CWD, 'node_modules/svelte/src/index-client.js')
+    const svelteClient = path.resolve(getCwd(), 'node_modules/svelte/src/index-client.js')
     if (await existsCached(svelteClient)) {
       const sourceTmpFile = getTempFilePath(sourceFilePath)
       const fromDir = path.dirname(sourceTmpFile)
@@ -333,7 +325,7 @@ const resolveAndCompileImportImplCore = async (
     return { filePath: resolvedPath, js: '', url: absoluteUrl }
   }
   const tmpFile = getTempFilePath(resolvedPath)
-  const tmpFileAbs = path.join(CWD, tmpFile)
+  const tmpFileAbs = path.join(getCwd(), tmpFile)
   ddl('COMPILE-FILE start ' + path.basename(resolvedPath))
   const compileId = traceStart('compile.svelte-file')
   const cached = importCache.get(resolvedPath)

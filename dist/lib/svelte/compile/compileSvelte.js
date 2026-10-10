@@ -9,7 +9,7 @@ import { getSvelteCompiler } from '../compiler-cache.js'
 import { cache, pendingPromises } from '#src/lib/caches/cache.js'
 import { ddl, ddlHold, ddlRelease } from './ddl.js'
 import { processImports } from './processImports.js'
-import { CWD } from '#src/constants.js'
+import { getCwd } from '#src/constants.js'
 /**
  * Pure compilation function - caching handled by CacheManager in tsLoader
  * Uses pendingPromises for deduplication
@@ -28,7 +28,7 @@ export const compileSvelte = async (filePath, options = {}) => {
   }
   const compilePromise = (async () => {
     const { compile, preprocess } = await getSvelteCompiler()
-    const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(CWD, filePath)
+    const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(getCwd(), filePath)
     const source = await fs.readFile(absPath, 'utf-8')
     const preprocessors = [
       resolveNodeModulesRelativeImportsPreprocessor(),
