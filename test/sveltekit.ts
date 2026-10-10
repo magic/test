@@ -18,8 +18,8 @@ export default [
   },
   // $app/state defaults
   {
-   component: '#lib/svelte/testFixtures/components/StateTest.svelte',
-    fn: async ({target }) => {
+    component: '#lib/svelte/testFixtures/components/StateTest.svelte',
+    fn: async ({ target }) => {
       return html(target)
     },
     expect: has.includes('class="state"'),
@@ -53,7 +53,7 @@ export default [
   },
   // callbacks fire
   {
-    component:    '#lib/svelte/testFixtures/components/NavTest.svelte',
+    component: '#lib/svelte/testFixtures/components/NavTest.svelte',
     props: { triggerGoto: true },
     fn: async ({ target }) => {
       // Navigation callbacks are async, wait for them to fully complete
@@ -260,7 +260,7 @@ export default [
   {
     component: '#lib/svelte/testFixtures/components/NavTest2.svelte',
     props: { triggerPreload: true },
-    fn: async ({target}) => {
+    fn: async ({ target }) => {
       await flushSyncSvelte()
       await tick()
       const result = html(target)
