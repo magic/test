@@ -26,8 +26,8 @@ import { compileSvelteWithWrite } from './compile/index.js'
 import {
   findNearestPackageJson,
   resolveImportMapSpecifier,
-} from '#src/lib/svelte/compile/resolveImportMap.js'
-import { initDOM, getDocument, getWindow } from '#src/lib/dom/index.js'
+} from '../../lib/svelte/compile/resolveImportMap.js'
+import { initDOM, getDocument, getWindow } from '../../lib/dom/index.js'
 import { createContext, runWithContext } from './shims/$app/state.js'
 import { detectSvelteKitImports, needsSvelteKitContext } from './detect-sveltekit-imports.js'
 let svelteMount

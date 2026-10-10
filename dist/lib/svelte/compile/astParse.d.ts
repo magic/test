@@ -1,5 +1,5 @@
 import type { TSESTree } from '@typescript-eslint/types'
-import type { ExportInfo } from './types.ts'
+import type { ExportInfo } from './types.js'
 export type FileInfo = {
   code: string
   ast: TSESTree.Program

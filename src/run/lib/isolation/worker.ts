@@ -8,7 +8,7 @@
 
 import { Worker } from 'node:worker_threads'
 
-import type { Snapshot, TestResult } from '../../../types.ts'
+import type { Snapshot, TestResult } from '../../../types.js'
 
 /**
  * Create a worker promise with shared error/signal handling.

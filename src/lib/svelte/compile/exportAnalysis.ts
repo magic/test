@@ -11,8 +11,8 @@ import path from 'node:path'
 
 import fs from '@magic/fs'
 
-import { parseFile, extractExports, extractImportsSync } from './astParse.ts'
-import type { ExportInfo } from './types.ts'
+import { parseFile, extractExports, extractImportsSync } from './astParse.js'
+import type { ExportInfo } from './types.js'
 
 export interface ExportVisitor {
   onSvelteExport: (name: string, resolvedPath: string) => boolean // return false to stop

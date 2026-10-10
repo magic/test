@@ -1,4 +1,4 @@
-import { extractImportsSync } from './compile/astParse.ts'
+import { extractImportsSync } from './compile/astParse.js'
 
 /**
  * Detect if a compiled Svelte component uses $app/* imports.

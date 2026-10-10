@@ -9,9 +9,9 @@
 import is from '@magic/types'
 import log from '@magic/log'
 
-import { skipProps } from './skipProps.ts'
+import { skipProps } from './skipProps.js'
 
-import type { Snapshot, PropertyDescriptorRecord } from '../../../types.ts'
+import type { Snapshot, PropertyDescriptorRecord } from '../../../types.js'
 
 /**
  * Map stringified symbol keys back to the Symbol itself.

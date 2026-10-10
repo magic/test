@@ -7,30 +7,30 @@ import fs from '@magic/fs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-import { getSvelteCompiler } from '../compiler-cache.ts'
-import { cacheManager } from '#src/lib/caches/cache.js'
-import { processImports } from './processImports.ts'
-import { compileSvelteWithWrite } from './compileSvelteWithWrite.ts'
-import { transformForNode } from './transformForNode.ts'
-import { resolvePackageExport, type PackageExportResolve } from './resolvePackageExport.ts'
-import { LRUCache } from '#src/lib/caches/LRUCache.js'
-import { cache as compileCache } from '#src/lib/caches/cache.js'
-import { getCwd, CACHE_DIR } from '#src/constants.js'
-import { hasSvelteRunes } from './astParse.ts'
-import { parseFile, extractExports, extractImports } from './astParse.ts'
-import { getTempFilePath } from './getTempFilePath.ts'
-import { existsCached } from '#src/lib/caches/pathCache.js'
-import { isSkipPattern, resolveFilePath, SHIM_EXTENSION_CANDIDATES } from './pathUtils.ts'
+import { getSvelteCompiler } from '../compiler-cache.js'
+import { cacheManager } from '../../caches/cache.js'
+import { processImports } from './processImports.js'
+import { compileSvelteWithWrite } from './compileSvelteWithWrite.js'
+import { transformForNode } from './transformForNode.js'
+import { resolvePackageExport, type PackageExportResolve } from './resolvePackageExport.js'
+import { LRUCache } from '../../caches/LRUCache.js'
+import { cache as compileCache } from '../../caches/cache.js'
+import { getCwd, CACHE_DIR } from '../../../constants.js'
+import { hasSvelteRunes } from './astParse.js'
+import { parseFile, extractExports, extractImports } from './astParse.js'
+import { getTempFilePath } from './getTempFilePath.js'
+import { existsCached } from '../../caches/pathCache.js'
+import { isSkipPattern, resolveFilePath, SHIM_EXTENSION_CANDIDATES } from './pathUtils.js'
 import {
   extractNamedExportsRecursive,
   findSvelteFileForExport,
   extractNamedImportsFromCode,
-} from './exportAnalysis.ts'
-import { computeTempPath, writeTempFile } from './tempFiles.ts'
-import { ddl, ddlInitWatchdog, ddlHold, ddlRelease } from './ddl.ts'
+} from './exportAnalysis.js'
+import { computeTempPath, writeTempFile } from './tempFiles.js'
+import { ddl, ddlInitWatchdog, ddlHold, ddlRelease } from './ddl.js'
 
 // Re-exported for import compatibility (tsLoader, readRecursive, tests)
-export { writeTempFile } from './tempFiles.ts'
+export { writeTempFile } from './tempFiles.js'
 
 ddlInitWatchdog()
 

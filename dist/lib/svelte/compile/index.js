@@ -13,5 +13,5 @@ export {
   resetTraces,
   getTraceData,
   getTraceSummary,
-} from '#src/lib/trace/timing.js'
+} from '../../trace/timing.js'
 //# sourceMappingURL=index.js.map

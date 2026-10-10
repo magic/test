@@ -1,12 +1,12 @@
-import { LRUCache } from './LRUCache.ts'
+import { LRUCache } from './LRUCache.js'
 import type {
   CompileCacheEntry,
   ImportCacheEntry,
   BarrelCacheEntry,
   CssObject,
-} from '#src/types.js'
+} from '../../types.js'
 export { LRUCache }
-export { clearCache } from './persistentCache.ts'
+export { clearCache } from './persistentCache.js'
 export interface PackageExportResolveEntry {
   resolvedPath: string | null
   isSvelteOnly: boolean

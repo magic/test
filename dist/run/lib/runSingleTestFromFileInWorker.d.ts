@@ -1,4 +1,4 @@
-import type { TestResult } from '#src/types.js'
+import type { TestResult } from '../../types.js'
 export declare const runSingleTestFromFileInWorker: (
   tests: unknown,
   testIndex: number,

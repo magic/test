@@ -1,4 +1,4 @@
-import type { WrappedTest } from '#src/types.js'
+import type { WrappedTest } from '../../types.js'
 type RunTestCoreOptions = {
   /** Unique test key (for timeout + logging). */
   key: string

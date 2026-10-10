@@ -1,6 +1,5 @@
 import { parentPort, workerData } from 'node:worker_threads'
 import is from '@magic/types'
-import { toCleanError } from '../lib/index.js'
 import { restoreFromSnapshot } from './isolation.js'
 import { createFailResult } from './lib/index.js'
 import { runSingleTestFromFileInWorker, importFileInWorker, makeSafeClone } from './lib/index.js'

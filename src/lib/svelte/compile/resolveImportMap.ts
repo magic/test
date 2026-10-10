@@ -1,7 +1,7 @@
 import path from 'node:path'
 import fs from '@magic/fs'
-import { existsCached } from '#src/lib/caches/pathCache.js'
-import { getCwd } from '#src/constants.js'
+import { existsCached } from '../../caches/pathCache.js'
+import { getCwd } from '../../../constants.js'
 
 /**
  * Find the nearest package.json by walking up from the directory containing

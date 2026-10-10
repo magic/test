@@ -1,10 +1,10 @@
 import path from 'node:path'
 import fs from '@magic/fs'
 
-import { parseFile, extractExports } from './astParse.ts'
-import { resolveImportMapSpecifier, findNearestPackageJson } from './resolveImportMap.ts'
-import { barrelCache, pendingPromises } from '#src/lib/caches/cache.js'
-import { traceStart, traceEnd } from '#src/lib/trace/timing.js'
+import { parseFile, extractExports } from './astParse.js'
+import { resolveImportMapSpecifier, findNearestPackageJson } from './resolveImportMap.js'
+import { barrelCache, pendingPromises } from '../../caches/cache.js'
+import { traceStart, traceEnd } from '../../trace/timing.js'
 
 export const getSvelteExports = async (
   filePath: string,

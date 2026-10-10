@@ -2,4 +2,4 @@ export {
   testImportsMutableModuleState,
   testUsesFixedPorts,
   testUsesSharedFiles,
-} from './analysis/index.ts'
+} from './analysis/index.js'

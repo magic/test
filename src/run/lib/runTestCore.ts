@@ -1,11 +1,11 @@
 import is from '@magic/types'
 
-import { toCleanError, ERRORS } from '#src/lib/index.js'
-import type { WrappedTest, EvaluateResult } from '#src/types.js'
+import { toCleanError, ERRORS } from '../../lib/index.js'
+import type { WrappedTest, EvaluateResult } from '../../types.js'
 
-import { evaluateTestResult } from './evaluateTestResult.ts'
-import { getTestTimeout } from './getTestTimeout.ts'
-import { withTimeout } from './withTimeout.ts'
+import { evaluateTestResult } from './evaluateTestResult.js'
+import { getTestTimeout } from './getTestTimeout.js'
+import { withTimeout } from './withTimeout.js'
 
 type RunTestCoreOptions = {
   /** Unique test key (for timeout + logging). */

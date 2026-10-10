@@ -2,16 +2,16 @@ import path from 'node:path'
 
 import fs from '@magic/fs'
 
-import { barrelCache, pendingPromises } from '#src/lib/caches/cache.js'
-import { traceStart, traceEnd } from '#src/lib/trace/timing.js'
-import { CACHE_DIR, getCwd } from '#src/constants.js'
-import { getSvelteExports } from './getSvelteExports.ts'
-import { processImports } from './processImports.ts'
-import { compileSvelte } from './compileSvelte.ts'
-import { computeRelativePath } from './computeRelativePath.ts'
-import { getTempFilePath } from './getTempFilePath.ts'
-import { parallelMap, MAX_CONCURRENT } from './parallelMap.ts'
-import { ddl, ddlHold, ddlRelease } from './ddl.ts'
+import { barrelCache, pendingPromises } from '../../caches/cache.js'
+import { traceStart, traceEnd } from '../../trace/timing.js'
+import { CACHE_DIR, getCwd } from '../../../constants.js'
+import { getSvelteExports } from './getSvelteExports.js'
+import { processImports } from './processImports.js'
+import { compileSvelte } from './compileSvelte.js'
+import { computeRelativePath } from './computeRelativePath.js'
+import { getTempFilePath } from './getTempFilePath.js'
+import { parallelMap, MAX_CONCURRENT } from './parallelMap.js'
+import { ddl, ddlHold, ddlRelease } from './ddl.js'
 
 export const compileBarrel = async (
   filePath: string,

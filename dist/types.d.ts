@@ -1,2 +1,2 @@
-export * from './types/test.ts'
-export * from './types/svelte.ts'
+export * from './types/test.js'
+export * from './types/svelte.js'

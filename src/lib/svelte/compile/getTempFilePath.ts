@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { CACHE_DIR, getCwd } from '#src/constants.js'
+import { CACHE_DIR, getCwd } from '../../../constants.js'
 
 export const getTempFilePath = (sourceFilePath: string): string => {
   const rel = path.relative(getCwd(), sourceFilePath)

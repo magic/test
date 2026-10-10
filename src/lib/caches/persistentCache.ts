@@ -2,9 +2,9 @@ import fs from '@magic/fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 
-import { LRUCache } from './LRUCache.ts'
+import { LRUCache } from './LRUCache.js'
 
-import { CACHE_DIR } from '#src/constants.js'
+import { CACHE_DIR } from '../../constants.js'
 
 const MANIFEST_FILE = path.join(CACHE_DIR, 'manifest.json')
 

@@ -1,4 +1,4 @@
-import type { ExportInfo } from './types.ts'
+import type { ExportInfo } from './types.js'
 export interface ExportVisitor {
   onSvelteExport: (name: string, resolvedPath: string) => boolean
   onSvelteDefault: (defaultName: string, resolvedPath: string) => boolean

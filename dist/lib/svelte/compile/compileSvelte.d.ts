@@ -1,4 +1,4 @@
-import type { CssObject } from './types.ts'
+import type { CssObject } from '../../../types.js'
 export interface CompileSvelteReturn {
   js: string
   css: CssObject | null

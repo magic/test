@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { getTestKey } from '#src/lib/index.js'
+import { getTestKey } from '../../lib/index.js'
 import { hasTestProperties } from './hasTestProperties.js'
 import { createFailResult } from './createFailResult.js'
 import { runSingleTestInWorker } from './runSingleTestInWorker.js'

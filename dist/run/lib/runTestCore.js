@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { toCleanError, ERRORS } from '#src/lib/index.js'
+import { toCleanError, ERRORS } from '../../lib/index.js'
 import { evaluateTestResult } from './evaluateTestResult.js'
 import { getTestTimeout } from './getTestTimeout.js'
 import { withTimeout } from './withTimeout.js'

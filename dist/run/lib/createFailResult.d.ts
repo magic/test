@@ -1,4 +1,4 @@
-import type { WrappedTest, TestResult } from '#src/types.js'
+import type { WrappedTest, TestResult } from '../../types.js'
 /**
  * Create a failure result. Optionally attach a cleaned error.
  */

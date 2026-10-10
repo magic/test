@@ -2,11 +2,11 @@ import { parentPort, workerData } from 'node:worker_threads'
 
 import is from '@magic/types'
 
-import { restoreFromSnapshot } from './isolation.ts'
-import { createFailResult } from './lib/index.ts'
-import type { TestResult } from '../types.ts'
+import { restoreFromSnapshot } from './isolation.js'
+import { createFailResult } from './lib/index.js'
+import type { TestResult } from '../types.js'
 
-import { runSingleTestFromFileInWorker, importFileInWorker, makeSafeClone } from './lib/index.ts'
+import { runSingleTestFromFileInWorker, importFileInWorker, makeSafeClone } from './lib/index.js'
 
 import '#src/bin/lib/registerLoader.js'
 

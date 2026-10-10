@@ -1,10 +1,12 @@
-import { getSvelteCompiler } from '../compiler-cache.ts'
-import { LRUCache } from '#src/lib/caches/LRUCache.js'
-import type { TSESTree } from '@typescript-eslint/types'
 import crypto from 'node:crypto'
-import type { ExportInfo } from './types.ts'
-import is from '@magic/types'
 import { createRequire } from 'node:module'
+
+import type { TSESTree } from '@typescript-eslint/types'
+import is from '@magic/types'
+
+import { getSvelteCompiler } from '../compiler-cache.js'
+import { LRUCache } from '../../caches/LRUCache.js'
+import type { ExportInfo } from './types.js'
 
 const MAX_AST_CACHE_SIZE = 500
 

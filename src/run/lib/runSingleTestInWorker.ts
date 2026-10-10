@@ -1,10 +1,10 @@
 import is from '@magic/types'
 
-import { cleanFunctionString } from '#src/lib/index.js'
-import type { WrappedTest, TestResult } from '#src/types.js'
+import { cleanFunctionString } from '../../lib/index.js'
+import type { WrappedTest, TestResult } from '../../types.js'
 
-import { createFailResult } from './createFailResult.ts'
-import { runTestFnInWorker } from './runTestFnInWorker.ts'
+import { createFailResult } from './createFailResult.js'
+import { runTestFnInWorker } from './runTestFnInWorker.js'
 
 export const runSingleTestInWorker = async (
   test: WrappedTest,

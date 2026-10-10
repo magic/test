@@ -1,4 +1,4 @@
-import type { WrappedTest, ComponentProps } from '#src/types.js'
+import type { WrappedTest, ComponentProps } from '../../types.js'
 /**
  * Prepare test by setting defaults and extracting component props
  */

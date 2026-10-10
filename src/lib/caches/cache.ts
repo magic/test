@@ -2,26 +2,26 @@ import path from 'node:path'
 
 import fs from '@magic/fs'
 
-import { ddlInitWatchdog } from '../svelte/compile/ddl.ts'
+import { ddlInitWatchdog } from '../svelte/compile/ddl.js'
 
 ddlInitWatchdog()
-import { LRUCache } from './LRUCache.ts'
+import { LRUCache } from './LRUCache.js'
 
-import { getCwd } from '#src/constants.js'
+import { getCwd } from '../../constants.js'
 import type {
   CompileCacheEntry,
   ImportCacheEntry,
   BarrelCacheEntry,
   CssObject,
-} from '#src/types.js'
-import { getCachedCompile, recordCompile } from './persistentCache.ts'
+} from '../../types.js'
+import { getCachedCompile, recordCompile } from './persistentCache.js'
 import is from '@magic/types'
 
 // Export LRUCache for external use
 export { LRUCache }
 
 // Re-export persistent cache functions
-export { clearCache } from './persistentCache.ts'
+export { clearCache } from './persistentCache.js'
 
 // Shared cache entry type for package exports
 export interface PackageExportResolveEntry {

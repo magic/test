@@ -1,4 +1,4 @@
-import type { WrappedTest, TestObject } from '#src/types.js'
+import type { WrappedTest, TestObject } from '../../types.js'
 
 export const testNeedsIsolation = (test: WrappedTest, suite?: TestObject): boolean => {
   if (test.before || test.after) {

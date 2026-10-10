@@ -1,12 +1,12 @@
 import is from '@magic/types'
 import log from '@magic/log'
 
-import { stats, createStore, ERRORS, Store } from './lib/index.ts'
-import { BEFORE_ALL_KEYS, AFTER_ALL_KEYS } from './lib/hookFiles.ts'
-import { runSuite } from './run/suite.ts'
-import type { TestSuites, TestCollection, CleanupFunction, TestResult } from './types.ts'
-import { printTraceSummary, isTraceEnabled } from './lib/trace/timing.ts'
-import { clearCache as clearPersistentCache } from './lib/caches/persistentCache.ts'
+import { stats, createStore, ERRORS, Store } from './lib/index.js'
+import { BEFORE_ALL_KEYS, AFTER_ALL_KEYS } from './lib/hookFiles.js'
+import { runSuite } from './run/suite.js'
+import type { TestSuites, TestCollection, CleanupFunction, TestResult } from './types.js'
+import { printTraceSummary, isTraceEnabled } from './lib/trace/timing.js'
+import { clearCache as clearPersistentCache } from './lib/caches/persistentCache.js'
 
 /**
  * Aggregate raw test results into the store's results object.

@@ -1,11 +1,11 @@
 // Re-export from main types
-export type {
-  CssObject,
-  ResolveAndCompileResult,
-  CompileCacheEntry,
-  ImportCacheEntry,
-  BarrelCacheEntry,
-} from '#src/types.js'
+// export type {
+//   CssObject,
+//   ResolveAndCompileResult,
+//   CompileCacheEntry,
+//   ImportCacheEntry,
+//   BarrelCacheEntry,
+// } from '../../../types.js'
 
 // ExportInfo is specific to this module
 export interface ExportInfo {

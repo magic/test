@@ -1,4 +1,4 @@
-import type { WrappedTest } from '#src/types.js'
+import type { WrappedTest } from '../../types.js'
 /**
  * Type guard to check if an object has test properties (fn or tests).
  */

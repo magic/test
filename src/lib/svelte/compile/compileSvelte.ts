@@ -6,14 +6,14 @@ import {
   testExportsPreprocessor,
   viteDefinePreprocessor,
   resolveNodeModulesRelativeImportsPreprocessor,
-} from '../preprocess.ts'
-import { getSvelteCompiler } from '../compiler-cache.ts'
+} from '../preprocess.js'
+import { getSvelteCompiler } from '../compiler-cache.js'
 
-import { cache, pendingPromises } from '#src/lib/caches/cache.js'
-import { ddl, ddlHold, ddlRelease } from './ddl.ts'
-import { processImports } from './processImports.ts'
-import { getCwd } from '#src/constants.js'
-import type { CssObject } from './types.ts'
+import { cache, pendingPromises } from '../../caches/cache.js'
+import { ddl, ddlHold, ddlRelease } from './ddl.js'
+import { processImports } from './processImports.js'
+import { getCwd } from '../../../constants.js'
+import type { CssObject } from '../../../types.js'
 
 export interface CompileSvelteReturn {
   js: string

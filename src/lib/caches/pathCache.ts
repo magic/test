@@ -1,4 +1,4 @@
-import { LRUCache } from './LRUCache.ts'
+import { LRUCache } from './LRUCache.js'
 import fs from '@magic/fs'
 
 // LRU cache for file stats (includes existence check)

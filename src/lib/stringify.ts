@@ -1,6 +1,6 @@
 import is from '@magic/types'
-import { env } from './env.ts'
-import type { InputValue, JsonSafe } from '../types.ts'
+import { env } from './env.js'
+import type { InputValue, JsonSafe } from '../types.js'
 
 /**
  * Recursively stringifies parts of an input value to make it JSON-safe.

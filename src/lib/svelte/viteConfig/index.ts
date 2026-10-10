@@ -1,3 +1,3 @@
-export { resolveAlias } from './resolveAlias.ts'
-export { getViteDefine } from './getViteDefine.ts'
-export { loadViteConfig } from './loadViteConfig.ts'
+export { resolveAlias } from './resolveAlias.js'
+export { getViteDefine } from './getViteDefine.js'
+export { loadViteConfig } from './loadViteConfig.js'

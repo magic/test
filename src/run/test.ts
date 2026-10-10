@@ -1,12 +1,12 @@
 import is from '@magic/types'
 import log from '@magic/log'
 
-import { toCleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/index.ts'
-import { Store } from '../lib/store.ts'
-import { isolation } from './isolation.ts'
-import { runSuite } from './suite.ts'
-import { executeTest, prepareTest, runTestCore, testNeedsIsolation } from './lib/index.ts'
-import type { WrappedTest, TestResult, Suite } from '../types.ts'
+import { toCleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/index.js'
+import { Store } from '../lib/store.js'
+import { isolation } from './isolation.js'
+import { runSuite } from './suite.js'
+import { executeTest, prepareTest, runTestCore, testNeedsIsolation } from './lib/index.js'
+import type { WrappedTest, TestResult, Suite } from '../types.js'
 
 type TestExecutionResult = {
   result: unknown

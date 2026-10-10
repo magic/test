@@ -8,7 +8,7 @@
  * -------------------------------------------------------------------------- */
 import path from 'node:path'
 import { writeQueue } from './writeQueue.js'
-import { getCwd, CACHE_DIR } from '#src/constants.js'
+import { getCwd, CACHE_DIR } from '../../../constants.js'
 const pendingWrites = new Map()
 export const computeTempPath = filePath => {
   if (filePath.includes('node_modules')) {

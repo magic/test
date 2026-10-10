@@ -1,5 +1,5 @@
 import { Worker } from 'node:worker_threads'
-import type { Snapshot, TestResult } from '../../../types.ts'
+import type { Snapshot, TestResult } from '../../../types.js'
 /**
  * Run a single test in a worker thread for true isolation.
  */

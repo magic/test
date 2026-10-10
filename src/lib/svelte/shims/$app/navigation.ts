@@ -10,7 +10,7 @@ import {
   type Navigation,
   type Page,
   type BeforeNavigate,
-} from './state.ts'
+} from './state.js'
 
 interface AfterNavigate {
   from: URL

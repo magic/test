@@ -1,2 +1,2 @@
-import type { TestCollection } from '#src/types.js'
+import type { TestCollection } from '../../types.js'
 export declare const suiteHasBeforeAllOrAfterAll: (tests: TestCollection) => boolean

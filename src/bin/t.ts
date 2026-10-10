@@ -7,8 +7,8 @@ import fs from '@magic/fs'
 import is from '@magic/types'
 import log from '@magic/log'
 
-import { abort } from '../run.ts'
-import { isolation } from '../run/isolation.ts'
+import { abort } from '../run.js'
+import { isolation } from '../run/isolation.js'
 
 const cwd = process.cwd()
 let childProcess: ReturnType<typeof cli.spawn> | null = null

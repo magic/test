@@ -1,8 +1,8 @@
-import { getSvelteCompiler } from '../compiler-cache.js'
-import { LRUCache } from '#src/lib/caches/LRUCache.js'
 import crypto from 'node:crypto'
-import is from '@magic/types'
 import { createRequire } from 'node:module'
+import is from '@magic/types'
+import { getSvelteCompiler } from '../compiler-cache.js'
+import { LRUCache } from '../../caches/LRUCache.js'
 const MAX_AST_CACHE_SIZE = 500
 // Use createRequire for ESM compatibility when parsing inline code
 const _require = createRequire(import.meta.url)

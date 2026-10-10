@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import fs from '@magic/fs'
-import { getCwd } from '#src/constants.js'
+import { getCwd } from '../../../constants.js'
 export const writeCompiledFile = async (tempPath, code, map, sourceMapRef = false, sourcePath) => {
   const tmpFileAbs = path.resolve(getCwd(), tempPath)
   await fs.mkdirp(path.dirname(tmpFileAbs), { recursive: true })

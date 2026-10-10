@@ -3,8 +3,8 @@ import { pathToFileURL, fileURLToPath } from 'node:url'
 
 import fs from '@magic/fs'
 import is from '@magic/types'
-import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.ts'
-import { loadTestDefines } from './loadTestDefines.ts'
+import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js'
+import { loadTestDefines } from './loadTestDefines.js'
 import {
   resolveSvelteOnlyExports,
   writeTempFile,

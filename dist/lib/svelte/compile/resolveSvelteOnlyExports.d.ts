@@ -1,4 +1,4 @@
-export { writeTempFile } from './tempFiles.ts'
+export { writeTempFile } from './tempFiles.js'
 export declare const compileSvelteOnlyExport: (
   sveltePath: string,
   sourceDir: string,

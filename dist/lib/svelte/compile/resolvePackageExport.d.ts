@@ -1,4 +1,4 @@
-import { type PackageExportResolveEntry } from '#src/lib/caches/cache.js'
+import { type PackageExportResolveEntry } from '../../caches/cache.js'
 export type PackageExportResolve = PackageExportResolveEntry
 export declare const resolvePackageExport: (
   pkgSpec: string,

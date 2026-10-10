@@ -11,14 +11,14 @@ import(path.join(__dirname, 'lib/registerLoader.js'))
 import { describe, before, after, it } from 'node:test'
 import fs from '@magic/fs'
 import is from '@magic/types'
-import { maybeInjectMagic } from './lib/index.ts'
-import { evaluateTestResult } from '../run/lib/index.ts'
+import { maybeInjectMagic } from './lib/index.js'
+import { evaluateTestResult } from '../run/lib/index.js'
 import {
   isBeforeAllFile,
   isAfterAllFile,
   beforeAllFileNames,
   afterAllFileNames,
-} from '../lib/hookFiles.ts'
+} from '../lib/hookFiles.js'
 
 import type {
   WrappedTest,
@@ -28,7 +28,7 @@ import type {
   SuiteHookWithArg,
   ComponentProps,
   TestContext,
-} from '../types.ts'
+} from '../types.js'
 
 /**
  * Internal suite type for node-test-runner

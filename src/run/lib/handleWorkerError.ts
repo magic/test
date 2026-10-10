@@ -1,7 +1,9 @@
+import type { WrappedTest, TestResult } from '../../types.js'
+
 import log from '@magic/log'
-import { getTestKey, cleanError, ERRORS } from '#src/lib/index.js'
-import { createFailResult } from './index.ts'
-import type { WrappedTest, TestResult } from '#src/types.js'
+
+import { getTestKey, cleanError, ERRORS } from '../../lib/index.js'
+import { createFailResult } from './index.js'
 
 export const handleWorkerError = (
   testToRun: WrappedTest,

@@ -1,8 +1,8 @@
 import is from '@magic/types'
 import path from 'node:path'
 
-import { getViteDefine } from './viteConfig/index.ts'
-import { getSvelteCompiler } from './compiler-cache.ts'
+import { getViteDefine } from './viteConfig/index.js'
+import { getSvelteCompiler } from './compiler-cache.js'
 
 type ASTNode = { [key: string]: unknown; type: string }
 

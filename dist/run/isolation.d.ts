@@ -1,4 +1,4 @@
-import type { Snapshot, TestResult } from '../types.ts'
+import type { Snapshot, TestResult } from '../types.js'
 export declare class Isolation {
   private snapshots
   private suiteSnapshots

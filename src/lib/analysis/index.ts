@@ -1,12 +1,12 @@
-export { walkTests } from './testWalker.ts'
+export { walkTests } from './testWalker.js'
 export {
   getImportNames,
   mutatesImportedState,
   getPortPatterns,
   getFilePaths,
-} from './codeParser.ts'
+} from './codeParser.js'
 export {
   testImportsMutableModuleState,
   testUsesFixedPorts,
   testUsesSharedFiles,
-} from './isolationChecks.ts'
+} from './isolationChecks.js'

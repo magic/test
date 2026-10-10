@@ -9,8 +9,8 @@
 
 import path from 'node:path'
 
-import { writeQueue } from './writeQueue.ts'
-import { getCwd, CACHE_DIR } from '#src/constants.js'
+import { writeQueue } from './writeQueue.js'
+import { getCwd, CACHE_DIR } from '../../../constants.js'
 
 const pendingWrites = new Map<string, Promise<string>>()
 

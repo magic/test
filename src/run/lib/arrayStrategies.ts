@@ -14,17 +14,17 @@
 
 import is from '@magic/types'
 
-import { runTest } from '../test.ts'
-import { isolation } from '../isolation.ts'
-import { getWorkerPool } from '../../lib/workerPool.ts'
-import { wrapTest } from './wrapTest.ts'
-import { handleWorkerError } from './handleWorkerError.ts'
-import { processWorkerResults } from './processWorkerResults.ts'
-import { testNeedsIsolation } from './testNeedsIsolation.ts'
+import { runTest } from '../test.js'
+import { isolation } from '../isolation.js'
+import { getWorkerPool } from '../../lib/workerPool.js'
+import { wrapTest } from './wrapTest.js'
+import { handleWorkerError } from './handleWorkerError.js'
+import { processWorkerResults } from './processWorkerResults.js'
+import { testNeedsIsolation } from './testNeedsIsolation.js'
 
-import type { Suite, WrappedTest, Snapshot, TestResult, TestObject, Test } from '../../types.ts'
+import type { Suite, WrappedTest, Snapshot, TestResult, TestObject, Test } from '../../types.js'
 
-import type { Store } from '../../lib/store.ts'
+import type { Store } from '../../lib/store.js'
 
 type BaseStrategyArgs = {
   tests: Test[]

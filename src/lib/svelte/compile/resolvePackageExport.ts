@@ -3,15 +3,15 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { createRequire } from 'node:module'
 import log from '@magic/log'
-import { LRUCache } from '#src/lib/caches/LRUCache.js'
-import { traceStart, traceEnd } from '#src/lib/trace/timing.js'
-import { existsCached } from '#src/lib/caches/pathCache.js'
-import { ddlHold, ddlRelease } from './ddl.ts'
+import { LRUCache } from '../../caches/LRUCache.js'
+import { traceStart, traceEnd } from '../../trace/timing.js'
+import { existsCached } from '../../caches/pathCache.js'
+import { ddlHold, ddlRelease } from './ddl.js'
 import {
   pendingPromises,
   packageExportCache,
   type PackageExportResolveEntry,
-} from '#src/lib/caches/cache.js'
+} from '../../caches/cache.js'
 
 // Combined LRU cache for file scanning operations (boolean results)
 // Keys prefixed: 'reexports:' or 'exportstar:'
@@ -27,9 +27,9 @@ import {
   hasSvelteReexports,
   getExportStarTargets,
   getExportNamedTargets,
-} from './astParse.ts'
+} from './astParse.js'
 
-import { isSkipPattern, FALLBACK_CANDIDATES } from './pathUtils.ts'
+import { isSkipPattern, FALLBACK_CANDIDATES } from './pathUtils.js'
 
 // Re-export for backward compatibility
 export type PackageExportResolve = PackageExportResolveEntry

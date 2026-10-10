@@ -1,4 +1,4 @@
-import type { Snapshot } from '../../../types.ts'
+import type { Snapshot } from '../../../types.js'
 export declare const reviveKeyFromString: (keyStr: string) => string | symbol
 /**
  * Improved deepClone: returns primitives, copies common built-ins.

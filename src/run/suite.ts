@@ -5,7 +5,7 @@ import error from '@magic/error'
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { runTest } from './test.ts'
+import { runTest } from './test.js'
 import {
   getFNS,
   ERRORS,
@@ -14,9 +14,9 @@ import {
   testImportsMutableModuleState,
   testUsesFixedPorts,
   testUsesSharedFiles,
-} from '../lib/index.ts'
-import { Store } from '../lib/store.ts'
-import { isolation } from './isolation.ts'
+} from '../lib/index.js'
+import { Store } from '../lib/store.js'
+import { isolation } from './isolation.js'
 import type {
   Suite,
   WrappedTest,
@@ -26,7 +26,7 @@ import type {
   TestObject,
   Test,
   TestCollection,
-} from '../types.ts'
+} from '../types.js'
 
 import {
   handleSuiteHooks,
@@ -34,7 +34,7 @@ import {
   runIsolatedArray,
   runSequentialHooked,
   runParallelArray,
-} from './lib/index.ts'
+} from './lib/index.js'
 
 /**
  * Type guard to check if an Error has a string `code` property.

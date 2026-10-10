@@ -1,10 +1,10 @@
 import is from '@magic/types'
 
-import { toCleanError } from '#src/lib/index.js'
-import { isolation } from '../isolation.ts'
-import type { WrappedTest, CleanupFunction, TestContext } from '#src/types.js'
+import { toCleanError } from '../../lib/index.js'
+import { isolation } from '../isolation.js'
+import type { WrappedTest, CleanupFunction, TestContext } from '../../types.js'
 
-import { runTestCore } from './runTestCore.ts'
+import { runTestCore } from './runTestCore.js'
 
 type RunFnResult = {
   result: unknown

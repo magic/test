@@ -1,5 +1,5 @@
-export { compileSvelte } from './compileSvelte.ts'
-export { compileSvelteWithWrite } from './compileSvelteWithWrite.ts'
+export { compileSvelte } from './compileSvelte.js'
+export { compileSvelteWithWrite } from './compileSvelteWithWrite.js'
 
 // Timing/tracing exports for performance profiling
 export {
@@ -14,4 +14,4 @@ export {
   resetTraces,
   getTraceData,
   getTraceSummary,
-} from '#src/lib/trace/timing.js'
+} from '../../trace/timing.js'

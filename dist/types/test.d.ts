@@ -1,5 +1,5 @@
-import type { Store } from '../lib/store.ts'
-import { BEFORE_ALL_KEYS, AFTER_ALL_KEYS } from '../lib/hookFiles.ts'
+import type { Store } from '../lib/store.js'
+import { BEFORE_ALL_KEYS, AFTER_ALL_KEYS } from '../lib/hookFiles.js'
 type BeforeAllKey = (typeof BEFORE_ALL_KEYS)[number]
 type AfterAllKey = (typeof AFTER_ALL_KEYS)[number]
 export type TestContext = {

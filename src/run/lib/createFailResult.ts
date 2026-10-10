@@ -1,5 +1,5 @@
-import type { WrappedTest, TestResult } from '#src/types.js'
-import { getTestKey, toCleanError } from '#src/lib/index.js'
+import type { WrappedTest, TestResult } from '../../types.js'
+import { getTestKey, toCleanError } from '../../lib/index.js'
 
 /**
  * Create a failure result. Optionally attach a cleaned error.

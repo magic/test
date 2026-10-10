@@ -1,13 +1,13 @@
 import path from 'node:path'
 
-import { getCwd } from '#src/constants.js'
-import type { CssObject } from './types.ts'
-import { transformForNode } from './transformForNode.ts'
-import { processImports } from './processImports.ts'
-import { compileSvelte } from './compileSvelte.ts'
-import { getTempFilePath } from './getTempFilePath.ts'
-import { writeCompiledFile } from './fileWriter.ts'
-import { traceStart, traceEnd } from '#src/lib/trace/timing.js'
+import { getCwd } from '../../../constants.js'
+import type { CssObject } from '../../../types.js'
+import { transformForNode } from './transformForNode.js'
+import { processImports } from './processImports.js'
+import { compileSvelte } from './compileSvelte.js'
+import { getTempFilePath } from './getTempFilePath.js'
+import { writeCompiledFile } from './fileWriter.js'
+import { traceStart, traceEnd } from '../../trace/timing.js'
 
 export const compileSvelteWithWrite = async (
   filePath: string,

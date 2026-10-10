@@ -1,4 +1,4 @@
-import type { WrappedTest, TestResult } from '#src/types.js'
+import type { WrappedTest, TestResult } from '../../types.js'
 export declare const handleWorkerError: (
   testToRun: WrappedTest,
   error: unknown,

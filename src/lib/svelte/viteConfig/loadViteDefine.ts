@@ -1,7 +1,7 @@
-import { findConfigFile } from './findConfigFile.ts'
-import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.ts'
-import { defineCache } from './cache.ts'
-import { loadViteConfig } from './loadViteConfig.ts'
+import { findConfigFile } from './findConfigFile.js'
+import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
+import { defineCache } from './cache.js'
+import { loadViteConfig } from './loadViteConfig.js'
 
 export const loadViteDefine = async (rootDir: string): Promise<Record<string, unknown>> => {
   const cacheKey = rootDir + ':vite-define'

@@ -5,10 +5,10 @@ export {
   type ImageConstructor,
   type CanvasRenderingContext2D,
   type CustomWindow,
-} from './types.ts'
-export { parsePngDimensions, createImagePolyfill } from './image.ts'
-export { createCanvasPolyfill } from './canvas.ts'
-import { initGlobals } from './globals.ts'
+} from './types.js'
+export { parsePngDimensions, createImagePolyfill } from './image.js'
+export { createCanvasPolyfill } from './canvas.js'
+import { initGlobals } from './globals.js'
 export { initGlobals }
 export declare const initDOM: () => {
   window: Window

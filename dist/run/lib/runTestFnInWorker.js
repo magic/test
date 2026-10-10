@@ -1,5 +1,5 @@
 import is from '@magic/types'
-import { toCleanError } from '#src/lib/index.js'
+import { toCleanError } from '../../lib/index.js'
 import { isolation } from '../isolation.js'
 import { runTestCore } from './runTestCore.js'
 /**

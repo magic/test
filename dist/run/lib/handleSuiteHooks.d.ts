@@ -1,4 +1,4 @@
-import type { TestCollection, CleanupResult } from '#src/types.js'
+import type { TestCollection, CleanupResult } from '../../types.js'
 /**
  * Handle suite-level beforeAll and afterAll hooks
  */

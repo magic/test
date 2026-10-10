@@ -1,4 +1,4 @@
-import type { Suite, SuiteInput } from '../types.ts'
+import type { Suite, SuiteInput } from '../types.js'
 /**
  * Run a suite of tests (recursively).
  */

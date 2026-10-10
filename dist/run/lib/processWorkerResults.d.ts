@@ -1,5 +1,5 @@
 import log from '@magic/log'
-import type { TestResult } from '#src/types.js'
+import type { TestResult } from '../../types.js'
 export declare const processWorkerResults: (
   results: TestResult[],
   rawResults: TestResult[],

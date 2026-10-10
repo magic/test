@@ -3,5 +3,5 @@
  * New code may import directly from #src/types/test.js or #src/types/svelte.js.
  * -------------------------------------------------------------------------- */
 
-export * from './types/test.ts'
-export * from './types/svelte.ts'
+export * from './types/test.js'
+export * from './types/svelte.js'

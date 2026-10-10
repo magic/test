@@ -1,6 +1,6 @@
-export { compileSvelte } from './compile/index.ts'
-export { mount, createSnippet, tick } from './mount.ts'
-export { html, text, component, props } from './assert.ts'
+export { compileSvelte } from './compile/index.js'
+export { mount, createSnippet, tick } from './mount.js'
+export { html, text, component, props } from './assert.js'
 export {
   fireEvent,
   click,
@@ -54,6 +54,6 @@ export {
   volumeChange,
   checked,
   trigger,
-} from './events.ts'
-export { testExportsPreprocessor } from './preprocess.ts'
-export { browser, dev, prod, createStaticPage } from './sveltekit-mocks.ts'
+} from './events.js'
+export { testExportsPreprocessor } from './preprocess.js'
+export { browser, dev, prod, createStaticPage } from './sveltekit-mocks.js'

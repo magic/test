@@ -4,12 +4,12 @@ import crypto from 'node:crypto'
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { LRUCache } from '#src/lib/caches/LRUCache.js'
-import { extractImportsSync } from './astParse.ts'
-import { resolveAndCompileImport } from './resolveAndCompileImport.ts'
-import { traceStart, traceEnd } from '#src/lib/trace/timing.js'
-import { parallelMap, MAX_CONCURRENT } from './parallelMap.ts'
-import { ddl } from './ddl.ts'
+import { LRUCache } from '../../caches/LRUCache.js'
+import { traceStart, traceEnd } from '../../trace/timing.js'
+import { extractImportsSync } from './astParse.js'
+import { resolveAndCompileImport } from './resolveAndCompileImport.js'
+import { parallelMap, MAX_CONCURRENT } from './parallelMap.js'
+import { ddl } from './ddl.js'
 
 // Cache for processImports results (key: codeHash:sourceFilePath)
 const processImportsCache = new LRUCache<{ code: string; result: string }>(200)

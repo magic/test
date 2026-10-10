@@ -1,5 +1,5 @@
 import { compileSvelte } from './compileSvelte.js'
-import type { CssObject } from './types.js'
+import type { CssObject } from '../../../types.js'
 
 export const compileSvelteWithImports = async (
   filePath: string,

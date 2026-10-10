@@ -18,13 +18,13 @@ import {
   buildSnapshot as buildGlobalSnapshot,
   restoreProperties as restoreGlobalProperties,
   reviveKeyFromString as reviveKey,
-} from './lib/isolation/snapshot.ts'
+} from './lib/isolation/snapshot.js'
 import {
   executeInWorker as runInWorker,
   executeBatchInWorker as runBatchInWorker,
-} from './lib/isolation/worker.ts'
+} from './lib/isolation/worker.js'
 
-import type { Snapshot, TestResult } from '../types.ts'
+import type { Snapshot, TestResult } from '../types.js'
 
 export class Isolation {
   private snapshots: Map<string, Snapshot>

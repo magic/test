@@ -1,4 +1,4 @@
-import { type Navigation, type BeforeNavigate } from './state.ts'
+import { type Navigation, type BeforeNavigate } from './state.js'
 interface AfterNavigate {
   from: URL
   to: URL

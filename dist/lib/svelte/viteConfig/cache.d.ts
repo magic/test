@@ -1,6 +1,6 @@
-import { LRUCache } from '#src/lib/caches/LRUCache.js'
-import type { AliasEntry, ViteConfig } from '#src/types.js'
-export { type AliasEntry } from '#src/types.js'
+import { LRUCache } from '../../caches/LRUCache.js'
+import type { AliasEntry, ViteConfig } from '../../../types.js'
+export { type AliasEntry } from '../../../types.js'
 export declare const configCache: LRUCache<{
   config: ViteConfig
   mtime: number

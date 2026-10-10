@@ -11,4 +11,4 @@ export async function ensureSvelte() {
   return svelte!
 }
 
-export * from './lib/svelte/index.ts'
+export * from './lib/svelte/index.js'

@@ -5,7 +5,7 @@ import fs from '@magic/fs'
 import is from '@magic/types'
 import log from '@magic/log'
 
-import { toImportPath } from './pathTransform.ts'
+import { toImportPath } from './pathTransform.js'
 
 const cwd = process.cwd()
 

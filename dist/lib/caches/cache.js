@@ -3,7 +3,7 @@ import fs from '@magic/fs'
 import { ddlInitWatchdog } from '../svelte/compile/ddl.js'
 ddlInitWatchdog()
 import { LRUCache } from './LRUCache.js'
-import { getCwd } from '#src/constants.js'
+import { getCwd } from '../../constants.js'
 import { getCachedCompile, recordCompile } from './persistentCache.js'
 import is from '@magic/types'
 // Export LRUCache for external use

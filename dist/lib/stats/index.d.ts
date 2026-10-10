@@ -1,2 +1,2 @@
-export { info } from './info.ts'
-export { reset } from './reset.ts'
+export { info } from './info.js'
+export { reset } from './reset.js'

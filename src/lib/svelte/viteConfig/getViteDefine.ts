@@ -1,7 +1,7 @@
 import path from 'node:path'
 
-import { findProjectRoot } from './findProjectRoot.ts'
-import { loadViteConfig } from './loadViteConfig.ts'
+import { findProjectRoot } from './findProjectRoot.js'
+import { loadViteConfig } from './loadViteConfig.js'
 
 /**
  * Get vite define variables for a source file

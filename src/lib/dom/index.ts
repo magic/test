@@ -6,13 +6,13 @@ export {
   type ImageConstructor,
   type CanvasRenderingContext2D,
   type CustomWindow,
-} from './types.ts'
+} from './types.js'
 
-export { parsePngDimensions, createImagePolyfill } from './image.ts'
+export { parsePngDimensions, createImagePolyfill } from './image.js'
 
-export { createCanvasPolyfill } from './canvas.ts'
+export { createCanvasPolyfill } from './canvas.js'
 
-import { initGlobals } from './globals.ts'
+import { initGlobals } from './globals.js'
 
 export { initGlobals }
 

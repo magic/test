@@ -8,9 +8,9 @@ export { default as error } from '@magic/error'
 
 export { has } from './lib/has.js'
 
-export { run } from './run.ts'
+export { run } from './run.js'
 
-import { initDOM } from './lib/dom/index.ts'
+import { initDOM } from './lib/dom/index.js'
 
 export {
   ERRORS,
@@ -24,11 +24,11 @@ export {
   vals,
   version,
   tryCatch,
-} from './lib/index.ts'
+} from './lib/index.js'
 
-export { initDOM, getDocument, getWindow } from './lib/dom/index.ts'
+export { initDOM, getDocument, getWindow } from './lib/dom/index.js'
 
-export * from './types.ts'
+export * from './types.js'
 
 // Auto-initialize DOM for all tests - makes HTMLInputElement, etc. available globally
 // This enables instanceof checks to work in plain JS unit tests

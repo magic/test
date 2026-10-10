@@ -1,6 +1,6 @@
 import is from '@magic/types'
-import { walkTests } from './analysis/testWalker.ts'
-import type { Test, TestCollection, TestObject } from '../types.ts'
+import { walkTests } from './analysis/testWalker.js'
+import type { Test, TestCollection, TestObject } from '../types.js'
 
 const GLOBAL_MODIFICATION_RE = /(?:globalThis|window|global|self|process\.env)/
 
