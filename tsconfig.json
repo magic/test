@@ -12,11 +12,9 @@
     "allowJs": true,
     "checkJs": true,
     "maxNodeModuleJsDepth": 2,
-    "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": true,
-    "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
     "strict": true,
     "noImplicitAny": true,
@@ -36,10 +34,10 @@
     "paths": {
       "@magic/test": ["./dist/index.js"],
       "@magic/test/*": ["./dist/*"]
-    }
+    },
+    "types": ["node"]
   },
 
   "include": ["src/**/*"],
-
   "exclude": ["node_modules", "dist/**/*", "coverage", ".tmp"]
 }
