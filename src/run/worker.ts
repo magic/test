@@ -8,7 +8,7 @@ import type { TestResult } from '../types.js'
 
 import { runSingleTestFromFileInWorker, importFileInWorker, makeSafeClone } from './lib/index.js'
 
-import '#src/bin/lib/registerLoader.js'
+import '../bin/lib/registerLoader.js'
 
 type SuiteSetup = {
   tests: unknown
