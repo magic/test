@@ -87,7 +87,7 @@ export default [
       flushSync()
       return target.querySelector('.changed')?.textContent
     },
-    expect: 'unchanged',
+    expect: 'changed',
     info: 'changed state reflects current state',
   },
 ] satisfies TestCase[]

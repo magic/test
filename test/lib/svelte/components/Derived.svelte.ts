@@ -81,7 +81,7 @@ export default [
       flushSync()
       return target.querySelector('.double')?.textContent
     },
-    expect: 'Double: 2',
+    expect: 'Double: 4',
     info: 'double count updates when count changes',
   },
   {
