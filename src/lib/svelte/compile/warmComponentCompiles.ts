@@ -108,6 +108,6 @@ export const warmComponentCompiles = async (tests: unknown): Promise<void> => {
         log.warn(`Component precompile failed for ${ref}: ${is.error(e) ? e.message : String(e)}`)
       }
     },
-    2,
+    6,
   )
 }

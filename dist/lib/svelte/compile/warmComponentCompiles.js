@@ -93,7 +93,7 @@ export const warmComponentCompiles = async tests => {
         log.warn(`Component precompile failed for ${ref}: ${is.error(e) ? e.message : String(e)}`)
       }
     },
-    2,
+    6,
   )
 }
 //# sourceMappingURL=warmComponentCompiles.js.map
