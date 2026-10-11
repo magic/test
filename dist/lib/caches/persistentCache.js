@@ -2,6 +2,7 @@ import fs from '@magic/fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { LRUCache } from './LRUCache.js'
+import { clearResolveTransformCache } from './resolveTransformCache.js'
 import { CACHE_DIR } from '../../constants.js'
 const MANIFEST_FILE = path.join(CACHE_DIR, 'manifest.json')
 // In-memory caches for performance
@@ -110,6 +111,7 @@ export async function clearCache() {
   }
   manifestCache = null
   hashCache.clear()
+  await clearResolveTransformCache()
 }
 export function getCacheDir() {
   return CACHE_DIR

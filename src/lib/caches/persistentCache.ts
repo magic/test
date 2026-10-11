@@ -3,6 +3,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 
 import { LRUCache } from './LRUCache.js'
+import { clearResolveTransformCache } from './resolveTransformCache.js'
 
 import { CACHE_DIR } from '../../constants.js'
 
@@ -147,6 +148,7 @@ export async function clearCache(): Promise<void> {
   }
   manifestCache = null
   hashCache.clear()
+  await clearResolveTransformCache()
 }
 
 export function getCacheDir(): string {
