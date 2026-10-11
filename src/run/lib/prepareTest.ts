@@ -9,7 +9,6 @@ export const prepareTest = (
 ): {
   componentFile?: string
   componentProps?: ComponentProps
-  componentContext?: Record<PropertyKey, unknown>
 } => {
   if (!is.ownProp(test, 'expect')) {
     if (is.ownProp(test, 'is')) {
@@ -19,7 +18,7 @@ export const prepareTest = (
     }
   }
 
-  const { component: componentProp, props: explicitProps, context: componentContext } = test
+  const { component: componentProp, props: explicitProps } = test
 
   if (!componentProp) {
     return {}
