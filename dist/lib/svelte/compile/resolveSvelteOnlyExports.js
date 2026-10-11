@@ -24,6 +24,7 @@ import {
   extractNamedImportsFromCode,
 } from './exportAnalysis.js'
 import { computeTempPath, writeTempFile } from './tempFiles.js'
+import { getResolveTransform, recordResolveTransform } from '../../caches/resolveTransformCache.js'
 import { ddl, ddlInitWatchdog, ddlHold, ddlRelease } from './ddl.js'
 // Re-exported for import compatibility (tsLoader, readRecursive, tests)
 export { writeTempFile } from './tempFiles.js'
@@ -482,7 +483,7 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
   }
   return result
 }
-export const resolveSvelteOnlyExports = async (code, sourceDir) => {
+const resolveSvelteOnlyExportsImpl = async (code, sourceDir) => {
   let result = code
   const fileInfo = await parseFile(code, '<inline>')
   const imports = extractImports(fileInfo)
@@ -626,6 +627,25 @@ export const resolveSvelteOnlyExports = async (code, sourceDir) => {
   for (const { placeholder, code } of exportStarReplacements) {
     result = result.replace(placeholder, code)
   }
+  return result
+}
+/**
+ * Cached wrapper around resolveSvelteOnlyExportsImpl.
+ *
+ * The transformation is pure in (code, sourceDir), so results are cached on
+ * disk keyed by their combined hash. Most test files contain no svelte
+ * imports and come out unchanged; the cache lets warm runs skip the full
+ * AST parse + package resolution entirely.
+ */
+export const resolveSvelteOnlyExports = async (code, sourceDir) => {
+  const cached = await getResolveTransform(code, sourceDir)
+  if (cached !== null) {
+    return cached
+  }
+  const result = await resolveSvelteOnlyExportsImpl(code, sourceDir)
+  // Fire-and-forget: populate the disk cache for the next run without
+  // slowing down this one.
+  recordResolveTransform(code, sourceDir, result)
   return result
 }
 //# sourceMappingURL=resolveSvelteOnlyExports.js.map
