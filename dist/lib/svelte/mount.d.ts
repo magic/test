@@ -17,6 +17,7 @@ export declare const mount: (
   filePath: string,
   options?: {
     props?: ComponentProps
+    context?: Record<PropertyKey, unknown>
   },
 ) => Promise<MountResult>
 export {}

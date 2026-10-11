@@ -10,7 +10,7 @@ export const prepareTest = test => {
       test.expect = true
     }
   }
-  const { component: componentProp, props: explicitProps } = test
+  const { component: componentProp, props: explicitProps, context: componentContext } = test
   if (!componentProp) {
     return {}
   }

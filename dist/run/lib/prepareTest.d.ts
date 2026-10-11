@@ -5,4 +5,5 @@ import type { WrappedTest, ComponentProps } from '../../types.js'
 export declare const prepareTest: (test: WrappedTest) => {
   componentFile?: string
   componentProps?: ComponentProps
+  componentContext?: Record<PropertyKey, unknown>
 }

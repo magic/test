@@ -1,2 +1,2 @@
-export { default as TestComponent } from './TestComponent.svelte'
+export { default as TestComponent } from '../components/TestComponent.svelte'
 //# sourceMappingURL=ImportMapBarrel.svelte.js.map

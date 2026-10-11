@@ -9,7 +9,13 @@ import { executeTest, prepareTest, runTestCore, testNeedsIsolation } from './lib
  * Main-thread test execution: shared runTestCore + svelte component mounting
  * via executeTest, with error logging (unavailable in workers).
  */
-const executeTestNoIsolation = async (test, key, componentFile, componentProps) => {
+const executeTestNoIsolation = async (
+  test,
+  key,
+  componentFile,
+  componentProps,
+  componentContext,
+) => {
   const logError = (code, info) => {
     if (code === ERRORS.E_TEST_FN) {
       info.component = componentFile
@@ -19,7 +25,7 @@ const executeTestNoIsolation = async (test, key, componentFile, componentProps) 
   return runTestCore({
     key,
     test,
-    invoke: () => executeTest(test.fn, key, componentFile, componentProps),
+    invoke: () => executeTest(test.fn, key, componentFile, componentProps, componentContext),
     logError,
   })
 }
@@ -33,7 +39,7 @@ export const runTest = async (test, store, rawResults) => {
   const testKey = test.key || ''
   const testName = test.name || ''
   const testParent = test.parent || ''
-  const { componentFile, componentProps } = prepareTest(test)
+  const { componentFile, componentProps, componentContext } = prepareTest(test)
   try {
     const { fn, name, pkg, before, parent, tests, info } = test
     if (!is.ownProp(test, 'fn')) {
@@ -78,11 +84,23 @@ export const runTest = async (test, store, rawResults) => {
             })
           }
         }
-        const execResult = await executeTestNoIsolation(test, key, componentFile, componentProps)
+        const execResult = await executeTestNoIsolation(
+          test,
+          key,
+          componentFile,
+          componentProps,
+          componentContext,
+        )
         return { ...execResult, afterCleanup }
       })
     } else {
-      isolatedResult = await executeTestNoIsolation(test, key, componentFile, componentProps)
+      isolatedResult = await executeTestNoIsolation(
+        test,
+        key,
+        componentFile,
+        componentProps,
+        componentContext,
+      )
     }
     if (is.function(isolatedResult.afterCleanup)) {
       try {

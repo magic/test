@@ -6,4 +6,5 @@ export declare const executeTest: (
   _key: string,
   componentFile?: string,
   componentProps?: Record<string, unknown>,
+  componentContext?: Record<PropertyKey, unknown>,
 ) => Promise<unknown>

@@ -34,6 +34,13 @@ let svelteMount
 let svelteUnmount
 let svelteCreateRawSnippet = null
 let svelteTick
+// Internal client context API (push/pop/setContext) - used to synthesize a
+// context-providing wrapper component for tests that pass a `context` option.
+// Loaded from the same internal module that compiled components import
+// (svelte/internal/client), so there is a single component_context stack.
+let sveltePush = null
+let sveltePop = null
+let svelteSetContext = null
 let svelteInitialized = false
 // Track mounted component state to ensure proper cleanup per-test
 let mountedComponent = null
@@ -92,6 +99,17 @@ const initSvelte = async () => {
     svelteUnmount = svelte.unmount
     svelteTick = svelte.tick
     svelteCreateRawSnippet = svelte.createRawSnippet || null
+    // Same explicit-path require strategy as index-client.js above.
+    // context.js is the module re-exported by svelte/internal/client
+    // (push/pop/setContext), i.e. the exact instance compiled components use.
+    const internalPath = path.join(
+      process.cwd(),
+      'node_modules/svelte/src/internal/client/context.js',
+    )
+    const internal = require(internalPath)
+    sveltePush = internal.push
+    sveltePop = internal.pop
+    svelteSetContext = internal.setContext
     svelteInitialized = true
     return
   } catch (e) {
@@ -140,6 +158,29 @@ export const tick = async () => {
     } else {
       throw e
     }
+  }
+}
+/**
+ * Synthesize a wrapper component that sets the given context entries
+ * (setContext semantics) before rendering the target component.
+ * The wrapper matches the shape of a Svelte-compiled wrapper component
+ * (push -> setContext calls -> child render -> pop), so it behaves identically
+ * to a .svelte wrapper in both standard and async component modes.
+ */
+const wrapWithContext = (Component, entries) => {
+  if (!sveltePush || !sveltePop || !svelteSetContext) {
+    throw new Error('Svelte not initialized')
+  }
+  const push = sveltePush
+  const pop = sveltePop
+  const setContext = svelteSetContext
+  return ($$anchor, $$props) => {
+    push($$props, true)
+    for (const [key, value] of entries) {
+      setContext(key, value)
+    }
+    Component($$anchor, $$props)
+    pop()
   }
 }
 export const mount = async (filePath, options = {}) => {
@@ -252,6 +293,14 @@ const mountWithMutex = async (filePath, options, releaseMutex) => {
       throw new Error(`Props must be an object, got ${typeof rawProps}`)
     }
     const props = rawProps ?? {}
+    const rawContext = options.context
+    if (
+      rawContext !== undefined &&
+      (!is.object(rawContext) || is.null(rawContext) || is.array(rawContext))
+    ) {
+      throw new Error(`Context must be an object, got ${typeof rawContext}`)
+    }
+    const contextEntries = rawContext ? Object.entries(rawContext) : null
     // Process props to convert snippet-like objects to actual Svelte 5 snippets
     const processProps = propsToProcess => {
       const processed = {}
@@ -288,7 +337,11 @@ const mountWithMutex = async (filePath, options, releaseMutex) => {
       if (!svelteMount) {
         throw new Error('Svelte not initialized')
       }
-      component = svelteMount(Component, {
+      const rootComponent =
+        contextEntries && contextEntries.length > 0
+          ? wrapWithContext(Component, contextEntries)
+          : Component
+      component = svelteMount(rootComponent, {
         target,
         props: processedProps,
       })

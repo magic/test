@@ -2,7 +2,7 @@ import is from '@magic/types'
 /**
  * Execute a single test function with proper isolation
  */
-export const executeTest = async (fn, _key, componentFile, componentProps) => {
+export const executeTest = async (fn, _key, componentFile, componentProps, componentContext) => {
   if (componentFile) {
     const { mount } = await import('../../lib/svelte/mount.js')
     const {
@@ -10,7 +10,7 @@ export const executeTest = async (fn, _key, componentFile, componentProps) => {
       component: instance,
       unmount,
       css,
-    } = await mount(componentFile, { props: componentProps })
+    } = await mount(componentFile, { props: componentProps, context: componentContext })
     try {
       if (is.function(fn)) {
         return await fn({ target, component: instance, unmount, css })
