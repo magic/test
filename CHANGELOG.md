@@ -1,5 +1,19 @@
 ### Changelog
 
+#### 0.3.42
+
+- src/run/lib/prepareTest: add componentContext to returned args
+- remove unused componentContext args
+- test: fix expected values for Derived and Input
+- perf: pre-compile svelte components before test run
+- perf: cache resolveSvelteOnlyExports results on disk (keyed by content hash) to skip per-file AST parse during test collection on warm runs
+- perf: increase component pre-compile concurrency from 2 to 6
+- feat: support context option for component tests
+- fix: resolve bare svelte imports to client runtime in ts loader
+- tsconfig: remove allowSyntheticDefaultImports and allowImportingTsExtensions, add types/node
+- remove TestComponent.svelte from testFixtures/barrelFixtures, is in testFixtures/components
+- format
+
 #### 0.3.41
 
 - svelte component coverage fully fixed, 0.0.40 was using the wrong paths
