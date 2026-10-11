@@ -124,12 +124,67 @@ const resolveAppImport = async (importPath: string): Promise<string | null> => {
   return null
 }
 
+// Node's default ESM conditions resolve the bare `svelte` import to the server
+// entry (the `default` condition of svelte's package exports), but this
+// framework always mounts components with the client runtime. Svelte's runtime
+// state (component_context for setContext/getContext, listeners, ...) lives in
+// per-module globals, so the whole test graph must share a single client
+// instance. When svelte's exports declare a `browser` condition for the
+// corresponding subpath (the client variant), resolve to that file instead.
+// Driven by svelte's own exports map so it adapts to future svelte versions.
+let svelteExportsCache: Record<string, unknown> | null | undefined
+
+const resolveSvelteBrowserTarget = async (specifier: string): Promise<string | null> => {
+  if (specifier !== 'svelte' && !specifier.startsWith('svelte/')) {
+    return null
+  }
+
+  if (svelteExportsCache === undefined) {
+    try {
+      const pkgPath = path.join(process.cwd(), 'node_modules', 'svelte', 'package.json')
+      const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'))
+      svelteExportsCache = is.objectNative(pkg.exports)
+        ? (pkg.exports as Record<string, unknown>)
+        : null
+    } catch {
+      svelteExportsCache = null
+    }
+  }
+
+  const exportsMap = svelteExportsCache
+  if (!exportsMap) {
+    return null
+  }
+
+  const exportsKey = specifier === 'svelte' ? '.' : `.${specifier.slice('svelte'.length)}`
+  const entry = exportsMap[exportsKey]
+  if (is.objectNative(entry)) {
+    const browser = (entry as Record<string, unknown>).browser
+    if (is.str(browser)) {
+      return path.join(process.cwd(), 'node_modules', 'svelte', browser)
+    }
+  }
+
+  return null
+}
+
 const resolveImpl = async (
   specifier: string,
   context: { parentURL?: string },
   nextResolve: (specifier: string, context?: object) => Promise<{ url: string }>,
 ): Promise<{ url: string; shortCircuit?: boolean }> => {
   try {
+    // svelte runtime: prefer the `browser` (client) variant so that dependencies
+    // importing bare `svelte` (e.g. svelte-maplibre's context.svelte.js)
+    // share the client runtime instance used by mount() - a single
+    // component_context for setContext/getContext.
+    if (specifier === 'svelte' || specifier.startsWith('svelte/')) {
+      const browserTarget = await resolveSvelteBrowserTarget(specifier)
+      if (browserTarget && (await fs.exists(browserTarget))) {
+        return { url: pathToFileURL(browserTarget).href, shortCircuit: true }
+      }
+    }
+
     // Direct handling of $app imports - resolve to built-in shims
     if (specifier.startsWith('$app')) {
       const resolved = await resolveAppImport(specifier)
