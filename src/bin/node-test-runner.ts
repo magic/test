@@ -11,6 +11,7 @@ import(path.join(__dirname, 'lib/registerLoader.js'))
 import { describe, before, after, it } from 'node:test'
 import fs from '@magic/fs'
 import is from '@magic/types'
+import { CACHE_DIR } from '../constants.js'
 import { maybeInjectMagic } from './lib/index.js'
 import { evaluateTestResult } from '../run/lib/index.js'
 import {
@@ -397,7 +398,7 @@ const registerTests = async () => {
     }
 
     // 3. Clean up temp directory
-    const tmpDir = path.join(cwd, 'test', '.tmp')
+    const tmpDir = path.join(CACHE_DIR, '.tmp')
     const exists = await fs.exists(tmpDir)
     if (exists) {
       await fs.rmrf(tmpDir)
