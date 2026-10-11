@@ -4,6 +4,7 @@ import log from '@magic/log'
 import { stats, createStore, ERRORS, Store } from './lib/index.js'
 import { BEFORE_ALL_KEYS, AFTER_ALL_KEYS } from './lib/hookFiles.js'
 import { runSuite } from './run/suite.js'
+import { warmComponentCompiles } from './lib/svelte/compile/warmComponentCompiles.js'
 import type { TestSuites, TestCollection, CleanupFunction, TestResult } from './types.js'
 import { printTraceSummary, isTraceEnabled } from './lib/trace/timing.js'
 import { clearCache as clearPersistentCache } from './lib/caches/persistentCache.js'
@@ -219,6 +220,11 @@ export const run = async (
   // After removing hook files, all remaining entries should be processed as test suites.
   // convertSuite will handle arrays, functions, and objects (including plain test objects).
   const testEntries: [string, unknown][] = Object.entries(testsObj)
+
+  // Pre-compile Svelte components referenced by the tests so the one-time
+  // compile cost (including the full dependency graph) is paid here, outside
+  // any per-test timeout. No-op when no components are referenced.
+  await warmComponentCompiles(testsObj)
 
   const suites = (
     await Promise.all(
