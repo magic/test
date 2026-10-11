@@ -8,6 +8,7 @@ export const executeTest = async (
   _key: string,
   componentFile?: string,
   componentProps?: Record<string, unknown>,
+  componentContext?: Record<PropertyKey, unknown>,
 ): Promise<unknown> => {
   if (componentFile) {
     const { mount } = await import('../../lib/svelte/mount.js')
@@ -16,7 +17,7 @@ export const executeTest = async (
       component: instance,
       unmount,
       css,
-    } = await mount(componentFile, { props: componentProps })
+    } = await mount(componentFile, { props: componentProps, context: componentContext })
 
     try {
       if (is.function(fn)) {

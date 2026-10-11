@@ -26,6 +26,7 @@ const executeTestNoIsolation = async (
   key: string,
   componentFile: string | undefined,
   componentProps: Record<string, unknown> | undefined,
+  componentContext: Record<PropertyKey, unknown> | undefined,
 ): Promise<TestExecutionResult> => {
   const logError = (code: string, info: Record<string, unknown>) => {
     if (code === ERRORS.E_TEST_FN) {
@@ -37,7 +38,7 @@ const executeTestNoIsolation = async (
   return runTestCore({
     key,
     test,
-    invoke: () => executeTest(test.fn, key, componentFile, componentProps),
+    invoke: () => executeTest(test.fn, key, componentFile, componentProps, componentContext),
     logError,
   })
 }
@@ -57,7 +58,7 @@ export const runTest = async (
   const testName = test.name || ''
   const testParent = test.parent || ''
 
-  const { componentFile, componentProps } = prepareTest(test)
+  const { componentFile, componentProps, componentContext } = prepareTest(test)
 
   try {
     const { fn, name, pkg, before, parent, tests, info } = test
@@ -116,6 +117,7 @@ export const runTest = async (
           key,
           componentFile,
           componentProps as Record<string, unknown> | undefined,
+          componentContext,
         )
 
         return { ...execResult, afterCleanup }
@@ -126,6 +128,7 @@ export const runTest = async (
         key,
         componentFile,
         componentProps as Record<string, unknown> | undefined,
+        componentContext,
       )
     }
 

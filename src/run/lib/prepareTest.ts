@@ -6,7 +6,11 @@ import type { WrappedTest, ComponentProps } from '../../types.js'
  */
 export const prepareTest = (
   test: WrappedTest,
-): { componentFile?: string; componentProps?: ComponentProps } => {
+): {
+  componentFile?: string
+  componentProps?: ComponentProps
+  componentContext?: Record<PropertyKey, unknown>
+} => {
   if (!is.ownProp(test, 'expect')) {
     if (is.ownProp(test, 'is')) {
       test.expect = test.is
@@ -15,7 +19,7 @@ export const prepareTest = (
     }
   }
 
-  const { component: componentProp, props: explicitProps } = test
+  const { component: componentProp, props: explicitProps, context: componentContext } = test
 
   if (!componentProp) {
     return {}

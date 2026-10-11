@@ -97,6 +97,17 @@ export interface Test {
   props?: Record<string, unknown>
 
   /**
+   * Svelte context to provide to the mounted component (setContext semantics).
+   * Maps context keys (string or symbol) to values; entries are set in an
+   * invisible wrapper component around the mounted component, so the mounted
+   * component (and its descendants) can read them via getContext.
+   * Pass values - e.g. for svelte-maplibre:
+   * `context: { [Symbol.for('svelte-maplibre')]: new MapContext() }`
+   * (not `createMapContext()`, which itself calls setContext).
+   */
+  context?: Record<PropertyKey, unknown>
+
+  /**
    * Nested tests or child suites.
    */
   tests?: TestCollection
