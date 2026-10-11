@@ -18,12 +18,14 @@ export const prepareTest = test => {
     return {
       componentFile: componentProp,
       componentProps: explicitProps || {},
+      componentContext,
     }
   }
   if (is.array(componentProp)) {
     return {
       componentFile: componentProp[0],
       componentProps: componentProp[1] || {},
+      componentContext,
     }
   }
   throw new Error('component must be a string or [string, props]')

@@ -30,7 +30,11 @@ export default [
         parent: 'parent',
         component: './Component.svelte',
       }),
-    expect: { componentFile: './Component.svelte', componentProps: {} },
+    expect: {
+      componentFile: './Component.svelte',
+      componentProps: {},
+      componentContext: undefined,
+    },
     info: 'extracts string component',
   },
   {
@@ -41,7 +45,11 @@ export default [
         parent: 'parent',
         component: ['./Component.svelte', { prop1: 'value' }],
       }),
-    expect: { componentFile: './Component.svelte', componentProps: { prop1: 'value' } },
+    expect: {
+      componentFile: './Component.svelte',
+      componentProps: { prop1: 'value' },
+      componentContext: undefined,
+    },
     info: 'extracts tuple component with props',
   },
   {
@@ -55,7 +63,11 @@ export default [
       })
       return result
     },
-    expect: { componentFile: './Comp.svelte', componentProps: { extra: 'prop' } },
+    expect: {
+      componentFile: './Comp.svelte',
+      componentProps: { extra: 'prop' },
+      componentContext: undefined,
+    },
     info: 'uses explicit props when component is string',
   },
   {
@@ -84,7 +96,11 @@ export default [
         parent: 'parent',
         component: '#lib/Component.svelte',
       }),
-    expect: { componentFile: '#lib/Component.svelte', componentProps: {} },
+    expect: {
+      componentFile: '#lib/Component.svelte',
+      componentProps: {},
+      componentContext: undefined,
+    },
     info: 'preserves #lib import map paths for components',
   },
 ] satisfies TestCase[]

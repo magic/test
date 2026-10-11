@@ -1,15 +1,16 @@
 import is from '@magic/types'
 import type { WrappedTest, ComponentProps } from '../../types.js'
 
+export interface PrepareTestArgs {
+  componentFile?: string
+  componentProps?: ComponentProps
+  componentContext?: Record<PropertyKey, unknown>
+}
+
 /**
  * Prepare test by setting defaults and extracting component props
  */
-export const prepareTest = (
-  test: WrappedTest,
-): {
-  componentFile?: string
-  componentProps?: ComponentProps
-} => {
+export const prepareTest = (test: WrappedTest): PrepareTestArgs => {
   if (!is.ownProp(test, 'expect')) {
     if (is.ownProp(test, 'is')) {
       test.expect = test.is
@@ -18,7 +19,7 @@ export const prepareTest = (
     }
   }
 
-  const { component: componentProp, props: explicitProps } = test
+  const { component: componentProp, props: explicitProps, context: componentContext } = test
 
   if (!componentProp) {
     return {}
@@ -28,6 +29,7 @@ export const prepareTest = (
     return {
       componentFile: componentProp,
       componentProps: explicitProps || {},
+      componentContext,
     }
   }
 
@@ -35,6 +37,7 @@ export const prepareTest = (
     return {
       componentFile: componentProp[0],
       componentProps: componentProp[1] || {},
+      componentContext,
     }
   }
 
