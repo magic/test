@@ -705,14 +705,14 @@ Environment detection utilities for conditional test behavior.
 
 environment variables read by @magic/test:
 
-| Variable                              | Description                                                    |
-| ------------------------------------- | -------------------------------------------------------------- |
-| `MAGIC_TEST_WORKERS`                  | max parallel workers (same as `--workers`)                     |
-| `MAGIC_TEST_VERBOSE`                  | set to `1` for verbose output (same as `-l`)                   |
-| `MAGIC_TEST_ERROR_LENGTH`             | error string limit, `0` = unlimited (same as `--error-length`) |
-| `MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED` | set to `false`/`0` to accept self-signed certificates          |
-| `MAGIC_TEST_VERBOSE_ERRORS`            | set to `1` for verbose error output (shows error length limits) |
-| `NODE_ENV`                            | set to `production` by the `-p` flag; defaults to `test`       |
+| Variable                              | Description                                                     |
+| ------------------------------------- | --------------------------------------------------------------- |
+| `MAGIC_TEST_WORKERS`                  | max parallel workers (same as `--workers`)                      |
+| `MAGIC_TEST_VERBOSE`                  | set to `1` for verbose output (same as `-l`)                    |
+| `MAGIC_TEST_ERROR_LENGTH`             | error string limit, `0` = unlimited (same as `--error-length`)  |
+| `MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED` | set to `false`/`0` to accept self-signed certificates           |
+| `MAGIC_TEST_VERBOSE_ERRORS`           | set to `1` for verbose error output (shows error length limits) |
+| `NODE_ENV`                            | set to `production` by the `-p` flag; defaults to `test`        |
 
 ```javascript
 import { env, isProd, isTest, isDev } from '@magic/test'
@@ -1241,12 +1241,12 @@ This works automatically for all `$state` and `$derived` runes in your component
 
 **Test Properties:**
 
-| Property    | Type       | Description                                              |
-| ----------- | ---------- | -------------------------------------------------------- |
-| `component` | `string`   | Path to the .svelte file                                 |
-| `props`     | `object`   | Props to pass to the component                           |
+| Property    | Type                                                                                  | Description                                                                                                               |
+| ----------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `component` | `string`                                                                              | Path to the .svelte file                                                                                                  |
+| `props`     | `object`                                                                              | Props to pass to the component                                                                                            |
 | `context`   | `object \| (info: { target: HTMLElement; props: Record<string, unknown> }) => object` | Svelte context option: either static context entries or a factory function receiving the mount target and processed props |
-| `fn`        | `function` | Test function receiving `{ target, component, unmount }` |
+| `fn`        | `function`                                                                            | Test function receiving `{ target, component, unmount }`                                                                  |
 
 **Context Factory**
 

@@ -21,6 +21,7 @@ import path from 'node:path'
 import { pathToFileURL, fileURLToPath } from 'node:url'
 import fs from '@magic/fs'
 import is from '@magic/types'
+import { initDOM } from '../../lib/dom/index.js'
 import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js'
 import { loadTestDefines } from './loadTestDefines.js'
 import {
@@ -51,6 +52,12 @@ const importFile = async filePath => {
     } else {
       importPath = isUrl ? filePath : pathToFileURL(fsPath).href
     }
+    // Ensure DOM globals exist in this process before importing the test
+    // file: files that only type-import @magic/test never trigger the index
+    // module's initDOM() call, and DOM-dependent source modules (e.g. svelte)
+    // would otherwise fail with "window is not defined". initGlobals is
+    // idempotent.
+    initDOM()
     const mod = await import(__rewriteRelativeImportExtension(importPath))
     // catch es6 export default
     if (is.module(mod)) {
@@ -64,9 +71,18 @@ const importFile = async filePath => {
       return mod
     }
   } catch (err) {
-    // Enhance error with file context
-    const error = is.error(err) ? err : new Error(String(err))
-    error.message = `Failed to import test file: ${filePath}\n${error.message}`
+    // Node caches failed ESM evaluations: when several test files import the
+    // same broken module they all reject with the SAME Error instance.
+    // Wrap it in a fresh error instead of mutating, so each file's message
+    // stays independent (mutating the shared instance would prepend
+    // "Failed to import test file: X" once per file and pollute every
+    // reported error).
+    const original = is.error(err) ? err : new Error(String(err))
+    const error = new Error(`Failed to import test file: ${filePath}\n${original.message}`)
+    if (is.ownProp(original, 'code')) {
+      error.code = original.code
+    }
+    error.cause = original
     if (process.env.MAGIC_TEST_VERBOSE_ERRORS) {
       console.error('Import error details for', filePath, err)
     }
