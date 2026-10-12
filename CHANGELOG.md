@@ -32,6 +32,14 @@
   - In readRecursive: log error codes and full error stack when MAGIC_TEST_VERBOSE_ERRORS env var is set
   - In unit: print import/runtime error details when MAGIC_TEST_VERBOSE_ERRORS env var is set
 
+- fix: initialize DOM globals before importing test files (main process and workers)
+  - Test files that only type-import @magic/test never triggered the index module's initDOM() call, so DOM-dependent source imports (e.g. svelte) failed with "window is not defined"
+  - initGlobals is idempotent, so early initialization in importFile/importFileInWorker is safe
+
+- fix: stop mutating shared ESM failure errors in import error messages
+  - Node caches failed module evaluations: several test files importing the same broken module reject with the SAME Error instance, and mutating it prepended "Failed to import test file: X" once per file, polluting every reported error
+  - Wrap the original error in a fresh one (preserving code and stack via cause) in readRecursive and importFileInWorker
+
 #### 0.3.41
 
 - svelte component coverage fully fixed, 0.0.40 was using the wrong paths
