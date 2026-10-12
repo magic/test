@@ -14,6 +14,24 @@
 - remove TestComponent.svelte from testFixtures/barrelFixtures, is in testFixtures/components
 - format
 
+#### 0.3.43
+
+- feat: support context factory function in mount() with target/props
+  - Add ContextInfo type (target HTMLElement + processed props)
+  - Add ContextOption type: static Record or factory (info) => Record
+  - Update mount() to accept factory, resolve after prop processing
+  - Use Reflect.ownKeys to preserve symbol-keyed contexts (e.g., svelte-maplibre)
+  - Propagate ContextOption through executeTest/prepareTest/test types
+
+- fix(tsLoader): resolve bare package specifiers from CACHE_DIR against real node_modules
+  - Add resolveRealPackageEntry() helper reading package.json exports/map/main/module
+  - In resolveImpl: detect when parentURL is inside CACHE_DIR and specifier is bare
+  - Fall back to real node_modules for such imports (cache mirror has no package.json)
+
+- feat: add MAGIC_TEST_VERBOSE_ERRORS for detailed import/runtime diagnostics
+  - In readRecursive: log error codes and full error stack when MAGIC_TEST_VERBOSE_ERRORS env var is set
+  - In unit: print import/runtime error details when MAGIC_TEST_VERBOSE_ERRORS env var is set
+
 #### 0.3.41
 
 - svelte component coverage fully fixed, 0.0.40 was using the wrong paths

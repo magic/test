@@ -711,6 +711,7 @@ environment variables read by @magic/test:
 | `MAGIC_TEST_VERBOSE`                  | set to `1` for verbose output (same as `-l`)                   |
 | `MAGIC_TEST_ERROR_LENGTH`             | error string limit, `0` = unlimited (same as `--error-length`) |
 | `MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED` | set to `false`/`0` to accept self-signed certificates          |
+| `MAGIC_TEST_VERBOSE_ERRORS`            | set to `1` for verbose error output (shows error length limits) |
 | `NODE_ENV`                            | set to `production` by the `-p` flag; defaults to `test`       |
 
 ```javascript
@@ -1244,7 +1245,42 @@ This works automatically for all `$state` and `$derived` runes in your component
 | ----------- | ---------- | -------------------------------------------------------- |
 | `component` | `string`   | Path to the .svelte file                                 |
 | `props`     | `object`   | Props to pass to the component                           |
+| `context`   | `object \| (info: { target: HTMLElement; props: Record<string, unknown> }) => object` | Svelte context option: either static context entries or a factory function receiving the mount target and processed props |
 | `fn`        | `function` | Test function receiving `{ target, component, unmount }` |
+
+**Context Factory**
+
+The `context` option allows you to provide a factory function that receives the mount target and processed props. This is particularly useful when you need to pass dynamic values to the component that depend on the test context.
+
+```javascript
+import { mount } from '@magic/test/svelte'
+import { tryCatch } from '@magic/test'
+
+const component = './src/lib/svelte/components/Counter.svelte'
+
+export default [
+  {
+    component,
+    fn: async ({ target, context }) => {
+      // context is a function that receives the mount target and processed props
+      // You can pass dynamic values here
+      return context.target.scrollWidth,
+    },
+    expect: 0,
+    info: 'context is a function that receives the mount target',
+  },
+  {
+    component,
+    fn: async ({ target, context }) => {
+      // Example: pass a computed value derived from the test context
+      const computed = context.target.scrollWidth * 2;
+      return computed;
+    },
+    expect: 400,
+    info: 'computed value from context is 400',
+  },
+]
+```
 
 **Example: Accessing Component State**
 
@@ -1674,6 +1710,25 @@ export default [
   { fn: () => add(0, 0), expect: 0 },
   { fn: () => add(-1, 1), expect: 0 },
 ]
+```
+
+##### Verbose Error Output
+
+Set `MAGIC_TEST_VERBOSE_ERRORS=1` to see detailed error information during test execution:
+
+- Error messages will include error codes (e.g., `[E_MAGIC_TEST]`)
+- Full error stack traces are logged to console
+- Import errors show file-specific details
+- Runtime errors include the exact error object
+
+This is useful for debugging complex test failures or when tests are failing silently.
+
+Example output with `MAGIC_TEST_VERBOSE_ERRORS=1`:
+
+```
+3 test file(s) failed to load (continuing):
+some-test.js [E_MAGIC_TEST]: Failed to import test file: /path/to/some-test.js
+  Error: Cannot find module './nonexistent'
 ```
 
 #### Common Pitfalls
