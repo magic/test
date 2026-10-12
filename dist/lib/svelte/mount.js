@@ -294,13 +294,16 @@ const mountWithMutex = async (filePath, options, releaseMutex) => {
     }
     const props = rawProps ?? {}
     const rawContext = options.context
+    const isContextFn = is.fn(rawContext)
     if (
       rawContext !== undefined &&
+      !isContextFn &&
       (!is.object(rawContext) || is.null(rawContext) || is.array(rawContext))
     ) {
-      throw new Error(`Context must be an object, got ${typeof rawContext}`)
+      throw new Error(
+        `Context must be an object or a function returning one, got ${typeof rawContext}`,
+      )
     }
-    const contextEntries = rawContext ? Object.entries(rawContext) : null
     // Process props to convert snippet-like objects to actual Svelte 5 snippets
     const processProps = propsToProcess => {
       const processed = {}
@@ -327,6 +330,26 @@ const mountWithMutex = async (filePath, options, releaseMutex) => {
       return processed
     }
     const processedProps = svelteCreateRawSnippet ? processProps(props) : props
+    // Resolve the context after props are processed: a context function receives
+    // the mount target and processed props (useful for context values that need
+    // a reference to the DOM the component renders into).
+    let contextEntries = null
+    if (rawContext) {
+      const contextObj = isContextFn
+        ? rawContext({
+            target,
+            props: processedProps,
+          })
+        : rawContext
+      if (is.null(contextObj) || is.array(contextObj) || !is.object(contextObj)) {
+        throw new Error(`Context must resolve to an object, got ${typeof contextObj}`)
+      }
+      // Reflect.ownKeys keeps symbol keys (Object.entries drops them), so
+      // symbol-keyed contexts like svelte-maplibre's work as expected.
+      contextEntries = Reflect.ownKeys(contextObj)
+        .filter(key => Object.prototype.propertyIsEnumerable.call(contextObj, key))
+        .map(key => [key, contextObj[key]])
+    }
     for (const key of Reflect.ownKeys(props)) {
       if (!is.string(key)) {
         throw new Error(`Prop keys must be strings, got ${typeof key}`)

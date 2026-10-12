@@ -1,3 +1,4 @@
+import type { ContextOption } from '../../types.js'
 /**
  * Execute a single test function with proper isolation
  */
@@ -6,5 +7,5 @@ export declare const executeTest: (
   _key: string,
   componentFile?: string,
   componentProps?: Record<string, unknown>,
-  componentContext?: Record<PropertyKey, unknown>,
+  componentContext?: ContextOption,
 ) => Promise<unknown>

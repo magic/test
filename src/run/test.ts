@@ -6,7 +6,7 @@ import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
 import { runSuite } from './suite.js'
 import { executeTest, prepareTest, runTestCore, testNeedsIsolation } from './lib/index.js'
-import type { WrappedTest, TestResult, Suite } from '../types.js'
+import type { WrappedTest, TestResult, Suite, ContextOption } from '../types.js'
 
 type TestExecutionResult = {
   result: unknown
@@ -26,7 +26,7 @@ const executeTestNoIsolation = async (
   key: string,
   componentFile: string | undefined,
   componentProps: Record<string, unknown> | undefined,
-  componentContext: Record<PropertyKey, unknown> | undefined,
+  componentContext: ContextOption | undefined,
 ): Promise<TestExecutionResult> => {
   const logError = (code: string, info: Record<string, unknown>) => {
     if (code === ERRORS.E_TEST_FN) {

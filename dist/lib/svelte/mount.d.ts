@@ -1,4 +1,4 @@
-import type { CssObject, ComponentProps } from '../../types.js'
+import type { CssObject, ComponentProps, ContextOption } from '../../types.js'
 /**
  * Create a raw snippet for passing as children prop
  */
@@ -17,7 +17,7 @@ export declare const mount: (
   filePath: string,
   options?: {
     props?: ComponentProps
-    context?: Record<PropertyKey, unknown>
+    context?: ContextOption
   },
 ) => Promise<MountResult>
 export {}

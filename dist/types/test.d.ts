@@ -23,6 +23,19 @@ type FnReturnType<F> = F extends () => Promise<infer R>
         : unknown
 export type TestExpect<T = unknown> =
   ((result: T) => boolean | Promise<boolean>) | T | (TestExpect<T> | T)[]
+/**
+ * Info passed to a context factory function: the mount target and processed props.
+ */
+export type ContextInfo = {
+  target: HTMLElement
+  props: Record<string, unknown>
+}
+/**
+ * Svelte context option: static entries (string or symbol keys), or a factory
+ * function receiving the mount target and props.
+ */
+export type ContextOption =
+  Record<PropertyKey, unknown> | ((info: ContextInfo) => Record<PropertyKey, unknown>)
 export interface Test {
   /** Additional information about the test. */
   info?: string
@@ -86,8 +99,12 @@ export interface Test {
    * Pass values - e.g. for svelte-maplibre:
    * `context: { [Symbol.for('svelte-maplibre')]: new MapContext() }`
    * (not `createMapContext()`, which itself calls setContext).
+   * Alternatively pass a function receiving `{ target, props }` and returning
+   * the entries - useful when a context value needs a reference to the DOM the
+   * component renders into (e.g. a stub map whose canvas container is the
+   * mount target).
    */
-  context?: Record<PropertyKey, unknown>
+  context?: ContextOption
   /**
    * Nested tests or child suites.
    */

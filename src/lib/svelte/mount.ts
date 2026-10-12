@@ -12,7 +12,7 @@ import {
   resolveImportMapSpecifier,
 } from '../../lib/svelte/compile/resolveImportMap.js'
 import { initDOM, getDocument, getWindow } from '../../lib/dom/index.js'
-import type { CssObject, ComponentProps } from '../../types.js'
+import type { CssObject, ComponentProps, ContextOption, ContextInfo } from '../../types.js'
 import { createContext, runWithContext } from './shims/$app/state.js'
 import { detectSvelteKitImports, needsSvelteKitContext } from './detect-sveltekit-imports.js'
 
@@ -206,7 +206,7 @@ const wrapWithContext = (
 
 export const mount = async (
   filePath: string,
-  options: { props?: ComponentProps; context?: Record<PropertyKey, unknown> } = {},
+  options: { props?: ComponentProps; context?: ContextOption } = {},
 ): Promise<MountResult> => {
   // Acquire mutex to ensure only one Svelte component test runs at a time
   const releaseMutex = await acquireMutex()
@@ -234,7 +234,7 @@ export const mount = async (
 
 const mountWithMutex = async (
   filePath: string,
-  options: { props?: ComponentProps; context?: Record<PropertyKey, unknown> },
+  options: { props?: ComponentProps; context?: ContextOption },
   releaseMutex: () => void,
 ): Promise<MountResult> => {
   const doc = getDocument()
@@ -343,17 +343,17 @@ const mountWithMutex = async (
     const props = rawProps ?? {}
 
     const rawContext = options.context
+    const isContextFn = is.fn(rawContext)
 
     if (
       rawContext !== undefined &&
+      !isContextFn &&
       (!is.object(rawContext) || is.null(rawContext) || is.array(rawContext))
     ) {
-      throw new Error(`Context must be an object, got ${typeof rawContext}`)
+      throw new Error(
+        `Context must be an object or a function returning one, got ${typeof rawContext}`,
+      )
     }
-
-    const contextEntries: [PropertyKey, unknown][] | null = rawContext
-      ? (Object.entries(rawContext) as [PropertyKey, unknown][])
-      : null
 
     // Process props to convert snippet-like objects to actual Svelte 5 snippets
 
@@ -383,6 +383,29 @@ const mountWithMutex = async (
     }
 
     const processedProps = svelteCreateRawSnippet ? processProps(props) : props
+
+    // Resolve the context after props are processed: a context function receives
+    // the mount target and processed props (useful for context values that need
+    // a reference to the DOM the component renders into).
+    let contextEntries: [PropertyKey, unknown][] | null = null
+    if (rawContext) {
+      const contextObj = isContextFn
+        ? (rawContext as (info: ContextInfo) => Record<PropertyKey, unknown>)({
+            target,
+            props: processedProps,
+          })
+        : (rawContext as Record<PropertyKey, unknown>)
+
+      if (is.null(contextObj) || is.array(contextObj) || !is.object(contextObj)) {
+        throw new Error(`Context must resolve to an object, got ${typeof contextObj}`)
+      }
+
+      // Reflect.ownKeys keeps symbol keys (Object.entries drops them), so
+      // symbol-keyed contexts like svelte-maplibre's work as expected.
+      contextEntries = Reflect.ownKeys(contextObj)
+        .filter(key => Object.prototype.propertyIsEnumerable.call(contextObj, key))
+        .map(key => [key, (contextObj as Record<PropertyKey, unknown>)[key]])
+    }
 
     for (const key of Reflect.ownKeys(props)) {
       if (!is.string(key)) {

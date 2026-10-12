@@ -1,4 +1,5 @@
 import is from '@magic/types'
+import type { ContextOption } from '../../types.js'
 
 /**
  * Execute a single test function with proper isolation
@@ -8,7 +9,7 @@ export const executeTest = async (
   _key: string,
   componentFile?: string,
   componentProps?: Record<string, unknown>,
-  componentContext?: Record<PropertyKey, unknown>,
+  componentContext?: ContextOption,
 ): Promise<unknown> => {
   if (componentFile) {
     const { mount } = await import('../../lib/svelte/mount.js')

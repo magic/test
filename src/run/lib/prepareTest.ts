@@ -1,10 +1,10 @@
 import is from '@magic/types'
-import type { WrappedTest, ComponentProps } from '../../types.js'
+import type { WrappedTest, ComponentProps, ContextOption } from '../../types.js'
 
 export interface PrepareTestArgs {
   componentFile?: string
   componentProps?: ComponentProps
-  componentContext?: Record<PropertyKey, unknown>
+  componentContext?: ContextOption
 }
 
 /**
