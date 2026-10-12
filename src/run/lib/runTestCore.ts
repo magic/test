@@ -1,6 +1,7 @@
 import is from '@magic/types'
 
 import { toCleanError, ERRORS } from '../../lib/index.js'
+import { withSvelteKitStore } from '../../lib/sveltekit.js'
 import type { WrappedTest, EvaluateResult } from '../../types.js'
 
 import { evaluateTestResult } from './evaluateTestResult.js'
@@ -50,7 +51,9 @@ export const runTestCore = async (options: RunTestCoreOptions): Promise<RunTestC
   for (let i = 0; i < runs; i++) {
     let res: unknown
     try {
-      res = await withTimeout(Promise.resolve(invoke()), timeoutMs, key)
+      // when the tested project has SvelteKit, run the test inside a mocked
+      // request store so server hooks (sequence, error, getEvent, ...) work
+      res = await withTimeout(Promise.resolve(withSvelteKitStore(invoke)), timeoutMs, key)
     } catch (e) {
       logError?.(ERRORS.E_TEST_FN!, {
         testKey: key,

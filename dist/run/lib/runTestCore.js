@@ -1,5 +1,6 @@
 import is from '@magic/types'
 import { toCleanError, ERRORS } from '../../lib/index.js'
+import { withSvelteKitStore } from '../../lib/sveltekit.js'
 import { evaluateTestResult } from './evaluateTestResult.js'
 import { getTestTimeout } from './getTestTimeout.js'
 import { withTimeout } from './withTimeout.js'
@@ -21,7 +22,9 @@ export const runTestCore = async options => {
   for (let i = 0; i < runs; i++) {
     let res
     try {
-      res = await withTimeout(Promise.resolve(invoke()), timeoutMs, key)
+      // when the tested project has SvelteKit, run the test inside a mocked
+      // request store so server hooks (sequence, error, getEvent, ...) work
+      res = await withTimeout(Promise.resolve(withSvelteKitStore(invoke)), timeoutMs, key)
     } catch (e) {
       logError?.(ERRORS.E_TEST_FN, {
         testKey: key,
