@@ -1,18 +1,8 @@
 ### Changelog
 
-#### 0.3.42
+#### 0.3.44
 
-- src/run/lib/prepareTest: add componentContext to returned args
-- remove unused componentContext args
-- test: fix expected values for Derived and Input
-- perf: pre-compile svelte components before test run
-- perf: cache resolveSvelteOnlyExports results on disk (keyed by content hash) to skip per-file AST parse during test collection on warm runs
-- perf: increase component pre-compile concurrency from 2 to 6
-- feat: support context option for component tests
-- fix: resolve bare svelte imports to client runtime in ts loader
-- tsconfig: remove allowSyntheticDefaultImports and allowImportingTsExtensions, add types/node
-- remove TestComponent.svelte from testFixtures/barrelFixtures, is in testFixtures/components
-- format
+- add sveltekit server store support, allowing sveltekit apps to test server side code paths
 
 #### 0.3.43
 
@@ -39,6 +29,20 @@
 - fix: stop mutating shared ESM failure errors in import error messages
   - Node caches failed module evaluations: several test files importing the same broken module reject with the SAME Error instance, and mutating it prepended "Failed to import test file: X" once per file, polluting every reported error
   - Wrap the original error in a fresh one (preserving code and stack via cause) in readRecursive and importFileInWorker
+
+#### 0.3.42
+
+- src/run/lib/prepareTest: add componentContext to returned args
+- remove unused componentContext args
+- test: fix expected values for Derived and Input
+- perf: pre-compile svelte components before test run
+- perf: cache resolveSvelteOnlyExports results on disk (keyed by content hash) to skip per-file AST parse during test collection on warm runs
+- perf: increase component pre-compile concurrency from 2 to 6
+- feat: support context option for component tests
+- fix: resolve bare svelte imports to client runtime in ts loader
+- tsconfig: remove allowSyntheticDefaultImports and allowImportingTsExtensions, add types/node
+- remove TestComponent.svelte from testFixtures/barrelFixtures, is in testFixtures/components
+- format
 
 #### 0.3.41
 
