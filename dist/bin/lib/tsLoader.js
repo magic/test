@@ -17,6 +17,7 @@ import { processImports } from '../../lib/svelte/compile/processImports.js'
 import { transformForNode } from '../../lib/svelte/compile/transformForNode.js'
 import { loadViteConfig } from '../../lib/svelte/viteConfig/loadViteConfig.js'
 import { initGlobals } from '../../lib/dom/globals.js'
+import { CACHE_DIR } from '../../constants.js'
 // Svelte is optional - only required when .svelte files are tested
 let svelteAvailable = false
 let svelteCompilerCache = null
@@ -143,6 +144,73 @@ const resolveSvelteBrowserTarget = async specifier => {
   }
   return null
 }
+// Resolve a bare package specifier to an entry file of the REAL node_modules
+// package (not the cache's partial mirror). Handles the exports map (import /
+// module / browser / default conditions) with main/module fallbacks. Returns
+// null when nothing resolvable is found so callers can fall back.
+const resolveRealPackageEntry = async specifier => {
+  const parts = specifier.split('/')
+  const isScoped = specifier.startsWith('@')
+  const pkgName = isScoped ? parts.slice(0, 2).join('/') : parts[0]
+  const subpath = isScoped ? parts.slice(2).join('/') : parts.slice(1).join('/')
+  if (!pkgName) {
+    return null
+  }
+  const pkgDir = path.join(process.cwd(), 'node_modules', pkgName)
+  const pkgJsonPath = path.join(pkgDir, 'package.json')
+  if (!(await fs.exists(pkgJsonPath))) {
+    return null
+  }
+  let pkg
+  try {
+    pkg = JSON.parse(await fs.readFile(pkgJsonPath, 'utf-8'))
+  } catch {
+    return null
+  }
+  const pick = value => {
+    if (is.str(value)) {
+      return value
+    }
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const obj = value
+      for (const cond of ['import', 'module', 'browser', 'default']) {
+        if (cond in obj) {
+          const picked = pick(obj[cond])
+          if (picked) {
+            return picked
+          }
+        }
+      }
+    }
+    return null
+  }
+  let rel = null
+  const exportsMap = pkg.exports
+  if (exportsMap && typeof exportsMap === 'object' && !Array.isArray(exportsMap)) {
+    const obj = exportsMap
+    const key = subpath ? `./${subpath}` : '.'
+    if (key in obj) {
+      rel = pick(obj[key])
+    }
+  }
+  if (!rel && !subpath) {
+    rel = pick(pkg.module) || pick(pkg.main)
+  }
+  if (!rel) {
+    return null
+  }
+  const candidates = [path.join(pkgDir, rel)]
+  if (rel.endsWith('.js')) {
+    candidates.push(path.join(pkgDir, rel.slice(0, -3) + '.ts'))
+    candidates.push(path.join(pkgDir, rel.slice(0, -3) + '.mjs'))
+  }
+  for (const candidate of candidates) {
+    if (await fs.exists(candidate)) {
+      return candidate
+    }
+  }
+  return null
+}
 const resolveImpl = async (specifier, context, nextResolve) => {
   try {
     // svelte runtime: prefer the `browser` (client) variant so that dependencies
@@ -160,6 +228,25 @@ const resolveImpl = async (specifier, context, nextResolve) => {
       const resolved = await resolveAppImport(specifier)
       if (resolved) {
         return { url: pathToFileURL(resolved).href, shortCircuit: true }
+      }
+    }
+    // Bare package imports from files living inside CACHE_DIR (transpiled test
+    // files, compiled components) would resolve against the cache's partial
+    // `node_modules` mirror (compiled .svelte.js files only, no package.json)
+    // and fail. Resolve such specifiers against the real node_modules instead.
+    if (
+      context.parentURL &&
+      context.parentURL.startsWith('file://') &&
+      !specifier.startsWith('.') &&
+      !specifier.startsWith('#') &&
+      !specifier.startsWith('$') &&
+      !specifier.startsWith('file:') &&
+      !specifier.startsWith('node:') &&
+      new URL(context.parentURL).pathname.startsWith(path.join(process.cwd(), CACHE_DIR) + path.sep)
+    ) {
+      const entry = await resolveRealPackageEntry(specifier)
+      if (entry) {
+        return { url: pathToFileURL(entry).href, shortCircuit: true }
       }
     }
     // Handle .js -> .ts conversion for absolute file:// URLs
