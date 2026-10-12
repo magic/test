@@ -67,6 +67,9 @@ const importFile = async filePath => {
     // Enhance error with file context
     const error = is.error(err) ? err : new Error(String(err))
     error.message = `Failed to import test file: ${filePath}\n${error.message}`
+    if (process.env.MAGIC_TEST_VERBOSE_ERRORS) {
+      console.error('Import error details for', filePath, err)
+    }
     throw error
   }
 }
@@ -213,8 +216,19 @@ const readRecursiveImpl = async (dir = '', onProgress) => {
   }
   if (errors.length > 0) {
     // Log errors but don't throw - continue with tests that loaded successfully
-    const errorMessages = errors.map(e => `${e.file}: ${e.error.message}`).join('\n')
+    const errorMessages = errors
+      .map(e => {
+        const code = e.error.code ? ` [${e.error.code}]` : ''
+        return `${e.file}${code}: ${e.error.message}`
+      })
+      .join('\n')
     console.error(`${errors.length} test file(s) failed to load (continuing): ${errorMessages}`)
+    if (process.env.MAGIC_TEST_VERBOSE_ERRORS) {
+      for (const e of errors) {
+        console.error('--- error details for', e.file, '---')
+        console.error(e.error)
+      }
+    }
   }
   return { tests, fileCount: processedCount }
 }

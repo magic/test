@@ -65,6 +65,9 @@ const init = async () => {
   } catch (e) {
     const err = e
     err.code = 'E_MAGIC_TEST'
+    if (process.env.MAGIC_TEST_VERBOSE_ERRORS) {
+      console.error('Import/runtime error:', err)
+    }
     log.error(err)
     process.exit(1)
   }
