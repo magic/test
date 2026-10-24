@@ -15,6 +15,7 @@
 - fix: compiled output for sources outside the project (e.g. file:-symlinked
   node_modules packages) no longer escapes the .magic-test-cache directory
   via `../` path segments and dumps `.svelte.js` files into the project tree.
+- test: regression tests for processImports side-effect handling
 
 #### 0.3.45
 
