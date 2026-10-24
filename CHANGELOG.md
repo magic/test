@@ -1,5 +1,10 @@
 ### Changelog
 
+#### 0.3.45
+
+- better handling of _unknown_ string in svelte components
+- update dependencies
+
 #### 0.3.44
 
 - add sveltekit server store support, allowing sveltekit apps to test server side code paths
