@@ -35,8 +35,8 @@ export default [
   {
     fn: async () => {
       // consecutive calls must keep working (failed import is cached, not retried per call)
-      const a = await withSvelteKitStore(() => 'a') as 'a'
-      const b = await withSvelteKitStore(() => 'b') as 'b'
+      const a = (await withSvelteKitStore(() => 'a')) as 'a'
+      const b = (await withSvelteKitStore(() => 'b')) as 'b'
       return a + b
     },
     expect: 'ab',
