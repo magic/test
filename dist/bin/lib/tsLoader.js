@@ -606,9 +606,7 @@ const loadImplInner = async (url, context, nextLoad) => {
         const result = compiler.compileModule(transpiled, { filename: filePath })
         return {
           format: 'module',
-          source:
-            ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
-            result.js.code,
+          source: result.js.code,
           shortCircuit: true,
         }
       } catch {
@@ -616,9 +614,7 @@ const loadImplInner = async (url, context, nextLoad) => {
         // Fall back to TypeScript transpilation only
         return {
           format: 'module',
-          source:
-            ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
-            transpiled,
+          source: transpiled,
           shortCircuit: true,
         }
       }
@@ -635,9 +631,7 @@ const loadImplInner = async (url, context, nextLoad) => {
         const result = compiler.compileModule(transpiled, { filename: filePath })
         return {
           format: 'module',
-          source:
-            ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
-            result.js.code,
+          source: result.js.code,
           shortCircuit: true,
         }
       } catch {
@@ -645,9 +639,7 @@ const loadImplInner = async (url, context, nextLoad) => {
         // Fall back to TypeScript transpilation only
         return {
           format: 'module',
-          source:
-            ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
-            transpiled,
+          source: transpiled,
           shortCircuit: true,
         }
       }
@@ -659,11 +651,14 @@ const loadImplInner = async (url, context, nextLoad) => {
       const source = await fs.readFile(filePath, 'utf-8')
       const withResolvedImports = await resolveDollarLibImports(source, filePath)
       const transpiled = transpileWithTypeScript(withResolvedImports)
+      // No in-memory preamble (e.g. a globalThis.addEventListener shim): the
+      // loader-init initGlobals() already installs those globals, and any
+      // in-memory-only prefix would shift V8 coverage offsets for c8 (c8
+      // remaps against the on-disk file, which has no such prefix), showing
+      // up as phantom uncovered import lines.
       return {
         format: 'module',
-        source:
-          ';typeof globalThis.addEventListener !== "function" && (globalThis.addEventListener = function(){}); ' +
-          transpiled,
+        source: transpiled,
         shortCircuit: true,
       }
     }

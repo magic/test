@@ -128,7 +128,11 @@ const compileBarrelImpl = async (
     MAX_CONCURRENT,
   )
 
-  const barrelRelPath = path.relative(getCwd(), filePath)
+  let barrelRelPath = path.relative(getCwd(), filePath)
+  // Files outside the project would escape CACHE_DIR via `../` — anchor them.
+  if (barrelRelPath.startsWith('..') || path.isAbsolute(barrelRelPath)) {
+    barrelRelPath = path.join('outside', filePath)
+  }
   const wrapperFile = path.join(CACHE_DIR, barrelRelPath.replace(/\.(ts|js)$/, '.barrel.js'))
   const wrapperAbsPath = path.join(getCwd(), wrapperFile)
   const wrapperTmpDir = path.dirname(wrapperAbsPath)

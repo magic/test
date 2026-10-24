@@ -1,5 +1,21 @@
 ### Changelog
 
+#### 0.3.46
+
+- fix: coverage attribution for .ts/.svelte modules — removed the per-module
+  `globalThis.addEventListener` shim that the loader prepended to the in-memory
+  source. The prefix (absent from the on-disk file) shifted every V8 coverage
+  offset, so c8 reported phantom uncovered import lines and missed
+  async-continuation code. `initGlobals()` already installs those globals at
+  loader init, so the shim was redundant.
+- fix: component tests can now mount components with side-effect asset
+  imports (e.g. a root layout doing `import '../app.css'`) — the Svelte
+  compile pipeline drops side-effect CSS/asset imports (no Node.js equivalent)
+  instead of failing module resolution.
+- fix: compiled output for sources outside the project (e.g. file:-symlinked
+  node_modules packages) no longer escapes the .magic-test-cache directory
+  via `../` path segments and dumps `.svelte.js` files into the project tree.
+
 #### 0.3.45
 
 - better handling of _unknown_ string in svelte components

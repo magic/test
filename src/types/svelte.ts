@@ -23,6 +23,16 @@ export type ResolveAndCompileResult =
       isSvelteOnlyPackage?: boolean
     }
   | { filePath: string; js: string; url: string; isSvelteOnlyPackage?: boolean }
+  | {
+      filePath: string
+      js: string
+      url: null
+      /**
+       * The import has no Node.js equivalent (side-effect asset imports such
+       * as `import './app.css'`) — drop the statement from the compiled code.
+       */
+      removeImport: true
+    }
 import type { SourceMap } from 'magic-string'
 
 export interface CssObjectInternal extends CssObject {

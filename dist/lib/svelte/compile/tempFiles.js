@@ -15,7 +15,11 @@ export const computeTempPath = filePath => {
     const relFromNodeModules = filePath.split('node_modules/').pop() || ''
     return path.join(getCwd(), CACHE_DIR, 'node_modules_processed', relFromNodeModules)
   }
-  const relPath = path.relative(getCwd(), filePath)
+  let relPath = path.relative(getCwd(), filePath)
+  // Files outside the project would escape CACHE_DIR via `../` — anchor them.
+  if (relPath.startsWith('..') || path.isAbsolute(relPath)) {
+    relPath = path.join('outside', filePath)
+  }
   return path.join(getCwd(), CACHE_DIR, relPath + '.mjs')
 }
 export const writeTempFile = async (filePath, code) => {

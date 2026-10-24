@@ -35,11 +35,12 @@ const processImportsImpl = async (code, sourceFilePath, importChain = []) => {
   // Use AST-based import extraction (handles comments automatically)
   const astImports = extractImportsSync(code)
   const imports = astImports
-    .filter(imp => imp.type === 'static' || imp.type === 'namespace')
+    .filter(imp => imp.type === 'static' || imp.type === 'namespace' || imp.type === 'sideEffect')
     .filter(imp => imp.source != null)
     .map(imp => ({
       imported: imp.specifiers,
       path: imp.source,
+      type: imp.type,
       full: imp.originalText,
       start: imp.start,
       end: imp.end,
@@ -52,6 +53,28 @@ const processImportsImpl = async (code, sourceFilePath, importChain = []) => {
     imports.map((item, i) => ({ item, index: i })),
     async ({ item, index }) => {
       const { imported, path: importPath, start, end } = item
+      if (item.type === 'sideEffect') {
+        // Side-effect imports (no specifiers): CSS/asset imports have no
+        // Node.js equivalent → drop the statement; JS side-effect imports
+        // resolve natively → keep as-is.
+        const base = importPath.split('?')[0] ?? importPath
+        if (/\.(css|scss|sass|less|styl|pcss)$/i.test(base)) {
+          return {
+            imported,
+            importPath,
+            start,
+            end,
+            result: { filePath: importPath, js: '', url: null, removeImport: true },
+          }
+        }
+        return {
+          imported,
+          importPath,
+          start,
+          end,
+          result: { filePath: importPath, js: '', url: null, skipProcessing: true },
+        }
+      }
       ddl('resolve ' + importPath + ' <- ' + path.basename(sourceFilePath))
       const resolveId = traceStart(
         `resolve.import[${index + 1}/${importCount}] ${importPath.split('/').pop() || importPath}`,
@@ -97,6 +120,11 @@ const processImportsImpl = async (code, sourceFilePath, importChain = []) => {
         processedCode =
           processedCode.slice(0, start) + `const ${imported} = {}` + processedCode.slice(end)
       }
+      continue
+    }
+    // Side-effect asset imports (CSS and friends) — drop the statement
+    if ('removeImport' in result && result.removeImport) {
+      processedCode = processedCode.slice(0, start) + processedCode.slice(end)
       continue
     }
     const url = 'url' in result && result.url

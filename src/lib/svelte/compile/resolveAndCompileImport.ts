@@ -237,6 +237,12 @@ const resolveAndCompileImportImplCore = async (
     }
   }
 
+  // Side-effect asset imports (CSS and friends) have no Node.js equivalent —
+  // the browser bundler handles them, tests only need the JS. Drop the import.
+  if (resolvedPath && /\.(css|scss|sass|less|styl|pcss)$/i.test(resolvedPath)) {
+    return { filePath: importPath, js: '', url: null, removeImport: true }
+  }
+
   const pathStats = await tryStat(resolvedPath)
   if (pathStats?.isDirectory()) {
     const importFileName = path.basename(importPath)
