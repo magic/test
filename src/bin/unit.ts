@@ -9,6 +9,7 @@ import is from '@magic/types'
 import { run, abort } from '../run.js'
 
 import { maybeInjectMagic, readRecursive, resetVisitedDirs } from './lib/index.js'
+import { prewarmComponentGraphs } from './lib/prewarmComponents.js'
 
 import type { CustomError } from '@magic/error'
 
@@ -72,6 +73,11 @@ const init = async () => {
       log.error('NO tests specified')
       process.exit(1)
     }
+
+    // Compile the component graphs once on the main thread so the test
+    // workers reuse the shared disk cache instead of each re-importing the
+    // package graphs (see prewarmComponents.ts).
+    await prewarmComponentGraphs(tests)
 
     const { shards, shardId, workers } = getShardConfig()
 

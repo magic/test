@@ -7,6 +7,7 @@ import { createFailResult } from './lib/index.js'
 import type { TestResult } from '../types.js'
 
 import { runSingleTestFromFileInWorker, importFileInWorker, makeSafeClone } from './lib/index.js'
+import { prewarmWorkerModules } from './lib/prewarmWorkerModules.js'
 
 import '../bin/lib/registerLoader.js'
 
@@ -124,6 +125,11 @@ const runBatchMode = async () => {
 
   try {
     const { tests, afterAllCleanup } = await setupSuite(suiteSnapshot)
+
+    // Move the one-time worker cost (component graph import/compile) out of
+    // the first test's timeout budget: in a shared worker the first test
+    // would otherwise carry it, and under load that is what flakes.
+    await prewarmWorkerModules(tests)
 
     const results: TestResult[] = []
     try {
