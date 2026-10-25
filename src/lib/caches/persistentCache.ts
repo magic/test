@@ -22,7 +22,29 @@ interface CacheManifest {
 
 // In-memory caches for performance
 let manifestCache: CacheManifest | null = null
-const hashCache = new LRUCache<string>(500)
+// The on-disk mtime the in-memory manifest was loaded from. Parallel test
+// workers share the manifest file: reload whenever another worker has
+// written a newer version so cache entries recorded mid-run are visible.
+let manifestMtime = 0
+const hashCache = new LRUCache<string>(4096)
+
+// Atomic write: a concurrent reader (sibling worker) must never observe a
+// truncated/partial file — write to a unique temp name, then rename (POSIX
+// renames are atomic).
+export async function writeAtomic(filePath: string, content: string): Promise<void> {
+  const tmp = `${filePath}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`
+  await fs.writeFile(tmp, content)
+  try {
+    await fs.rename(tmp, filePath)
+  } catch (e) {
+    try {
+      await fs.unlink(tmp)
+    } catch {
+      // temp cleanup is best-effort
+    }
+    throw e
+  }
+}
 
 // Compute SHA-256 hash of file content (with caching)
 async function hashFile(filePath: string): Promise<string> {
@@ -44,13 +66,14 @@ function getCachePath(sourcePath: string): string {
 }
 
 export async function loadManifest(): Promise<CacheManifest | null> {
-  if (manifestCache) {
-    return manifestCache
-  }
-
   try {
+    const stats = await fs.stat(MANIFEST_FILE)
+    if (manifestCache && stats.mtimeMs === manifestMtime) {
+      return manifestCache
+    }
     const data = await fs.readFile(MANIFEST_FILE, 'utf-8')
     manifestCache = JSON.parse(data)
+    manifestMtime = stats.mtimeMs
     return manifestCache
   } catch {
     return null
@@ -58,16 +81,25 @@ export async function loadManifest(): Promise<CacheManifest | null> {
 }
 
 export async function saveManifest(manifest?: CacheManifest): Promise<void> {
+  // Merge with the latest on-disk manifest so concurrent writers (parallel
+  // test workers) don't clobber each other's entries: a stale in-memory copy
+  // must not drop entries another worker recorded in the meantime.
+  const latest = await loadManifest()
   let m: CacheManifest | null | undefined = manifest
   if (!m) {
-    // Load current manifest and save
-    m = await loadManifest()
+    m = latest
+  } else if (latest) {
+    for (const [key, value] of Object.entries(latest.sources)) {
+      if (!(key in m.sources)) {
+        m.sources[key] = value
+      }
+    }
   }
   if (!m) {
     return
   }
   await fs.mkdirp(CACHE_DIR)
-  await fs.writeFile(MANIFEST_FILE, JSON.stringify(m, null, 2))
+  await writeAtomic(MANIFEST_FILE, JSON.stringify(m, null, 2))
 }
 
 export async function getCachedCompile(
@@ -131,7 +163,7 @@ export async function recordCompile(sourcePath: string, compiledJs: string): Pro
   // Save compiled file
   const compiledPath = getCachePath(sourcePath)
   await fs.mkdirp(path.dirname(compiledPath))
-  await fs.writeFile(compiledPath, compiledJs)
+  await writeAtomic(compiledPath, compiledJs)
 
   // Update manifest
   manifest.sources[sourcePath] = { mtime: stats.mtimeMs, hash }
@@ -147,6 +179,7 @@ export async function clearCache(): Promise<void> {
     // Ignore
   }
   manifestCache = null
+  manifestMtime = 0
   hashCache.clear()
   await clearResolveTransformCache()
 }

@@ -3,6 +3,7 @@ import { pathToFileURL } from 'node:url'
 import fs from '@magic/fs'
 
 import { getCwd } from '../../../constants.js'
+import { writeAtomic } from '../../caches/persistentCache.js'
 
 export const writeCompiledFile = async (
   tempPath: string,
@@ -35,10 +36,10 @@ export const writeCompiledFile = async (
       }
       mapObj.sourceRoot = ''
     }
-    await fs.writeFile(tmpFileAbs + '.map', JSON.stringify(mapObj))
+    await writeAtomic(tmpFileAbs + '.map', JSON.stringify(mapObj))
   }
 
-  await fs.writeFile(tmpFileAbs, contentToWrite)
+  await writeAtomic(tmpFileAbs, contentToWrite)
 
   const importUrl = pathToFileURL(tmpFileAbs).href
   return { tmpFile: tempPath, importUrl }
