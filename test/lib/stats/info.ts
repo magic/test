@@ -27,7 +27,7 @@ export default [
     fn: () => {
       const store = createStore()
       store.set({ results: { test1: { all: 1, pass: 1 } } })
-      return info(['test1'], store) === true
+      return info([{ name: 'test1', parent: '', pkg: '', pass: 0, fail: 0, all: 0, tests: [] }], store) === true
     },
     expect: true,
     info: 'info with test results returns true',
@@ -37,7 +37,7 @@ export default [
     fn: () => {
       const store = createStore()
       store.set({ results: { test1: { all: 10, pass: 8 } } })
-      info(['test1'], store)
+      info([{ name: 'test1', parent: '', pkg: '', pass: 0, fail: 0, all: 0, tests: [] }], store)
       const results = store.get<TestResults>('results')
       return results?.test1?.all === 10 && results?.test1?.pass === 8
     },
