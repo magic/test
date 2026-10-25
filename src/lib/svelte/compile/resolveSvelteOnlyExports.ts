@@ -4,6 +4,7 @@ import crypto from 'node:crypto'
 import { AsyncLocalStorage } from 'node:async_hooks'
 
 import fs from '@magic/fs'
+import log from '@magic/log'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -119,6 +120,19 @@ const compiling = new Map<string, Promise<string>>()
 // (concurrent, different async context) is NOT treated as a cycle: it safely awaits
 // the shared pending compile via the `compiling` map.
 const compileStack = new AsyncLocalStorage<{ active: Set<string> }>()
+
+// Degradation tracking: when a per-export compile times out, the mirror
+// barrel gets a `export const X = {}` placeholder. Such a result must NOT
+// be written to the persistent resolve-transform cache — that would hide
+// the export (silent `X is not a function` in component tests) until the
+// cache is cleared. The flag rides in AsyncLocalStorage so the per-export
+// catches (deep in the call chain) can signal the cached wrapper.
+const degradedStore = new AsyncLocalStorage<{ hit: boolean }>()
+
+// Per-export compile budget. Under machine load a cold svelte compile of a
+// component with a deep graph can take well over 30 s; 90 s keeps the
+// deadlock guard without flaking loaded machines into broken barrels.
+const SVELTE_EXPORT_COMPILE_TIMEOUT_MS = 90000
 
 const reentryOutputPath = (p: string): string => {
   if (p.endsWith('.svelte')) {
@@ -271,7 +285,7 @@ const handleJsWithSvelteReexports = async (
         const timeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(
             () => reject(new Error('compile timeout for ' + absoluteSveltePath.split('/').pop())),
-            30000,
+            SVELTE_EXPORT_COMPILE_TIMEOUT_MS,
           ),
         )
         const result = (await Promise.race([
@@ -284,7 +298,16 @@ const handleJsWithSvelteReexports = async (
           original: firstExp.originalText || `export * from '${firstExp.source}'`,
           replacement: `export { ${svelteDefaultName} } from '${compiledUrl}'`,
         })
-      } catch {
+      } catch (e) {
+        if (e instanceof Error && e.message.startsWith('compile timeout')) {
+          const degraded = degradedStore.getStore()
+          if (degraded) {
+            degraded.hit = true
+          }
+          log.warn(
+            `svelte-only barrel: ${path.basename(absoluteSveltePath)} did not compile within ${SVELTE_EXPORT_COMPILE_TIMEOUT_MS / 1000}s (machine load?) — emitting a {} placeholder. The result is not cached; the next run retries.`,
+          )
+        }
         const svelteDefaultName = path.basename(absoluteSveltePath, '.svelte')
         replacements.push({
           original: firstExp.originalText || `export * from '${firstExp.source}'`,
@@ -306,7 +329,7 @@ const handleJsWithSvelteReexports = async (
         const timeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(
             () => reject(new Error('compile timeout for ' + absoluteSveltePath.split('/').pop())),
-            30000,
+            SVELTE_EXPORT_COMPILE_TIMEOUT_MS,
           ),
         )
         const result = (await Promise.race([
@@ -338,7 +361,16 @@ const handleJsWithSvelteReexports = async (
             replacement: `export { ${specifiers.join(', ')} } from '${compiledUrl}'`,
           })
         }
-      } catch {
+      } catch (e) {
+        if (e instanceof Error && e.message.startsWith('compile timeout')) {
+          const degraded = degradedStore.getStore()
+          if (degraded) {
+            degraded.hit = true
+          }
+          log.warn(
+            `svelte-only barrel: ${path.basename(absoluteSveltePath)} did not compile within ${SVELTE_EXPORT_COMPILE_TIMEOUT_MS / 1000}s (machine load?) — emitting a {} placeholder. The result is not cached; the next run retries.`,
+          )
+        }
         exps.forEach(exp => {
           const exportName = exp.alias || exp.name
           const isDefault = exp.name === 'default'
@@ -738,11 +770,20 @@ export const resolveSvelteOnlyExports = async (
     return cached
   }
 
-  const result = await resolveSvelteOnlyExportsImpl(code, sourceDir)
+  const degraded = { hit: false }
+  const result = await degradedStore.run(degraded, async () =>
+    resolveSvelteOnlyExportsImpl(code, sourceDir),
+  )
 
-  // Fire-and-forget: populate the disk cache for the next run without
-  // slowing down this one.
-  recordResolveTransform(code, sourceDir, result)
+  // A degraded transform (a per-export compile timed out under load) must
+  // not be persisted: the {} placeholder would hide the export in every
+  // subsequent run until the cache is cleared. Skipping the record makes
+  // the next run retry the compile.
+  if (!degraded.hit) {
+    // Fire-and-forget: populate the disk cache for the next run without
+    // slowing down this one.
+    recordResolveTransform(code, sourceDir, result)
+  }
 
   return result
 }
