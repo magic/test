@@ -28,6 +28,7 @@ type RunTestCoreResult = {
   exp: unknown
   expString: unknown
   afterError?: unknown
+  duration?: number
 }
 
 /**
@@ -42,6 +43,8 @@ export const runTestCore = async (options: RunTestCoreOptions): Promise<RunTestC
   const { after, expect, runs = 1, timeout } = test
 
   const timeoutMs = getTestTimeout(timeout)
+
+  const startTime = process.hrtime.bigint()
 
   let result: unknown
   let exp: unknown
@@ -110,5 +113,8 @@ export const runTestCore = async (options: RunTestCoreOptions): Promise<RunTestC
     }
   }
 
-  return { result, pass, exp, expString, afterError }
+  const endTime = process.hrtime.bigint()
+  const durationMs = Number(endTime - startTime) / 1_000_000
+
+  return { result, pass, exp, expString, afterError, duration: durationMs }
 }

@@ -25,6 +25,7 @@ export const runSingleTestInWorker = async (
   let exp
   let expString
   let pass = false
+  let duration: number | undefined
 
   try {
     const testResult = await runTestFnInWorker(test, testKey)
@@ -32,6 +33,7 @@ export const runSingleTestInWorker = async (
     pass = testResult.pass
     exp = testResult.exp
     expString = testResult.expString
+    duration = testResult.duration
   } catch {
     // Error already logged by inner functions
   }
@@ -47,5 +49,6 @@ export const runSingleTestInWorker = async (
     key: testKey,
     info,
     pkg: testPkg,
+    duration,
   }
 }

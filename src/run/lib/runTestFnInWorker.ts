@@ -13,6 +13,7 @@ type RunFnResult = {
   expString: unknown
   afterCleanupError: unknown
   afterError: unknown
+  duration?: number
 }
 
 /**
@@ -57,6 +58,7 @@ export const runTestFnInWorker = async (test: WrappedTest, key: string): Promise
       afterCleanup,
       afterCleanupError: innerAfterCleanupError,
       afterError: core.afterError,
+      duration: core.duration,
     }
   })
 
@@ -75,5 +77,6 @@ export const runTestFnInWorker = async (test: WrappedTest, key: string): Promise
     expString: isolatedResult.expString,
     afterCleanupError: isolatedResult.afterCleanupError || afterCleanupError,
     afterError: isolatedResult.afterError,
+    duration: isolatedResult.duration,
   }
 }

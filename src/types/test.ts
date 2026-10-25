@@ -191,6 +191,9 @@ export interface TestResult {
 
   /** Error from after hook (if any) */
   afterError?: unknown
+
+  /** Duration of the test in milliseconds */
+  duration?: number
 }
 
 /**

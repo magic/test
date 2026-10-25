@@ -15,6 +15,7 @@ type TestExecutionResult = {
   expString: unknown
   afterCleanup?: () => void | Promise<void>
   afterError?: unknown
+  duration?: number
 }
 
 /**
@@ -166,6 +167,7 @@ export const runTest = async (
       expString: isolatedResult.expString,
       key,
       info,
+      duration: isolatedResult.duration,
     }
 
     rawResults?.push(testResult)
