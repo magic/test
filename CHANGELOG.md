@@ -1,5 +1,53 @@
 ### Changelog
 
+#### 0.3.48
+
+- perf: component import graphs — per-process memoization of resolved import
+  paths, larger in-memory LRU caches, and cross-worker reuse of the persistent
+  compile cache: a test worker now reuses compiled output recorded by a
+  sibling worker instead of recompiling the shared package barrels from
+  source. On a cold 159-test SvelteKit app this cut worker compile work from
+  ~183 s CPU to ~96 s (4,690 → ~278 traced resolve/compile operations).
+- perf: barrel wrappers are now persistent. `compileBarrel` writes the
+  generated wrapper to the standard temp location and records it in the
+  manifest (keyed by the barrel file hash), and barrel exports are recorded
+  per file — so a warm run skips the multi-second export-graph walk and the
+  per-worker recompilation of a barrel's svelte exports entirely. The wrapper
+  location change is safe: stale caches simply re-record on first use.
+- perf: `compileSvelteWithWrite` (the warmup path) records its output in the
+  persistent cache, so test workers hit the compiled app components instead
+  of recompiling them per worker.
+- perf/robustness: compile-cache writes are atomic (temp + rename), the
+  manifest reloads when a sibling worker writes a newer one, and manifests
+  are merged on save so concurrent workers no longer clobber each other's
+  entries.
+- feat: prewarm component graphs before test workers start — a small pool of
+  worker threads (default 4) imports each referenced component once and
+  records the compiled graph in the shared disk cache, so test workers reuse
+  it instead of all recompiling the barrels from source. The redundant
+  per-worker barrel import was the dominant cold-run cost and, under machine
+  load, pushed component tests past the per-test timeout. The prewarm is
+  skipped automatically when the cache is already warm (hash probe), so warm
+  runs pay nothing. `MAGIC_TEST_PREWARM=0` disables it, `MAGIC_TEST_PREWARM_WORKERS=n`
+  sets the thread count.
+- feat: `MAGIC_TEST_WORKER_REUSE=1` — run a file's isolated tests
+  sequentially in one shared worker instead of one fresh worker per test.
+  The first mount pays the one-time component-graph cost, subsequent mounts
+  reuse the imported modules (~40 ms each): ~22 s → ~15 s warm wall time on
+  a 159-test SvelteKit suite, and far fewer rotating per-test timeouts under
+  machine load. Batched workers pre-import the referenced component modules
+  before the first test, keeping the one-time cost outside the per-test
+  timeout budget. Trade-off: batched tests share module-level state, so it
+  is opt-in for stateless/props-driven component suites. Default (off) keeps
+  full per-test isolation.
+- fix: svelte-only barrel generation — the per-export compile raced a 30 s
+  timeout that silently emitted an `export const X = {}` placeholder on
+  expiry, and the broken result was persisted to the resolve-transform
+  cache, hiding the export (`X is not a function`) in every later run until
+  the cache was cleared. The budget is now 90 s, a timeout logs a warning
+  instead of degrading silently, and a degraded transform is never recorded
+  (the next run retries).
+
 #### 0.3.46
 
 - fix: coverage attribution for .ts/.svelte modules — removed the per-module

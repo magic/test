@@ -705,14 +705,17 @@ Environment detection utilities for conditional test behavior.
 
 environment variables read by @magic/test:
 
-| Variable                              | Description                                                     |
-| ------------------------------------- | --------------------------------------------------------------- |
-| `MAGIC_TEST_WORKERS`                  | max parallel workers (same as `--workers`)                      |
-| `MAGIC_TEST_VERBOSE`                  | set to `1` for verbose output (same as `-l`)                    |
-| `MAGIC_TEST_ERROR_LENGTH`             | error string limit, `0` = unlimited (same as `--error-length`)  |
-| `MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED` | set to `false`/`0` to accept self-signed certificates           |
-| `MAGIC_TEST_VERBOSE_ERRORS`           | set to `1` for verbose error output (shows error length limits) |
-| `NODE_ENV`                            | set to `production` by the `-p` flag; defaults to `test`        |
+| Variable                              | Description                                                                                                 |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `MAGIC_TEST_WORKERS`                  | max parallel workers (same as `--workers`)                                                                  |
+| `MAGIC_TEST_VERBOSE`                  | set to `1` for verbose output (same as `-l`)                                                                |
+| `MAGIC_TEST_ERROR_LENGTH`             | error string limit, `0` = unlimited (same as `--error-length`)                                              |
+| `MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED` | set to `false`/`0` to accept self-signed certificates                                                       |
+| `MAGIC_TEST_VERBOSE_ERRORS`           | set to `1` for verbose error output (shows error length limits)                                             |
+| `MAGIC_TEST_WORKER_REUSE`             | set to `1` to run a file's isolated tests in one shared worker (faster, but tests share module-level state) |
+| `MAGIC_TEST_PREWARM`                  | set to `0` to skip the pre-run component-graph prewarm (on by default)                                      |
+| `MAGIC_TEST_PREWARM_WORKERS`          | prewarm thread count (default `4`)                                                                          |
+| `NODE_ENV`                            | set to `production` by the `-p` flag; defaults to `test`                                                    |
 
 ```javascript
 import { env, isProd, isTest, isDev } from '@magic/test'
@@ -1457,6 +1460,33 @@ const needsIsolation = suiteNeedsIsolation(tests)
 ```
 
 This is useful for custom runners or when building test tooling.
+
+### <a name="worker-reuse"></a>Worker reuse (component tests)
+
+Every isolated test runs in a **fresh worker thread**: fresh `globalThis`,
+fresh module registry, fresh component graph import. That isolation is what
+keeps component tests independent, but the per-worker cost is high — the
+first `mount()` in a worker pays for the whole Svelte dependency graph
+(import + compile caches miss on the first worker), which on a typical
+SvelteKit app takes several seconds; each further worker repeats it.
+
+`MAGIC_TEST_WORKER_REUSE=1` changes the trade: a file's isolated tests run
+**sequentially in one shared worker**. The first test pays the one-time graph
+cost, every subsequent mount reuses the already-imported modules (~40 ms).
+On a 159-test SvelteKit suite this cut wall time from ~22 s to ~15 s, and
+under machine load it removes most of the rotating per-test timeouts (fewer
+workers, fewer one-time cold starts inside the per-test timeout budget).
+
+Trade-off: tests in a batch **share module-level state** (no fresh module
+registry per test; `globalThis` is restored only between suites, not tests).
+Only enable this for suites whose component tests are stateless / props-
+driven — i.e. they don't rely on module-scoped `$state`, module-scoped
+stores, or singletons being re-created per test. The default (off) keeps
+full per-test isolation.
+
+```json
+"test": "MAGIC_TEST_WORKER_REUSE=1 t -p -w 4 --timeout 60000"
+```
 
 #### <a name="usage"></a>Usage
 
