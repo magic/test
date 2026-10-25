@@ -27,7 +27,12 @@ export default [
     fn: () => {
       const store = createStore()
       store.set({ results: { test1: { all: 1, pass: 1 } } })
-      return info([{ name: 'test1', parent: '', pkg: '', pass: 0, fail: 0, all: 0, tests: [] }], store) === true
+      return (
+        info(
+          [{ name: 'test1', parent: '', pkg: '', pass: 0, fail: 0, all: 0, tests: [] }],
+          store,
+        ) === true
+      )
     },
     expect: true,
     info: 'info with test results returns true',

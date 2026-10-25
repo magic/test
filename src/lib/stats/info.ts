@@ -68,7 +68,7 @@ const formatDuration = (ms: number): string => {
  * Prints test results for a package and its suites.
  */
 export const info = (suites: Suite[], store: Store, useLogging: boolean = true): boolean => {
-  const results = store.get<TestResults>('results') 
+  const results = store.get<TestResults>('results')
 
   if (!results) {
     return true
