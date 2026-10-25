@@ -32,10 +32,10 @@ export interface PackageExportResolveEntry {
 }
 
 // Unified LRU caches
-export const cache = new LRUCache<CompileCacheEntry>(100)
-export const importCache = new LRUCache<ImportCacheEntry>(100)
-export const packageExportCache = new LRUCache<PackageExportResolveEntry>(200)
-export const barrelCache = new LRUCache<BarrelCacheEntry>(100)
+export const cache = new LRUCache<CompileCacheEntry>(4096)
+export const importCache = new LRUCache<ImportCacheEntry>(4096)
+export const packageExportCache = new LRUCache<PackageExportResolveEntry>(4096)
+export const barrelCache = new LRUCache<BarrelCacheEntry>(4096)
 
 // Unified promise deduplication map
 // Keys prefixed: 'barrel:', 'svelte:', 'exports:', 'pkg:', 'resolve:', 'cmgr:'

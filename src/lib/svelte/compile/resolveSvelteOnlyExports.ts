@@ -109,7 +109,7 @@ const processJsReexport = async (
   return pathToFileURL(tempFile).href
 }
 
-const tmpFileCache = new LRUCache<string>(100)
+const tmpFileCache = new LRUCache<string>(4096)
 
 const compiling = new Map<string, Promise<string>>()
 

@@ -12,7 +12,7 @@ import { parallelMap, MAX_CONCURRENT } from './parallelMap.js'
 import { ddl } from './ddl.js'
 
 // Cache for processImports results (key: codeHash:sourceFilePath)
-const processImportsCache = new LRUCache<{ code: string; result: string }>(200)
+const processImportsCache = new LRUCache<{ code: string; result: string }>(4096)
 
 export const processImports = async (
   code: string,
