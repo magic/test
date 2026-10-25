@@ -48,7 +48,7 @@
   instead of degrading silently, and a degraded transform is never recorded
   (the next run retries).
 
-#### 0.3.46
+#### 0.3.47
 
 - fix: coverage attribution for .ts/.svelte modules — removed the per-module
   `globalThis.addEventListener` shim that the loader prepended to the in-memory
