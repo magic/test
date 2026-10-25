@@ -2,15 +2,16 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import { barrelCache, pendingPromises } from '../../caches/cache.js'
 import { traceStart, traceEnd } from '../../trace/timing.js'
-import { CACHE_DIR, getCwd } from '../../../constants.js'
+import { getCwd } from '../../../constants.js'
 import { getSvelteExports } from './getSvelteExports.js'
 import { processImports } from './processImports.js'
 import { compileSvelte } from './compileSvelte.js'
+import { recordCompile } from '../../caches/persistentCache.js'
 import { computeRelativePath } from './computeRelativePath.js'
 import { getTempFilePath } from './getTempFilePath.js'
 import { parallelMap, MAX_CONCURRENT } from './parallelMap.js'
 import { ddl, ddlHold, ddlRelease } from './ddl.js'
-export const compileBarrel = async (filePath, importChain = []) => {
+export const compileBarrel = async (filePath, importChain = [], knownExports) => {
   const id = traceStart(`compileBarrel ${path.basename(filePath)}`)
   try {
     // Check for circular dependency FIRST - must happen before any async operations
@@ -61,7 +62,7 @@ export const compileBarrel = async (filePath, importChain = []) => {
     // Create promise and store it for other callers to await
     const compilePromise = (async () => {
       try {
-        return await compileBarrelImpl(filePath, currentChain)
+        return await compileBarrelImpl(filePath, currentChain, knownExports)
       } finally {
         pendingPromises.delete(`barrel:${filePath}`)
       }
@@ -76,8 +77,10 @@ export const compileBarrel = async (filePath, importChain = []) => {
     throw error
   }
 }
-const compileBarrelImpl = async (filePath, currentChain) => {
-  const exports = await getSvelteExports(filePath)
+const compileBarrelImpl = async (filePath, currentChain, knownExports) => {
+  // The caller (resolveAndCompileImport) already walked the export graph to
+  // decide this is a barrel — reuse its result instead of walking again.
+  const exports = knownExports ?? (await getSvelteExports(filePath))
   if (exports.length === 0) {
     throw new Error(`No Svelte exports found in barrel file: ${filePath}`)
   }
@@ -94,6 +97,10 @@ const compileBarrelImpl = async (filePath, currentChain) => {
       const processed = await processImports(js, sveltePath, currentChain)
       traceEnd(processId)
       traceEnd(compileId)
+      // Record each export in the persistent cache: the wrapper references
+      // these temp files, and without manifest entries every worker would
+      // recompile the whole barrel's svelte exports from source.
+      await recordCompile(sveltePath, processed)
       const tmpFile = getTempFilePath(sveltePath)
       const tmpFileAbs = path.join(getCwd(), tmpFile)
       return {
@@ -105,12 +112,10 @@ const compileBarrelImpl = async (filePath, currentChain) => {
     },
     MAX_CONCURRENT,
   )
-  let barrelRelPath = path.relative(getCwd(), filePath)
-  // Files outside the project would escape CACHE_DIR via `../` — anchor them.
-  if (barrelRelPath.startsWith('..') || path.isAbsolute(barrelRelPath)) {
-    barrelRelPath = path.join('outside', filePath)
-  }
-  const wrapperFile = path.join(CACHE_DIR, barrelRelPath.replace(/\.(ts|js)$/, '.barrel.js'))
+  // Standard temp location (same naming as getTempFilePath/getCachePath) so
+  // the wrapper participates in the persistent compile cache: recordCompile
+  // hashes the barrel source and getCachedCompile validates it on reuse.
+  const wrapperFile = getTempFilePath(filePath)
   const wrapperAbsPath = path.join(getCwd(), wrapperFile)
   const wrapperTmpDir = path.dirname(wrapperAbsPath)
   const writeId = traceStart('fs.writeFile')

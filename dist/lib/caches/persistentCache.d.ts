@@ -7,6 +7,7 @@ interface CacheManifest {
   svelteVersion: string
   sources: Record<string, SourceEntry>
 }
+export declare function writeAtomic(filePath: string, content: string): Promise<void>
 export declare function loadManifest(): Promise<CacheManifest | null>
 export declare function saveManifest(manifest?: CacheManifest): Promise<void>
 export declare function getCachedCompile(sourcePath: string): Promise<{

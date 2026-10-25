@@ -88,32 +88,66 @@ export const runIsolatedArray = async args => {
       }
     })
   }
-  // Hooked tests → individual workers
+  // Hooked tests → individual workers. With MAGIC_TEST_WORKER_REUSE=1 they
+  // instead run as one batch per file in a single worker: each test re-mounts
+  // on the same window, but the imported module graph (the expensive part,
+  // ~6 s per fresh worker) is shared — subsequent mounts take ~40 ms.
+  // Trade-off: tests in a batch share module-level state (no fresh module
+  // registry per test), so only enable this for suites whose component tests
+  // are stateless/props-driven.
   if (testsWithHooks.length > 0) {
-    const pool = getWorkerPool()
-    const individualPromises = testsWithHooks.map(({ test, index }) =>
-      pool(() =>
-        isolation
-          .executeInWorker({
+    const reuse = process.env.MAGIC_TEST_WORKER_REUSE === '1'
+    if (reuse) {
+      const pool = getWorkerPool()
+      await pool(async () => {
+        try {
+          const batchResults = await isolation.executeBatchInWorker({
             testFileUrl,
-            testIndex: index,
-            testPkg: test.pkg,
-            testParent: test.parent,
-            testName: test.name,
+            testIndices: testsWithHooks.map(t => t.index),
+            testPkg: pkg,
+            testParent: parent,
+            testNames: testsWithHooks.map(t => t.test.name),
             suiteSnapshot,
           })
-          .then(
-            result => {
-              rawResults.push(result)
-              return { result: result, index }
-            },
-            err => ({ result: handleWorkerError(test, err, rawResults), index }),
-          ),
-      ),
-    )
-    const individualResults = await Promise.all(individualPromises)
-    for (const { result, index } of individualResults) {
-      resultsByIndex.set(index, result)
+          const processed = processWorkerResults(batchResults, rawResults)
+          testsWithHooks.forEach(({ index }, i) => {
+            const r = processed[i]
+            if (r) {
+              resultsByIndex.set(index, r)
+            }
+          })
+        } catch (err) {
+          for (const { test, index } of testsWithHooks) {
+            resultsByIndex.set(index, handleWorkerError(test, err, rawResults))
+          }
+        }
+      })
+    } else {
+      const pool = getWorkerPool()
+      const individualPromises = testsWithHooks.map(({ test, index }) =>
+        pool(() =>
+          isolation
+            .executeInWorker({
+              testFileUrl,
+              testIndex: index,
+              testPkg: test.pkg,
+              testParent: test.parent,
+              testName: test.name,
+              suiteSnapshot,
+            })
+            .then(
+              result => {
+                rawResults.push(result)
+                return { result: result, index }
+              },
+              err => ({ result: handleWorkerError(test, err, rawResults), index }),
+            ),
+        ),
+      )
+      const individualResults = await Promise.all(individualPromises)
+      for (const { result, index } of individualResults) {
+        resultsByIndex.set(index, result)
+      }
     }
   }
   const allResults = []

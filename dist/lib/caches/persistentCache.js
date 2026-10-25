@@ -7,7 +7,28 @@ import { CACHE_DIR } from '../../constants.js'
 const MANIFEST_FILE = path.join(CACHE_DIR, 'manifest.json')
 // In-memory caches for performance
 let manifestCache = null
-const hashCache = new LRUCache(500)
+// The on-disk mtime the in-memory manifest was loaded from. Parallel test
+// workers share the manifest file: reload whenever another worker has
+// written a newer version so cache entries recorded mid-run are visible.
+let manifestMtime = 0
+const hashCache = new LRUCache(4096)
+// Atomic write: a concurrent reader (sibling worker) must never observe a
+// truncated/partial file — write to a unique temp name, then rename (POSIX
+// renames are atomic).
+export async function writeAtomic(filePath, content) {
+  const tmp = `${filePath}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`
+  await fs.writeFile(tmp, content)
+  try {
+    await fs.rename(tmp, filePath)
+  } catch (e) {
+    try {
+      await fs.unlink(tmp)
+    } catch {
+      // temp cleanup is best-effort
+    }
+    throw e
+  }
+}
 // Compute SHA-256 hash of file content (with caching)
 async function hashFile(filePath) {
   const cached = hashCache.get(filePath)
@@ -25,28 +46,39 @@ function getCachePath(sourcePath) {
   return path.join(CACHE_DIR, rel)
 }
 export async function loadManifest() {
-  if (manifestCache) {
-    return manifestCache
-  }
   try {
+    const stats = await fs.stat(MANIFEST_FILE)
+    if (manifestCache && stats.mtimeMs === manifestMtime) {
+      return manifestCache
+    }
     const data = await fs.readFile(MANIFEST_FILE, 'utf-8')
     manifestCache = JSON.parse(data)
+    manifestMtime = stats.mtimeMs
     return manifestCache
   } catch {
     return null
   }
 }
 export async function saveManifest(manifest) {
+  // Merge with the latest on-disk manifest so concurrent writers (parallel
+  // test workers) don't clobber each other's entries: a stale in-memory copy
+  // must not drop entries another worker recorded in the meantime.
+  const latest = await loadManifest()
   let m = manifest
   if (!m) {
-    // Load current manifest and save
-    m = await loadManifest()
+    m = latest
+  } else if (latest) {
+    for (const [key, value] of Object.entries(latest.sources)) {
+      if (!(key in m.sources)) {
+        m.sources[key] = value
+      }
+    }
   }
   if (!m) {
     return
   }
   await fs.mkdirp(CACHE_DIR)
-  await fs.writeFile(MANIFEST_FILE, JSON.stringify(m, null, 2))
+  await writeAtomic(MANIFEST_FILE, JSON.stringify(m, null, 2))
 }
 export async function getCachedCompile(sourcePath) {
   const m = await loadManifest()
@@ -97,7 +129,7 @@ export async function recordCompile(sourcePath, compiledJs) {
   // Save compiled file
   const compiledPath = getCachePath(sourcePath)
   await fs.mkdirp(path.dirname(compiledPath))
-  await fs.writeFile(compiledPath, compiledJs)
+  await writeAtomic(compiledPath, compiledJs)
   // Update manifest
   manifest.sources[sourcePath] = { mtime: stats.mtimeMs, hash }
   // Save manifest to disk
@@ -110,6 +142,7 @@ export async function clearCache() {
     // Ignore
   }
   manifestCache = null
+  manifestMtime = 0
   hashCache.clear()
   await clearResolveTransformCache()
 }

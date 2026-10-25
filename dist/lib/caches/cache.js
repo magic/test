@@ -11,10 +11,10 @@ export { LRUCache }
 // Re-export persistent cache functions
 export { clearCache } from './persistentCache.js'
 // Unified LRU caches
-export const cache = new LRUCache(100)
-export const importCache = new LRUCache(100)
-export const packageExportCache = new LRUCache(200)
-export const barrelCache = new LRUCache(100)
+export const cache = new LRUCache(4096)
+export const importCache = new LRUCache(4096)
+export const packageExportCache = new LRUCache(4096)
+export const barrelCache = new LRUCache(4096)
 // Unified promise deduplication map
 // Keys prefixed: 'barrel:', 'svelte:', 'exports:', 'pkg:', 'resolve:', 'cmgr:'
 export const pendingPromises = new Map()

@@ -1,5 +1,6 @@
 import fs from '@magic/fs'
 import path from 'node:path'
+import { writeAtomic } from '../../caches/persistentCache.js'
 class WriteQueue {
   pendingWrites = new Map()
   flushPromise = null
@@ -30,7 +31,7 @@ class WriteQueue {
     if (request) {
       this.pendingWrites.delete(filePath)
       await fs.mkdir(path.dirname(request.path), { recursive: true })
-      await fs.writeFile(request.path, request.content)
+      await writeAtomic(request.path, request.content)
     }
   }
   /**
@@ -49,11 +50,12 @@ class WriteQueue {
       const writes = [...this.pendingWrites.values()]
       this.pendingWrites.clear()
       this.lastFlush = Date.now()
-      // Write all files in parallel
+      // Write all files in parallel (atomic renames — readers never see
+      // partial files)
       await Promise.all(
         writes.map(async w => {
           await fs.mkdir(path.dirname(w.path), { recursive: true })
-          await fs.writeFile(w.path, w.content)
+          await writeAtomic(w.path, w.content)
         }),
       )
       this.flushPromise = null

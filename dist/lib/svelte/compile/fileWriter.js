@@ -2,6 +2,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import fs from '@magic/fs'
 import { getCwd } from '../../../constants.js'
+import { writeAtomic } from '../../caches/persistentCache.js'
 export const writeCompiledFile = async (tempPath, code, map, sourceMapRef = false, sourcePath) => {
   const tmpFileAbs = path.resolve(getCwd(), tempPath)
   await fs.mkdirp(path.dirname(tmpFileAbs), { recursive: true })
@@ -24,9 +25,9 @@ export const writeCompiledFile = async (tempPath, code, map, sourceMapRef = fals
       }
       mapObj.sourceRoot = ''
     }
-    await fs.writeFile(tmpFileAbs + '.map', JSON.stringify(mapObj))
+    await writeAtomic(tmpFileAbs + '.map', JSON.stringify(mapObj))
   }
-  await fs.writeFile(tmpFileAbs, contentToWrite)
+  await writeAtomic(tmpFileAbs, contentToWrite)
   const importUrl = pathToFileURL(tmpFileAbs).href
   return { tmpFile: tempPath, importUrl }
 }

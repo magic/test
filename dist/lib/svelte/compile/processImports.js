@@ -9,7 +9,7 @@ import { resolveAndCompileImport } from './resolveAndCompileImport.js'
 import { parallelMap, MAX_CONCURRENT } from './parallelMap.js'
 import { ddl } from './ddl.js'
 // Cache for processImports results (key: codeHash:sourceFilePath)
-const processImportsCache = new LRUCache(200)
+const processImportsCache = new LRUCache(4096)
 export const processImports = async (code, sourceFilePath, importChain = []) => {
   // Skip caching if importChain is non-empty (might depend on circular deps)
   if (importChain.length === 0) {

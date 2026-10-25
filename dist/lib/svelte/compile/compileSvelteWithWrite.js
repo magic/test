@@ -5,6 +5,7 @@ import { processImports } from './processImports.js'
 import { compileSvelte } from './compileSvelte.js'
 import { getTempFilePath } from './getTempFilePath.js'
 import { writeCompiledFile } from './fileWriter.js'
+import { recordCompile } from '../../caches/persistentCache.js'
 import { traceStart, traceEnd } from '../../trace/timing.js'
 export const compileSvelteWithWrite = async filePath => {
   const id = traceStart(`compileSvelteWithWrite ${path.basename(filePath)}`)
@@ -27,6 +28,12 @@ export const compileSvelteWithWrite = async filePath => {
       map,
       true,
       resolvedPath,
+    )
+    // Record in the persistent cache so test workers hit the compiled file
+    // (hash-validated) instead of recompiling the app component per worker.
+    await recordCompile(
+      resolvedPath,
+      transformedCode + `//# sourceMappingURL=${path.basename(tmpFileAbs)}.map\n`,
     )
     return { js: transformedCode, css, tmpFile: writtenTmpFile, importUrl }
   } catch (e) {

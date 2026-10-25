@@ -3,6 +3,7 @@ import is from '@magic/types'
 import { restoreFromSnapshot } from './isolation.js'
 import { createFailResult } from './lib/index.js'
 import { runSingleTestFromFileInWorker, importFileInWorker, makeSafeClone } from './lib/index.js'
+import { prewarmWorkerModules } from './lib/prewarmWorkerModules.js'
 import '../bin/lib/registerLoader.js'
 const setupSuite = async suiteSnapshot => {
   if (suiteSnapshot && typeof suiteSnapshot === 'object' && 'props' in suiteSnapshot) {
@@ -97,6 +98,10 @@ const runBatchMode = async () => {
   const { testIndices, testPkg, testParent, testNames, suiteSnapshot } = workerData
   try {
     const { tests, afterAllCleanup } = await setupSuite(suiteSnapshot)
+    // Move the one-time worker cost (component graph import/compile) out of
+    // the first test's timeout budget: in a shared worker the first test
+    // would otherwise carry it, and under load that is what flakes.
+    await prewarmWorkerModules(tests)
     const results = []
     try {
       for (let i = 0; i < testIndices.length; i++) {
