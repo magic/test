@@ -103,7 +103,18 @@ export const warmComponentCompiles = async (tests: unknown): Promise<void> => {
     [...resolved.entries()],
     async ([resolvedPath, ref]) => {
       try {
-        await compileSvelteWithWrite(resolvedPath)
+        const { importUrl } = await compileSvelteWithWrite(resolvedPath)
+        // Pre-import the compiled module graph on the MAIN thread. Compiling
+        // (above) only writes the .svelte.js to the disk cache — the one-time
+        // cost of actually loading a component's full dependency graph (the
+        // package barrel + svelte deps, ~seconds) is paid by the first test
+        // that mounts it, under the svelte mutex and inside its per-test
+        // timeout. Importing here (collection phase, outside any per-test
+        // timeout) moves that cost upfront and lets the test's mount reuse the
+        // already-populated ESM module registry (subsequent mounts are ~ms).
+        // Concurrent imports of the shared barrel are deduped by the ESM
+        // registry, so the heavy graph load happens once.
+        await import(importUrl)
       } catch (e) {
         log.warn(`Component precompile failed for ${ref}: ${is.error(e) ? e.message : String(e)}`)
       }

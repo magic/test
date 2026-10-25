@@ -469,6 +469,90 @@ const extractImports = (
   return imports
 }
 
+/**
+ * Return the IMPORTED names referenced by a static import from `spec`.
+ * For `import { A, B as X } from 'spec'` → ['A','B'] (the source-package export
+ * names, not the local aliases). Default import → 'default'; namespace → '*'.
+ * This is what must be looked up in the source package's export graph.
+ */
+export const extractImportedNamesFromCode = (code: string, spec: string): string[] => {
+  try {
+    const { parse } = _require('@typescript-eslint/parser')
+    const ast = parse(code, { sourceType: 'module', ecmaVersion: 'latest' })
+    const names: string[] = []
+    for (const node of ast.body) {
+      if (
+        node.type === 'ImportDeclaration' &&
+        is.string(node.source.value) &&
+        node.source.value === spec
+      ) {
+        for (const s of node.specifiers) {
+          if (s.type === 'ImportSpecifier') {
+            const imported =
+              s.imported.type === 'Identifier'
+                ? s.imported.name
+                : String((s.imported as TSESTree.Literal).value ?? '')
+            if (imported) {
+              names.push(imported)
+            }
+          } else if (s.type === 'ImportDefaultSpecifier') {
+            names.push('default')
+          } else if (s.type === 'ImportNamespaceSpecifier') {
+            names.push('*')
+          }
+        }
+      }
+    }
+    return names
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Return the imported names of a static import from `spec` ONLY when the import
+ * is a pure named import (every specifier is an `ImportSpecifier`); otherwise
+ * return null. Pure-named is the only shape that can be safely rewritten to
+ * per-export file imports (a default/namespace/side-effect import may touch any
+ * export, so it must fall back to loading the whole module).
+ */
+export const extractPureNamedImportsFromCode = (code: string, spec: string): string[] | null => {
+  try {
+    const { parse } = _require('@typescript-eslint/parser')
+    const ast = parse(code, { sourceType: 'module', ecmaVersion: 'latest' })
+    for (const node of ast.body) {
+      if (
+        node.type === 'ImportDeclaration' &&
+        is.string(node.source.value) &&
+        node.source.value === spec
+      ) {
+        const specs = node.specifiers
+        if (specs.length === 0) {
+          return null
+        }
+        const names: string[] = []
+        for (const s of specs) {
+          if (s.type !== 'ImportSpecifier') {
+            return null
+          }
+          const imported =
+            s.imported.type === 'Identifier'
+              ? s.imported.name
+              : String((s.imported as TSESTree.Literal).value ?? '')
+          if (!imported) {
+            return null
+          }
+          names.push(imported)
+        }
+        return names
+      }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 // Types for simple import extraction (used by processImports)
 export type SimpleImport = {
   specifiers: string // joined specifier string like "{ foo, bar }" or "* as name"

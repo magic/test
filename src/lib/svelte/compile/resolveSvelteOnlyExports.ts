@@ -25,6 +25,7 @@ import { isSkipPattern, resolveFilePath, SHIM_EXTENSION_CANDIDATES } from './pat
 import {
   extractNamedExportsRecursive,
   findSvelteFileForExport,
+  findExportSourceFile,
   extractNamedImportsFromCode,
 } from './exportAnalysis.js'
 import { computeTempPath, writeTempFile } from './tempFiles.js'
@@ -233,6 +234,81 @@ const compileSvelteOnlyExportImpl = async (
   })()
   compiling.set(cacheKey, promise)
   return promise
+}
+
+/**
+ * Build a MINIMAL on-demand barrel for a svelte barrel entry: for each
+ * requested export name, resolve it to its `.svelte` file (transitively, via
+ * `findSvelteFileForExport`), compile just that file (`compileSvelteOnlyExport`),
+ * and emit a wrapper re-exporting only those names. This loads ONLY the
+ * components the importer actually touches, instead of the barrel's full graph.
+ *
+ * Returns the temp file path of the minimal barrel, or null when any requested
+ * name cannot be resolved to a unique `.svelte` file (caller must fall back to
+ * loading the whole barrel). The wrapper path is deterministic in
+ * (entryPath, sorted names) so repeated calls reuse the same file.
+ */
+export const buildOnDemandSvelteBarrel = async (
+  entryPath: string,
+  sourceDir: string,
+  importedNames: string[],
+): Promise<string | null> => {
+  if (importedNames.length === 0) {
+    return null
+  }
+
+  // Resolve every requested name to a concrete source file. Svelte components are
+  // compiled on demand; plain-JS utils are re-exported from their source file
+  // (cheap — no svelte compile). Any name that can't be resolved to a unique
+  // source means we can't build a complete minimal barrel → fall back to full.
+  const lines: string[] = []
+  for (const name of importedNames) {
+    if (name === 'default' || name === '*') {
+      return null
+    }
+    const src = await findExportSourceFile(entryPath, name)
+    if (src.svelte) {
+      const compiledPath = await compileSvelteOnlyExport(src.svelte, sourceDir)
+      const url = pathToFileURL(path.resolve(compiledPath)).href
+      lines.push(`export { default as ${name} } from '${url}'`)
+    } else if (src.js) {
+      const url = pathToFileURL(src.js).href
+      const sourceName = src.jsExportName || name
+      if (sourceName === '*') {
+        // Namespace re-export (e.g. `export * as Auth from './auth.js'`):
+        // the valid syntax has NO braces.
+        lines.push(`export * as ${name} from '${url}'`)
+      } else {
+        lines.push(
+          sourceName === name
+            ? `export { ${name} } from '${url}'`
+            : `export { ${sourceName} as ${name} } from '${url}'`,
+        )
+      }
+    } else {
+      return null
+    }
+  }
+
+  if (lines.length === 0) {
+    return null
+  }
+
+  const content = lines.join('\n')
+
+  // Deterministic wrapper path keyed by (entry, sorted names).
+  const hash = crypto
+    .createHash('sha256')
+    .update([...importedNames].sort().join(','))
+    .digest('hex')
+    .slice(0, 12)
+  const synthetic = entryPath.replace(/\.m?js$/, '') + `.lazy-${hash}.mjs`
+  const tmp = computeTempPath(synthetic)
+  if (await existsCached(tmp)) {
+    return tmp
+  }
+  await writeTempFile(synthetic, content)
+  return tmp
 }
 
 const handleJsWithSvelteReexports = async (
