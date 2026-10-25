@@ -3,6 +3,8 @@ import { fileURLToPath } from 'node:url'
 
 import { compileBarrel } from '#src/lib/svelte/compile/compileBarrel.js'
 import { barrelCache } from '#src/lib/caches/cache.js'
+import { getTempFilePath } from '#src/lib/svelte/compile/getTempFilePath.js'
+import { getCwd } from '#src/constants.js'
 import type { TestCase } from '#src/types.js'
 import { has } from '#src/lib/has.js'
 
@@ -29,10 +31,12 @@ export default [
   {
     fn: async () => {
       const result = await compileBarrel(barrelFixturePath)
-      return result.wrapperAbsPath.includes('.barrel.js')
+      // Wrapper lives at the standard persistent-cache temp path (same naming
+      // as getCachePath) so the recordCompile/getCachedCompile roundtrip works
+      return result.wrapperAbsPath === path.join(getCwd(), getTempFilePath(barrelFixturePath))
     },
     expect: true,
-    info: 'compileBarrel returns wrapperAbsPath with .barrel.js extension',
+    info: 'compileBarrel writes the wrapper to the standard persistent-cache temp path',
   },
   {
     fn: async () => {
