@@ -73,10 +73,24 @@ interface PrewarmResult {
   error?: string
 }
 
-const collectComponentPaths = (node: unknown, out: Set<string>): void => {
+/**
+ * Collect `component` strings from the test data. Test exports are arbitrary
+ * module values (e.g. an eslint config), so the object graph can contain
+ * cycles — typescript-eslint's plugin object self-references via
+ * `configs['flat/all'][0].plugins`. The visited set breaks those cycles (and
+ * skips repeated shared subtrees); a first visit already collects everything
+ * beneath a node, so skipping later visits loses nothing.
+ */
+const collectComponentPaths = (node: unknown, out: Set<string>, seen: WeakSet<object>): void => {
+  if (is.array(node) || is.objectNative(node)) {
+    if (seen.has(node)) {
+      return
+    }
+    seen.add(node)
+  }
   if (is.array(node)) {
     for (const item of node) {
-      collectComponentPaths(item, out)
+      collectComponentPaths(item, out, seen)
     }
     return
   }
@@ -85,7 +99,7 @@ const collectComponentPaths = (node: unknown, out: Set<string>): void => {
       out.add(node.component)
     }
     for (const value of Object.values(node)) {
-      collectComponentPaths(value, out)
+      collectComponentPaths(value, out, seen)
     }
   }
 }
@@ -147,7 +161,7 @@ export const prewarmComponentGraphs = async (tests: unknown): Promise<void> => {
   }
 
   const components = new Set<string>()
-  collectComponentPaths(tests, components)
+  collectComponentPaths(tests, components, new WeakSet())
   if (components.size === 0) {
     return
   }

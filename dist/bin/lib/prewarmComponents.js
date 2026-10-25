@@ -62,10 +62,24 @@ const graphLooksWarm = async () => {
   }
   return false
 }
-const collectComponentPaths = (node, out) => {
+/**
+ * Collect `component` strings from the test data. Test exports are arbitrary
+ * module values (e.g. an eslint config), so the object graph can contain
+ * cycles — typescript-eslint's plugin object self-references via
+ * `configs['flat/all'][0].plugins`. The visited set breaks those cycles (and
+ * skips repeated shared subtrees); a first visit already collects everything
+ * beneath a node, so skipping later visits loses nothing.
+ */
+const collectComponentPaths = (node, out, seen) => {
+  if (is.array(node) || is.objectNative(node)) {
+    if (seen.has(node)) {
+      return
+    }
+    seen.add(node)
+  }
   if (is.array(node)) {
     for (const item of node) {
-      collectComponentPaths(item, out)
+      collectComponentPaths(item, out, seen)
     }
     return
   }
@@ -74,7 +88,7 @@ const collectComponentPaths = (node, out) => {
       out.add(node.component)
     }
     for (const value of Object.values(node)) {
-      collectComponentPaths(value, out)
+      collectComponentPaths(value, out, seen)
     }
   }
 }
@@ -131,7 +145,7 @@ export const prewarmComponentGraphs = async tests => {
     return
   }
   const components = new Set()
-  collectComponentPaths(tests, components)
+  collectComponentPaths(tests, components, new WeakSet())
   if (components.size === 0) {
     return
   }
