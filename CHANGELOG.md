@@ -1,5 +1,9 @@
 ### Changelog
 
+#### 0.3.49
+
+- fix: prevent maximum call stack size exceeded in collectComponentPaths
+
 #### 0.3.48
 
 - perf: component import graphs — per-process memoization of resolved import
