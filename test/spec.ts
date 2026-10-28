@@ -662,6 +662,22 @@ const spec = {
       includes: 'fn',
       oneOf: 'fn',
       matches: 'fn',
+      not: [
+        'obj',
+        {
+          at: 'fn',
+          property: 'fn',
+          properties: 'fn',
+          any: 'fn',
+          nested: 'fn',
+          string: 'fn',
+          key: 'fn',
+          keys: 'fn',
+          includes: 'fn',
+          oneOf: 'fn',
+          matches: 'fn',
+        },
+      ],
     },
   ],
 

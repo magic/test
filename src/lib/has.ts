@@ -89,12 +89,17 @@ export const string = (...substring: StringCheck[]) => {
   }
 }
 
-export const at = (index: number, check: Check) => {
+export const at = (index: number, check: Check | Check[]) => {
   return (result: unknown): boolean => {
     if (!is.array(result)) {
       return false
     }
     const value = result[index]
+    // An array of checks must all pass against the element; a single
+    // non-array check behaves as before.
+    if (is.array(check)) {
+      return check.every(c => checkValue(value, c))
+    }
     return checkValue(value, check)
   }
 }
@@ -151,6 +156,26 @@ export const matches =
   (result: unknown): boolean =>
     is.string(result) && pattern.test(result)
 
+const negate =
+  <Args extends unknown[]>(fn: (...args: Args) => (result: unknown) => boolean) =>
+  (...args: Args): ((result: unknown) => boolean) =>
+  (result: unknown): boolean =>
+    !fn(...args)(result)
+
+export const not = {
+  property: negate(property),
+  properties: negate(properties),
+  any: negate(any),
+  nested: negate(nested),
+  string: negate(string),
+  at: negate(at),
+  key: negate(key),
+  keys: negate(keys),
+  includes: negate(includes),
+  oneOf: negate(oneOf),
+  matches: negate(matches),
+}
+
 export const has = {
   property,
   properties,
@@ -163,4 +188,5 @@ export const has = {
   includes,
   oneOf,
   matches,
+  not,
 }

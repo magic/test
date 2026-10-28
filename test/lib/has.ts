@@ -1,5 +1,6 @@
 import is from '@magic/types'
 import {
+  has,
   property,
   properties,
   any,
@@ -11,6 +12,7 @@ import {
   oneOf,
   matches,
   at,
+  not,
 } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
 
@@ -683,5 +685,461 @@ export default [
     fn: () => at(-1, is.string)(['a', 'b']),
     expect: false,
     info: 'at returns false for negative index',
+  },
+
+  // has.at array-of-checks tests
+  {
+    fn: () => at(0, [is.string, (v: unknown) => v === 'a'])(['a', 'b', 'c']),
+    expect: true,
+    info: 'at accepts an array of checks - all pass',
+  },
+  {
+    fn: () => at(0, [is.string, (v: unknown) => v === 'b'])(['a', 'b', 'c']),
+    expect: false,
+    info: 'at accepts an array of checks - one fails',
+  },
+  {
+    fn: () => at(1, ['value', is.string])(['a', 'value', 'c']),
+    expect: true,
+    info: 'at array of checks mixes literal value and predicate',
+  },
+  {
+    fn: () => at(5, [is.string])(['a', 'b']),
+    expect: false,
+    info: 'at array of checks still respects out-of-bounds index',
+  },
+
+  // has.not coverage meta-test
+  {
+    fn: () =>
+      Object.keys(not).sort().join(',') ===
+      Object.keys(has)
+        .filter(k => k !== 'not')
+        .sort()
+        .join(','),
+    expect: true,
+    info: 'has.not provides a negated version of every has.* check function',
+  },
+
+  // has.not.property tests
+  {
+    fn: () => not.property('a', is.string)({}),
+    expect: true,
+    info: 'not.property returns true when key does not exist',
+  },
+  {
+    fn: () => not.property('a', is.string)({ a: 123 }),
+    expect: true,
+    info: 'not.property returns true when key exists but predicate fails',
+  },
+  {
+    fn: () => not.property('a', is.string)({ a: 'hello' }),
+    expect: false,
+    info: 'not.property returns false when key exists and predicate passes',
+  },
+  {
+    fn: () => not.property('a', is.string)(null),
+    expect: true,
+    info: 'not.property returns true when result is null',
+  },
+  {
+    fn: () => not.property('count', 5)({ count: 6 }),
+    expect: true,
+    info: 'not.property returns true when literal value does not match',
+  },
+  {
+    fn: () => not.property('count', 5)({ count: 5 }),
+    expect: false,
+    info: 'not.property returns false when literal value matches',
+  },
+
+  // has.not.properties tests
+  {
+    fn: () => not.properties({ a: is.string, b: is.number })({ a: 'hello' }),
+    expect: true,
+    info: 'not.properties returns true when a key is missing',
+  },
+  {
+    fn: () => not.properties({ a: is.string, b: is.number })({ a: 'hello', b: 'wrong' }),
+    expect: true,
+    info: 'not.properties returns true when one predicate fails',
+  },
+  {
+    fn: () => not.properties({ a: is.string, b: is.number })({ a: 'hello', b: 123 }),
+    expect: false,
+    info: 'not.properties returns false when all keys exist and predicates pass',
+  },
+  {
+    fn: () => not.properties({})(null),
+    expect: true,
+    info: 'not.properties returns true when result is null',
+  },
+  {
+    fn: () => not.properties({})({ a: 1 }),
+    expect: false,
+    info: 'not.properties returns false for empty spec with object result',
+  },
+  {
+    fn: () => not.properties({ a: 'value' })({ a: 'other' }),
+    expect: true,
+    info: 'not.properties returns true when literal value does not match',
+  },
+  {
+    fn: () => not.properties({ a: 'value' })({ a: 'value' }),
+    expect: false,
+    info: 'not.properties returns false when literal value matches',
+  },
+
+  // has.not.any tests
+  {
+    fn: () => not.any({ a: is.string, b: is.number })({ a: 1, c: 2 }),
+    expect: true,
+    info: 'not.any returns true when no keys match',
+  },
+  {
+    fn: () => not.any({ a: is.string, b: is.number })({ a: 'hello' }),
+    expect: false,
+    info: 'not.any returns false when one key matches',
+  },
+  {
+    fn: () => not.any({ a: is.string })(null),
+    expect: true,
+    info: 'not.any returns true when result is null',
+  },
+  {
+    fn: () => not.any({ a: is.string })('string'),
+    expect: true,
+    info: 'not.any returns true when result is a string',
+  },
+  {
+    fn: () => not.any({ a: 'value' })({ a: 'other' }),
+    expect: true,
+    info: 'not.any returns true when literal value does not match',
+  },
+  {
+    fn: () => not.any({ a: 'value' })({ a: 'value' }),
+    expect: false,
+    info: 'not.any returns false when literal value matches',
+  },
+
+  // has.not.nested tests
+  {
+    fn: () => not.nested('a.b', is.string)({ a: { b: 123 } }),
+    expect: true,
+    info: 'not.nested returns true when path exists but predicate fails',
+  },
+  {
+    fn: () => not.nested('a.b', is.string)({ a: {} }),
+    expect: true,
+    info: 'not.nested returns true when path partially exists',
+  },
+  {
+    fn: () => not.nested('a.b', is.string)({ a: { b: 'hello' } }),
+    expect: false,
+    info: 'not.nested returns false when path exists and predicate passes',
+  },
+  {
+    fn: () => not.nested('a.b', is.string)(null),
+    expect: true,
+    info: 'not.nested returns true when result is null',
+  },
+  {
+    fn: () => not.nested('a.b', is.string)('string'),
+    expect: true,
+    info: 'not.nested returns true when result is a string',
+  },
+  {
+    fn: () => not.nested('a.b', is.string)({ a: null }),
+    expect: true,
+    info: 'not.nested returns true when path contains null',
+  },
+  {
+    fn: () => not.nested('a.count', 5)({ a: { count: 6 } }),
+    expect: true,
+    info: 'not.nested returns true when literal value does not match',
+  },
+  {
+    fn: () => not.nested('a.count', 5)({ a: { count: 5 } }),
+    expect: false,
+    info: 'not.nested returns false when literal value matches',
+  },
+
+  // has.not.string tests
+  {
+    fn: () => not.string('hello')('world'),
+    expect: true,
+    info: 'not.string returns true when substring not found',
+  },
+  {
+    fn: () => not.string('hello')('hello world'),
+    expect: false,
+    info: 'not.string returns false when substring found',
+  },
+  {
+    fn: () => not.string('hello', 'xyz')('hello world'),
+    expect: true,
+    info: 'not.string returns true when one substring is missing',
+  },
+  {
+    fn: () => not.string('hello', 'world')('hello world'),
+    expect: false,
+    info: 'not.string returns false when all substrings are found',
+  },
+  {
+    fn: () => not.string('hello')(123),
+    expect: true,
+    info: 'not.string returns true when value is not a string',
+  },
+  {
+    fn: () => not.string('hello')(null),
+    expect: true,
+    info: 'not.string returns true when value is null',
+  },
+  {
+    fn: () => not.string((s: string) => s.includes('a'))('hello a to z'),
+    expect: false,
+    info: 'not.string returns false when predicate passes',
+  },
+  {
+    fn: () => not.string((s: string) => s.includes('a'))('hello'),
+    expect: true,
+    info: 'not.string returns true when predicate fails',
+  },
+
+  // has.not.at tests
+  {
+    fn: () => not.at(0, is.string)(['a', 'b', 'c']),
+    expect: false,
+    info: 'not.at returns false when index exists and predicate passes',
+  },
+  {
+    fn: () => not.at(1, is.string)(['a', 2, 'c']),
+    expect: true,
+    info: 'not.at returns true when index exists but predicate fails',
+  },
+  {
+    fn: () => not.at(5, is.string)(['a', 'b']),
+    expect: true,
+    info: 'not.at returns true when index out of bounds',
+  },
+  {
+    fn: () => not.at(0, is.string)(null),
+    expect: true,
+    info: 'not.at returns true when result is null',
+  },
+  {
+    fn: () => not.at(0, is.string)('string'),
+    expect: true,
+    info: 'not.at returns true when result is a string',
+  },
+  {
+    fn: () => not.at(1, 'value')(['a', 'value', 'c']),
+    expect: false,
+    info: 'not.at returns false when literal value matches',
+  },
+  {
+    fn: () => not.at(1, 'other')(['a', 'value', 'c']),
+    expect: true,
+    info: 'not.at returns true when literal value does not match',
+  },
+  {
+    fn: () => not.at(0, [is.string, (v: unknown) => v === 'a'])(['a', 'b', 'c']),
+    expect: false,
+    info: 'not.at array of checks - returns false when all pass',
+  },
+  {
+    fn: () => not.at(0, [is.string, (v: unknown) => v === 'b'])(['a', 'b', 'c']),
+    expect: true,
+    info: 'not.at array of checks - returns true when one fails',
+  },
+
+  // has.not.key tests
+  {
+    fn: () => not.key('c')({ a: 1, b: 2 }),
+    expect: true,
+    info: 'not.key returns true when key does not exist',
+  },
+  {
+    fn: () => not.key('a')({ a: 1, b: 2 }),
+    expect: false,
+    info: 'not.key returns false when key exists',
+  },
+  {
+    fn: () => not.key('a')({}),
+    expect: true,
+    info: 'not.key returns true for empty object',
+  },
+  {
+    fn: () => not.key('a')(null),
+    expect: true,
+    info: 'not.key returns true when result is null',
+  },
+  {
+    fn: () => not.key('a')('string'),
+    expect: true,
+    info: 'not.key returns true when result is a string',
+  },
+
+  // has.not.keys tests
+  {
+    fn: () => not.keys(['a', 'c'])({ a: 1, b: 2 }),
+    expect: true,
+    info: 'not.keys returns true when one key is missing',
+  },
+  {
+    fn: () => not.keys(['a', 'b'])({ a: 1, b: 2, c: 3 }),
+    expect: false,
+    info: 'not.keys returns false when all keys exist',
+  },
+  {
+    fn: () => not.keys([])({ a: 1 }),
+    expect: false,
+    info: 'not.keys returns false for empty key array (base always true for objects)',
+  },
+  {
+    fn: () => not.keys(['a'])(null),
+    expect: true,
+    info: 'not.keys returns true when result is null',
+  },
+
+  // has.not.includes tests
+  {
+    fn: () => not.includes('d')(['a', 'b', 'c']),
+    expect: true,
+    info: 'not.includes returns true for array without item',
+  },
+  {
+    fn: () => not.includes('a')(['a', 'b', 'c']),
+    expect: false,
+    info: 'not.includes returns false for array with item',
+  },
+  {
+    fn: () => not.includes({ c: 3 })([{ a: 1 }, { b: 2 }]),
+    expect: true,
+    info: 'not.includes returns true when object is not in array',
+  },
+  {
+    fn: () => not.includes({ a: 1 })([{ a: 1 }, { b: 2 }]),
+    expect: false,
+    info: 'not.includes returns false when object is in array',
+  },
+  {
+    fn: () => not.includes('xyz')('hello world'),
+    expect: true,
+    info: 'not.includes returns true for string not containing substring',
+  },
+  {
+    fn: () => not.includes('ello')('hello world'),
+    expect: false,
+    info: 'not.includes returns false for string containing substring',
+  },
+  {
+    fn: () => not.includes('a')(123),
+    expect: true,
+    info: 'not.includes returns true for non-array/string number',
+  },
+  {
+    fn: () => not.includes('a')(null),
+    expect: true,
+    info: 'not.includes returns true for null',
+  },
+  {
+    fn: () => not.includes('a', 'b')(['a', 'b', 'c']),
+    expect: false,
+    info: 'not.includes returns false when all items are present',
+  },
+  {
+    fn: () => not.includes('a', 'd')(['a', 'b', 'c']),
+    expect: true,
+    info: 'not.includes returns true when one item is missing',
+  },
+  {
+    fn: () => not.includes((v: unknown) => is.number(v) && v > 5)([1, 3, 4]),
+    expect: true,
+    info: 'not.includes predicate returns true when no element matches',
+  },
+  {
+    fn: () => not.includes((v: unknown) => is.number(v) && v > 5)([1, 3, 7]),
+    expect: false,
+    info: 'not.includes predicate returns false when element matches',
+  },
+
+  // has.not.oneOf tests
+  {
+    fn: () => not.oneOf(['a', 'b', 'c'])('d'),
+    expect: true,
+    info: 'not.oneOf returns true when value is not in options',
+  },
+  {
+    fn: () => not.oneOf(['a', 'b', 'c'])('b'),
+    expect: false,
+    info: 'not.oneOf returns false when value is in options',
+  },
+  {
+    fn: () => not.oneOf([1, 2, 3])(4),
+    expect: true,
+    info: 'not.oneOf works with numbers',
+  },
+  {
+    fn: () => not.oneOf([{ a: 1 }, { b: 2 }])({ c: 3 }),
+    expect: true,
+    info: 'not.oneOf returns true for object not in options',
+  },
+  {
+    fn: () => not.oneOf([{ a: 1 }, { b: 2 }])({ a: 1 }),
+    expect: false,
+    info: 'not.oneOf returns false for object in options',
+  },
+  {
+    fn: () => not.oneOf([])(null),
+    expect: true,
+    info: 'not.oneOf returns true for empty options',
+  },
+  {
+    fn: () => not.oneOf('a', 'b', 'c')('d'),
+    expect: true,
+    info: 'not.oneOf multi-arg returns true when value not in options',
+  },
+  {
+    fn: () => not.oneOf('a', 'b', 'c')('b'),
+    expect: false,
+    info: 'not.oneOf multi-arg returns false when value in options',
+  },
+  {
+    fn: () => not.oneOf()(null),
+    expect: true,
+    info: 'not.oneOf returns true with no options',
+  },
+
+  // has.not.matches tests
+  {
+    fn: () => not.matches(/^\d{3}-\d{4}$/)('123-45678'),
+    expect: true,
+    info: 'not.matches returns true for non-matching regex',
+  },
+  {
+    fn: () => not.matches(/^\d{3}-\d{4}$/)('123-4567'),
+    expect: false,
+    info: 'not.matches returns false for matching regex',
+  },
+  {
+    fn: () => not.matches(/hello/)('goodbye'),
+    expect: true,
+    info: 'not.matches returns true when pattern not found',
+  },
+  {
+    fn: () => not.matches(/hello/)('hello world'),
+    expect: false,
+    info: 'not.matches returns false when pattern found',
+  },
+  {
+    fn: () => not.matches(/test/)(123),
+    expect: true,
+    info: 'not.matches returns true for non-string',
+  },
+  {
+    fn: () => not.matches(/test/)(null),
+    expect: true,
+    info: 'not.matches returns true for null',
   },
 ] satisfies TestCase[]
