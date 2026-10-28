@@ -18,6 +18,7 @@ const res = cli({
     ['--shard-id'],
     ['--error-length'],
     ['--timeout', '--to', '-t'],
+    ['--slow', '--timing', '-s'],
     ['--workers', '--w', '-w'],
   ],
   env: [[['--production', '--prod', '--p', '-p'], 'NODE_ENV', 'production']],
@@ -32,6 +33,8 @@ const res = cli({
       '--shard-id': 'shard id (0-indexed)',
       '--error-length': 'max length for error strings (default 70, 0 = no limit)',
       '--timeout': 'test timeout in ms (default: 30000)',
+      '--slow': 'show slowest tests (alias: --timing, -s)',
+      '--timing': 'show slowest tests (alias: --slow, -s)',
       '--workers': 'max parallel workers (default: auto, env: MAGIC_TEST_WORKERS)',
     },
     header: `
@@ -41,13 +44,15 @@ see https://github.com/magic/test for info
     example: `
 Usage:
 t -p => run tests without coverage
-t    => run slow tests with coverage
+t    => run tests with coverage
+t -s => show slowest tests
 t -h => this help text
 
 npm example:
 "scripts": {
   "test": "t -p",
-  "cover": "t"
+  "cover": "t",
+  "slow": "t -s"
 }
 `.trim(),
   },
@@ -71,6 +76,9 @@ const run = async () => {
   // Forward verbose to the child process via env (argv is not inherited)
   if (res.args.verbose) {
     process.env.MAGIC_TEST_VERBOSE = '1'
+  }
+  if (res.args.slow || res.args.timing) {
+    process.env.MAGIC_TEST_TIMING = '1'
   }
   // Set env vars (read by the unit.js child process and the worker pool)
   if (shards) {

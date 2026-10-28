@@ -31,11 +31,19 @@ export const getErrorLength = () => {
   }
   return undefined
 }
+/**
+ * Check if slow-test timing output is enabled.
+ * Set by `t -s/--slow/--timing` via env (the child unit process doesn't
+ * inherit argv), with a direct-argv fallback for `node unit.js --timing`.
+ */
+export const isTimingEnabled = () =>
+  process.env.MAGIC_TEST_TIMING === '1' || process.argv.includes('--timing')
 export const env = {
   isNodeProd,
   isNodeDev,
   isProd,
   isVerbose,
   getErrorLength,
+  isTimingEnabled,
 }
 //# sourceMappingURL=env.js.map

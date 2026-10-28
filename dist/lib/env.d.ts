@@ -21,10 +21,17 @@ export declare const isVerbose: () => boolean
  * Returns 0 for no limit (--verbose sets this), undefined if not set
  */
 export declare const getErrorLength: () => number | undefined
+/**
+ * Check if slow-test timing output is enabled.
+ * Set by `t -s/--slow/--timing` via env (the child unit process doesn't
+ * inherit argv), with a direct-argv fallback for `node unit.js --timing`.
+ */
+export declare const isTimingEnabled: () => boolean
 export declare const env: {
   isNodeProd: () => boolean
   isNodeDev: () => boolean
   isProd: () => boolean
   isVerbose: () => boolean
   getErrorLength: () => number | undefined
+  isTimingEnabled: () => boolean
 }
