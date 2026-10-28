@@ -4,4 +4,5 @@ export declare const resolveAndCompileImport: (
   sourceDir: string,
   sourceFilePath: string,
   importChain?: string[],
+  code?: string,
 ) => Promise<ResolveAndCompileResult>

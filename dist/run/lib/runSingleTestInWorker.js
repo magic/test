@@ -12,12 +12,14 @@ export const runSingleTestInWorker = async (test, testKey, testPkg, testParent, 
   let exp
   let expString
   let pass = false
+  let duration
   try {
     const testResult = await runTestFnInWorker(test, testKey)
     result = testResult.result
     pass = testResult.pass
     exp = testResult.exp
     expString = testResult.expString
+    duration = testResult.duration
   } catch {
     // Error already logged by inner functions
   }
@@ -32,6 +34,7 @@ export const runSingleTestInWorker = async (test, testKey, testPkg, testParent, 
     key: testKey,
     info,
     pkg: testPkg,
+    duration,
   }
 }
 //# sourceMappingURL=runSingleTestInWorker.js.map

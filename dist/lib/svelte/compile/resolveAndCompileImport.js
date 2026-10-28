@@ -16,14 +16,15 @@ import { getTempFilePath } from './getTempFilePath.js'
 import { compileBarrel } from './compileBarrel.js'
 import { resolveImportMapSpecifier, findNearestPackageJson } from './resolveImportMap.js'
 import { resolvePackageExport } from './resolvePackageExport.js'
-import { compileSvelteOnlyExport } from './resolveSvelteOnlyExports.js'
+import { compileSvelteOnlyExport, buildOnDemandSvelteBarrel } from './resolveSvelteOnlyExports.js'
 import { tryStat } from '../../fs.js'
 import { ddl } from './ddl.js'
 import { traceStart, traceEnd } from '../../trace/timing.js'
 import { writeQueue } from './writeQueue.js'
 import { existsCached } from '../../caches/pathCache.js'
 import { resolveFilePath, SHIM_EXTENSION_CANDIDATES } from './pathUtils.js'
-import { extractNamedImportsFromCode } from './exportAnalysis.js'
+import { extractNamedImportsFromCode, isSvelteBarrel } from './exportAnalysis.js'
+import { extractPureNamedImportsFromCode } from './astParse.js'
 // Memo of resolved absolute paths per (specifier, sourceDir). The fs probing
 // below (stat/exists/extension candidates/barrel detection) dominates the cost
 // of resolving a plain import, and the same specifier is re-resolved from many
@@ -33,15 +34,62 @@ import { extractNamedImportsFromCode } from './exportAnalysis.js'
 const resolvedPathCache = new LRUCache(4096)
 // Plain (non-svelte) files resolve to a source-independent file:// URL.
 const plainFileUrlCache = new LRUCache(4096)
+// On-demand svelte-barrel loading (env-gated via MAGIC_TEST_LAZY_BARREL=1).
+// When enabled, an import that resolves to a node_modules svelte barrel AND whose
+// usage is a pure named import where every name resolves to a .svelte file is
+// pointed at a MINIMAL barrel containing only the touched components, instead of
+// the whole eager graph. node_modules-only; any uncertainty falls back to the
+// current (eager) behavior.
+const isNodeModulesPath = p => p.includes(`${path.sep}node_modules${path.sep}`)
+const maybeOnDemandBarrel = async (entryPath, sourceDir, sourceCode, importPath) => {
+  if (process.env.MAGIC_TEST_LAZY_BARREL !== '1') {
+    return null
+  }
+  if (!entryPath || !isNodeModulesPath(entryPath)) {
+    return null
+  }
+  const ext = path.extname(entryPath)
+  if (ext !== '.js' && ext !== '.mjs') {
+    return null
+  }
+  if (!(await existsCached(entryPath))) {
+    return null
+  }
+  if (!(await isSvelteBarrel(entryPath))) {
+    return null
+  }
+  if (!sourceCode) {
+    return null
+  }
+  // Only pure named imports (no default/namespace/side-effect) can be safely
+  // rewritten to per-export file imports. `sourceCode` is the compiled module
+  // source (valid JS) being processed, so its specifiers are authoritative.
+  const importedNames = extractPureNamedImportsFromCode(sourceCode, importPath)
+  if (!importedNames || importedNames.length === 0) {
+    return null
+  }
+  try {
+    return await buildOnDemandSvelteBarrel(entryPath, sourceDir, importedNames)
+  } catch {
+    return null
+  }
+}
 export const resolveAndCompileImport = async (
   importPath,
   sourceDir,
   sourceFilePath,
   importChain = [],
+  code,
 ) => {
   const id = traceStart(`resolveAndCompileImport ${importPath.split('/').pop() || importPath}`)
   try {
-    return await resolveAndCompileImportImpl(importPath, sourceDir, sourceFilePath, importChain)
+    return await resolveAndCompileImportImpl(
+      importPath,
+      sourceDir,
+      sourceFilePath,
+      importChain,
+      code,
+    )
   } finally {
     traceEnd(id)
   }
@@ -51,6 +99,7 @@ const resolveAndCompileImportImpl = async (
   sourceDir,
   sourceFilePath,
   importChain = [],
+  code,
 ) => {
   // Deduplicate concurrent requests using shared pendingPromises map
   // Include sourceFilePath in dedup key to prevent deadlock when the same file
@@ -66,6 +115,7 @@ const resolveAndCompileImportImpl = async (
     sourceDir,
     sourceFilePath,
     importChain,
+    code,
   )
   pendingPromises.set(dedupKey, promise)
   try {
@@ -79,6 +129,7 @@ const resolveAndCompileImportImplCore = async (
   sourceDir,
   sourceFilePath,
   importChain = [],
+  code,
 ) => {
   const resolveKey = `${importPath}\u0000${sourceDir}`
   const memoized = resolvedPathCache.get(resolveKey)
@@ -141,15 +192,32 @@ const resolveAndCompileImportImplCore = async (
               isSvelteOnlyPackage: true,
             }
           }
-          const sourceCode = await fs.readFile(sourceFilePath, 'utf-8')
-          const namedImports = extractNamedImportsFromCode(sourceCode, importPath)
-          const compiledPath = await compileSvelteOnlyExport(
-            resolved.resolvedPath,
-            sourceDir,
-            namedImports.length > 0 ? namedImports : undefined,
-          )
+          let onDemandUrl = null
+          if (process.env.MAGIC_TEST_LAZY_BARREL === '1' && code) {
+            const namedImports = extractNamedImportsFromCode(code, importPath)
+            if (namedImports.length > 0) {
+              onDemandUrl = await buildOnDemandSvelteBarrel(
+                resolved.resolvedPath,
+                sourceDir,
+                namedImports,
+              )
+            }
+          }
+          if (onDemandUrl) {
+            return { filePath: importPath, js: '', url: onDemandUrl }
+          }
+          const compiledPath = await compileSvelteOnlyExport(resolved.resolvedPath, sourceDir)
           const compiledUrl = pathToFileURL(compiledPath).href
           return { filePath: importPath, js: '', url: compiledUrl }
+        }
+        const onDemandScoped = await maybeOnDemandBarrel(
+          resolved.resolvedPath ?? null,
+          sourceDir,
+          code,
+          importPath,
+        )
+        if (onDemandScoped) {
+          return { filePath: importPath, js: '', url: onDemandScoped }
         }
         return { filePath: importPath, js: '', url: null, skipProcessing: true }
       }
@@ -172,13 +240,21 @@ const resolveAndCompileImportImplCore = async (
               isSvelteOnlyPackage: true,
             }
           }
-          const sourceCode = await fs.readFile(sourceFilePath, 'utf-8')
-          const namedImports = extractNamedImportsFromCode(sourceCode, importPath)
-          const compiledPath = await compileSvelteOnlyExport(
-            resolved.resolvedPath,
-            sourceDir,
-            namedImports.length > 0 ? namedImports : undefined,
-          )
+          let onDemandUrl = null
+          if (process.env.MAGIC_TEST_LAZY_BARREL === '1' && code) {
+            const namedImports = extractNamedImportsFromCode(code, importPath)
+            if (namedImports.length > 0) {
+              onDemandUrl = await buildOnDemandSvelteBarrel(
+                resolved.resolvedPath,
+                sourceDir,
+                namedImports,
+              )
+            }
+          }
+          if (onDemandUrl) {
+            return { filePath: importPath, js: '', url: onDemandUrl }
+          }
+          const compiledPath = await compileSvelteOnlyExport(resolved.resolvedPath, sourceDir)
           const compiledUrl = pathToFileURL(compiledPath).href
           return { filePath: importPath, js: '', url: compiledUrl }
         }
@@ -308,6 +384,13 @@ const resolveAndCompileImportImplCore = async (
   // the browser bundler handles them, tests only need the JS. Drop the import.
   if (resolvedPath && /\.(css|scss|sass|less|styl|pcss)$/i.test(resolvedPath)) {
     return { filePath: importPath, js: '', url: null, removeImport: true }
+  }
+  // On-demand svelte barrel (env-gated): for a node_modules barrel reached via a
+  // relative/bare import (e.g. a package component importing '../icons.js'), load
+  // only the touched components instead of the whole sub-barrel graph.
+  const onDemand = await maybeOnDemandBarrel(resolvedPath, sourceDir, code, importPath)
+  if (onDemand) {
+    return { filePath: resolvedPath, js: '', url: onDemand }
   }
   const ext = path.extname(resolvedPath)
   if ((ext === '.ts' || ext === '.js') && (await existsCached(resolvedPath))) {

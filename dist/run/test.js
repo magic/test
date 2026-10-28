@@ -134,6 +134,7 @@ export const runTest = async (test, store, rawResults) => {
       expString: isolatedResult.expString,
       key,
       info,
+      duration: isolatedResult.duration,
     }
     rawResults?.push(testResult)
     return testResult

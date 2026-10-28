@@ -85,6 +85,7 @@ const processImportsImpl = async (code, sourceFilePath, importChain = []) => {
           sourceDir,
           sourceFilePath,
           chainWithCurrent,
+          code,
         )
         traceEnd(resolveId)
         return { imported, importPath, start, end, result }

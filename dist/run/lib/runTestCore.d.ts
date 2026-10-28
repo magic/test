@@ -18,6 +18,7 @@ type RunTestCoreResult = {
   exp: unknown
   expString: unknown
   afterError?: unknown
+  duration?: number
 }
 /**
  * Shared test-execution core: the `runs` loop, expectation evaluation,

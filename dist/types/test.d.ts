@@ -155,6 +155,8 @@ export interface TestResult {
   afterCleanupError?: unknown
   /** Error from after hook (if any) */
   afterError?: unknown
+  /** Duration of the test in milliseconds */
+  duration?: number
 }
 /**
  * Represents a suite or group of tests.

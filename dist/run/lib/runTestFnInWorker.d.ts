@@ -6,6 +6,7 @@ type RunFnResult = {
   expString: unknown
   afterCleanupError: unknown
   afterError: unknown
+  duration?: number
 }
 /**
  * Worker-side test execution: runs `before`, the shared runTestCore (fn +

@@ -15,6 +15,7 @@ export const runTestCore = async options => {
   const { key, test, invoke, logError } = options
   const { after, expect, runs = 1, timeout } = test
   const timeoutMs = getTestTimeout(timeout)
+  const startTime = process.hrtime.bigint()
   let result
   let exp
   let expString
@@ -75,6 +76,8 @@ export const runTestCore = async options => {
       })
     }
   }
-  return { result, pass, exp, expString, afterError }
+  const endTime = process.hrtime.bigint()
+  const durationMs = Number(endTime - startTime) / 1_000_000
+  return { result, pass, exp, expString, afterError, duration: durationMs }
 }
 //# sourceMappingURL=runTestCore.js.map

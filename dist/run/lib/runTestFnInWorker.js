@@ -37,6 +37,7 @@ export const runTestFnInWorker = async (test, key) => {
       afterCleanup,
       afterCleanupError: innerAfterCleanupError,
       afterError: core.afterError,
+      duration: core.duration,
     }
   })
   if (isolatedResult.afterCleanup) {
@@ -53,6 +54,7 @@ export const runTestFnInWorker = async (test, key) => {
     expString: isolatedResult.expString,
     afterCleanupError: isolatedResult.afterCleanupError || afterCleanupError,
     afterError: isolatedResult.afterError,
+    duration: isolatedResult.duration,
   }
 }
 //# sourceMappingURL=runTestFnInWorker.js.map

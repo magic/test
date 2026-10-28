@@ -76,6 +76,11 @@ export const at = (index, check) => {
       return false
     }
     const value = result[index]
+    // An array of checks must all pass against the element; a single
+    // non-array check behaves as before.
+    if (is.array(check)) {
+      return check.every(c => checkValue(value, c))
+    }
     return checkValue(value, check)
   }
 }
@@ -122,6 +127,24 @@ export const oneOf =
     return options.some(opt => is.deep.equal(result, opt))
   }
 export const matches = pattern => result => is.string(result) && pattern.test(result)
+const negate =
+  fn =>
+  (...args) =>
+  result =>
+    !fn(...args)(result)
+export const not = {
+  property: negate(property),
+  properties: negate(properties),
+  any: negate(any),
+  nested: negate(nested),
+  string: negate(string),
+  at: negate(at),
+  key: negate(key),
+  keys: negate(keys),
+  includes: negate(includes),
+  oneOf: negate(oneOf),
+  matches: negate(matches),
+}
 export const has = {
   property,
   properties,
@@ -134,5 +157,6 @@ export const has = {
   includes,
   oneOf,
   matches,
+  not,
 }
 //# sourceMappingURL=has.js.map

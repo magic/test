@@ -1,4 +1,5 @@
 import log from '@magic/log'
+import is from '@magic/types'
 import { env } from '../env.js'
 import { stringify } from '../stringify.js'
 import { getDuration } from '../getDuration.js'
@@ -6,6 +7,46 @@ import { Store } from '../store.js'
 import { isTestResult } from './isTestResult.js'
 import { printPercent } from './printPercent.js'
 import path from 'node:path'
+const SLOW_TEST_THRESHOLD_MS = 500
+const SLOW_TEST_REPORT_COUNT = 20
+const collectSlowTests = suites => {
+  const slow = []
+  const walk = item => {
+    if (!is.objectNative(item)) {
+      return
+    }
+    if (is.arr(item.tests)) {
+      for (const t of item.tests) {
+        walk(t)
+      }
+      return
+    }
+    const test = item
+    if (
+      isTestResult(test) &&
+      typeof test.duration === 'number' &&
+      test.duration >= SLOW_TEST_THRESHOLD_MS
+    ) {
+      slow.push({
+        name: test.name,
+        key: test.key,
+        duration: test.duration,
+        info: test.info,
+      })
+    }
+  }
+  for (const suite of suites) {
+    walk(suite)
+  }
+  slow.sort((a, b) => b.duration - a.duration)
+  return slow.slice(0, SLOW_TEST_REPORT_COUNT)
+}
+const formatDuration = ms => {
+  if (ms >= 1000) {
+    return `${(ms / 1000).toFixed(2)}s`
+  }
+  return `${ms.toFixed(0)}ms`
+}
 /**
  * Prints test results for a package and its suites.
  */
@@ -18,8 +59,7 @@ export const info = (suites, store, useLogging = true) => {
     if (!suite) {
       return
     }
-    const suiteObj = suite
-    const { tests, duration, name } = suiteObj
+    const { tests, duration, name } = suite
     if (!tests) {
       return
     }
@@ -96,6 +136,46 @@ export const info = (suites, store, useLogging = true) => {
     } else {
       log(`Ran ${all} tests in ${duration}. Passed ${pass}/${all} ${percentage}%\n`)
     }
+  }
+  // Slow-test report: helps identify performance bottlenecks.
+  const slowTests = collectSlowTests(suites)
+  if (slowTests.length > 0) {
+    const maxDur = slowTests[0].duration
+    const thresholdLabel = formatDuration(SLOW_TEST_THRESHOLD_MS)
+    const maxLabel = formatDuration(maxDur)
+    const c = {
+      reset: '\x1b[0m',
+      dim: '\x1b[2m',
+      yellow: '\x1b[33m',
+      magenta: '\x1b[35m',
+      red: '\x1b[31m',
+      bold: '\x1b[1m',
+    }
+    console.log('\n' + c.bold + '═'.repeat(70) + c.reset)
+    console.log(c.bold + `  Slowest Tests (≥ ${thresholdLabel})` + c.reset)
+    console.log(c.bold + '═'.repeat(70) + c.reset + '\n')
+    for (const t of slowTests) {
+      let color = c.yellow
+      if (t.duration > 2000) {
+        color = c.magenta
+      }
+      if (t.duration > 5000) {
+        color = c.red
+      }
+      // name and key are both the suite/file (tests in a file share a key),
+      // so show the key; the `info` field is what identifies the individual
+      // test within the file.
+      const label = t.key || t.name
+      console.log(`  ${color}${formatDuration(t.duration).padStart(8)}${c.reset}  ${label}`)
+      if (t.info && t.info !== label) {
+        console.log(`  ${c.dim}         ${t.info}${c.reset}`)
+      }
+    }
+    console.log()
+    console.log(
+      `  ${c.dim}Showing ${slowTests.length} slowest of ${all} tests. Max: ${maxLabel}${c.reset}`,
+    )
+    console.log(c.bold + '═'.repeat(70) + c.reset + '\n')
   }
   return pass === all
 }

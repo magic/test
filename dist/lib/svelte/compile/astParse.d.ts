@@ -19,6 +19,24 @@ declare const extractImports: (fileInfo: FileInfo) => Array<{
   specifiers: string[]
   originalText?: string
 }>
+/**
+ * Return the IMPORTED names referenced by a static import from `spec`.
+ * For `import { A, B as X } from 'spec'` → ['A','B'] (the source-package export
+ * names, not the local aliases). Default import → 'default'; namespace → '*'.
+ * This is what must be looked up in the source package's export graph.
+ */
+export declare const extractImportedNamesFromCode: (code: string, spec: string) => string[]
+/**
+ * Return the imported names of a static import from `spec` ONLY when the import
+ * is a pure named import (every specifier is an `ImportSpecifier`); otherwise
+ * return null. Pure-named is the only shape that can be safely rewritten to
+ * per-export file imports (a default/namespace/side-effect import may touch any
+ * export, so it must fall back to loading the whole module).
+ */
+export declare const extractPureNamedImportsFromCode: (
+  code: string,
+  spec: string,
+) => string[] | null
 export type SimpleImport = {
   specifiers: string
   source: string
