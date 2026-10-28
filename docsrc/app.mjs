@@ -45,7 +45,7 @@ export const state = {
         { to: '/lib/#lib-error', text: 'error' },
         { to: '/lib/#lib-mock', text: 'mock' },
         { to: '/lib/#lib-mock-log', text: 'mock.log' },
-        { to: '/lib/#lib-has', text: 'has' },
+        { to: '/has/', text: 'has' },
         { to: '/lib/#lib-version', text: 'version' },
         { to: '/lib/#lib-dom', text: 'DOM Environment' },
       ],

@@ -435,6 +435,12 @@ mock.log.timeEnd('operation')   // Logs timing end if not NODE_ENV=production
     ' or stringifying functions.',
   ]),
 
+  p([
+    'Full documentation for every has.* check, including has.not, lives on the ',
+    Link({ to: '/has/' }, 'has page'),
+    '.',
+  ]),
+
   Pre(`
 import { has, is } from '@magic/test'
 `),
