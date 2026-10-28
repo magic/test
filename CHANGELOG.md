@@ -2,6 +2,7 @@
 
 #### 0.3.50
 
+- feat: add -s, --slow, --timing flag to get slow test information
 - feat: `has.not` — negated versions of every `has.*` check: `has.not.property`,
   `has.not.properties`, `has.not.any`, `has.not.nested`, `has.not.string`,
   `has.not.at`, `has.not.key`, `has.not.keys`, `has.not.includes`,
