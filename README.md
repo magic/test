@@ -1122,6 +1122,53 @@ const roles = ['admin', 'root', 'user']
 }
 ```
 
+**has.at(index, check)** - Check the element at a given index of an array. Accepts a predicate, a literal value, or an array of checks (all must pass)
+
+```js
+{
+  fn: () => getItems(),
+  expect: has.at(0, is.string),
+  info: 'first item is a string',
+}
+
+// multiple checks must all pass
+{
+  fn: () => getItems(),
+  expect: has.at(0, [is.string, item => item === 'first']),
+  info: 'first item is the string "first"',
+}
+```
+
+**has.not** - Negated versions of every has.* check. `has.not.X(...)` passes exactly when `has.X(...)` would fail (pure logical negation)
+
+```js
+{
+  fn: () => status,
+  expect: has.not.oneOf(['pending', 'done']),
+  info: 'status is not a valid state',
+}
+
+{
+  fn: () => error.message,
+  expect: has.not.string('timeout'),
+  info: 'error is not a timeout',
+}
+
+{
+  fn: () => user,
+  expect: has.not.property('isAdmin', true),
+  info: 'user is not an admin',
+}
+
+{
+  fn: () => items,
+  expect: has.not.includes('admin'),
+  info: 'items do not contain admin',
+}
+```
+
+Available: `has.not.property`, `has.not.properties`, `has.not.any`, `has.not.nested`, `has.not.string`, `has.not.at`, `has.not.key`, `has.not.keys`, `has.not.includes`, `has.not.oneOf`, `has.not.matches`
+
 ##### <a name="lib-dom"></a>DOM Environment
 
 @magic/test automatically initializes a DOM environment when imported, making browser APIs available in Node.js.
