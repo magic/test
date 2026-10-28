@@ -134,4 +134,25 @@ export default [
     expect: true,
     info: 'getErrorLength returns NaN for invalid string',
   },
+  // isTimingEnabled
+  {
+    fn: () => withEnv({ MAGIC_TEST_TIMING: '1' }, () => env.isTimingEnabled()),
+    expect: true,
+    info: 'isTimingEnabled returns true with MAGIC_TEST_TIMING=1',
+  },
+  {
+    fn: () => withEnv({ MAGIC_TEST_TIMING: '0' }, () => env.isTimingEnabled()),
+    expect: false,
+    info: 'isTimingEnabled returns false with MAGIC_TEST_TIMING=0',
+  },
+  {
+    fn: () => withEnv({}, () => withArgv(['--timing'], () => env.isTimingEnabled())),
+    expect: true,
+    info: 'isTimingEnabled returns true with --timing argv flag',
+  },
+  {
+    fn: () => withEnv({}, () => withArgv([], () => env.isTimingEnabled())),
+    expect: false,
+    info: 'isTimingEnabled returns false without flag or env',
+  },
 ] satisfies TestCase[]

@@ -172,46 +172,49 @@ export const info = (suites: Suite[], store: Store, useLogging: boolean = true):
   }
 
   // Slow-test report: helps identify performance bottlenecks.
-  const slowTests = collectSlowTests(suites)
-  if (slowTests.length > 0) {
-    const maxDur = slowTests[0]!.duration
-    const thresholdLabel = formatDuration(SLOW_TEST_THRESHOLD_MS)
-    const maxLabel = formatDuration(maxDur)
-    const c = {
-      reset: '\x1b[0m',
-      dim: '\x1b[2m',
-      yellow: '\x1b[33m',
-      magenta: '\x1b[35m',
-      red: '\x1b[31m',
-      bold: '\x1b[1m',
-    }
-    console.log('\n' + c.bold + '═'.repeat(70) + c.reset)
-    console.log(c.bold + `  Slowest Tests (≥ ${thresholdLabel})` + c.reset)
-    console.log(c.bold + '═'.repeat(70) + c.reset + '\n')
+  // Only shown when --slow/--timing/-s flag is provided.
+  if (env.isTimingEnabled()) {
+    const slowTests = collectSlowTests(suites)
+    if (slowTests.length > 0) {
+      const maxDur = slowTests[0]!.duration
+      const thresholdLabel = formatDuration(SLOW_TEST_THRESHOLD_MS)
+      const maxLabel = formatDuration(maxDur)
+      const c = {
+        reset: '\x1b[0m',
+        dim: '\x1b[2m',
+        yellow: '\x1b[33m',
+        magenta: '\x1b[35m',
+        red: '\x1b[31m',
+        bold: '\x1b[1m',
+      }
+      console.log('\n' + c.bold + '═'.repeat(70) + c.reset)
+      console.log(c.bold + `  Slowest Tests (≥ ${thresholdLabel})` + c.reset)
+      console.log(c.bold + '═'.repeat(70) + c.reset + '\n')
 
-    for (const t of slowTests) {
-      let color = c.yellow
-      if (t.duration > 2000) {
-        color = c.magenta
+      for (const t of slowTests) {
+        let color = c.yellow
+        if (t.duration > 2000) {
+          color = c.magenta
+        }
+        if (t.duration > 5000) {
+          color = c.red
+        }
+        // name and key are both the suite/file (tests in a file share a key),
+        // so show the key; the `info` field is what identifies the individual
+        // test within the file.
+        const label = t.key || t.name
+        console.log(`  ${color}${formatDuration(t.duration).padStart(8)}${c.reset}  ${label}`)
+        if (t.info && t.info !== label) {
+          console.log(`  ${c.dim}         ${t.info}${c.reset}`)
+        }
       }
-      if (t.duration > 5000) {
-        color = c.red
-      }
-      // name and key are both the suite/file (tests in a file share a key),
-      // so show the key; the `info` field is what identifies the individual
-      // test within the file.
-      const label = t.key || t.name
-      console.log(`  ${color}${formatDuration(t.duration).padStart(8)}${c.reset}  ${label}`)
-      if (t.info && t.info !== label) {
-        console.log(`  ${c.dim}         ${t.info}${c.reset}`)
-      }
-    }
 
-    console.log()
-    console.log(
-      `  ${c.dim}Showing ${slowTests.length} slowest of ${all} tests. Max: ${maxLabel}${c.reset}`,
-    )
-    console.log(c.bold + '═'.repeat(70) + c.reset + '\n')
+      console.log()
+      console.log(
+        `  ${c.dim}Showing ${slowTests.length} slowest of ${all} tests. Max: ${maxLabel}${c.reset}`,
+      )
+      console.log(c.bold + '═'.repeat(70) + c.reset + '\n')
+    }
   }
 
   return pass === all

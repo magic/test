@@ -83,6 +83,7 @@ const spec = {
       isProd: 'fn',
       isVerbose: 'fn',
       getErrorLength: 'fn',
+      isTimingEnabled: 'fn',
     },
   ],
 
