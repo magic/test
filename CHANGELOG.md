@@ -1,5 +1,15 @@
 ### Changelog
 
+#### 0.3.50
+
+- feat: `has.not` — negated versions of every `has.*` check: `has.not.property`,
+  `has.not.properties`, `has.not.any`, `has.not.nested`, `has.not.string`,
+  `has.not.at`, `has.not.key`, `has.not.keys`, `has.not.includes`,
+  `has.not.oneOf`, `has.not.matches`. Each `has.not.X(...)` passes exactly when
+  the matching `has.X(...)` would fail (pure logical negation).
+- feat: `has.at(index, checks[])` — an array of checks now passes only when
+  every check matches the array element
+
 #### 0.3.49
 
 - fix: prevent maximum call stack size exceeded in collectComponentPaths
