@@ -35,7 +35,7 @@ export const createStaticPage = (initialData = {}) => {
   return new Proxy(state, handler)
 }
 export const browser = true
-export const dev = process.env.NODE_ENV !== 'production'
-export const prod = process.env.NODE_ENV === 'production'
+export const dev = process.env.MAGIC_TEST_ENV !== 'production'
+export const prod = process.env.MAGIC_TEST_ENV === 'production'
 export const platform = 'node'
 //# sourceMappingURL=sveltekit-mocks.js.map

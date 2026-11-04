@@ -39,6 +39,19 @@ const isImportResult = obj => {
   )
 }
 const CONCURRENCY_LIMIT = 50
+/**
+ * Vite define values may be pre-stringified JSON (e.g. '"my url"') or raw
+ * literals (e.g. a bare 'http://localhost:9000'). Parse JSON when possible,
+ * otherwise keep the raw string so a non-JSON define does not crash the
+ * whole import.
+ */
+const parseDefineValue = value => {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return value
+  }
+}
 const importFile = async filePath => {
   try {
     const isUrl = filePath.startsWith('file://')
@@ -122,7 +135,7 @@ const readRecursiveImpl = async (dir = '', onProgress) => {
       }
       for (const [key, value] of Object.entries(defines)) {
         // @ts-expect-error - dynamic globalThis property assignment
-        globalThis[key] = typeof value === 'string' ? JSON.parse(value) : value
+        globalThis[key] = typeof value === 'string' ? parseDefineValue(value) : value
       }
       const imported = await importFile(importPath)
       tests[fileP] = imported
@@ -185,7 +198,7 @@ const readRecursiveImpl = async (dir = '', onProgress) => {
           }
           for (const [key, value] of Object.entries(defines)) {
             // @ts-expect-error - dynamic globalThis property assignment
-            globalThis[key] = typeof value === 'string' ? JSON.parse(value) : value
+            globalThis[key] = typeof value === 'string' ? parseDefineValue(value) : value
           }
           const test = await importFile(filePath)
           processedCount++

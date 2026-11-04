@@ -48,6 +48,12 @@ export const resolveAlias = async (importPath, sourceFilePath, options = {}) => 
       }
     }
     if (resolved) {
+      // Remote URL alias targets (e.g. a custom engine build served over
+      // http/https) are not local files: return them as-is so the load hook
+      // can fetch the source. fs.exists probing below is only for local paths.
+      if (/^https?:\/\//.test(resolved)) {
+        return resolved
+      }
       // Try with extensions, handling .js->.ts conversion
       const withExtensions = [
         '',
