@@ -12,7 +12,14 @@ export const normalizeSingleAlias = (entry: unknown, configDir: string): AliasEn
   let findVal: string | RegExp = is.string(find) || is.regex(find) ? find : String(find)
   let replacementVal: string = is.string(replacement) ? replacement : String(replacement)
 
-  if (is.string(replacementVal) && !path.isAbsolute(replacementVal)) {
+  if (
+    is.string(replacementVal) &&
+    !path.isAbsolute(replacementVal) &&
+    // Remote URL replacements (e.g. a custom engine build served over
+    // http/https) must not be treated as local paths: path.resolve would
+    // mangle the scheme ('https://' -> '<configDir>/https:/...'). Keep verbatim.
+    !/^https?:\/\//.test(replacementVal)
+  ) {
     replacementVal = path.resolve(configDir, replacementVal)
   }
 

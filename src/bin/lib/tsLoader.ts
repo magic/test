@@ -1,6 +1,7 @@
-import fs from '@magic/fs'
 import path from 'node:path'
+import crypto from 'node:crypto'
 import { pathToFileURL } from 'node:url'
+import fs from '@magic/fs'
 import is from '@magic/types'
 import log from '@magic/log'
 import { resolveAlias } from '../../lib/svelte/viteConfig/resolveAlias.js'
@@ -17,7 +18,7 @@ import { processImports } from '../../lib/svelte/compile/processImports.js'
 import { transformForNode } from '../../lib/svelte/compile/transformForNode.js'
 import { loadViteConfig } from '../../lib/svelte/viteConfig/loadViteConfig.js'
 import { initGlobals } from '../../lib/dom/globals.js'
-import { CACHE_DIR } from '../../constants.js'
+import { CACHE_DIR, getCwd } from '../../constants.js'
 
 // Svelte is optional - only required when .svelte files are tested
 let svelteAvailable = false
@@ -86,6 +87,61 @@ const compileSvelteFile = async (filePath: string): Promise<string | undefined> 
 // Node cannot load raw .svelte sources - if the resolved file is a .svelte
 // component, compile it first and return the compiled module URL instead of
 // the raw file URL (the load hook has no handler for .svelte URLs).
+// Remote URL alias targets (e.g. a custom three engine served over http/https)
+// must be materialized as local files: V8 coverage records the module URL and
+// c8 crashes when normalizing non-file URLs. Fetch each URL once, cache the
+// source under CACHE_DIR/remote, and serve the local file URL instead.
+const remoteModuleCache = new Map<string, Promise<string>>()
+// Remote builds use relative specifiers ("./three.core.js"). Once the module
+// is served from a local cache file those relatives would resolve against the
+// cache dir, so rewrite them to absolute remote URLs. The resolve hook then
+// materializes the absolute URLs as local files in turn.
+const rewriteRemoteSource = (source: string, base: string): string => {
+  const toAbsolute = (rel: string) => new URL(rel, base).href
+  return source.replace(
+    /(\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)(['"])(\.\.{0,1}\/[^'"]*)\2/g,
+    (_m, pre, quote, rel) => pre + quote + toAbsolute(rel) + quote,
+  )
+}
+const materializeRemoteModule = async (remoteUrl: string): Promise<string> => {
+  let pending = remoteModuleCache.get(remoteUrl)
+  if (!pending) {
+    pending = (async () => {
+      const hash = crypto.createHash('sha1').update(remoteUrl).digest('hex')
+      const dest = path.join(getCwd(), CACHE_DIR, 'remote', `${hash}.mjs`)
+      try {
+        const res = await fetch(remoteUrl)
+        if (!res.ok) {
+          throw new Error(`Failed to fetch remote module ${remoteUrl}: HTTP ${res.status}`)
+        }
+        const source = await res.text()
+        await fs.mkdirp(path.dirname(dest))
+        try {
+          await fs.access(dest)
+        } catch {
+          await fs.writeFile(dest, rewriteRemoteSource(source, remoteUrl))
+        }
+      } catch (e) {
+        // The remote build server can be down (e.g. a local dev engine). Fall
+        // back to the last materialized copy so imports still resolve instead
+        // of failing the whole module graph.
+        try {
+          await fs.access(dest)
+          log.warn(
+            `Remote module ${remoteUrl} unreachable (${e instanceof Error ? e.message : e}); ` +
+              'using cached copy',
+          )
+        } catch {
+          throw e
+        }
+      }
+      return pathToFileURL(dest).href
+    })()
+    remoteModuleCache.set(remoteUrl, pending)
+    pending.catch(() => remoteModuleCache.delete(remoteUrl))
+  }
+  return pending
+}
 const returnFileUrl = async (filePath: string): Promise<{ url: string; shortCircuit: boolean }> => {
   if (svelteAvailable && filePath.endsWith('.svelte')) {
     const importUrl = await compileSvelteFile(filePath)
@@ -243,6 +299,11 @@ const resolveImpl = async (
   nextResolve: (specifier: string, context?: object) => Promise<{ url: string }>,
 ): Promise<{ url: string; shortCircuit?: boolean }> => {
   try {
+    // Absolute remote URL imports (specifiers rewritten by
+    // rewriteRemoteSource, or explicit http(s) imports): materialize directly.
+    if (/^https?:\/\//.test(specifier)) {
+      return { url: await materializeRemoteModule(specifier), shortCircuit: true }
+    }
     // svelte runtime: prefer the `browser` (client) variant so that dependencies
     // importing bare `svelte` (e.g. svelte-maplibre's context.svelte.js)
     // share the client runtime instance used by mount() - a single
@@ -254,6 +315,18 @@ const resolveImpl = async (
       }
     }
 
+    // Remote URL parents (a cached http/https module graph, e.g. the three
+    // engine): resolve relative/absolute specifiers against the remote base
+    // and materialize the result as a local cached file as well.
+    if (
+      context.parentURL &&
+      /^https?:\/\//.test(context.parentURL) &&
+      !specifier.startsWith('node:') &&
+      !specifier.startsWith('file://')
+    ) {
+      const absolute = new URL(specifier, context.parentURL).href
+      return { url: await materializeRemoteModule(absolute), shortCircuit: true }
+    }
     // Direct handling of $app imports - resolve to built-in shims
     if (specifier.startsWith('$app')) {
       const resolved = await resolveAppImport(specifier)
@@ -311,6 +384,12 @@ const resolveImpl = async (
           includeShims: true,
         })
         if (aliasResolved) {
+          // Remote URL alias target (e.g. a custom engine build served over
+          // http/https): materialize it as a local cached file (see
+          // materializeRemoteModule) so coverage never sees non-file URLs.
+          if (/^https?:\/\//.test(aliasResolved)) {
+            return { url: await materializeRemoteModule(aliasResolved), shortCircuit: true }
+          }
           // Check if resolved path exists, try extensions if not
           const withExtensions = ['', '.ts', '.svelte.ts', '.js', '/index.ts', '/index.js']
           for (const ext of withExtensions) {
@@ -662,6 +741,17 @@ const loadImplInner = async (
   context: { format?: string },
   nextLoad: (url: string, context?: object) => Promise<{ format?: string; source?: string }>,
 ): Promise<{ format?: string; source?: string; shortCircuit?: boolean }> => {
+  // Remote URL modules (vite aliases pointing at an http/https build, e.g. a
+  // custom three engine): fetch the source and serve it as an ES module.
+  if (/^https?:\/\//.test(url)) {
+    const res = await fetch(url)
+    if (!res.ok) {
+      throw new Error(`Failed to fetch remote module ${url}: HTTP ${res.status}`)
+    }
+    const source = await res.text()
+    return { format: 'module', source, shortCircuit: true }
+  }
+
   if (url.includes('/magic/util/test/src/') && url.endsWith('.js')) {
     const tsUrl = url.replace(/\.js$/, '.ts')
     const filePath = tsUrl.replace('file://', '')
