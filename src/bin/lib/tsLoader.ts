@@ -17,6 +17,7 @@ import { writeTempFile } from '../../lib/svelte/compile/resolveSvelteOnlyExports
 import { processImports } from '../../lib/svelte/compile/processImports.js'
 import { transformForNode } from '../../lib/svelte/compile/transformForNode.js'
 import { loadViteConfig } from '../../lib/svelte/viteConfig/loadViteConfig.js'
+import { findProjectRoot } from '../../lib/svelte/viteConfig/findProjectRoot.js'
 import { initGlobals } from '../../lib/dom/globals.js'
 import { CACHE_DIR, getCwd } from '../../constants.js'
 
@@ -181,6 +182,116 @@ const resolveAppImport = async (importPath: string): Promise<string | null> => {
   return null
 }
 
+// SvelteKit 3 `$app/env/private` and `$app/env/public` are generated per
+// project from src/env.ts (defineEnvVars) by the SvelteKit vite plugin.
+// Node has no such plugin, so synthesize equivalent modules: one export per
+// declared variable, reading process.env at module-evaluation time.
+let envVarsCache: { private: string[]; public: string[] } | null = null
+let envVarsCacheRoot: string | null = null
+
+const parseEnvVars = async (
+  rootDir: string,
+): Promise<{ private: string[]; public: string[] } | null> => {
+  if (envVarsCache !== null && envVarsCacheRoot === rootDir) {
+    return envVarsCache
+  }
+  const candidates = [path.join(rootDir, 'src', 'env.ts'), path.join(rootDir, 'src', 'env.js')]
+  for (const envPath of candidates) {
+    if (!(await fs.exists(envPath))) {
+      continue
+    }
+    const src = await fs.readFile(envPath, 'utf-8')
+    const marker = src.indexOf('defineEnvVars')
+    if (marker === -1) {
+      continue
+    }
+    const open = src.indexOf('{', marker)
+    if (open === -1) {
+      continue
+    }
+    // Scan to the matching closing brace
+    let depth = 0
+    let end = -1
+    for (let i = open; i < src.length; i++) {
+      if (src[i] === '{') {
+        depth++
+      } else if (src[i] === '}') {
+        depth--
+        if (depth === 0) {
+          end = i
+          break
+        }
+      }
+    }
+    if (end === -1) {
+      continue
+    }
+    // Extract the TOP-LEVEL keys of the object (skip nested keys like the
+    // `public: true` inside per-variable option objects)
+    const body = src.slice(open + 1, end)
+    const keys: string[] = []
+    let d = 0
+    for (let i = 0; i < body.length; i++) {
+      const c = body[i]
+      if (c === '{' || c === '[') {
+        d++
+      } else if (c === '}' || c === ']') {
+        d--
+      } else if (d === 0 && c && /[A-Za-z_$]/.test(c)) {
+        const m = /^[A-Za-z_$][\w$]*/.exec(body.slice(i))
+        if (m) {
+          const after = body.slice(i + m[0].length)
+          const ws = after.match(/^\s*/)?.[0] ?? ''
+          if (after[ws.length] === ':') {
+            keys.push(m[0])
+          }
+          i += m[0].length - 1
+        }
+      }
+    }
+    envVarsCache = {
+      private: keys.filter(k => !k.startsWith('PUBLIC_')),
+      public: keys.filter(k => k.startsWith('PUBLIC_')),
+    }
+    envVarsCacheRoot = rootDir
+    return envVarsCache
+  }
+  return null
+}
+
+const resolveAppEnvSubpath = async (
+  importPath: string,
+  sourceFilePath: string,
+): Promise<string | null> => {
+  if (importPath !== '$app/env/private' && importPath !== '$app/env/public') {
+    return null
+  }
+  try {
+    const sourceDir = path.dirname(sourceFilePath)
+    const rootDir = await findProjectRoot(sourceDir)
+    const vars = await parseEnvVars(rootDir)
+    if (!vars) {
+      return null
+    }
+    const names = importPath.endsWith('public') ? vars.public : vars.private
+    const source = names.length
+      ? names.map(n => `export const ${n} = process.env.${n};`).join('')
+      : ''
+    // Synthesize the module as a real temp file: a `data:` URL would end up
+    // in V8 coverage data and crash c8's file-URL source-map normalization.
+    const modulePath = path.join(
+      rootDir,
+      'node_modules',
+      '@magic-env',
+      importPath.endsWith('public') ? 'public.mjs' : 'private.mjs',
+    )
+    const written = await writeTempFile(modulePath, source)
+    return pathToFileURL(written).href
+  } catch {
+    return null
+  }
+}
+
 // Node's default ESM conditions resolve the bare `svelte` import to the server
 // entry (the `default` condition of svelte's package exports), but this
 // framework always mounts components with the client runtime. Svelte's runtime
@@ -332,6 +443,13 @@ const resolveImpl = async (
       const resolved = await resolveAppImport(specifier)
       if (resolved) {
         return { url: pathToFileURL(resolved).href, shortCircuit: true }
+      }
+      // SvelteKit 3 env subpaths (generated per project from src/env.ts)
+      if (context.parentURL) {
+        const envUrl = await resolveAppEnvSubpath(specifier, new URL(context.parentURL).pathname)
+        if (envUrl) {
+          return { url: envUrl, shortCircuit: true }
+        }
       }
     }
 
