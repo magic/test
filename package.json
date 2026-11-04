@@ -83,8 +83,8 @@
     "@magic-themes/docs": "0.0.15",
     "@magic/core": "0.0.161",
     "@magic/format": "0.0.75",
-    "@types/node": "26.6.5",
-    "eslint": "10.13.0",
+    "@types/node": "26.6.6",
+    "eslint": "10.14.0",
     "prettier-plugin-svelte": "4.1.1",
     "svelte": "5.57.3"
   },
