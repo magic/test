@@ -29,6 +29,7 @@ export const createStaticPage = (
       if (prop === 'state') {
         return state.state
       }
+
       return state[prop as keyof typeof state]
     },
     set: (_target, prop, value) => {
@@ -48,8 +49,8 @@ export const createStaticPage = (
 
 export const browser = true
 
-export const dev = process.env.NODE_ENV !== 'production'
+export const dev = process.env.MAGIC_TEST_ENV !== 'production'
 
-export const prod = process.env.NODE_ENV === 'production'
+export const prod = process.env.MAGIC_TEST_ENV === 'production'
 
 export const platform = 'node'

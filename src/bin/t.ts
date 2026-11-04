@@ -25,8 +25,9 @@ const res = cli({
     ['--timeout', '--to', '-t'],
     ['--slow', '--timing', '-s'],
     ['--workers', '--w', '-w'],
+    ['--production', '--prod', '--p', '-p'],
   ],
-  env: [[['--production', '--prod', '--p', '-p'], 'NODE_ENV', 'production']],
+  // env: [[['--production', '--prod', '--p', '-p'], 'NODE_ENV', 'production']],
   help: {
     name: '@magic/test t',
     options: {
@@ -71,7 +72,10 @@ const run = async () => {
 
   log(`### ${log.color('green', 'Testing package:')} ${name}@${version}\n`)
 
-  const isProd = res.env.NODE_ENV === 'production'
+  const isProd = res.args.production
+  if (isProd) {
+    process.env.MAGIC_TEST_ENV = 'production'
+  }
 
   let binPath = path.join(cwd, 'node_modules', '@magic', 'test', 'dist', 'bin')
   if (name === '@magic/test') {
