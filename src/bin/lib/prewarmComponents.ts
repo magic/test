@@ -75,9 +75,9 @@ interface PrewarmResult {
 
 /**
  * Collect `component` strings from the test data. Test exports are arbitrary
- * module values (e.g. an eslint config), so the object graph can contain
- * cycles — typescript-eslint's plugin object self-references via
- * `configs['flat/all'][0].plugins`. The visited set breaks those cycles (and
+ * module values (e.g. a linter config), so the object graph can contain
+ * cycles — config plugin objects often self-reference. The visited set
+ * breaks those cycles (and
  * skips repeated shared subtrees); a first visit already collects everything
  * beneath a node, so skipping later visits loses nothing.
  */

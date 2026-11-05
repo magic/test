@@ -1,21 +1,24 @@
 import crypto from 'node:crypto'
-import { createRequire } from 'node:module'
 
-import type { TSESTree } from '@typescript-eslint/types'
 import is from '@magic/types'
+import type {
+  ImportDefaultSpecifier,
+  ImportNamespaceSpecifier,
+  ImportSpecifier,
+  Node as AstNode,
+  Program,
+} from 'oxc-parser'
 
+import { parseAst } from '../../analysis/parseAst.js'
 import { getSvelteCompiler } from '../compiler-cache.js'
 import { LRUCache } from '../../caches/LRUCache.js'
 import type { ExportInfo } from './types.js'
 
 const MAX_AST_CACHE_SIZE = 500
 
-// Use createRequire for ESM compatibility when parsing inline code
-const _require = createRequire(import.meta.url)
-
 export type FileInfo = {
   code: string
-  ast: TSESTree.Program
+  ast: Program
   filePath: string
   hasRunes?: boolean
   isCompiled?: boolean
@@ -23,7 +26,7 @@ export type FileInfo = {
 
 // Analysis cache - single parse per unique code
 type CodeAnalysis = {
-  ast: TSESTree.Program
+  ast: Program
   hasRunes: boolean
   isCompiled: boolean
 }
@@ -78,11 +81,7 @@ const extractScriptFromSvelte = async (source: string): Promise<string> => {
 }
 
 const analyzeCodeSync = (code: string): CodeAnalysis => {
-  const { parse } = _require('@typescript-eslint/parser')
-  const ast = parse(code, {
-    sourceType: 'module',
-    ecmaVersion: 'latest',
-  })
+  const ast = parseAst(code)
 
   let hasRunes = false
   let isCompiled = false
@@ -90,13 +89,10 @@ const analyzeCodeSync = (code: string): CodeAnalysis => {
   // Check for compiled Svelte at the top level: import * as $ from 'svelte/internal/'
   for (const node of ast.body) {
     if (node.type === 'ImportDeclaration') {
-      const imp = node as TSESTree.ImportDeclaration
-      const nsSpec = imp.specifiers.find(s => s.type === 'ImportNamespaceSpecifier')
+      const nsSpec = node.specifiers.find(s => s.type === 'ImportNamespaceSpecifier')
       if (nsSpec) {
-        const spec = nsSpec as TSESTree.ImportNamespaceSpecifier
-        if (spec.local.name === '$') {
-          const source = imp.source as TSESTree.Literal
-          if (is.string(source.value) && source.value.startsWith('svelte/internal')) {
+        if (nsSpec.local.name === '$') {
+          if (node.source.value.startsWith('svelte/internal')) {
             isCompiled = true
           }
         }
@@ -104,7 +100,7 @@ const analyzeCodeSync = (code: string): CodeAnalysis => {
     }
   }
 
-  const checkNode = (node: TSESTree.Node): void => {
+  const checkNode = (node: AstNode): void => {
     // Check for Svelte runes: $state(), $derived(), etc.
     if (!hasRunes && node.type === 'CallExpression') {
       const callee = node.callee
@@ -135,11 +131,11 @@ const analyzeCodeSync = (code: string): CodeAnalysis => {
         const val = (node as unknown as Record<string, unknown>)[key]
         if (val && is.object(val)) {
           if ('type' in val) {
-            checkNode(val as TSESTree.Node)
+            checkNode(val as AstNode)
           } else if (is.array(val)) {
             for (const item of val) {
               if (item && is.object(item) && 'type' in (item as object)) {
-                checkNode(item as TSESTree.Node)
+                checkNode(item as AstNode)
               }
             }
           }
@@ -194,11 +190,11 @@ const parseFile = async (code: string, filePath: string): Promise<FileInfo> => {
   return result
 }
 
-const getOriginal = (node: TSESTree.Node, code: string): string => {
-  return code.slice(node.range[0], node.range[1])
+const getOriginal = (node: AstNode, code: string): string => {
+  return code.slice(node.start, node.end)
 }
 
-const getDeclarationNames = (decl: TSESTree.Node): string[] => {
+const getDeclarationNames = (decl: AstNode): string[] => {
   switch (decl.type) {
     case 'FunctionDeclaration':
     case 'ClassDeclaration':
@@ -215,55 +211,26 @@ const getDeclarationNames = (decl: TSESTree.Node): string[] => {
     case 'TSModuleDeclaration':
       return decl.id && decl.id.type === 'Identifier' ? [decl.id.name] : []
     case 'TSTypeParameterDeclaration':
-      return decl.params.map(p => ('name' in p && is.string(p.name) ? p.name : '')).filter(Boolean)
+      return decl.params.map(p => p.name.name).filter(Boolean)
     default:
       return []
   }
 }
 
-const extractPatternNames = (
-  pattern:
-    TSESTree.Identifier | TSESTree.ArrayPattern | TSESTree.ObjectPattern | TSESTree.RestElement,
-  _code: string,
-): string[] => {
+const extractPatternNames = (pattern: AstNode, _code: string): string[] => {
   if (pattern.type === 'Identifier') {
     return [pattern.name]
   }
   if (pattern.type === 'ArrayPattern') {
-    return pattern.elements.flatMap(e =>
-      e
-        ? extractPatternNames(
-            e as
-              | TSESTree.Identifier
-              | TSESTree.ArrayPattern
-              | TSESTree.ObjectPattern
-              | TSESTree.RestElement,
-            _code,
-          )
-        : [],
-    )
+    return pattern.elements.flatMap(e => (e ? extractPatternNames(e, _code) : []))
   }
   if (pattern.type === 'ObjectPattern') {
     return pattern.properties.flatMap(p => {
       if (p.type === 'RestElement') {
-        return extractPatternNames(
-          p.argument as
-            | TSESTree.Identifier
-            | TSESTree.ArrayPattern
-            | TSESTree.ObjectPattern
-            | TSESTree.RestElement,
-          _code,
-        )
+        return extractPatternNames(p.argument, _code)
       }
       if (p.type === 'Property') {
-        return extractPatternNames(
-          p.value as
-            | TSESTree.Identifier
-            | TSESTree.ArrayPattern
-            | TSESTree.ObjectPattern
-            | TSESTree.RestElement,
-          _code,
-        )
+        return extractPatternNames(p.value, _code)
       }
       return []
     })
@@ -362,8 +329,7 @@ const extractExports = (fileInfo: FileInfo): ExportInfo[] => {
 }
 
 const getSpecifierString = (
-  spec:
-    TSESTree.ImportSpecifier | TSESTree.ImportDefaultSpecifier | TSESTree.ImportNamespaceSpecifier,
+  spec: ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier,
 ): string => {
   if (spec.type === 'ImportSpecifier') {
     const imported =
@@ -381,16 +347,15 @@ const getSpecifierString = (
 }
 
 const findImportExpressions = (
-  node: TSESTree.Node,
+  node: AstNode,
   code: string,
 ): Array<{ source: string; originalText: string }> => {
   const results: Array<{ source: string; originalText: string }> = []
 
-  const walk = (n: TSESTree.Node): void => {
+  const walk = (n: AstNode): void => {
     if (n.type === 'ImportExpression') {
-      const imp = n as TSESTree.ImportExpression
-      const src = imp.source as TSESTree.Literal
-      const source = is.string(src.value) ? src.value : ''
+      const src = n.source
+      const source = src.type === 'Literal' && is.string(src.value) ? src.value : ''
       results.push({
         source,
         originalText: getOriginal(n, code),
@@ -403,11 +368,11 @@ const findImportExpressions = (
       }
       const val = (n as unknown as Record<string, unknown>)[key]
       if (val && is.object(val) && 'type' in (val as object)) {
-        walk(val as TSESTree.Node)
+        walk(val as AstNode)
       } else if (is.array(val)) {
         for (const item of val) {
           if (item && is.object(item) && 'type' in (item as object)) {
-            walk(item as TSESTree.Node)
+            walk(item as AstNode)
           }
         }
       }
@@ -436,7 +401,7 @@ const extractImports = (
 
   for (const node of ast.body) {
     if (node.type === 'ImportDeclaration') {
-      const specifiers = node.specifiers.map(s => getSpecifierString(s as never)).filter(Boolean)
+      const specifiers = node.specifiers.map(s => getSpecifierString(s)).filter(Boolean)
 
       let type: 'static' | 'namespace' | 'sideEffect' = 'static'
       if (node.specifiers.some(s => s.type === 'ImportNamespaceSpecifier')) {
@@ -447,7 +412,7 @@ const extractImports = (
 
       imports.push({
         type,
-        source: is.string(node.source.value) ? node.source.value : String(node.source.value || ''),
+        source: node.source.value,
         specifiers,
         originalText: getOriginal(node, code),
       })
@@ -477,21 +442,14 @@ const extractImports = (
  */
 export const extractImportedNamesFromCode = (code: string, spec: string): string[] => {
   try {
-    const { parse } = _require('@typescript-eslint/parser')
-    const ast = parse(code, { sourceType: 'module', ecmaVersion: 'latest' })
+    const ast = parseAst(code)
     const names: string[] = []
     for (const node of ast.body) {
-      if (
-        node.type === 'ImportDeclaration' &&
-        is.string(node.source.value) &&
-        node.source.value === spec
-      ) {
+      if (node.type === 'ImportDeclaration' && node.source.value === spec) {
         for (const s of node.specifiers) {
           if (s.type === 'ImportSpecifier') {
             const imported =
-              s.imported.type === 'Identifier'
-                ? s.imported.name
-                : String((s.imported as TSESTree.Literal).value ?? '')
+              s.imported.type === 'Identifier' ? s.imported.name : String(s.imported.value ?? '')
             if (imported) {
               names.push(imported)
             }
@@ -518,14 +476,9 @@ export const extractImportedNamesFromCode = (code: string, spec: string): string
  */
 export const extractPureNamedImportsFromCode = (code: string, spec: string): string[] | null => {
   try {
-    const { parse } = _require('@typescript-eslint/parser')
-    const ast = parse(code, { sourceType: 'module', ecmaVersion: 'latest' })
+    const ast = parseAst(code)
     for (const node of ast.body) {
-      if (
-        node.type === 'ImportDeclaration' &&
-        is.string(node.source.value) &&
-        node.source.value === spec
-      ) {
+      if (node.type === 'ImportDeclaration' && node.source.value === spec) {
         const specs = node.specifiers
         if (specs.length === 0) {
           return null
@@ -536,9 +489,7 @@ export const extractPureNamedImportsFromCode = (code: string, spec: string): str
             return null
           }
           const imported =
-            s.imported.type === 'Identifier'
-              ? s.imported.name
-              : String((s.imported as TSESTree.Literal).value ?? '')
+            s.imported.type === 'Identifier' ? s.imported.name : String(s.imported.value ?? '')
           if (!imported) {
             return null
           }
@@ -570,30 +521,24 @@ export type SimpleImport = {
  */
 export const extractImportsSync = (code: string): SimpleImport[] => {
   try {
-    const { parse } = _require('@typescript-eslint/parser')
-    const ast = parse(code, {
-      sourceType: 'module',
-      ecmaVersion: 'latest',
-    })
+    const ast = parseAst(code)
 
     const imports: SimpleImport[] = []
 
     for (const node of ast.body) {
       if (node.type === 'ImportDeclaration') {
         // Get original text for replacement
-        const originalText = node.range ? code.slice(node.range[0], node.range[1]) : ''
+        const originalText = code.slice(node.start, node.end)
 
         // Get source path
-        const source = is.string(node.source.value)
-          ? node.source.value
-          : String(node.source.value || '')
+        const source = node.source.value
 
         // Get specifier string
         let specifiers = ''
         let type: 'static' | 'namespace' | 'sideEffect' = 'static'
         const localNames: string[] = []
 
-        const allSpecs = node.specifiers as Array<{ type: string; [key: string]: unknown }>
+        const allSpecs = node.specifiers
         if (allSpecs.length === 0) {
           type = 'sideEffect'
           specifiers = ''
@@ -601,8 +546,8 @@ export const extractImportsSync = (code: string): SimpleImport[] => {
           type = 'namespace'
           for (const spec of allSpecs) {
             if (spec.type === 'ImportNamespaceSpecifier') {
-              specifiers = `* as ${(spec as unknown as TSESTree.ImportNamespaceSpecifier).local.name}`
-              localNames.push((spec as unknown as TSESTree.ImportNamespaceSpecifier).local.name)
+              specifiers = `* as ${spec.local.name}`
+              localNames.push(spec.local.name)
               break
             }
           }
@@ -612,15 +557,13 @@ export const extractImportsSync = (code: string): SimpleImport[] => {
           const namedImports: string[] = []
           for (const spec of allSpecs) {
             if (spec.type === 'ImportSpecifier') {
-              const s = spec as unknown as TSESTree.ImportSpecifier
-              const imported = s.imported.type === 'Identifier' ? s.imported.name : ''
-              const local = s.local.name
+              const imported = spec.imported.type === 'Identifier' ? spec.imported.name : ''
+              const local = spec.local.name
               localNames.push(local)
               namedImports.push(imported !== local ? `${imported} as ${local}` : local)
             } else if (spec.type === 'ImportDefaultSpecifier') {
-              const s = spec as unknown as TSESTree.ImportDefaultSpecifier
-              defaultImports.push(s.local.name)
-              localNames.push(s.local.name)
+              defaultImports.push(spec.local.name)
+              localNames.push(spec.local.name)
             }
           }
           // Default imports don't get braces, named imports do
@@ -642,8 +585,8 @@ export const extractImportsSync = (code: string): SimpleImport[] => {
           source,
           originalText,
           type,
-          start: node.range?.[0] ?? 0,
-          end: node.range?.[1] ?? 0,
+          start: node.start,
+          end: node.end,
           localNames,
         })
       }
@@ -716,31 +659,25 @@ export type SvelteReexportInfo = {
  */
 export const getSvelteReexports = (code: string): SvelteReexportInfo[] => {
   try {
-    const { parse } = _require('@typescript-eslint/parser')
-    const ast = parse(code, {
-      sourceType: 'module',
-      ecmaVersion: 'latest',
-    })
+    const ast = parseAst(code)
 
     const reexports: SvelteReexportInfo[] = []
 
     for (const node of ast.body) {
       if (node.type === 'ExportNamedDeclaration' && node.source) {
-        const source = node.source as TSESTree.Literal
-        if (is.string(source.value) && source.value.endsWith('.svelte')) {
+        if (node.source.value.endsWith('.svelte')) {
           reexports.push({
-            source: source.value,
-            originalText: code.slice(node.range[0], node.range[1]),
+            source: node.source.value,
+            originalText: code.slice(node.start, node.end),
           })
         }
       } else if (node.type === 'ExportDefaultDeclaration') {
         // export default from './Foo.svelte' - TSExportAssignment is handled separately
       } else if (node.type === 'ExportAllDeclaration' && node.source) {
-        const source = node.source as TSESTree.Literal
-        if (is.string(source.value) && source.value.endsWith('.svelte')) {
+        if (node.source.value.endsWith('.svelte')) {
           reexports.push({
-            source: source.value,
-            originalText: code.slice(node.range[0], node.range[1]),
+            source: node.source.value,
+            originalText: code.slice(node.start, node.end),
           })
         }
       }
@@ -766,20 +703,13 @@ export const hasSvelteReexports = (code: string): boolean => {
  */
 export const getExportStarTargets = (code: string): string[] => {
   try {
-    const { parse } = _require('@typescript-eslint/parser')
-    const ast = parse(code, {
-      sourceType: 'module',
-      ecmaVersion: 'latest',
-    })
+    const ast = parseAst(code)
 
     const targets: string[] = []
 
     for (const node of ast.body) {
       if (node.type === 'ExportAllDeclaration' && node.source) {
-        const source = node.source as TSESTree.Literal
-        if (is.string(source.value)) {
-          targets.push(source.value)
-        }
+        targets.push(node.source.value)
       }
     }
 
@@ -803,20 +733,13 @@ export const hasExportStar = (code: string): boolean => {
  */
 export const getExportNamedTargets = (code: string): string[] => {
   try {
-    const { parse } = _require('@typescript-eslint/parser')
-    const ast = parse(code, {
-      sourceType: 'module',
-      ecmaVersion: 'latest',
-    })
+    const ast = parseAst(code)
 
     const targets: string[] = []
 
     for (const node of ast.body) {
       if (node.type === 'ExportNamedDeclaration' && node.source) {
-        const source = node.source as TSESTree.Literal
-        if (is.string(source.value)) {
-          targets.push(source.value)
-        }
+        targets.push(node.source.value)
       }
     }
 

@@ -1,21 +1,27 @@
 import is from '@magic/types'
-import { parse } from '@typescript-eslint/parser'
-import type { TSESTree } from '@typescript-eslint/types'
+import type {
+  ImportDefaultSpecifier,
+  ImportNamespaceSpecifier,
+  ImportSpecifier,
+  Node as AstNode,
+} from 'oxc-parser'
 
-// Safely cast a value to TSESTree.Node after validation
-const toNode = (val: unknown): TSESTree.Node | undefined => {
+import { parseAst } from './parseAst.js'
+
+// Safely cast a value to AstNode after validation
+const toNode = (val: unknown): AstNode | undefined => {
   if (is.objectNative(val) && is.string(val.type)) {
-    return val as unknown as TSESTree.Node
+    return val as unknown as AstNode
   }
   return undefined
 }
 
 // Recursively get all nodes from an AST
-const getChildNodes = (node: TSESTree.Node): TSESTree.Node[] => {
-  const children: TSESTree.Node[] = []
+const getChildNodes = (node: AstNode): AstNode[] => {
+  const children: AstNode[] = []
 
-  for (const key of Object.keys(node) as Array<keyof TSESTree.Node>) {
-    if (key === 'type' || key === 'loc' || key === 'range' || key === 'parent') {
+  for (const key of Object.keys(node) as Array<keyof AstNode>) {
+    if (key === 'type' || key === 'range' || key === 'start' || key === 'end' || key === 'parent') {
       continue
     }
     const val = node[key] as unknown
@@ -38,10 +44,9 @@ const getChildNodes = (node: TSESTree.Node): TSESTree.Node[] => {
   return children
 }
 
-type ImportSpecifier =
-  TSESTree.ImportSpecifier | TSESTree.ImportDefaultSpecifier | TSESTree.ImportNamespaceSpecifier
+type ImportSpec = ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier
 
-const getSpecifierName = (spec: ImportSpecifier): string => {
+const getSpecifierName = (spec: ImportSpec): string => {
   if (spec.type === 'ImportNamespaceSpecifier') {
     return spec.local.name
   }
@@ -56,17 +61,14 @@ const getSpecifierName = (spec: ImportSpecifier): string => {
 }
 
 export const getImportNames = (content: string): string[] => {
-  const ast = parse(content, {
-    sourceType: 'module',
-    ecmaVersion: 'latest',
-  })
+  const ast = parseAst(content)
 
   const names: string[] = []
 
   for (const node of ast.body) {
     if (node.type === 'ImportDeclaration') {
       for (const spec of node.specifiers) {
-        const name = getSpecifierName(spec as ImportSpecifier)
+        const name = getSpecifierName(spec as ImportSpec)
         if (name) {
           names.push(name)
         }
@@ -78,7 +80,7 @@ export const getImportNames = (content: string): string[] => {
 }
 
 // Helper to check if a node accesses a member of an imported name
-const checkMemberAccess = (node: TSESTree.Node, importNameSet: Set<string>): boolean => {
+const checkMemberAccess = (node: AstNode, importNameSet: Set<string>): boolean => {
   // Direct identifier: foo
   if (node.type === 'Identifier') {
     return importNameSet.has(node.name)
@@ -106,12 +108,9 @@ export const mutatesImportedState = (code: string, importNames: string[]): boole
   const importNameSet = new Set(importNames)
 
   try {
-    const ast = parse(code, {
-      sourceType: 'module',
-      ecmaVersion: 'latest',
-    })
+    const ast = parseAst(code)
 
-    const checkNode = (node: TSESTree.Node): boolean => {
+    const checkNode = (node: AstNode): boolean => {
       // Check for assignments: foo.bar = x, foo[0] = x, foo = x
       if (node.type === 'AssignmentExpression') {
         const left = node.left
