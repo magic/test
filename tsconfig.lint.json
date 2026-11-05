@@ -1,9 +1,9 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.app.json",
   "compilerOptions": {
     "rootDir": ".",
     "noEmit": true
   },
-  "include": ["src/**/*", "test/**/*", "test/.fixtures/**/*"],
+  "include": ["src/**/*", "test/**/*", "test/.fixtures/**/*", "docsrc/globals.d.ts"],
   "exclude": ["node_modules", "dist/**/*", "coverage", ".tmp"]
 }
