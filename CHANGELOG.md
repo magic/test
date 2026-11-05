@@ -1,5 +1,16 @@
 ### Changelog
 
+#### 0.3.51
+
+- feat: changed usage of `--production` / `-p` flag — reads prod mode from CLI arg instead of `NODE_ENV`, sets `MAGIC_TEST_ENV`; SvelteKit dev/prod sentinels read `MAGIC_TEST_ENV` instead of `NODE_ENV`
+- feat: synthesize `$app/env/private` and `$app/env/public` from `src/env.ts` — parses top-level `defineEnvVars` keys from `src/env.ts` (cached per project root), emits temp module files exporting `process.env.<var>` at module-evaluation time
+- feat: support remote module URLs and raw string Vite defines — materialize remote `http/https` modules as local cached files; rewrite relative specifiers in remote sources to absolute URLs; keep `http/https` alias targets verbatim; parse Vite define values as JSON when possible, keep raw strings otherwise
+- deps: update dependencies
+- chore: switch from ESLint to Oxlint
+- chore: update tsconfig for VS Code linting of @types/node types
+- chore: remove Travis CI and AppVeyor configs
+- docs: add `MAGIC-TEST-SKILL.md` and reference it in README.md
+
 #### 0.3.50
 
 - feat: add -s, --slow, --timing flag to get slow test information
