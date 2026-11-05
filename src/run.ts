@@ -4,6 +4,7 @@ import log from '@magic/log'
 import { stats, createStore, ERRORS, Store } from './lib/index.js'
 import { BEFORE_ALL_KEYS, AFTER_ALL_KEYS } from './lib/hookFiles.js'
 import { runSuite } from './run/suite.js'
+import { isolation } from './run/isolation.js'
 import { warmComponentCompiles } from './lib/svelte/compile/warmComponentCompiles.js'
 import type { TestSuites, TestCollection, CleanupFunction, TestResult } from './types.js'
 import { printTraceSummary, isTraceEnabled } from './lib/trace/timing.js'
@@ -81,6 +82,13 @@ export let aborted = false
  */
 export const abort = async () => {
   aborted = true
+  // Reclaim active workers so a stuck run (Ctrl-C, library consumers) does
+  // not leave worker threads alive past the abort call (B4).
+  try {
+    await isolation.terminateAllWorkers()
+  } catch {
+    // best effort — termination must never mask the abort itself
+  }
   // Persistent cache saves on each write, no need for explicit save on abort
 }
 

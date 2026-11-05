@@ -1,6 +1,40 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Canvas, Image, createCanvas, loadImage } from '@napi-rs/canvas/node-canvas.js'
+import { createRequire } from 'node:module'
 import is from '@magic/types'
+
+// Type-only import: erased at compile time, no runtime native-module load.
+import type { Canvas, Image } from '@napi-rs/canvas/node-canvas.js'
+
+type CanvasModule = typeof import('@napi-rs/canvas/node-canvas.js')
+
+let canvasModule: CanvasModule | null = null
+let canvasLoadError: Error | null = null
+
+// Load the canvas native module lazily on first use instead of at module
+// load. This repo's polyfill used to import the native binding
+// unconditionally, so a broken environment (missing system library,
+// prebuild/ABI mismatch) took down the whole run at collection time and in
+// every worker. Now:
+// - projects whose tests never touch canvas never load the native module,
+// - a load failure surfaces as a catchable error in the one test that needs
+//   canvas, with an actionable message (see .plans/FIX_HANG.md, B5).
+const getCanvasModule = (): CanvasModule => {
+  if (canvasModule) {
+    return canvasModule
+  }
+  if (canvasLoadError) {
+    throw canvasLoadError
+  }
+  try {
+    const require = createRequire(import.meta.url)
+    const mod = require('@napi-rs/canvas/node-canvas.js') as CanvasModule
+    canvasModule = mod
+    return mod
+  } catch (e) {
+    canvasLoadError = e instanceof Error ? e : new Error(String(e))
+    throw canvasLoadError
+  }
+}
 
 let origGetContext: ((type: string, ...args: unknown[]) => unknown) | null = null
 
@@ -28,6 +62,11 @@ export const createCanvasPolyfill = (): void => {
       return origGetContext!.call(this, type, ...args)
     }
 
+    // First real canvas use: load the native module here. A broken native
+    // module throws a catchable Error that fails this test (and the suite),
+    // instead of aborting the whole process at startup.
+    const { createCanvas, Image: NativeImage, loadImage, Canvas: NativeCanvas } = getCanvasModule()
+
     if (!this._nodeCanvas) {
       this._nodeCanvas = createCanvas(this.width || 300, this.height || 150)
     }
@@ -45,12 +84,12 @@ export const createCanvasPolyfill = (): void => {
         | { _nodeCanvasImage?: unknown; width: number; height: number; src?: string },
       ...drawArgs: unknown[]
     ): void => {
-      if (is.instance(img, Image) || ('_nodeCanvasImage' in img && img._nodeCanvasImage)) {
-        const nodeImg = is.instance(img, Image) ? img : img._nodeCanvasImage
+      if (is.instance(img, NativeImage) || ('_nodeCanvasImage' in img && img._nodeCanvasImage)) {
+        const nodeImg = is.instance(img, NativeImage) ? img : img._nodeCanvasImage
         return originalDrawImage(nodeImg, ...drawArgs)
       }
 
-      if (is.instance(img, Canvas)) {
+      if (is.instance(img, NativeCanvas)) {
         return originalDrawImage(img, ...drawArgs)
       }
 

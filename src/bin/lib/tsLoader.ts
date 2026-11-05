@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url'
 import fs from '@magic/fs'
 import is from '@magic/types'
 import log from '@magic/log'
+import { get as httpGet } from '../../lib/http.js'
 import { resolveAlias } from '../../lib/svelte/viteConfig/resolveAlias.js'
 import { traceStart, traceEnd } from '../../lib/trace/timing.js'
 import { cacheManager } from '../../lib/caches/cache.js'
@@ -43,6 +44,35 @@ const getCompileModule = (): Promise<typeof import('svelte/compiler')> => {
 
 // Track files currently being loaded to prevent circular dependency hangs
 const currentlyLoading = new Set<string>()
+
+// Bound remote module fetches with a hard timeout. A half-dead remote build
+// server (accepts TCP, never responds) would otherwise hang the fetch
+// forever — in a worker that never posts or exits, which stalls the whole
+// run (see .plans/FIX_HANG.md, B3).
+//
+// MUST go through node:http/https (lib/http.ts), NOT the global fetch:
+// after initGlobals() installs the happy-dom window, the global fetch and
+// AbortController are happy-dom's, and its signal handling cannot cancel a
+// pending request to a non-responding server — abort() fires, the request
+// just keeps hanging. node:http gives us a real socket-level timeout.
+const REMOTE_TIMEOUT_MS = parseInt(process.env.MAGIC_TEST_REMOTE_TIMEOUT_MS || '30000', 10)
+const fetchRemoteModule = async (url: string): Promise<string> => {
+  try {
+    const source = await httpGet(url, { timeout: REMOTE_TIMEOUT_MS })
+    if (is.str(source)) {
+      return source
+    }
+    throw new Error(`Remote module ${url} did not return text (got ${typeof source})`)
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    if (msg.startsWith('Request timeout')) {
+      throw new Error(`Timed out fetching remote module ${url} after ${REMOTE_TIMEOUT_MS} ms`, {
+        cause: e,
+      })
+    }
+    throw e
+  }
+}
 
 // Warm the user vite config and the whole compile pipeline at loader init.
 // Dynamic imports that run while a resolve/load hook is still being awaited can
@@ -111,11 +141,7 @@ const materializeRemoteModule = async (remoteUrl: string): Promise<string> => {
       const hash = crypto.createHash('sha1').update(remoteUrl).digest('hex')
       const dest = path.join(getCwd(), CACHE_DIR, 'remote', `${hash}.mjs`)
       try {
-        const res = await fetch(remoteUrl)
-        if (!res.ok) {
-          throw new Error(`Failed to fetch remote module ${remoteUrl}: HTTP ${res.status}`)
-        }
-        const source = await res.text()
+        const source = await fetchRemoteModule(remoteUrl)
         await fs.mkdirp(path.dirname(dest))
         try {
           await fs.access(dest)
@@ -862,11 +888,7 @@ const loadImplInner = async (
   // Remote URL modules (vite aliases pointing at an http/https build, e.g. a
   // custom three engine): fetch the source and serve it as an ES module.
   if (/^https?:\/\//.test(url)) {
-    const res = await fetch(url)
-    if (!res.ok) {
-      throw new Error(`Failed to fetch remote module ${url}: HTTP ${res.status}`)
-    }
-    const source = await res.text()
+    const source = await fetchRemoteModule(url)
     return { format: 'module', source, shortCircuit: true }
   }
 

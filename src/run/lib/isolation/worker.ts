@@ -17,16 +17,35 @@ const createWorkerPromise = <T>(
   worker: Worker,
   transform: (result: unknown) => T,
   activeWorkers: Set<Worker>,
-  rejectOnNonZero = false,
 ): Promise<T> => {
+  const WORKER_TIMEOUT_MS = parseInt(process.env.MAGIC_TEST_WORKER_TIMEOUT_MS || '120000', 10)
+
   return new Promise((resolve, reject) => {
     activeWorkers.add(worker)
 
     let settled = false
+    let timeout: ReturnType<typeof setTimeout> | undefined
+
     const cleanup = () => {
       activeWorkers.delete(worker)
-      worker.terminate()
+      if (timeout) {
+        clearTimeout(timeout)
+        timeout = undefined
+      }
     }
+
+    // Backstop for workers that are stuck but alive (e.g. a hung remote
+    // fetch): the per-test withTimeout runs inside the worker and cannot
+    // rescue a stalled worker, so bound the whole round-trip here.
+    timeout = setTimeout(() => {
+      if (settled) {
+        return
+      }
+      settled = true
+      cleanup()
+      void worker.terminate()
+      reject(new Error(`Worker round-trip timed out after ${WORKER_TIMEOUT_MS} ms`))
+    }, WORKER_TIMEOUT_MS)
 
     worker.on('message', result => {
       if (settled) {
@@ -34,6 +53,7 @@ const createWorkerPromise = <T>(
       }
       settled = true
       cleanup()
+      void worker.terminate()
       resolve(transform(result))
     })
 
@@ -43,18 +63,21 @@ const createWorkerPromise = <T>(
       }
       settled = true
       cleanup()
+      void worker.terminate()
       reject(err)
     })
 
+    // Treat exit without a prior result message as a failure in ALL modes
+    // (batch workers previously ignored every exit code; single-mode workers
+    // only rejected non-zero exits) — a worker death must never leave the
+    // promise pending forever.
     worker.on('exit', code => {
       if (settled) {
         return
       }
-      if (code !== 0 && rejectOnNonZero) {
-        settled = true
-        cleanup()
-        reject(new Error(`Worker exited with code ${code}`))
-      }
+      settled = true
+      cleanup()
+      reject(new Error(`Worker exited with code ${code} without posting a result`))
     })
   })
 }
@@ -84,7 +107,7 @@ export const executeInWorker = (
     },
   })
 
-  return createWorkerPromise(worker, r => r as TestResult, activeWorkers, true)
+  return createWorkerPromise(worker, r => r as TestResult, activeWorkers)
 }
 
 /**
@@ -113,5 +136,5 @@ export const executeBatchInWorker = (
     },
   })
 
-  return createWorkerPromise(worker, r => r as TestResult[], activeWorkers, false)
+  return createWorkerPromise(worker, r => r as TestResult[], activeWorkers)
 }
