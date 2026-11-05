@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Canvas, Image, createCanvas, loadImage } from 'canvas'
+import { Canvas, Image, createCanvas, loadImage } from '@napi-rs/canvas/node-canvas.js'
 import is from '@magic/types'
 
 let origGetContext: ((type: string, ...args: unknown[]) => unknown) | null = null
@@ -35,7 +35,8 @@ export const createCanvasPolyfill = (): void => {
     const ctx: any = this._nodeCanvas.getContext('2d')
 
     const originalDrawImage = ctx.drawImage.bind(ctx)
-    const originalToDataURL = ctx.toDataURL?.bind(ctx)
+    // napi-rs keeps encoding on the canvas object, not the 2d context
+    const originalToDataURL = (this._nodeCanvas as any).toDataURL?.bind(this._nodeCanvas)
 
     const drawImageFn = (
       img:

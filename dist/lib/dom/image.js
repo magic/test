@@ -1,4 +1,4 @@
-import { loadImage } from 'canvas'
+import { loadImage } from '@napi-rs/canvas/node-canvas.js'
 export const parsePngDimensions = dataUrl => {
   try {
     const base64 = dataUrl.split(',')[1]

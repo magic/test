@@ -1,6 +1,6 @@
 import type { Window } from 'happy-dom'
 
-import { loadImage } from 'canvas'
+import { loadImage } from '@napi-rs/canvas/node-canvas.js'
 
 import type { ImageInstance, ImageConstructor } from './types.js'
 
