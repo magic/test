@@ -6,6 +6,11 @@ no transpiling of either your codebase nor the tests.
 
 incredibly fast.
 
+[agent skill](./MAGIC-TEST-SKILL.md) — a ready-to-use skill that teaches coding
+agents how to write and debug tests for your project with this runner
+(copy `MAGIC-TEST-SKILL.md` into your agent's skill directory, e.g.
+`~/.agents/skill/MAGIC-TEST-SKILL.md`).
+
 [html docs](https://magic.github.io/test)
 
 [![NPM version][npm-image]][npm-url]
