@@ -7,6 +7,7 @@
 - feat: support remote module URLs and raw string Vite defines — materialize remote `http/https` modules as local cached files; rewrite relative specifiers in remote sources to absolute URLs; keep `http/https` alias targets verbatim; parse Vite define values as JSON when possible, keep raw strings otherwise
 - deps: update dependencies
 - chore: switch from ESLint to Oxlint
+- fix: replace `@typescript-eslint/parser` with `oxc-parser` for static source analysis (import/export extraction, module-state mutation checks, Svelte rune & compiled-output detection). `oxc-parser` is the same parser oxlint is built on, ~3× faster than the previous one.
 - chore: update tsconfig for VS Code linting of @types/node types
 - chore: remove Travis CI and AppVeyor configs
 - docs: add `MAGIC-TEST-SKILL.md` and reference it in README.md
