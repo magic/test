@@ -18,7 +18,7 @@
   let replaceUrl = $state('')
   let invalidateCalled = $state(false)
   let invalidateAllCalled = $state(false)
-  let preloadedData = $state<any>(null)
+  let preloadedData = $state(null)
   let preloadedCode = $state(false)
 
   $effect(() => {

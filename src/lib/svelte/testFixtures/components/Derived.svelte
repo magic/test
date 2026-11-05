@@ -13,7 +13,9 @@
   }
 
   const remove = () => {
-    if (count > 0) count -= 1
+    if (count > 0) {
+      count -= 1
+    }
   }
 </script>
 

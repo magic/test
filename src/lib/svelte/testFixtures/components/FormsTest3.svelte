@@ -2,7 +2,7 @@
   import { applyAction, enhance } from '$app/forms'
   import is from '@magic/types'
 
-  let enhanceResult = $state<any>(null)
+  let enhanceResult = $state<{ destroy: boolean } | null>(null)
 
   $effect(() => {
     const form = document.createElement('form')
