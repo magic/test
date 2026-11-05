@@ -40,10 +40,10 @@
     "coverage": "node dist/bin/t.js",
     "format": "f -w --exclude ./docs/",
     "format:check": "f --exclude ./docs/",
-    "tsc": "tsc --noEmit",
+    "tsc": "tsc -p tsconfig.app.json --noEmit",
     "tsc:test": "tsc -p tsconfig.test.json --noEmit",
     "check": "npm run tsc && npm run tsc:test && npm run lint",
-    "lint": "eslint"
+    "lint": "oxlint"
   },
   "engines": {
     "node": ">=22.18.0"
@@ -71,11 +71,9 @@
     "canvas": "3.2.3",
     "happy-dom": "21.0.4",
     "magic-string": "1.4.5",
-    "typescript": "npm:@typescript/typescript6",
-    "typescript-eslint": "8.72.1"
+    "typescript": "npm:@typescript/typescript6"
   },
   "devDependencies": {
-    "@eslint/js": "10.0.1",
     "@magic-modules/git-badges": "0.0.12",
     "@magic-modules/light-switch": "0.0.12",
     "@magic-modules/no-spy": "0.0.9",
@@ -83,8 +81,9 @@
     "@magic-themes/docs": "0.0.15",
     "@magic/core": "0.0.161",
     "@magic/format": "0.0.75",
+    "@rsvelte/oxlint-plugin": "0.2.6",
     "@types/node": "26.6.6",
-    "eslint": "10.14.0",
+    "oxlint": "1.91.0",
     "prettier-plugin-svelte": "4.1.1",
     "svelte": "5.57.3"
   },
