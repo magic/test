@@ -119,15 +119,16 @@ export const runIsolatedArray = async (
     })
   }
 
-  // Hooked tests → individual workers. With MAGIC_TEST_WORKER_REUSE=1 they
-  // instead run as one batch per file in a single worker: each test re-mounts
-  // on the same window, but the imported module graph (the expensive part,
-  // ~6 s per fresh worker) is shared — subsequent mounts take ~40 ms.
+  // Hooked tests → run as one batch per file in a single worker: each test
+  // re-mounts on the same window, but the imported module graph (the
+  // expensive part, ~6 s per fresh worker) is shared — subsequent mounts
+  // take ~40 ms.
   // Trade-off: tests in a batch share module-level state (no fresh module
   // registry per test), so only enable this for suites whose component tests
-  // are stateless/props-driven.
+  // are stateless/props-driven. Set MAGIC_TEST_WORKER_REUSE=0 to force one
+  // fresh worker per test (full isolation).
   if (testsWithHooks.length > 0) {
-    const reuse = process.env.MAGIC_TEST_WORKER_REUSE === '1'
+    const reuse = process.env.MAGIC_TEST_WORKER_REUSE !== '0'
     if (reuse) {
       const pool = getWorkerPool()
       await pool(async () => {
