@@ -39,6 +39,13 @@ export default [
   },
   // info sets default values when results missing
   {
+    before: () => {
+      const oldLog = console.log
+      console.log = () => {}
+      return () => {
+        console.log = oldLog
+      }
+    },
     fn: () => {
       const store = createStore()
       store.set({ results: { test1: { all: 10, pass: 8 } } })
