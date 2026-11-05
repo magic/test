@@ -1,6 +1,6 @@
 import is from '@magic/types'
-import { parse } from '@typescript-eslint/parser'
-// Safely cast a value to TSESTree.Node after validation
+import { parseAst } from './parseAst.js'
+// Safely cast a value to AstNode after validation
 const toNode = val => {
   if (is.objectNative(val) && is.string(val.type)) {
     return val
@@ -11,7 +11,7 @@ const toNode = val => {
 const getChildNodes = node => {
   const children = []
   for (const key of Object.keys(node)) {
-    if (key === 'type' || key === 'loc' || key === 'range' || key === 'parent') {
+    if (key === 'type' || key === 'range' || key === 'start' || key === 'end' || key === 'parent') {
       continue
     }
     const val = node[key]
@@ -45,10 +45,7 @@ const getSpecifierName = spec => {
   return spec.local.name
 }
 export const getImportNames = content => {
-  const ast = parse(content, {
-    sourceType: 'module',
-    ecmaVersion: 'latest',
-  })
+  const ast = parseAst(content)
   const names = []
   for (const node of ast.body) {
     if (node.type === 'ImportDeclaration') {
@@ -86,10 +83,7 @@ export const mutatesImportedState = (code, importNames) => {
   }
   const importNameSet = new Set(importNames)
   try {
-    const ast = parse(code, {
-      sourceType: 'module',
-      ecmaVersion: 'latest',
-    })
+    const ast = parseAst(code)
     const checkNode = node => {
       // Check for assignments: foo.bar = x, foo[0] = x, foo = x
       if (node.type === 'AssignmentExpression') {

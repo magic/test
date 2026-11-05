@@ -1,8 +1,8 @@
-import type { TSESTree } from '@typescript-eslint/types'
+import type { Node as AstNode, Program } from 'oxc-parser'
 import type { ExportInfo } from './types.js'
 export type FileInfo = {
   code: string
-  ast: TSESTree.Program
+  ast: Program
   filePath: string
   hasRunes?: boolean
   isCompiled?: boolean
@@ -10,8 +10,8 @@ export type FileInfo = {
 export declare const clearAstCache: () => void
 declare const extractScriptFromSvelte: (source: string) => Promise<string>
 declare const parseFile: (code: string, filePath: string) => Promise<FileInfo>
-declare const getOriginal: (node: TSESTree.Node, code: string) => string
-declare const getDeclarationNames: (decl: TSESTree.Node) => string[]
+declare const getOriginal: (node: AstNode, code: string) => string
+declare const getDeclarationNames: (decl: AstNode) => string[]
 declare const extractExports: (fileInfo: FileInfo) => ExportInfo[]
 declare const extractImports: (fileInfo: FileInfo) => Array<{
   type: 'static' | 'dynamic' | 'sideEffect' | 'namespace'

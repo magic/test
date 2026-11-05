@@ -1,11 +1,9 @@
 import crypto from 'node:crypto'
-import { createRequire } from 'node:module'
 import is from '@magic/types'
+import { parseAst } from '../../analysis/parseAst.js'
 import { getSvelteCompiler } from '../compiler-cache.js'
 import { LRUCache } from '../../caches/LRUCache.js'
 const MAX_AST_CACHE_SIZE = 500
-// Use createRequire for ESM compatibility when parsing inline code
-const _require = createRequire(import.meta.url)
 const analysisCache = new LRUCache(MAX_AST_CACHE_SIZE)
 // Use LRUCache for consistent cache behavior
 const astCache = new LRUCache(MAX_AST_CACHE_SIZE)
@@ -45,23 +43,16 @@ const extractScriptFromSvelte = async source => {
   }
 }
 const analyzeCodeSync = code => {
-  const { parse } = _require('@typescript-eslint/parser')
-  const ast = parse(code, {
-    sourceType: 'module',
-    ecmaVersion: 'latest',
-  })
+  const ast = parseAst(code)
   let hasRunes = false
   let isCompiled = false
   // Check for compiled Svelte at the top level: import * as $ from 'svelte/internal/'
   for (const node of ast.body) {
     if (node.type === 'ImportDeclaration') {
-      const imp = node
-      const nsSpec = imp.specifiers.find(s => s.type === 'ImportNamespaceSpecifier')
+      const nsSpec = node.specifiers.find(s => s.type === 'ImportNamespaceSpecifier')
       if (nsSpec) {
-        const spec = nsSpec
-        if (spec.local.name === '$') {
-          const source = imp.source
-          if (is.string(source.value) && source.value.startsWith('svelte/internal')) {
+        if (nsSpec.local.name === '$') {
+          if (node.source.value.startsWith('svelte/internal')) {
             isCompiled = true
           }
         }
@@ -149,7 +140,7 @@ const parseFile = async (code, filePath) => {
   return result
 }
 const getOriginal = (node, code) => {
-  return code.slice(node.range[0], node.range[1])
+  return code.slice(node.start, node.end)
 }
 const getDeclarationNames = decl => {
   switch (decl.type) {
@@ -168,7 +159,7 @@ const getDeclarationNames = decl => {
     case 'TSModuleDeclaration':
       return decl.id && decl.id.type === 'Identifier' ? [decl.id.name] : []
     case 'TSTypeParameterDeclaration':
-      return decl.params.map(p => ('name' in p && is.string(p.name) ? p.name : '')).filter(Boolean)
+      return decl.params.map(p => p.name.name).filter(Boolean)
     default:
       return []
   }
@@ -299,9 +290,8 @@ const findImportExpressions = (node, code) => {
   const results = []
   const walk = n => {
     if (n.type === 'ImportExpression') {
-      const imp = n
-      const src = imp.source
-      const source = is.string(src.value) ? src.value : ''
+      const src = n.source
+      const source = src.type === 'Literal' && is.string(src.value) ? src.value : ''
       results.push({
         source,
         originalText: getOriginal(n, code),
@@ -340,7 +330,7 @@ const extractImports = fileInfo => {
       }
       imports.push({
         type,
-        source: is.string(node.source.value) ? node.source.value : String(node.source.value || ''),
+        source: node.source.value,
         specifiers,
         originalText: getOriginal(node, code),
       })
@@ -368,15 +358,10 @@ const extractImports = fileInfo => {
  */
 export const extractImportedNamesFromCode = (code, spec) => {
   try {
-    const { parse } = _require('@typescript-eslint/parser')
-    const ast = parse(code, { sourceType: 'module', ecmaVersion: 'latest' })
+    const ast = parseAst(code)
     const names = []
     for (const node of ast.body) {
-      if (
-        node.type === 'ImportDeclaration' &&
-        is.string(node.source.value) &&
-        node.source.value === spec
-      ) {
+      if (node.type === 'ImportDeclaration' && node.source.value === spec) {
         for (const s of node.specifiers) {
           if (s.type === 'ImportSpecifier') {
             const imported =
@@ -406,14 +391,9 @@ export const extractImportedNamesFromCode = (code, spec) => {
  */
 export const extractPureNamedImportsFromCode = (code, spec) => {
   try {
-    const { parse } = _require('@typescript-eslint/parser')
-    const ast = parse(code, { sourceType: 'module', ecmaVersion: 'latest' })
+    const ast = parseAst(code)
     for (const node of ast.body) {
-      if (
-        node.type === 'ImportDeclaration' &&
-        is.string(node.source.value) &&
-        node.source.value === spec
-      ) {
+      if (node.type === 'ImportDeclaration' && node.source.value === spec) {
         const specs = node.specifiers
         if (specs.length === 0) {
           return null
@@ -444,20 +424,14 @@ export const extractPureNamedImportsFromCode = (code, spec) => {
  */
 export const extractImportsSync = code => {
   try {
-    const { parse } = _require('@typescript-eslint/parser')
-    const ast = parse(code, {
-      sourceType: 'module',
-      ecmaVersion: 'latest',
-    })
+    const ast = parseAst(code)
     const imports = []
     for (const node of ast.body) {
       if (node.type === 'ImportDeclaration') {
         // Get original text for replacement
-        const originalText = node.range ? code.slice(node.range[0], node.range[1]) : ''
+        const originalText = code.slice(node.start, node.end)
         // Get source path
-        const source = is.string(node.source.value)
-          ? node.source.value
-          : String(node.source.value || '')
+        const source = node.source.value
         // Get specifier string
         let specifiers = ''
         let type = 'static'
@@ -481,15 +455,13 @@ export const extractImportsSync = code => {
           const namedImports = []
           for (const spec of allSpecs) {
             if (spec.type === 'ImportSpecifier') {
-              const s = spec
-              const imported = s.imported.type === 'Identifier' ? s.imported.name : ''
-              const local = s.local.name
+              const imported = spec.imported.type === 'Identifier' ? spec.imported.name : ''
+              const local = spec.local.name
               localNames.push(local)
               namedImports.push(imported !== local ? `${imported} as ${local}` : local)
             } else if (spec.type === 'ImportDefaultSpecifier') {
-              const s = spec
-              defaultImports.push(s.local.name)
-              localNames.push(s.local.name)
+              defaultImports.push(spec.local.name)
+              localNames.push(spec.local.name)
             }
           }
           // Default imports don't get braces, named imports do
@@ -510,8 +482,8 @@ export const extractImportsSync = code => {
           source,
           originalText,
           type,
-          start: node.range?.[0] ?? 0,
-          end: node.range?.[1] ?? 0,
+          start: node.start,
+          end: node.end,
           localNames,
         })
       }
@@ -572,29 +544,23 @@ export const isSvelteCompiled = code => {
  */
 export const getSvelteReexports = code => {
   try {
-    const { parse } = _require('@typescript-eslint/parser')
-    const ast = parse(code, {
-      sourceType: 'module',
-      ecmaVersion: 'latest',
-    })
+    const ast = parseAst(code)
     const reexports = []
     for (const node of ast.body) {
       if (node.type === 'ExportNamedDeclaration' && node.source) {
-        const source = node.source
-        if (is.string(source.value) && source.value.endsWith('.svelte')) {
+        if (node.source.value.endsWith('.svelte')) {
           reexports.push({
-            source: source.value,
-            originalText: code.slice(node.range[0], node.range[1]),
+            source: node.source.value,
+            originalText: code.slice(node.start, node.end),
           })
         }
       } else if (node.type === 'ExportDefaultDeclaration') {
         // export default from './Foo.svelte' - TSExportAssignment is handled separately
       } else if (node.type === 'ExportAllDeclaration' && node.source) {
-        const source = node.source
-        if (is.string(source.value) && source.value.endsWith('.svelte')) {
+        if (node.source.value.endsWith('.svelte')) {
           reexports.push({
-            source: source.value,
-            originalText: code.slice(node.range[0], node.range[1]),
+            source: node.source.value,
+            originalText: code.slice(node.start, node.end),
           })
         }
       }
@@ -617,18 +583,11 @@ export const hasSvelteReexports = code => {
  */
 export const getExportStarTargets = code => {
   try {
-    const { parse } = _require('@typescript-eslint/parser')
-    const ast = parse(code, {
-      sourceType: 'module',
-      ecmaVersion: 'latest',
-    })
+    const ast = parseAst(code)
     const targets = []
     for (const node of ast.body) {
       if (node.type === 'ExportAllDeclaration' && node.source) {
-        const source = node.source
-        if (is.string(source.value)) {
-          targets.push(source.value)
-        }
+        targets.push(node.source.value)
       }
     }
     return targets
@@ -649,18 +608,11 @@ export const hasExportStar = code => {
  */
 export const getExportNamedTargets = code => {
   try {
-    const { parse } = _require('@typescript-eslint/parser')
-    const ast = parse(code, {
-      sourceType: 'module',
-      ecmaVersion: 'latest',
-    })
+    const ast = parseAst(code)
     const targets = []
     for (const node of ast.body) {
       if (node.type === 'ExportNamedDeclaration' && node.source) {
-        const source = node.source
-        if (is.string(source.value)) {
-          targets.push(source.value)
-        }
+        targets.push(node.source.value)
       }
     }
     return targets
