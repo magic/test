@@ -121,7 +121,7 @@ export type RunResult = {
  * @param {number} totalShards
  * @returns {number}
  */
-const getShardForTest = (testPath: string, totalShards: number): number => {
+export const getShardForTest = (testPath: string, totalShards: number): number => {
   let hash = 2166136261
   for (let i = 0; i < testPath.length; i++) {
     hash ^= testPath.charCodeAt(i)
