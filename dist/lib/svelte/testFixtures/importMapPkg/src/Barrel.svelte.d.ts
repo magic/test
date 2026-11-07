@@ -1,1 +1,1 @@
-export { default as Foo } from '#fix/Foo.svelte'
+export { default as Foo } from "#fix/Foo.svelte";

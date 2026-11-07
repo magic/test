@@ -1,5 +1,5 @@
 /**
  * Formats a number with fixed decimals and converts to number type.
  */
-export const toMinimalFixed = (p, fix = 2) => parseFloat(p.toFixed(fix))
+export const toMinimalFixed = (p, fix = 2) => parseFloat(p.toFixed(fix));
 //# sourceMappingURL=toMinimalFixed.js.map

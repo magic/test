@@ -1,6 +1,6 @@
-import is from '@magic/types'
+import is from '@magic/types';
 /**
  * Type guard to check if an object has test properties (fn or tests).
  */
-export const hasTestProperties = obj => is.objectNative(obj) && ('fn' in obj || 'tests' in obj)
+export const hasTestProperties = (obj) => is.objectNative(obj) && ('fn' in obj || 'tests' in obj);
 //# sourceMappingURL=hasTestProperties.js.map

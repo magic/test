@@ -8,135 +8,130 @@
  * - lib/isolation/worker.ts:   worker-thread execution
  * - lib/isolation/skipProps.ts: globals excluded from snapshots
  * -------------------------------------------------------------------------- */
-import { Worker } from 'node:worker_threads'
-import log from '@magic/log'
-import {
-  deepClone as deepCloneGlobal,
-  shouldCaptureProperty as shouldCapture,
-  buildSnapshot as buildGlobalSnapshot,
-  restoreProperties as restoreGlobalProperties,
-  reviveKeyFromString as reviveKey,
-} from './lib/isolation/snapshot.js'
-import {
-  executeInWorker as runInWorker,
-  executeBatchInWorker as runBatchInWorker,
-} from './lib/isolation/worker.js'
+import { Worker } from 'node:worker_threads';
+import log from '@magic/log';
+import { deepClone as deepCloneGlobal, shouldCaptureProperty as shouldCapture, buildSnapshot as buildGlobalSnapshot, restoreProperties as restoreGlobalProperties, reviveKeyFromString as reviveKey, } from './lib/isolation/snapshot.js';
+import { executeInWorker as runInWorker, executeBatchInWorker as runBatchInWorker, } from './lib/isolation/worker.js';
 export class Isolation {
-  snapshots
-  suiteSnapshots
-  activeWorkers
-  constructor() {
-    this.snapshots = new Map()
-    this.suiteSnapshots = new Map()
-    this.activeWorkers = new Set()
-  }
-  /**
-   * Terminate all active workers. Call this on shutdown.
-   */
-  async terminateAllWorkers() {
-    await Promise.all(Array.from(this.activeWorkers).map(worker => worker.terminate()))
-    this.activeWorkers.clear()
-  }
-  /**
-   * Improved deepClone: returns primitives, copies common built-ins.
-   */
-  deepClone(value, seen) {
-    return deepCloneGlobal(value, seen)
-  }
-  /**
-   * Build a snapshot of the current globalThis.
-   */
-  buildSnapshot() {
-    return buildGlobalSnapshot()
-  }
-  captureSuiteSnapshot(suiteKey) {
-    try {
-      const snapshot = this.buildSnapshot()
-      this.suiteSnapshots.set(suiteKey, snapshot)
-    } catch (e) {
-      log.warn('Isolation: failed to capture suite snapshot for', suiteKey, ':', e)
-      // Still ignore to not break tests, but make visible
+    snapshots;
+    suiteSnapshots;
+    activeWorkers;
+    constructor() {
+        this.snapshots = new Map();
+        this.suiteSnapshots = new Map();
+        this.activeWorkers = new Set();
     }
-  }
-  restoreSuiteSnapshot(suiteKey) {
-    this.restoreSnapshotFromMap(this.suiteSnapshots, suiteKey)
-  }
-  /**
-   * Restore properties from a snapshot to globalThis.
-   */
-  restoreProperties(snapshot) {
-    restoreGlobalProperties(snapshot)
-  }
-  restoreSnapshotFromMap(snapshotMap, key) {
-    const snapshot = snapshotMap.get(key)
-    if (!snapshot) {
-      return
+    /**
+     * Terminate all active workers. Call this on shutdown.
+     */
+    async terminateAllWorkers() {
+        await Promise.all(Array.from(this.activeWorkers).map(worker => worker.terminate()));
+        this.activeWorkers.clear();
     }
-    this.restoreProperties(snapshot)
-    snapshotMap.delete(key)
-  }
-  captureSnapshot(testKey) {
-    try {
-      const snapshot = this.buildSnapshot()
-      this.snapshots.set(testKey, snapshot)
-    } catch {
-      // ignore
+    /**
+     * Improved deepClone: returns primitives, copies common built-ins.
+     */
+    deepClone(value, seen) {
+        return deepCloneGlobal(value, seen);
     }
-  }
-  restoreSnapshot(testKey) {
-    this.restoreSnapshotFromMap(this.snapshots, testKey)
-  }
-  /**
-   * helper to map stringified symbol keys back to Symbol if needed.
-   */
-  _reviveKeyFromString(keyStr) {
-    return reviveKey(keyStr)
-  }
-  /**
-   * shouldCaptureProperty: O(1) lookup using Set.has()
-   */
-  shouldCaptureProperty(prop) {
-    return shouldCapture(prop)
-  }
-  async executeSuiteIsolated(suiteKey, fn) {
-    this.captureSuiteSnapshot(suiteKey)
-    try {
-      return await fn()
-    } finally {
-      this.restoreSuiteSnapshot(suiteKey)
+    /**
+     * Build a snapshot of the current globalThis.
+     */
+    buildSnapshot() {
+        return buildGlobalSnapshot();
     }
-  }
-  async executeIsolated(testKey, fn) {
-    this.captureSnapshot(testKey)
-    try {
-      return await fn()
-    } finally {
-      this.restoreSnapshot(testKey)
+    captureSuiteSnapshot(suiteKey) {
+        try {
+            const snapshot = this.buildSnapshot();
+            this.suiteSnapshots.set(suiteKey, snapshot);
+        }
+        catch (e) {
+            log.warn('Isolation: failed to capture suite snapshot for', suiteKey, ':', e);
+            // Still ignore to not break tests, but make visible
+        }
     }
-  }
-  /**
-   * Run a test in a worker thread for true isolation
-   */
-  executeInWorker(options) {
-    return runInWorker(options, this.activeWorkers)
-  }
-  /**
-   * Run multiple tests in a single worker for better performance
-   */
-  executeBatchInWorker(options) {
-    return runBatchInWorker(options, this.activeWorkers)
-  }
+    restoreSuiteSnapshot(suiteKey) {
+        this.restoreSnapshotFromMap(this.suiteSnapshots, suiteKey);
+    }
+    /**
+     * Restore properties from a snapshot to globalThis.
+     */
+    restoreProperties(snapshot) {
+        restoreGlobalProperties(snapshot);
+    }
+    restoreSnapshotFromMap(snapshotMap, key) {
+        const snapshot = snapshotMap.get(key);
+        if (!snapshot) {
+            return;
+        }
+        this.restoreProperties(snapshot);
+        snapshotMap.delete(key);
+    }
+    captureSnapshot(testKey) {
+        try {
+            const snapshot = this.buildSnapshot();
+            this.snapshots.set(testKey, snapshot);
+        }
+        catch {
+            // ignore
+        }
+    }
+    restoreSnapshot(testKey) {
+        this.restoreSnapshotFromMap(this.snapshots, testKey);
+    }
+    /**
+     * helper to map stringified symbol keys back to Symbol if needed.
+     */
+    _reviveKeyFromString(keyStr) {
+        return reviveKey(keyStr);
+    }
+    /**
+     * shouldCaptureProperty: O(1) lookup using Set.has()
+     */
+    shouldCaptureProperty(prop) {
+        return shouldCapture(prop);
+    }
+    async executeSuiteIsolated(suiteKey, fn) {
+        this.captureSuiteSnapshot(suiteKey);
+        try {
+            return await fn();
+        }
+        finally {
+            this.restoreSuiteSnapshot(suiteKey);
+        }
+    }
+    async executeIsolated(testKey, fn) {
+        this.captureSnapshot(testKey);
+        try {
+            return await fn();
+        }
+        finally {
+            this.restoreSnapshot(testKey);
+        }
+    }
+    /**
+     * Run a test in a worker thread for true isolation
+     */
+    executeInWorker(options) {
+        return runInWorker(options, this.activeWorkers);
+    }
+    /**
+     * Run multiple tests in a single worker for better performance
+     */
+    executeBatchInWorker(options) {
+        return runBatchInWorker(options, this.activeWorkers);
+    }
 }
 /**
  * Apply a snapshot to the current globalThis context.
  * Deletes properties not in the snapshot, restores properties from snapshot.
  * Standalone version for use in worker threads.
  */
-export const restoreFromSnapshot = snapshot => {
-  if (!snapshot) {
-    return
-  }
-  isolation.restoreProperties(snapshot)
-}
-export const isolation = new Isolation()
+export const restoreFromSnapshot = (snapshot) => {
+    if (!snapshot) {
+        return;
+    }
+    isolation.restoreProperties(snapshot);
+};
+export const isolation = new Isolation();
 //# sourceMappingURL=isolation.js.map

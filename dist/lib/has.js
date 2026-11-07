@@ -1,162 +1,154 @@
-import is from '@magic/types'
-const isPredicate = check => is.function(check)
+import is from '@magic/types';
+const isPredicate = (check) => is.function(check);
 const checkValue = (value, check) => {
-  if (isPredicate(check)) {
-    return check(value)
-  }
-  return is.deep.equal(value, check)
-}
+    if (isPredicate(check)) {
+        return check(value);
+    }
+    return is.deep.equal(value, check);
+};
 export const property = (key, check) => {
-  return result => {
-    if (is.null(result) || !is.object(result)) {
-      return false
-    }
-    const value = result[key]
-    return checkValue(value, check)
-  }
-}
-export const properties = spec => {
-  return result => {
-    if (is.null(result) || !is.object(result)) {
-      return false
-    }
-    for (const [key, check] of Object.entries(spec)) {
-      if (!(key in result)) {
-        return false
-      }
-      if (!checkValue(result[key], check)) {
-        return false
-      }
-    }
-    return true
-  }
-}
-export const any = spec => {
-  return result => {
-    if (is.null(result) || !is.object(result)) {
-      return false
-    }
-    for (const [key, check] of Object.entries(spec)) {
-      if (key in result && checkValue(result[key], check)) {
-        return true
-      }
-    }
-    return false
-  }
-}
+    return (result) => {
+        if (is.null(result) || !is.object(result)) {
+            return false;
+        }
+        const value = result[key];
+        return checkValue(value, check);
+    };
+};
+export const properties = (spec) => {
+    return (result) => {
+        if (is.null(result) || !is.object(result)) {
+            return false;
+        }
+        for (const [key, check] of Object.entries(spec)) {
+            if (!(key in result)) {
+                return false;
+            }
+            if (!checkValue(result[key], check)) {
+                return false;
+            }
+        }
+        return true;
+    };
+};
+export const any = (spec) => {
+    return (result) => {
+        if (is.null(result) || !is.object(result)) {
+            return false;
+        }
+        for (const [key, check] of Object.entries(spec)) {
+            if (key in result && checkValue(result[key], check)) {
+                return true;
+            }
+        }
+        return false;
+    };
+};
 export const nested = (path, check) => {
-  const pathKeys = path.split('.')
-  return result => {
-    let current = result
-    for (const key of pathKeys) {
-      if (current === null || !is.object(current) || !(key in current)) {
-        return false
-      }
-      current = current[key]
-    }
-    return checkValue(current, check)
-  }
-}
+    const pathKeys = path.split('.');
+    return (result) => {
+        let current = result;
+        for (const key of pathKeys) {
+            if (current === null || !is.object(current) || !(key in current)) {
+                return false;
+            }
+            current = current[key];
+        }
+        return checkValue(current, check);
+    };
+};
 export const string = (...substring) => {
-  return result => {
-    if (!is.string(result)) {
-      return false
-    }
-    return substring.every(str => {
-      if (is.function(str)) {
-        return str(result)
-      }
-      return result.includes(str)
-    })
-  }
-}
+    return (result) => {
+        if (!is.string(result)) {
+            return false;
+        }
+        return substring.every(str => {
+            if (is.function(str)) {
+                return str(result);
+            }
+            return result.includes(str);
+        });
+    };
+};
 export const at = (index, check) => {
-  return result => {
-    if (!is.array(result)) {
-      return false
-    }
-    const value = result[index]
-    // An array of checks must all pass against the element; a single
-    // non-array check behaves as before.
-    if (is.array(check)) {
-      return check.every(c => checkValue(value, c))
-    }
-    return checkValue(value, check)
-  }
-}
-export const key = keyName => {
-  return result => {
-    if (is.null(result) || !is.object(result)) {
-      return false
-    }
-    return keyName in result
-  }
-}
-export const keys = keyNames => {
-  return result => {
-    if (is.null(result) || !is.object(result)) {
-      return false
-    }
-    for (const keyName of keyNames) {
-      if (!(keyName in result)) {
-        return false
-      }
-    }
-    return true
-  }
-}
-export const includes =
-  (...items) =>
-  result => {
+    return (result) => {
+        if (!is.array(result)) {
+            return false;
+        }
+        const value = result[index];
+        // An array of checks must all pass against the element; a single
+        // non-array check behaves as before.
+        if (is.array(check)) {
+            return check.every(c => checkValue(value, c));
+        }
+        return checkValue(value, check);
+    };
+};
+export const key = (keyName) => {
+    return (result) => {
+        if (is.null(result) || !is.object(result)) {
+            return false;
+        }
+        return keyName in result;
+    };
+};
+export const keys = (keyNames) => {
+    return (result) => {
+        if (is.null(result) || !is.object(result)) {
+            return false;
+        }
+        for (const keyName of keyNames) {
+            if (!(keyName in result)) {
+                return false;
+            }
+        }
+        return true;
+    };
+};
+export const includes = (...items) => (result) => {
     return items.every(item => {
-      if (is.array(result)) {
-        return result.some(v => (is.function(item) ? item(v) : is.deep.equal(v, item)))
-      }
-      if (is.string(result) && is.string(item)) {
-        return result.includes(item)
-      }
-      return false
-    })
-  }
-export const oneOf =
-  (...options) =>
-  result => {
+        if (is.array(result)) {
+            return result.some(v => (is.function(item) ? item(v) : is.deep.equal(v, item)));
+        }
+        if (is.string(result) && is.string(item)) {
+            return result.includes(item);
+        }
+        return false;
+    });
+};
+export const oneOf = (...options) => (result) => {
     if (options.length === 1 && is.array(options[0])) {
-      return oneOf(...options[0])(result)
+        return oneOf(...options[0])(result);
     }
-    return options.some(opt => is.deep.equal(result, opt))
-  }
-export const matches = pattern => result => is.string(result) && pattern.test(result)
-const negate =
-  fn =>
-  (...args) =>
-  result =>
-    !fn(...args)(result)
+    return options.some(opt => is.deep.equal(result, opt));
+};
+export const matches = (pattern) => (result) => is.string(result) && pattern.test(result);
+const negate = (fn) => (...args) => (result) => !fn(...args)(result);
 export const not = {
-  property: negate(property),
-  properties: negate(properties),
-  any: negate(any),
-  nested: negate(nested),
-  string: negate(string),
-  at: negate(at),
-  key: negate(key),
-  keys: negate(keys),
-  includes: negate(includes),
-  oneOf: negate(oneOf),
-  matches: negate(matches),
-}
+    property: negate(property),
+    properties: negate(properties),
+    any: negate(any),
+    nested: negate(nested),
+    string: negate(string),
+    at: negate(at),
+    key: negate(key),
+    keys: negate(keys),
+    includes: negate(includes),
+    oneOf: negate(oneOf),
+    matches: negate(matches),
+};
 export const has = {
-  property,
-  properties,
-  any,
-  nested,
-  string,
-  at,
-  key,
-  keys,
-  includes,
-  oneOf,
-  matches,
-  not,
-}
+    property,
+    properties,
+    any,
+    nested,
+    string,
+    at,
+    key,
+    keys,
+    includes,
+    oneOf,
+    matches,
+    not,
+};
 //# sourceMappingURL=has.js.map

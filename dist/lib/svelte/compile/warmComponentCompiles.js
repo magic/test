@@ -1,74 +1,86 @@
-var __rewriteRelativeImportExtension =
-  (this && this.__rewriteRelativeImportExtension) ||
-  function (path, preserveJsx) {
-    if (typeof path === 'string' && /^\.\.?\//.test(path)) {
-      return path.replace(
-        /\.(tsx)$|((?:\.d)?)((?:\.[^./]+?)?)\.([cm]?)ts$/i,
-        function (m, tsx, d, ext, cm) {
-          return tsx
-            ? preserveJsx
-              ? '.jsx'
-              : '.js'
-            : d && (!ext || !cm)
-              ? m
-              : d + ext + '.' + cm.toLowerCase() + 'js'
-        },
-      )
+var __rewriteRelativeImportExtension = (this && this.__rewriteRelativeImportExtension) || function (path, preserveJsx) {
+    if (typeof path === "string" && /^\.\.?\//.test(path)) {
+        return path.replace(/\.(tsx)$|((?:\.d)?)((?:\.[^./]+?)?)\.([cm]?)ts$/i, function (m, tsx, d, ext, cm) {
+            return tsx ? preserveJsx ? ".jsx" : ".js" : d && (!ext || !cm) ? m : (d + ext + "." + cm.toLowerCase() + "js");
+        });
     }
-    return path
-  }
-import path from 'node:path'
-import log from '@magic/log'
-import is from '@magic/types'
-import { findNearestPackageJson, resolveImportMapSpecifier } from './resolveImportMap.js'
-import { compileSvelteWithWrite } from './compileSvelteWithWrite.js'
-import { parallelMap } from './parallelMap.js'
-import { getCwd } from '../../../constants.js'
+    return path;
+};
+import path from 'node:path';
+import fs from '@magic/fs';
+import log from '@magic/log';
+import is from '@magic/types';
+import { findNearestPackageJson, resolveImportMapSpecifier } from './resolveImportMap.js';
+import { compileSvelteWithWrite } from './compileSvelteWithWrite.js';
+import { parallelMap } from './parallelMap.js';
+import { getCwd } from '../../../constants.js';
 /**
  * Recursively collect component paths referenced by test entries.
  * Handles arrays, nested test objects, and both the `component: 'path'` and
  * `component: ['path', props]` forms. Functions (lazy tests) and other
- * non-data values are skipped.
+ * non-data values are skipped. Cyclic object graphs (config plugins often
+ * self-reference) are broken with the `seen` set; a first visit already
+ * collects everything beneath a node, so skipping later visits loses nothing.
  */
-const collectComponentPaths = (node, out, seen) => {
-  if (is.array(node)) {
-    if (seen.has(node)) {
-      return
+export const collectComponentPaths = (node, out, seen) => {
+    if (is.array(node)) {
+        if (seen.has(node)) {
+            return;
+        }
+        seen.add(node);
+        for (const item of node) {
+            collectComponentPaths(item, out, seen);
+        }
+        return;
     }
-    seen.add(node)
-    for (const item of node) {
-      collectComponentPaths(item, out, seen)
+    if (is.objectNative(node)) {
+        if (seen.has(node)) {
+            return;
+        }
+        seen.add(node);
+        const { component } = node;
+        if (is.string(component)) {
+            out.add(component);
+        }
+        else if (is.array(component) && is.string(component[0])) {
+            out.add(component[0]);
+        }
+        for (const value of Object.values(node)) {
+            collectComponentPaths(value, out, seen);
+        }
     }
-    return
-  }
-  if (is.objectNative(node)) {
-    if (seen.has(node)) {
-      return
+};
+/**
+ * Resolve a component reference (import-map specifier, absolute or relative
+ * path) to an existing file, or null. Unresolvable `#` specs are dropped
+ * (the mount surfaces the real error later) instead of falling back to a
+ * literal `#...` path that can never exist.
+ */
+export const resolveComponentPath = async (componentPath) => {
+    try {
+        let abs;
+        if (componentPath.startsWith('#')) {
+            // Import-map specifier (e.g. "#lib/Foo.svelte") — resolve against the
+            // project's package.json, same as the component mount path.
+            const pkgJsonPath = await findNearestPackageJson(getCwd());
+            const resolved = await resolveImportMapSpecifier(componentPath, pkgJsonPath);
+            if (!resolved) {
+                return null;
+            }
+            abs = resolved;
+        }
+        else {
+            abs = path.isAbsolute(componentPath) ? componentPath : path.resolve(getCwd(), componentPath);
+        }
+        if (!(await fs.exists(abs))) {
+            return null;
+        }
+        return abs;
     }
-    seen.add(node)
-    const { component } = node
-    if (is.string(component)) {
-      out.add(component)
-    } else if (is.array(component) && is.string(component[0])) {
-      out.add(component[0])
+    catch {
+        return null;
     }
-    for (const value of Object.values(node)) {
-      collectComponentPaths(value, out, seen)
-    }
-  }
-}
-const resolveComponentPath = async componentPath => {
-  try {
-    if (componentPath.startsWith('#')) {
-      const pkgJsonPath = await findNearestPackageJson(componentPath)
-      const resolved = await resolveImportMapSpecifier(componentPath, pkgJsonPath)
-      return resolved || path.resolve(getCwd(), componentPath)
-    }
-    return path.isAbsolute(componentPath) ? componentPath : path.resolve(getCwd(), componentPath)
-  } catch {
-    return null
-  }
-}
+};
 /**
  * Pre-compile all Svelte components referenced by the collected tests.
  *
@@ -81,49 +93,47 @@ const resolveComponentPath = async componentPath => {
  * Failures are logged but non-fatal: the actual mount surfaces the error at
  * test time.
  */
-export const warmComponentCompiles = async tests => {
-  const refs = new Set()
-  collectComponentPaths(tests, refs, new WeakSet())
-  if (refs.size === 0) {
-    return
-  }
-  // Only worth doing (and only possible) when svelte is installed
-  try {
-    await import('svelte/compiler')
-  } catch {
-    return
-  }
-  const resolved = new Map()
-  for (const ref of refs) {
-    const p = await resolveComponentPath(ref)
-    if (p && !resolved.has(p)) {
-      resolved.set(p, ref)
+export const warmComponentCompiles = async (tests) => {
+    const refs = new Set();
+    collectComponentPaths(tests, refs, new WeakSet());
+    if (refs.size === 0) {
+        return;
     }
-  }
-  if (resolved.size === 0) {
-    return
-  }
-  await parallelMap(
-    [...resolved.entries()],
-    async ([resolvedPath, ref]) => {
-      try {
-        const { importUrl } = await compileSvelteWithWrite(resolvedPath)
-        // Pre-import the compiled module graph on the MAIN thread. Compiling
-        // (above) only writes the .svelte.js to the disk cache — the one-time
-        // cost of actually loading a component's full dependency graph (the
-        // package barrel + svelte deps, ~seconds) is paid by the first test
-        // that mounts it, under the svelte mutex and inside its per-test
-        // timeout. Importing here (collection phase, outside any per-test
-        // timeout) moves that cost upfront and lets the test's mount reuse the
-        // already-populated ESM module registry (subsequent mounts are ~ms).
-        // Concurrent imports of the shared barrel are deduped by the ESM
-        // registry, so the heavy graph load happens once.
-        await import(__rewriteRelativeImportExtension(importUrl))
-      } catch (e) {
-        log.warn(`Component precompile failed for ${ref}: ${is.error(e) ? e.message : String(e)}`)
-      }
-    },
-    6,
-  )
-}
+    // Only worth doing (and only possible) when svelte is installed
+    try {
+        await import('svelte/compiler');
+    }
+    catch {
+        return;
+    }
+    const resolved = new Map();
+    for (const ref of refs) {
+        const p = await resolveComponentPath(ref);
+        if (p && !resolved.has(p)) {
+            resolved.set(p, ref);
+        }
+    }
+    if (resolved.size === 0) {
+        return;
+    }
+    await parallelMap([...resolved.entries()], async ([resolvedPath, ref]) => {
+        try {
+            const { importUrl } = await compileSvelteWithWrite(resolvedPath);
+            // Pre-import the compiled module graph on the MAIN thread. Compiling
+            // (above) only writes the .svelte.js to the disk cache — the one-time
+            // cost of actually loading a component's full dependency graph (the
+            // package barrel + svelte deps, ~seconds) is paid by the first test
+            // that mounts it, under the svelte mutex and inside its per-test
+            // timeout. Importing here (collection phase, outside any per-test
+            // timeout) moves that cost upfront and lets the test's mount reuse the
+            // already-populated ESM module registry (subsequent mounts are ~ms).
+            // Concurrent imports of the shared barrel are deduped by the ESM
+            // registry, so the heavy graph load happens once.
+            await import(__rewriteRelativeImportExtension(importUrl));
+        }
+        catch (e) {
+            log.warn(`Component precompile failed for ${ref}: ${is.error(e) ? e.message : String(e)}`);
+        }
+    }, 6);
+};
 //# sourceMappingURL=warmComponentCompiles.js.map

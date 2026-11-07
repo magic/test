@@ -1,5 +1,5 @@
-export declare const WORKER_LIMIT: number
-export declare const getEffectiveWorkerLimit: (override?: number) => number
+export declare const WORKER_LIMIT: number;
+export declare const getEffectiveWorkerLimit: (override?: number) => number;
 /**
  * Get a worker pool.
  *
@@ -7,4 +7,4 @@ export declare const getEffectiveWorkerLimit: (override?: number) => number
  * concurrently-running suites cannot multiply the worker count
  * (N suites × limit). Explicit limits get a dedicated pool.
  */
-export declare const getWorkerPool: (limit?: number) => <T>(fn: () => Promise<T>) => Promise<T>
+export declare const getWorkerPool: (limit?: number) => <T>(fn: () => Promise<T>) => Promise<T>;

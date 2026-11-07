@@ -1,355 +1,362 @@
-import crypto from 'node:crypto'
-import is from '@magic/types'
-import { parseAst } from '../../analysis/parseAst.js'
-import { getSvelteCompiler } from '../compiler-cache.js'
-import { LRUCache } from '../../caches/LRUCache.js'
-const MAX_AST_CACHE_SIZE = 500
-const analysisCache = new LRUCache(MAX_AST_CACHE_SIZE)
+import crypto from 'node:crypto';
+import is from '@magic/types';
+import { parseAst } from '../../analysis/parseAst.js';
+import { getSvelteCompiler } from '../compiler-cache.js';
+import { LRUCache } from '../../caches/LRUCache.js';
+const MAX_AST_CACHE_SIZE = 500;
+const analysisCache = new LRUCache(MAX_AST_CACHE_SIZE);
 // Use LRUCache for consistent cache behavior
-const astCache = new LRUCache(MAX_AST_CACHE_SIZE)
-export const clearAstCache = () => astCache.clear()
+const astCache = new LRUCache(MAX_AST_CACHE_SIZE);
+export const clearAstCache = () => astCache.clear();
 const getCacheKey = (code, filePath) => {
-  const hash = crypto.createHash('sha256').update(code).digest('hex')
-  return `${filePath}:${hash}`
-}
-const extractScriptFromSvelte = async source => {
-  try {
-    const { parse: parseSvelte } = await getSvelteCompiler()
-    const ast = parseSvelte(source, { modern: true })
-    const parts = []
-    const extractBody = content => {
-      if (!content || !is.object(content)) {
-        return
-      }
-      const c = content
-      if (c.body && is.array(c.body)) {
-        for (const node of c.body) {
-          if (node && is.object(node) && 'start' in node && 'end' in node) {
-            const n = node
-            parts.push(source.slice(n.start, n.end))
-          }
-        }
-      }
-    }
-    if (ast.module) {
-      extractBody(ast.module.content)
-    }
-    if (ast.instance) {
-      extractBody(ast.instance.content)
-    }
-    return parts.join('\n')
-  } catch {
-    return ''
-  }
-}
-const analyzeCodeSync = code => {
-  const ast = parseAst(code)
-  let hasRunes = false
-  let isCompiled = false
-  // Check for compiled Svelte at the top level: import * as $ from 'svelte/internal/'
-  for (const node of ast.body) {
-    if (node.type === 'ImportDeclaration') {
-      const nsSpec = node.specifiers.find(s => s.type === 'ImportNamespaceSpecifier')
-      if (nsSpec) {
-        if (nsSpec.local.name === '$') {
-          if (node.source.value.startsWith('svelte/internal')) {
-            isCompiled = true
-          }
-        }
-      }
-    }
-  }
-  const checkNode = node => {
-    // Check for Svelte runes: $state(), $derived(), etc.
-    if (!hasRunes && node.type === 'CallExpression') {
-      const callee = node.callee
-      if (callee.type === 'Identifier' && callee.name.startsWith('$')) {
-        if (SVELTE_RUNE_NAMES.has(callee.name)) {
-          hasRunes = true
-        }
-      }
-      // Handle $derived.by, $effect.pre, etc.
-      if (callee.type === 'MemberExpression') {
-        const obj = callee.object
-        const prop = callee.property
-        if (obj.type === 'Identifier' && obj.name.startsWith('$') && prop.type === 'Identifier') {
-          const fullName = `${obj.name}.${prop.name}`
-          if (SVELTE_RUNE_NAMES.has(fullName)) {
-            hasRunes = true
-          }
-        }
-      }
-    }
-    // Recurse only if we haven't found runes yet (isCompiled already checked at top level)
-    if (!hasRunes) {
-      for (const key of Object.keys(node)) {
-        if (key === 'type' || key === 'loc' || key === 'range' || key === 'parent') {
-          continue
-        }
-        const val = node[key]
-        if (val && is.object(val)) {
-          if ('type' in val) {
-            checkNode(val)
-          } else if (is.array(val)) {
-            for (const item of val) {
-              if (item && is.object(item) && 'type' in item) {
-                checkNode(item)
-              }
+    const hash = crypto.createHash('sha256').update(code).digest('hex');
+    return `${filePath}:${hash}`;
+};
+const extractScriptFromSvelte = async (source) => {
+    try {
+        const { parse: parseSvelte } = await getSvelteCompiler();
+        const ast = parseSvelte(source, { modern: true });
+        const parts = [];
+        const extractBody = (content) => {
+            if (!content || !is.object(content)) {
+                return;
             }
-          }
+            const c = content;
+            if (c.body && is.array(c.body)) {
+                for (const node of c.body) {
+                    if (node && is.object(node) && 'start' in node && 'end' in node) {
+                        const n = node;
+                        parts.push(source.slice(n.start, n.end));
+                    }
+                }
+            }
+        };
+        if (ast.module) {
+            extractBody(ast.module.content);
         }
-      }
+        if (ast.instance) {
+            extractBody(ast.instance.content);
+        }
+        return parts.join('\n');
     }
-  }
-  for (const node of ast.body) {
-    checkNode(node)
-    if (hasRunes) {
-      break
+    catch {
+        return '';
     }
-  }
-  return { ast, hasRunes, isCompiled }
-}
-const analyzeCode = code => {
-  const cacheKey = code.slice(0, 1000)
-  const cached = analysisCache.get(cacheKey)
-  if (cached) {
-    return cached
-  }
-  const analysis = analyzeCodeSync(code)
-  analysisCache.set(cacheKey, analysis)
-  return analysis
-}
+};
+const analyzeCodeSync = (code) => {
+    const ast = parseAst(code);
+    let hasRunes = false;
+    let isCompiled = false;
+    // Check for compiled Svelte at the top level: import * as $ from 'svelte/internal/'
+    for (const node of ast.body) {
+        if (node.type === 'ImportDeclaration') {
+            const nsSpec = node.specifiers.find(s => s.type === 'ImportNamespaceSpecifier');
+            if (nsSpec) {
+                if (nsSpec.local.name === '$') {
+                    if (node.source.value.startsWith('svelte/internal')) {
+                        isCompiled = true;
+                    }
+                }
+            }
+        }
+    }
+    const checkNode = (node) => {
+        // Check for Svelte runes: $state(), $derived(), etc.
+        if (!hasRunes && node.type === 'CallExpression') {
+            const callee = node.callee;
+            if (callee.type === 'Identifier' && callee.name.startsWith('$')) {
+                if (SVELTE_RUNE_NAMES.has(callee.name)) {
+                    hasRunes = true;
+                }
+            }
+            // Handle $derived.by, $effect.pre, etc.
+            if (callee.type === 'MemberExpression') {
+                const obj = callee.object;
+                const prop = callee.property;
+                if (obj.type === 'Identifier' && obj.name.startsWith('$') && prop.type === 'Identifier') {
+                    const fullName = `${obj.name}.${prop.name}`;
+                    if (SVELTE_RUNE_NAMES.has(fullName)) {
+                        hasRunes = true;
+                    }
+                }
+            }
+        }
+        // Recurse only if we haven't found runes yet (isCompiled already checked at top level)
+        if (!hasRunes) {
+            for (const key of Object.keys(node)) {
+                if (key === 'type' || key === 'loc' || key === 'range' || key === 'parent') {
+                    continue;
+                }
+                const val = node[key];
+                if (val && is.object(val)) {
+                    if ('type' in val) {
+                        checkNode(val);
+                    }
+                    else if (is.array(val)) {
+                        for (const item of val) {
+                            if (item && is.object(item) && 'type' in item) {
+                                checkNode(item);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+    for (const node of ast.body) {
+        checkNode(node);
+        if (hasRunes) {
+            break;
+        }
+    }
+    return { ast, hasRunes, isCompiled };
+};
+const analyzeCode = (code) => {
+    const cacheKey = code.slice(0, 1000);
+    const cached = analysisCache.get(cacheKey);
+    if (cached) {
+        return cached;
+    }
+    const analysis = analyzeCodeSync(code);
+    analysisCache.set(cacheKey, analysis);
+    return analysis;
+};
 const parseFile = async (code, filePath) => {
-  const cacheKey = getCacheKey(code, filePath)
-  const cached = astCache.get(cacheKey)
-  if (cached) {
-    return cached
-  }
-  const isSvelte = filePath.endsWith('.svelte')
-  const codeToParse = isSvelte ? await extractScriptFromSvelte(code) : code
-  // Use cached analysis for rune/compiled detection
-  const analysis = analyzeCode(codeToParse)
-  const result = {
-    code: codeToParse,
-    ast: analysis.ast,
-    filePath,
-    hasRunes: analysis.hasRunes,
-    isCompiled: analysis.isCompiled,
-  }
-  astCache.set(cacheKey, result)
-  return result
-}
+    const cacheKey = getCacheKey(code, filePath);
+    const cached = astCache.get(cacheKey);
+    if (cached) {
+        return cached;
+    }
+    const isSvelte = filePath.endsWith('.svelte');
+    const codeToParse = isSvelte ? await extractScriptFromSvelte(code) : code;
+    // Use cached analysis for rune/compiled detection
+    const analysis = analyzeCode(codeToParse);
+    const result = {
+        code: codeToParse,
+        ast: analysis.ast,
+        filePath,
+        hasRunes: analysis.hasRunes,
+        isCompiled: analysis.isCompiled,
+    };
+    astCache.set(cacheKey, result);
+    return result;
+};
 const getOriginal = (node, code) => {
-  return code.slice(node.start, node.end)
-}
-const getDeclarationNames = decl => {
-  switch (decl.type) {
-    case 'FunctionDeclaration':
-    case 'ClassDeclaration':
-      return decl.id && decl.id.type === 'Identifier' ? [decl.id.name] : []
-    case 'TSDeclareFunction':
-      return decl.id && decl.id.type === 'Identifier' ? [decl.id.name] : []
-    case 'VariableDeclaration':
-      return decl.declarations.flatMap(d => extractPatternNames(d.id, ''))
-    case 'TSInterfaceDeclaration':
-    case 'TSTypeAliasDeclaration':
-      return decl.id && decl.id.type === 'Identifier' ? [decl.id.name] : []
-    case 'TSEnumDeclaration':
-      return decl.id && decl.id.type === 'Identifier' ? [decl.id.name] : []
-    case 'TSModuleDeclaration':
-      return decl.id && decl.id.type === 'Identifier' ? [decl.id.name] : []
-    case 'TSTypeParameterDeclaration':
-      return decl.params.map(p => p.name.name).filter(Boolean)
-    default:
-      return []
-  }
-}
+    return code.slice(node.start, node.end);
+};
+const getDeclarationNames = (decl) => {
+    switch (decl.type) {
+        case 'FunctionDeclaration':
+        case 'ClassDeclaration':
+            return decl.id && decl.id.type === 'Identifier' ? [decl.id.name] : [];
+        case 'TSDeclareFunction':
+            return decl.id && decl.id.type === 'Identifier' ? [decl.id.name] : [];
+        case 'VariableDeclaration':
+            return decl.declarations.flatMap(d => extractPatternNames(d.id, ''));
+        case 'TSInterfaceDeclaration':
+        case 'TSTypeAliasDeclaration':
+            return decl.id && decl.id.type === 'Identifier' ? [decl.id.name] : [];
+        case 'TSEnumDeclaration':
+            return decl.id && decl.id.type === 'Identifier' ? [decl.id.name] : [];
+        case 'TSModuleDeclaration':
+            return decl.id && decl.id.type === 'Identifier' ? [decl.id.name] : [];
+        case 'TSTypeParameterDeclaration':
+            return decl.params.map(p => p.name.name).filter(Boolean);
+        default:
+            return [];
+    }
+};
 const extractPatternNames = (pattern, _code) => {
-  if (pattern.type === 'Identifier') {
-    return [pattern.name]
-  }
-  if (pattern.type === 'ArrayPattern') {
-    return pattern.elements.flatMap(e => (e ? extractPatternNames(e, _code) : []))
-  }
-  if (pattern.type === 'ObjectPattern') {
-    return pattern.properties.flatMap(p => {
-      if (p.type === 'RestElement') {
-        return extractPatternNames(p.argument, _code)
-      }
-      if (p.type === 'Property') {
-        return extractPatternNames(p.value, _code)
-      }
-      return []
-    })
-  }
-  return []
-}
-const extractExports = fileInfo => {
-  const { ast, code } = fileInfo
-  const exports = []
-  for (const node of ast.body) {
-    if (node.type === 'ExportNamedDeclaration') {
-      const originalText = getOriginal(node, code)
-      if (node.source) {
-        for (const spec of node.specifiers) {
-          if (spec.type === 'ExportSpecifier') {
-            const localName = spec.local.type === 'Identifier' ? spec.local.name : ''
-            const exportedName =
-              spec.exported.type === 'Identifier' ? spec.exported.name : localName
-            exports.push({
-              name: localName,
-              alias: exportedName !== localName ? exportedName : undefined,
-              source: node.source.value,
-              isType: node.exportKind === 'type',
-              isDefault: false,
-              isBatch: false,
-              originalText,
-            })
-          }
-        }
-      } else if (node.declaration) {
-        const names = getDeclarationNames(node.declaration)
-        for (const name of names) {
-          exports.push({
-            name,
-            source: null,
-            isType: node.exportKind === 'type',
-            isDefault: false,
-            isBatch: false,
-            originalText,
-          })
-        }
-      } else if (node.specifiers.length > 0) {
-        for (const spec of node.specifiers) {
-          if (spec.type === 'ExportSpecifier') {
-            const localName = spec.local.type === 'Identifier' ? spec.local.name : ''
-            const exportedName =
-              spec.exported.type === 'Identifier' ? spec.exported.name : localName
-            exports.push({
-              name: localName,
-              alias: exportedName !== localName ? exportedName : undefined,
-              source: null,
-              isType: node.exportKind === 'type',
-              isDefault: false,
-              isBatch: false,
-              originalText,
-            })
-          }
-        }
-      }
-    } else if (node.type === 'ExportDefaultDeclaration') {
-      exports.push({
-        name: 'default',
-        source: null,
-        isType: false,
-        isDefault: true,
-        isBatch: false,
-        originalText: getOriginal(node, code),
-      })
-    } else if (node.type === 'ExportAllDeclaration') {
-      const alias =
-        node.exported && node.exported.type === 'Identifier' ? node.exported.name : undefined
-      exports.push({
-        name: '*',
-        alias,
-        source: node.source.value,
-        isType: node.exportKind === 'type',
-        isDefault: false,
-        isBatch: !alias,
-        originalText: getOriginal(node, code),
-      })
-    } else if (node.type === 'TSExportAssignment') {
-      exports.push({
-        name: 'default',
-        source: null,
-        isType: false,
-        isDefault: true,
-        isBatch: false,
-        originalText: getOriginal(node, code),
-      })
+    if (pattern.type === 'Identifier') {
+        return [pattern.name];
     }
-  }
-  return exports
-}
-const getSpecifierString = spec => {
-  if (spec.type === 'ImportSpecifier') {
-    const imported =
-      spec.imported.type === 'Identifier' ? spec.imported.name : String(spec.imported.value || '')
-    const local = spec.local.name
-    return imported !== local ? `${imported} as ${local}` : local
-  }
-  if (spec.type === 'ImportDefaultSpecifier') {
-    return `default as ${spec.local.name}`
-  }
-  if (spec.type === 'ImportNamespaceSpecifier') {
-    return `* as ${spec.local.name}`
-  }
-  return ''
-}
+    if (pattern.type === 'ArrayPattern') {
+        return pattern.elements.flatMap(e => (e ? extractPatternNames(e, _code) : []));
+    }
+    if (pattern.type === 'ObjectPattern') {
+        return pattern.properties.flatMap(p => {
+            if (p.type === 'RestElement') {
+                return extractPatternNames(p.argument, _code);
+            }
+            if (p.type === 'Property') {
+                return extractPatternNames(p.value, _code);
+            }
+            return [];
+        });
+    }
+    return [];
+};
+const extractExports = (fileInfo) => {
+    const { ast, code } = fileInfo;
+    const exports = [];
+    for (const node of ast.body) {
+        if (node.type === 'ExportNamedDeclaration') {
+            const originalText = getOriginal(node, code);
+            if (node.source) {
+                for (const spec of node.specifiers) {
+                    if (spec.type === 'ExportSpecifier') {
+                        const localName = spec.local.type === 'Identifier' ? spec.local.name : '';
+                        const exportedName = spec.exported.type === 'Identifier' ? spec.exported.name : localName;
+                        exports.push({
+                            name: localName,
+                            alias: exportedName !== localName ? exportedName : undefined,
+                            source: node.source.value,
+                            isType: node.exportKind === 'type',
+                            isDefault: false,
+                            isBatch: false,
+                            originalText,
+                        });
+                    }
+                }
+            }
+            else if (node.declaration) {
+                const names = getDeclarationNames(node.declaration);
+                for (const name of names) {
+                    exports.push({
+                        name,
+                        source: null,
+                        isType: node.exportKind === 'type',
+                        isDefault: false,
+                        isBatch: false,
+                        originalText,
+                    });
+                }
+            }
+            else if (node.specifiers.length > 0) {
+                for (const spec of node.specifiers) {
+                    if (spec.type === 'ExportSpecifier') {
+                        const localName = spec.local.type === 'Identifier' ? spec.local.name : '';
+                        const exportedName = spec.exported.type === 'Identifier' ? spec.exported.name : localName;
+                        exports.push({
+                            name: localName,
+                            alias: exportedName !== localName ? exportedName : undefined,
+                            source: null,
+                            isType: node.exportKind === 'type',
+                            isDefault: false,
+                            isBatch: false,
+                            originalText,
+                        });
+                    }
+                }
+            }
+        }
+        else if (node.type === 'ExportDefaultDeclaration') {
+            exports.push({
+                name: 'default',
+                source: null,
+                isType: false,
+                isDefault: true,
+                isBatch: false,
+                originalText: getOriginal(node, code),
+            });
+        }
+        else if (node.type === 'ExportAllDeclaration') {
+            const alias = node.exported && node.exported.type === 'Identifier' ? node.exported.name : undefined;
+            exports.push({
+                name: '*',
+                alias,
+                source: node.source.value,
+                isType: node.exportKind === 'type',
+                isDefault: false,
+                isBatch: !alias,
+                originalText: getOriginal(node, code),
+            });
+        }
+        else if (node.type === 'TSExportAssignment') {
+            exports.push({
+                name: 'default',
+                source: null,
+                isType: false,
+                isDefault: true,
+                isBatch: false,
+                originalText: getOriginal(node, code),
+            });
+        }
+    }
+    return exports;
+};
+const getSpecifierString = (spec) => {
+    if (spec.type === 'ImportSpecifier') {
+        const imported = spec.imported.type === 'Identifier' ? spec.imported.name : String(spec.imported.value || '');
+        const local = spec.local.name;
+        return imported !== local ? `${imported} as ${local}` : local;
+    }
+    if (spec.type === 'ImportDefaultSpecifier') {
+        return `default as ${spec.local.name}`;
+    }
+    if (spec.type === 'ImportNamespaceSpecifier') {
+        return `* as ${spec.local.name}`;
+    }
+    return '';
+};
 const findImportExpressions = (node, code) => {
-  const results = []
-  const walk = n => {
-    if (n.type === 'ImportExpression') {
-      const src = n.source
-      const source = src.type === 'Literal' && is.string(src.value) ? src.value : ''
-      results.push({
-        source,
-        originalText: getOriginal(n, code),
-      })
-    }
-    for (const key of Object.keys(n)) {
-      if (key === 'type' || key === 'loc' || key === 'range' || key === 'parent') {
-        continue
-      }
-      const val = n[key]
-      if (val && is.object(val) && 'type' in val) {
-        walk(val)
-      } else if (is.array(val)) {
-        for (const item of val) {
-          if (item && is.object(item) && 'type' in item) {
-            walk(item)
-          }
+    const results = [];
+    const walk = (n) => {
+        if (n.type === 'ImportExpression') {
+            const src = n.source;
+            const source = src.type === 'Literal' && is.string(src.value) ? src.value : '';
+            results.push({
+                source,
+                originalText: getOriginal(n, code),
+            });
         }
-      }
+        for (const key of Object.keys(n)) {
+            if (key === 'type' || key === 'loc' || key === 'range' || key === 'parent') {
+                continue;
+            }
+            const val = n[key];
+            if (val && is.object(val) && 'type' in val) {
+                walk(val);
+            }
+            else if (is.array(val)) {
+                for (const item of val) {
+                    if (item && is.object(item) && 'type' in item) {
+                        walk(item);
+                    }
+                }
+            }
+        }
+    };
+    walk(node);
+    return results;
+};
+const extractImports = (fileInfo) => {
+    const { ast, code } = fileInfo;
+    const imports = [];
+    for (const node of ast.body) {
+        if (node.type === 'ImportDeclaration') {
+            const specifiers = node.specifiers.map(s => getSpecifierString(s)).filter(Boolean);
+            let type = 'static';
+            if (node.specifiers.some(s => s.type === 'ImportNamespaceSpecifier')) {
+                type = 'namespace';
+            }
+            else if (specifiers.length === 0) {
+                type = 'sideEffect';
+            }
+            imports.push({
+                type,
+                source: node.source.value,
+                specifiers,
+                originalText: getOriginal(node, code),
+            });
+        }
+        else if (node.type === 'ExportDefaultDeclaration' || node.type === 'ExportNamedDeclaration') {
+            // intentionally left blank.
+        }
+        else {
+            const dynamicImports = findImportExpressions(node, code);
+            for (const dyn of dynamicImports) {
+                imports.push({
+                    type: 'dynamic',
+                    source: dyn.source,
+                    specifiers: [],
+                    originalText: dyn.originalText,
+                });
+            }
+        }
     }
-  }
-  walk(node)
-  return results
-}
-const extractImports = fileInfo => {
-  const { ast, code } = fileInfo
-  const imports = []
-  for (const node of ast.body) {
-    if (node.type === 'ImportDeclaration') {
-      const specifiers = node.specifiers.map(s => getSpecifierString(s)).filter(Boolean)
-      let type = 'static'
-      if (node.specifiers.some(s => s.type === 'ImportNamespaceSpecifier')) {
-        type = 'namespace'
-      } else if (specifiers.length === 0) {
-        type = 'sideEffect'
-      }
-      imports.push({
-        type,
-        source: node.source.value,
-        specifiers,
-        originalText: getOriginal(node, code),
-      })
-    } else if (node.type === 'ExportDefaultDeclaration' || node.type === 'ExportNamedDeclaration') {
-      // intentionally left blank.
-    } else {
-      const dynamicImports = findImportExpressions(node, code)
-      for (const dyn of dynamicImports) {
-        imports.push({
-          type: 'dynamic',
-          source: dyn.source,
-          specifiers: [],
-          originalText: dyn.originalText,
-        })
-      }
-    }
-  }
-  return imports
-}
+    return imports;
+};
 /**
  * Return the IMPORTED names referenced by a static import from `spec`.
  * For `import { A, B as X } from 'spec'` → ['A','B'] (the source-package export
@@ -357,31 +364,33 @@ const extractImports = fileInfo => {
  * This is what must be looked up in the source package's export graph.
  */
 export const extractImportedNamesFromCode = (code, spec) => {
-  try {
-    const ast = parseAst(code)
-    const names = []
-    for (const node of ast.body) {
-      if (node.type === 'ImportDeclaration' && node.source.value === spec) {
-        for (const s of node.specifiers) {
-          if (s.type === 'ImportSpecifier') {
-            const imported =
-              s.imported.type === 'Identifier' ? s.imported.name : String(s.imported.value ?? '')
-            if (imported) {
-              names.push(imported)
+    try {
+        const ast = parseAst(code);
+        const names = [];
+        for (const node of ast.body) {
+            if (node.type === 'ImportDeclaration' && node.source.value === spec) {
+                for (const s of node.specifiers) {
+                    if (s.type === 'ImportSpecifier') {
+                        const imported = s.imported.type === 'Identifier' ? s.imported.name : String(s.imported.value ?? '');
+                        if (imported) {
+                            names.push(imported);
+                        }
+                    }
+                    else if (s.type === 'ImportDefaultSpecifier') {
+                        names.push('default');
+                    }
+                    else if (s.type === 'ImportNamespaceSpecifier') {
+                        names.push('*');
+                    }
+                }
             }
-          } else if (s.type === 'ImportDefaultSpecifier') {
-            names.push('default')
-          } else if (s.type === 'ImportNamespaceSpecifier') {
-            names.push('*')
-          }
         }
-      }
+        return names;
     }
-    return names
-  } catch {
-    return []
-  }
-}
+    catch {
+        return [];
+    }
+};
 /**
  * Return the imported names of a static import from `spec` ONLY when the import
  * is a pure named import (every specifier is an `ImportSpecifier`); otherwise
@@ -390,234 +399,240 @@ export const extractImportedNamesFromCode = (code, spec) => {
  * export, so it must fall back to loading the whole module).
  */
 export const extractPureNamedImportsFromCode = (code, spec) => {
-  try {
-    const ast = parseAst(code)
-    for (const node of ast.body) {
-      if (node.type === 'ImportDeclaration' && node.source.value === spec) {
-        const specs = node.specifiers
-        if (specs.length === 0) {
-          return null
+    try {
+        const ast = parseAst(code);
+        for (const node of ast.body) {
+            if (node.type === 'ImportDeclaration' && node.source.value === spec) {
+                const specs = node.specifiers;
+                if (specs.length === 0) {
+                    return null;
+                }
+                const names = [];
+                for (const s of specs) {
+                    if (s.type !== 'ImportSpecifier') {
+                        return null;
+                    }
+                    const imported = s.imported.type === 'Identifier' ? s.imported.name : String(s.imported.value ?? '');
+                    if (!imported) {
+                        return null;
+                    }
+                    names.push(imported);
+                }
+                return names;
+            }
         }
-        const names = []
-        for (const s of specs) {
-          if (s.type !== 'ImportSpecifier') {
-            return null
-          }
-          const imported =
-            s.imported.type === 'Identifier' ? s.imported.name : String(s.imported.value ?? '')
-          if (!imported) {
-            return null
-          }
-          names.push(imported)
-        }
-        return names
-      }
+        return null;
     }
-    return null
-  } catch {
-    return null
-  }
-}
+    catch {
+        return null;
+    }
+};
 /**
  * Synchronously extract imports from code string.
  * Used by processImports for fast, regex-free import extraction.
  */
-export const extractImportsSync = code => {
-  try {
-    const ast = parseAst(code)
-    const imports = []
-    for (const node of ast.body) {
-      if (node.type === 'ImportDeclaration') {
-        // Get original text for replacement
-        const originalText = code.slice(node.start, node.end)
-        // Get source path
-        const source = node.source.value
-        // Get specifier string
-        let specifiers = ''
-        let type = 'static'
-        const localNames = []
-        const allSpecs = node.specifiers
-        if (allSpecs.length === 0) {
-          type = 'sideEffect'
-          specifiers = ''
-        } else if (allSpecs.some(s => s.type === 'ImportNamespaceSpecifier')) {
-          type = 'namespace'
-          for (const spec of allSpecs) {
-            if (spec.type === 'ImportNamespaceSpecifier') {
-              specifiers = `* as ${spec.local.name}`
-              localNames.push(spec.local.name)
-              break
+export const extractImportsSync = (code) => {
+    try {
+        const ast = parseAst(code);
+        const imports = [];
+        for (const node of ast.body) {
+            if (node.type === 'ImportDeclaration') {
+                // Get original text for replacement
+                const originalText = code.slice(node.start, node.end);
+                // Get source path
+                const source = node.source.value;
+                // Get specifier string
+                let specifiers = '';
+                let type = 'static';
+                const localNames = [];
+                const allSpecs = node.specifiers;
+                if (allSpecs.length === 0) {
+                    type = 'sideEffect';
+                    specifiers = '';
+                }
+                else if (allSpecs.some(s => s.type === 'ImportNamespaceSpecifier')) {
+                    type = 'namespace';
+                    for (const spec of allSpecs) {
+                        if (spec.type === 'ImportNamespaceSpecifier') {
+                            specifiers = `* as ${spec.local.name}`;
+                            localNames.push(spec.local.name);
+                            break;
+                        }
+                    }
+                }
+                else {
+                    type = 'static';
+                    const defaultImports = [];
+                    const namedImports = [];
+                    for (const spec of allSpecs) {
+                        if (spec.type === 'ImportSpecifier') {
+                            const imported = spec.imported.type === 'Identifier' ? spec.imported.name : '';
+                            const local = spec.local.name;
+                            localNames.push(local);
+                            namedImports.push(imported !== local ? `${imported} as ${local}` : local);
+                        }
+                        else if (spec.type === 'ImportDefaultSpecifier') {
+                            defaultImports.push(spec.local.name);
+                            localNames.push(spec.local.name);
+                        }
+                    }
+                    // Default imports don't get braces, named imports do
+                    // Mix default + named: default comes first, no braces for defaults
+                    if (namedImports.length > 0 && defaultImports.length > 0) {
+                        // Mixed: import default, { named } from
+                        specifiers = `{ ${namedImports.join(', ')} }`;
+                    }
+                    else if (namedImports.length > 0) {
+                        // Only named imports
+                        specifiers = `{ ${namedImports.join(', ')} }`;
+                    }
+                    else {
+                        // Only default imports
+                        specifiers = defaultImports.join(', ');
+                    }
+                }
+                imports.push({
+                    specifiers,
+                    source,
+                    originalText,
+                    type,
+                    start: node.start,
+                    end: node.end,
+                    localNames,
+                });
             }
-          }
-        } else {
-          type = 'static'
-          const defaultImports = []
-          const namedImports = []
-          for (const spec of allSpecs) {
-            if (spec.type === 'ImportSpecifier') {
-              const imported = spec.imported.type === 'Identifier' ? spec.imported.name : ''
-              const local = spec.local.name
-              localNames.push(local)
-              namedImports.push(imported !== local ? `${imported} as ${local}` : local)
-            } else if (spec.type === 'ImportDefaultSpecifier') {
-              defaultImports.push(spec.local.name)
-              localNames.push(spec.local.name)
-            }
-          }
-          // Default imports don't get braces, named imports do
-          // Mix default + named: default comes first, no braces for defaults
-          if (namedImports.length > 0 && defaultImports.length > 0) {
-            // Mixed: import default, { named } from
-            specifiers = `{ ${namedImports.join(', ')} }`
-          } else if (namedImports.length > 0) {
-            // Only named imports
-            specifiers = `{ ${namedImports.join(', ')} }`
-          } else {
-            // Only default imports
-            specifiers = defaultImports.join(', ')
-          }
         }
-        imports.push({
-          specifiers,
-          source,
-          originalText,
-          type,
-          start: node.start,
-          end: node.end,
-          localNames,
-        })
-      }
+        return imports;
     }
-    return imports
-  } catch {
-    return []
-  }
-}
-export {
-  extractScriptFromSvelte,
-  parseFile,
-  extractExports,
-  getDeclarationNames,
-  extractImports,
-  getOriginal,
-}
+    catch {
+        return [];
+    }
+};
+export { extractScriptFromSvelte, parseFile, extractExports, getDeclarationNames, extractImports, getOriginal, };
 // Valid Svelte 5 rune names
 const SVELTE_RUNE_NAMES = new Set([
-  '$state',
-  '$derived',
-  '$effect',
-  '$props',
-  '$bindable',
-  '$state.config',
-  'effect.pre',
-  'effect.post',
-  'derived.by',
-])
+    '$state',
+    '$derived',
+    '$effect',
+    '$props',
+    '$bindable',
+    '$state.config',
+    'effect.pre',
+    'effect.post',
+    'derived.by',
+]);
 /**
  * Check if code contains Svelte 5 runes using AST parsing.
  * Returns false for already-compiled output (which also has rune calls).
  * Uses cached analysis for efficiency.
  */
-export const hasSvelteRunes = code => {
-  try {
-    const { hasRunes, isCompiled } = analyzeCode(code)
-    // Compiled output contains runes but doesn't need re-processing
-    return hasRunes && !isCompiled
-  } catch {
-    return false
-  }
-}
+export const hasSvelteRunes = (code) => {
+    try {
+        const { hasRunes, isCompiled } = analyzeCode(code);
+        // Compiled output contains runes but doesn't need re-processing
+        return hasRunes && !isCompiled;
+    }
+    catch {
+        return false;
+    }
+};
 /**
  * Check if code is compiled Svelte output (has import * as $ from 'svelte/internal/')
  * Uses cached analysis for efficiency.
  */
-export const isSvelteCompiled = code => {
-  try {
-    return analyzeCode(code).isCompiled
-  } catch {
-    return false
-  }
-}
+export const isSvelteCompiled = (code) => {
+    try {
+        return analyzeCode(code).isCompiled;
+    }
+    catch {
+        return false;
+    }
+};
 /**
  * Check if code re-exports from .svelte files.
  * Replaces: SVELTE_REEXPORT_REGEX and SVELTE_DEFAULT_REEXPORT_REGEX
  */
-export const getSvelteReexports = code => {
-  try {
-    const ast = parseAst(code)
-    const reexports = []
-    for (const node of ast.body) {
-      if (node.type === 'ExportNamedDeclaration' && node.source) {
-        if (node.source.value.endsWith('.svelte')) {
-          reexports.push({
-            source: node.source.value,
-            originalText: code.slice(node.start, node.end),
-          })
+export const getSvelteReexports = (code) => {
+    try {
+        const ast = parseAst(code);
+        const reexports = [];
+        for (const node of ast.body) {
+            if (node.type === 'ExportNamedDeclaration' && node.source) {
+                if (node.source.value.endsWith('.svelte')) {
+                    reexports.push({
+                        source: node.source.value,
+                        originalText: code.slice(node.start, node.end),
+                    });
+                }
+            }
+            else if (node.type === 'ExportDefaultDeclaration') {
+                // export default from './Foo.svelte' - TSExportAssignment is handled separately
+            }
+            else if (node.type === 'ExportAllDeclaration' && node.source) {
+                if (node.source.value.endsWith('.svelte')) {
+                    reexports.push({
+                        source: node.source.value,
+                        originalText: code.slice(node.start, node.end),
+                    });
+                }
+            }
         }
-      } else if (node.type === 'ExportDefaultDeclaration') {
-        // export default from './Foo.svelte' - TSExportAssignment is handled separately
-      } else if (node.type === 'ExportAllDeclaration' && node.source) {
-        if (node.source.value.endsWith('.svelte')) {
-          reexports.push({
-            source: node.source.value,
-            originalText: code.slice(node.start, node.end),
-          })
-        }
-      }
+        return reexports;
     }
-    return reexports
-  } catch {
-    return []
-  }
-}
+    catch {
+        return [];
+    }
+};
 /**
  * Check if code has Svelte re-exports.
  * Replaces: SVELTE_REEXPORT_REGEX.test(content) || SVELTE_DEFAULT_REEXPORT_REGEX.test(content)
  */
-export const hasSvelteReexports = code => {
-  return getSvelteReexports(code).length > 0
-}
+export const hasSvelteReexports = (code) => {
+    return getSvelteReexports(code).length > 0;
+};
 /**
  * Get all export * from targets.
  * Replaces: EXPORT_STAR_REGEX
  */
-export const getExportStarTargets = code => {
-  try {
-    const ast = parseAst(code)
-    const targets = []
-    for (const node of ast.body) {
-      if (node.type === 'ExportAllDeclaration' && node.source) {
-        targets.push(node.source.value)
-      }
+export const getExportStarTargets = (code) => {
+    try {
+        const ast = parseAst(code);
+        const targets = [];
+        for (const node of ast.body) {
+            if (node.type === 'ExportAllDeclaration' && node.source) {
+                targets.push(node.source.value);
+            }
+        }
+        return targets;
     }
-    return targets
-  } catch {
-    return []
-  }
-}
+    catch {
+        return [];
+    }
+};
 /**
  * Check if code has export * from statements.
  * Replaces: EXPORT_STAR_REGEX.test(content)
  */
-export const hasExportStar = code => {
-  return getExportStarTargets(code).length > 0
-}
+export const hasExportStar = (code) => {
+    return getExportStarTargets(code).length > 0;
+};
 /**
  * Get all export { x } from targets (named re-exports).
  * Replaces: EXPORT_NAMED_REGEX
  */
-export const getExportNamedTargets = code => {
-  try {
-    const ast = parseAst(code)
-    const targets = []
-    for (const node of ast.body) {
-      if (node.type === 'ExportNamedDeclaration' && node.source) {
-        targets.push(node.source.value)
-      }
+export const getExportNamedTargets = (code) => {
+    try {
+        const ast = parseAst(code);
+        const targets = [];
+        for (const node of ast.body) {
+            if (node.type === 'ExportNamedDeclaration' && node.source) {
+                targets.push(node.source.value);
+            }
+        }
+        return targets;
     }
-    return targets
-  } catch {
-    return []
-  }
-}
+    catch {
+        return [];
+    }
+};
 //# sourceMappingURL=astParse.js.map

@@ -2,51 +2,45 @@
  * Error types for handleResponse
  */
 export declare class JsonParseError extends Error {
-  responseStatusCode: number
-  responseCause?: unknown
-  constructor(message: string, cause?: unknown)
+    responseStatusCode: number;
+    responseCause?: unknown;
+    constructor(message: string, cause?: unknown);
 }
 export declare class HttpStatusError extends Error {
-  responseStatusCode: number
-  responseUrl?: string
-  responseBody?: string
-  constructor(message: string, statusCode: number, url?: string, body?: string)
+    responseStatusCode: number;
+    responseUrl?: string;
+    responseBody?: string;
+    constructor(message: string, statusCode: number, url?: string, body?: string);
 }
 export declare class SizeLimitError extends Error {
-  responseStatusCode: number
-  responseUrl?: string
-  constructor(message: string, url?: string)
+    responseStatusCode: number;
+    responseUrl?: string;
+    constructor(message: string, url?: string);
 }
 export declare class NetworkError extends Error {
-  responseStatusCode: number
-  responseCause?: unknown
-  constructor(message: string, cause?: unknown)
+    responseStatusCode: number;
+    responseCause?: unknown;
+    constructor(message: string, cause?: unknown);
 }
 /**
  * Parse HTTP response body based on content-type.
  * Pure function for unit testing.
  */
-export declare function parseHttpResponseContent(rawData: string, contentType?: string): unknown
+export declare function parseHttpResponseContent(rawData: string, contentType?: string): unknown;
 /**
  * Sanitize error response body for safe logging.
  * Pure function for unit testing.
  */
-export declare function sanitizeBody(body: string): string
+export declare function sanitizeBody(body: string): string;
 /**
  * Handle an HTTP response, collecting data and resolving or rejecting a promise.
  * Automatically parses JSON responses based on content-type header.
  * Accepts any 2xx status code as successful.
  */
-export declare const handleResponse: (
-  res: {
-    statusCode?: number
-    headers: Record<string, string | string[] | undefined>
-    setEncoding?: (enc: BufferEncoding) => void
-    on: (event: string, cb: (chunk?: string | Buffer) => void) => void
-    destroy?: () => void
-  },
-  resolve: (value: unknown) => void,
-  reject: (reason?: unknown) => void,
-  url?: string,
-  maxSize?: number,
-) => void
+export declare const handleResponse: (res: {
+    statusCode?: number;
+    headers: Record<string, string | string[] | undefined>;
+    setEncoding?: (enc: BufferEncoding) => void;
+    on: (event: string, cb: (chunk?: string | Buffer) => void) => void;
+    destroy?: () => void;
+}, resolve: (value: unknown) => void, reject: (reason?: unknown) => void, url?: string, maxSize?: number) => void;

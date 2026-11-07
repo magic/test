@@ -1,1 +1,1 @@
-export declare const stripJsonComments: (content: string) => string
+export declare const stripJsonComments: (content: string) => string;

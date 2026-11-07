@@ -1,1 +1,1 @@
-export declare const cleanFunctionString: (fn: unknown) => string
+export declare const cleanFunctionString: (fn: unknown) => string;

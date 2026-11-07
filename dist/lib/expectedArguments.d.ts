@@ -1,1 +1,1 @@
-export declare const expectedArguments: (fn?: unknown) => string | string[]
+export declare const expectedArguments: (fn?: unknown) => string | string[];

@@ -1,34 +1,34 @@
-import path from 'node:path'
-import { pathToFileURL } from 'node:url'
-import fs from '@magic/fs'
-import { getCwd } from '../../../constants.js'
-import { writeAtomic } from '../../caches/persistentCache.js'
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import fs from '@magic/fs';
+import { getCwd } from '../../../constants.js';
+import { writeAtomic } from '../../caches/persistentCache.js';
 export const writeCompiledFile = async (tempPath, code, map, sourceMapRef = false, sourcePath) => {
-  const tmpFileAbs = path.resolve(getCwd(), tempPath)
-  await fs.mkdirp(path.dirname(tmpFileAbs), { recursive: true })
-  let contentToWrite = code
-  if (sourceMapRef && map) {
-    const sourceMapComment = `//# sourceMappingURL=${path.basename(tmpFileAbs)}.map\n`
-    contentToWrite = code + sourceMapComment
-    // Write source map file for c8 coverage remapping
-    const mapObj = JSON.parse(map)
-    // Preserve original source reference from Svelte compiler (points to .svelte file)
-    // Do NOT replace with tempPath — that breaks coverage mapping back to source.
-    // The Svelte compiler emits only the source basename in `sources` (e.g.
-    // "Toggle.svelte") regardless of the `filename` option, so resolve it against
-    // the actual source file's directory — resolving against getCwd() would produce a
-    // bogus path like "<getCwd()>/Toggle.svelte" for nested components.
-    if (mapObj.sources && mapObj.sources.length > 0) {
-      if (!path.isAbsolute(mapObj.sources[0])) {
-        const baseDir = sourcePath ? path.dirname(sourcePath) : getCwd()
-        mapObj.sources = [path.resolve(baseDir, mapObj.sources[0])]
-      }
-      mapObj.sourceRoot = ''
+    const tmpFileAbs = path.resolve(getCwd(), tempPath);
+    await fs.mkdirp(path.dirname(tmpFileAbs), { recursive: true });
+    let contentToWrite = code;
+    if (sourceMapRef && map) {
+        const sourceMapComment = `//# sourceMappingURL=${path.basename(tmpFileAbs)}.map\n`;
+        contentToWrite = code + sourceMapComment;
+        // Write source map file for c8 coverage remapping
+        const mapObj = JSON.parse(map);
+        // Preserve original source reference from Svelte compiler (points to .svelte file)
+        // Do NOT replace with tempPath — that breaks coverage mapping back to source.
+        // The Svelte compiler emits only the source basename in `sources` (e.g.
+        // "Toggle.svelte") regardless of the `filename` option, so resolve it against
+        // the actual source file's directory — resolving against getCwd() would produce a
+        // bogus path like "<getCwd()>/Toggle.svelte" for nested components.
+        if (mapObj.sources && mapObj.sources.length > 0) {
+            if (!path.isAbsolute(mapObj.sources[0])) {
+                const baseDir = sourcePath ? path.dirname(sourcePath) : getCwd();
+                mapObj.sources = [path.resolve(baseDir, mapObj.sources[0])];
+            }
+            mapObj.sourceRoot = '';
+        }
+        await writeAtomic(tmpFileAbs + '.map', JSON.stringify(mapObj));
     }
-    await writeAtomic(tmpFileAbs + '.map', JSON.stringify(mapObj))
-  }
-  await writeAtomic(tmpFileAbs, contentToWrite)
-  const importUrl = pathToFileURL(tmpFileAbs).href
-  return { tmpFile: tempPath, importUrl }
-}
+    await writeAtomic(tmpFileAbs, contentToWrite);
+    const importUrl = pathToFileURL(tmpFileAbs).href;
+    return { tmpFile: tempPath, importUrl };
+};
 //# sourceMappingURL=fileWriter.js.map

@@ -1,1 +1,1 @@
-export declare const maybeInjectMagic: () => Promise<void>
+export declare const maybeInjectMagic: () => Promise<void>;

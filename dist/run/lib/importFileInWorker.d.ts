@@ -1,1 +1,1 @@
-export declare const importFileInWorker: (filePath: string) => Promise<unknown>
+export declare const importFileInWorker: (filePath: string) => Promise<unknown>;

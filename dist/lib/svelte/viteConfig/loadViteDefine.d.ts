@@ -1,1 +1,1 @@
-export declare const loadViteDefine: (rootDir: string) => Promise<Record<string, unknown>>
+export declare const loadViteDefine: (rootDir: string) => Promise<Record<string, unknown>>;

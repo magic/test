@@ -1,9 +1,5 @@
-export { writeTempFile } from './tempFiles.js'
-export declare const compileSvelteOnlyExport: (
-  sveltePath: string,
-  sourceDir: string,
-  exportNames?: string[],
-) => Promise<string>
+export { writeTempFile } from './tempFiles.js';
+export declare const compileSvelteOnlyExport: (sveltePath: string, sourceDir: string, exportNames?: string[]) => Promise<string>;
 /**
  * Build a MINIMAL on-demand barrel for a svelte barrel entry: for each
  * requested export name, resolve it to its `.svelte` file (transitively, via
@@ -16,11 +12,7 @@ export declare const compileSvelteOnlyExport: (
  * loading the whole barrel). The wrapper path is deterministic in
  * (entryPath, sorted names) so repeated calls reuse the same file.
  */
-export declare const buildOnDemandSvelteBarrel: (
-  entryPath: string,
-  sourceDir: string,
-  importedNames: string[],
-) => Promise<string | null>
+export declare const buildOnDemandSvelteBarrel: (entryPath: string, sourceDir: string, importedNames: string[]) => Promise<string | null>;
 /**
  * Cached wrapper around resolveSvelteOnlyExportsImpl.
  *
@@ -29,4 +21,4 @@ export declare const buildOnDemandSvelteBarrel: (
  * imports and come out unchanged; the cache lets warm runs skip the full
  * AST parse + package resolution entirely.
  */
-export declare const resolveSvelteOnlyExports: (code: string, sourceDir: string) => Promise<string>
+export declare const resolveSvelteOnlyExports: (code: string, sourceDir: string) => Promise<string>;

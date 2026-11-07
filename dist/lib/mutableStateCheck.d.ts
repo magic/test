@@ -1,5 +1,1 @@
-export {
-  testImportsMutableModuleState,
-  testUsesFixedPorts,
-  testUsesSharedFiles,
-} from './analysis/index.js'
+export { testImportsMutableModuleState, testUsesFixedPorts, testUsesSharedFiles, } from './analysis/index.js';

@@ -1,17 +1,5 @@
-export { compileSvelte } from './compileSvelte.js'
-export { compileSvelteWithWrite } from './compileSvelteWithWrite.js'
+export { compileSvelte } from './compileSvelte.js';
+export { compileSvelteWithWrite } from './compileSvelteWithWrite.js';
 // Timing/tracing exports for performance profiling
-export {
-  traceStart,
-  traceEnd,
-  traceAsync,
-  enableTracing,
-  disableTracing,
-  isTracingEnabled,
-  isTraceEnabled,
-  printTraceSummary,
-  resetTraces,
-  getTraceData,
-  getTraceSummary,
-} from '../../trace/timing.js'
+export { traceStart, traceEnd, traceAsync, enableTracing, disableTracing, isTracingEnabled, isTraceEnabled, printTraceSummary, resetTraces, getTraceData, getTraceSummary, } from '../../trace/timing.js';
 //# sourceMappingURL=index.js.map

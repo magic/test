@@ -1,8 +1,2 @@
-import type { TestResult } from '../../types.js'
-export declare const runSingleTestFromFileInWorker: (
-  tests: unknown,
-  testIndex: number,
-  testPkg: string,
-  testParent: string,
-  testName: string,
-) => Promise<TestResult>
+import type { TestResult } from '../../types.js';
+export declare const runSingleTestFromFileInWorker: (tests: unknown, testIndex: number, testPkg: string, testParent: string, testName: string) => Promise<TestResult>;

@@ -1,17 +1,17 @@
-import type { WrappedTest } from '../../types.js'
+import type { WrappedTest } from '../../types.js';
 type RunFnResult = {
-  result: unknown
-  pass: boolean
-  exp: unknown
-  expString: unknown
-  afterCleanupError: unknown
-  afterError: unknown
-  duration?: number
-}
+    result: unknown;
+    pass: boolean;
+    exp: unknown;
+    expString: unknown;
+    afterCleanupError: unknown;
+    afterError: unknown;
+    duration?: number;
+};
 /**
  * Worker-side test execution: runs `before`, the shared runTestCore (fn +
  * expectation + timeout + after), and `afterCleanup` outside the isolation
  * scope. No error logging — worker output is not visible in the parent.
  */
-export declare const runTestFnInWorker: (test: WrappedTest, key: string) => Promise<RunFnResult>
-export {}
+export declare const runTestFnInWorker: (test: WrappedTest, key: string) => Promise<RunFnResult>;
+export {};

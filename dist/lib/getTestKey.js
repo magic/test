@@ -1,22 +1,25 @@
 export const getTestKey = (pkg, parent, name) => {
-  let key = ''
-  if (parent && parent !== pkg) {
-    key = `${pkg}`
-  }
-  if (parent && parent !== name) {
-    if (!parent.startsWith('/') && parent !== pkg) {
-      parent = `.${parent}`
+    let key = '';
+    let parentKey = parent;
+    let testName = name;
+    if (parentKey && parentKey !== pkg) {
+        key = `${pkg}`;
     }
-    key += `${parent}`
-  }
-  if (name) {
-    if (parent && parent !== name && parent !== pkg && !name.startsWith('/')) {
-      key += '#'
-    } else if (!name.startsWith('/')) {
-      name = `/${name}`
+    if (parentKey && parentKey !== testName) {
+        if (!parentKey.startsWith('/') && parentKey !== pkg) {
+            parentKey = `.${parentKey}`;
+        }
+        key += `${parentKey}`;
     }
-    key += name
-  }
-  return key
-}
+    if (testName) {
+        if (parentKey && parentKey !== testName && parentKey !== pkg && !testName.startsWith('/')) {
+            key += '#';
+        }
+        else if (!testName.startsWith('/')) {
+            testName = `/${testName}`;
+        }
+        key += testName;
+    }
+    return key;
+};
 //# sourceMappingURL=getTestKey.js.map

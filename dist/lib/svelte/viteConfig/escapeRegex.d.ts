@@ -1,1 +1,1 @@
-export declare const escapeRegex: (str: string) => string
+export declare const escapeRegex: (str: string) => string;

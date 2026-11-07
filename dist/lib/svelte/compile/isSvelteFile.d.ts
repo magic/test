@@ -1,1 +1,1 @@
-export declare const isSvelteFile: (filePath: string) => boolean
+export declare const isSvelteFile: (filePath: string) => boolean;

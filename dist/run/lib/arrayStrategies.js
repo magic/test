@@ -11,14 +11,14 @@
  *                        the main thread so hook order is preserved.
  * - runParallelArray:    no isolation needed → plain parallel execution.
  * -------------------------------------------------------------------------- */
-import is from '@magic/types'
-import { runTest } from '../test.js'
-import { isolation } from '../isolation.js'
-import { getWorkerPool } from '../../lib/workerPool.js'
-import { wrapTest } from './wrapTest.js'
-import { handleWorkerError } from './handleWorkerError.js'
-import { processWorkerResults } from './processWorkerResults.js'
-import { testNeedsIsolation } from './testNeedsIsolation.js'
+import is from '@magic/types';
+import { runTest } from '../test.js';
+import { isolation } from '../isolation.js';
+import { getWorkerPool } from '../../lib/workerPool.js';
+import { wrapTest } from './wrapTest.js';
+import { handleWorkerError } from './handleWorkerError.js';
+import { processWorkerResults } from './processWorkerResults.js';
+import { testNeedsIsolation } from './testNeedsIsolation.js';
 /**
  * Isolated execution: tests modify globals / imported module state / fixed
  * ports or files, so each runs in its own worker (fresh globalThis + module
@@ -26,169 +26,156 @@ import { testNeedsIsolation } from './testNeedsIsolation.js'
  * into a single worker; otherwise they run in parallel on the main thread.
  * Hooked tests always get individual workers.
  */
-export const runIsolatedArray = async args => {
-  const {
-    tests,
-    name,
-    parent,
-    pkg,
-    store,
-    rawResults,
-    testFileUrl,
-    suiteObj,
-    suiteSnapshot,
-    hasBeforeAll,
-  } = args
-  // Results are collected by original test index so the final order matches
-  // source order (hooked and unhooked tests interleaved as written).
-  const resultsByIndex = new Map()
-  const testsWithHooks = []
-  const testsWithoutHooks = []
-  tests.forEach((t, i) => {
-    const test = wrapTest(t, name, parent, pkg)
-    if (testNeedsIsolation(test, suiteObj)) {
-      testsWithHooks.push({ test, index: i })
-    } else {
-      testsWithoutHooks.push({ test, index: i })
-    }
-  })
-  // hasBeforeAll → batch the unhooked tests in one worker so they see the
-  // same module state the hook set up
-  if (hasBeforeAll && testsWithoutHooks.length > 0) {
-    try {
-      const batchResults = await isolation.executeBatchInWorker({
-        testFileUrl,
-        testIndices: testsWithoutHooks.map(t => t.index),
-        testPkg: pkg,
-        testParent: parent,
-        testNames: testsWithoutHooks.map(t => t.test.name),
-        suiteSnapshot,
-      })
-      const processed = processWorkerResults(batchResults, rawResults)
-      testsWithoutHooks.forEach(({ index }, i) => {
-        const r = processed[i]
-        if (r) {
-          resultsByIndex.set(index, r)
+export const runIsolatedArray = async (args) => {
+    const { tests, name, parent, pkg, store, rawResults, testFileUrl, suiteObj, suiteSnapshot, hasBeforeAll, } = args;
+    // Results are collected by original test index so the final order matches
+    // source order (hooked and unhooked tests interleaved as written).
+    const resultsByIndex = new Map();
+    const testsWithHooks = [];
+    const testsWithoutHooks = [];
+    tests.forEach((t, i) => {
+        const test = wrapTest(t, name, parent, pkg);
+        if (testNeedsIsolation(test, suiteObj)) {
+            testsWithHooks.push({ test, index: i });
         }
-      })
-    } catch (err) {
-      for (const { test, index } of testsWithoutHooks) {
-        resultsByIndex.set(index, handleWorkerError(test, err, rawResults))
-      }
-    }
-  }
-  // No beforeAll → unhooked tests can run in parallel on the main thread
-  if (!hasBeforeAll && testsWithoutHooks.length > 0) {
-    const promises = testsWithoutHooks.map(t => runTest(t.test, store, rawResults))
-    const resolved = await Promise.all(promises)
-    testsWithoutHooks.forEach(({ index }, i) => {
-      const r = resolved[i]
-      if (r && 'pass' in r) {
-        resultsByIndex.set(index, r)
-      }
-    })
-  }
-  // Hooked tests → individual workers. With MAGIC_TEST_WORKER_REUSE=1 they
-  // instead run as one batch per file in a single worker: each test re-mounts
-  // on the same window, but the imported module graph (the expensive part,
-  // ~6 s per fresh worker) is shared — subsequent mounts take ~40 ms.
-  // Trade-off: tests in a batch share module-level state (no fresh module
-  // registry per test), so only enable this for suites whose component tests
-  // are stateless/props-driven.
-  if (testsWithHooks.length > 0) {
-    const reuse = process.env.MAGIC_TEST_WORKER_REUSE === '1'
-    if (reuse) {
-      const pool = getWorkerPool()
-      await pool(async () => {
+        else {
+            testsWithoutHooks.push({ test, index: i });
+        }
+    });
+    // hasBeforeAll → batch the unhooked tests in one worker so they see the
+    // same module state the hook set up
+    if (hasBeforeAll && testsWithoutHooks.length > 0) {
         try {
-          const batchResults = await isolation.executeBatchInWorker({
-            testFileUrl,
-            testIndices: testsWithHooks.map(t => t.index),
-            testPkg: pkg,
-            testParent: parent,
-            testNames: testsWithHooks.map(t => t.test.name),
-            suiteSnapshot,
-          })
-          const processed = processWorkerResults(batchResults, rawResults)
-          testsWithHooks.forEach(({ index }, i) => {
-            const r = processed[i]
-            if (r) {
-              resultsByIndex.set(index, r)
-            }
-          })
-        } catch (err) {
-          for (const { test, index } of testsWithHooks) {
-            resultsByIndex.set(index, handleWorkerError(test, err, rawResults))
-          }
+            const batchResults = await isolation.executeBatchInWorker({
+                testFileUrl,
+                testIndices: testsWithoutHooks.map(t => t.index),
+                testPkg: pkg,
+                testParent: parent,
+                testNames: testsWithoutHooks.map(t => t.test.name),
+                suiteSnapshot,
+            });
+            const processed = processWorkerResults(batchResults, rawResults);
+            testsWithoutHooks.forEach(({ index }, i) => {
+                const r = processed[i];
+                if (r) {
+                    resultsByIndex.set(index, r);
+                }
+            });
         }
-      })
-    } else {
-      const pool = getWorkerPool()
-      const individualPromises = testsWithHooks.map(({ test, index }) =>
-        pool(() =>
-          isolation
-            .executeInWorker({
-              testFileUrl,
-              testIndex: index,
-              testPkg: test.pkg,
-              testParent: test.parent,
-              testName: test.name,
-              suiteSnapshot,
+        catch (err) {
+            for (const { test, index } of testsWithoutHooks) {
+                resultsByIndex.set(index, handleWorkerError(test, err, rawResults));
+            }
+        }
+    }
+    // No beforeAll → unhooked tests can run in parallel on the main thread
+    if (!hasBeforeAll && testsWithoutHooks.length > 0) {
+        const promises = testsWithoutHooks.map(t => runTest(t.test, store, rawResults));
+        const resolved = await Promise.all(promises);
+        testsWithoutHooks.forEach(({ index }, i) => {
+            const r = resolved[i];
+            if (r && 'pass' in r) {
+                resultsByIndex.set(index, r);
+            }
+        });
+    }
+    // Hooked tests → run as one batch per file in a single worker: each test
+    // re-mounts on the same window, but the imported module graph (the
+    // expensive part, ~6 s per fresh worker) is shared — subsequent mounts
+    // take ~40 ms.
+    // Trade-off: tests in a batch share module-level state (no fresh module
+    // registry per test), so only enable this for suites whose component tests
+    // are stateless/props-driven. Set MAGIC_TEST_WORKER_REUSE=0 to force one
+    // fresh worker per test (full isolation).
+    if (testsWithHooks.length > 0) {
+        const reuse = process.env.MAGIC_TEST_WORKER_REUSE !== '0';
+        if (reuse) {
+            const pool = getWorkerPool();
+            await pool(async () => {
+                try {
+                    const batchResults = await isolation.executeBatchInWorker({
+                        testFileUrl,
+                        testIndices: testsWithHooks.map(t => t.index),
+                        testPkg: pkg,
+                        testParent: parent,
+                        testNames: testsWithHooks.map(t => t.test.name),
+                        suiteSnapshot,
+                    });
+                    const processed = processWorkerResults(batchResults, rawResults);
+                    testsWithHooks.forEach(({ index }, i) => {
+                        const r = processed[i];
+                        if (r) {
+                            resultsByIndex.set(index, r);
+                        }
+                    });
+                }
+                catch (err) {
+                    for (const { test, index } of testsWithHooks) {
+                        resultsByIndex.set(index, handleWorkerError(test, err, rawResults));
+                    }
+                }
+            });
+        }
+        else {
+            const pool = getWorkerPool();
+            const individualPromises = testsWithHooks.map(({ test, index }) => pool(() => isolation
+                .executeInWorker({
+                testFileUrl,
+                testIndex: index,
+                testPkg: test.pkg,
+                testParent: test.parent,
+                testName: test.name,
+                suiteSnapshot,
             })
-            .then(
-              result => {
-                rawResults.push(result)
-                return { result: result, index }
-              },
-              err => ({ result: handleWorkerError(test, err, rawResults), index }),
-            ),
-        ),
-      )
-      const individualResults = await Promise.all(individualPromises)
-      for (const { result, index } of individualResults) {
-        resultsByIndex.set(index, result)
-      }
+                .then(result => {
+                rawResults.push(result);
+                return { result: result, index };
+            }, err => ({ result: handleWorkerError(test, err, rawResults), index }))));
+            const individualResults = await Promise.all(individualPromises);
+            for (const { result, index } of individualResults) {
+                resultsByIndex.set(index, result);
+            }
+        }
     }
-  }
-  const allResults = []
-  for (let i = 0; i < tests.length; i++) {
-    const r = resultsByIndex.get(i)
-    if (r) {
-      allResults.push(r)
+    const allResults = [];
+    for (let i = 0; i < tests.length; i++) {
+        const r = resultsByIndex.get(i);
+        if (r) {
+            allResults.push(r);
+        }
     }
-  }
-  return allResults
-}
+    return allResults;
+};
 /**
  * Sequential execution with per-test hooks: the suite has beforeEach or
  * afterEach, so tests must run one at a time on the main thread to preserve
  * hook ordering.
  */
-export const runSequentialHooked = async args => {
-  const { tests, name, parent, pkg, store, rawResults, suiteObj } = args
-  const results = []
-  for (const t of tests) {
-    const test = wrapTest(t, name, parent, pkg)
-    if (suiteObj && is.function(suiteObj.beforeEach)) {
-      await suiteObj.beforeEach()
+export const runSequentialHooked = async (args) => {
+    const { tests, name, parent, pkg, store, rawResults, suiteObj } = args;
+    const results = [];
+    for (const t of tests) {
+        const test = wrapTest(t, name, parent, pkg);
+        if (suiteObj && is.function(suiteObj.beforeEach)) {
+            await suiteObj.beforeEach();
+        }
+        const result = await runTest(test, store, rawResults);
+        if (result) {
+            results.push(result);
+        }
+        if (suiteObj && is.function(suiteObj.afterEach)) {
+            await suiteObj.afterEach();
+        }
     }
-    const result = await runTest(test, store, rawResults)
-    if (result) {
-      results.push(result)
-    }
-    if (suiteObj && is.function(suiteObj.afterEach)) {
-      await suiteObj.afterEach()
-    }
-  }
-  return results
-}
+    return results;
+};
 /**
  * Plain parallel execution: no isolation or hooks involved.
  */
-export const runParallelArray = async args => {
-  const { tests, name, parent, pkg, store, rawResults } = args
-  const promises = tests.map(t => runTest(wrapTest(t, name, parent, pkg), store, rawResults))
-  const resolved = await Promise.all(promises)
-  return resolved.filter(r => !!r)
-}
+export const runParallelArray = async (args) => {
+    const { tests, name, parent, pkg, store, rawResults } = args;
+    const promises = tests.map(t => runTest(wrapTest(t, name, parent, pkg), store, rawResults));
+    const resolved = await Promise.all(promises);
+    return resolved.filter(r => !!r);
+};
 //# sourceMappingURL=arrayStrategies.js.map

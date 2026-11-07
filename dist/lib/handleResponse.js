@@ -1,58 +1,58 @@
-import is from '@magic/types'
+import is from '@magic/types';
 /**
  * Error types for handleResponse
  */
 export class JsonParseError extends Error {
-  responseStatusCode = 0
-  responseCause
-  constructor(message, cause) {
-    super(message)
-    this.responseCause = cause
-  }
+    responseStatusCode = 0;
+    responseCause;
+    constructor(message, cause) {
+        super(message);
+        this.responseCause = cause;
+    }
 }
 export class HttpStatusError extends Error {
-  responseStatusCode
-  responseUrl
-  responseBody
-  constructor(message, statusCode, url, body) {
-    super(message)
-    this.responseStatusCode = statusCode
-    this.responseUrl = url
-    this.responseBody = body
-  }
+    responseStatusCode;
+    responseUrl;
+    responseBody;
+    constructor(message, statusCode, url, body) {
+        super(message);
+        this.responseStatusCode = statusCode;
+        this.responseUrl = url;
+        this.responseBody = body;
+    }
 }
 export class SizeLimitError extends Error {
-  responseStatusCode = 413
-  responseUrl
-  constructor(message, url) {
-    super(message)
-    this.responseUrl = url
-  }
+    responseStatusCode = 413;
+    responseUrl;
+    constructor(message, url) {
+        super(message);
+        this.responseUrl = url;
+    }
 }
 export class NetworkError extends Error {
-  responseStatusCode = 0
-  responseCause
-  constructor(message, cause) {
-    super(message)
-    this.responseCause = cause
-  }
+    responseStatusCode = 0;
+    responseCause;
+    constructor(message, cause) {
+        super(message);
+        this.responseCause = cause;
+    }
 }
 /**
  * Parse HTTP response body based on content-type.
  * Pure function for unit testing.
  */
 export function parseHttpResponseContent(rawData, contentType) {
-  if (contentType === 'application/json') {
-    return JSON.parse(rawData)
-  }
-  return rawData
+    if (contentType === 'application/json') {
+        return JSON.parse(rawData);
+    }
+    return rawData;
 }
 /**
  * Sanitize error response body for safe logging.
  * Pure function for unit testing.
  */
 export function sanitizeBody(body) {
-  return body.substring(0, 200).replace(/(password|token|secret|key)=[^&]+/gi, '$1=***')
+    return body.substring(0, 200).replace(/(password|token|secret|key)=[^&]+/gi, '$1=***');
 }
 /**
  * Handle an HTTP response, collecting data and resolving or rejecting a promise.
@@ -60,69 +60,67 @@ export function sanitizeBody(body) {
  * Accepts any 2xx status code as successful.
  */
 export const handleResponse = (res, resolve, reject, url, maxSize) => {
-  const { statusCode } = res
-  const contentType = is.str(res.headers['content-type']) ? res.headers['content-type'] : undefined
-  let err
-  if (!statusCode || statusCode < 200 || statusCode >= 300) {
-    err = `Request failed: ${statusCode ?? 'unknown'}`
-    if (url) {
-      err += `\nURL: ${url}`
+    const { statusCode } = res;
+    const contentType = is.str(res.headers['content-type']) ? res.headers['content-type'] : undefined;
+    let err;
+    if (!statusCode || statusCode < 200 || statusCode >= 300) {
+        err = `Request failed: ${statusCode ?? 'unknown'}`;
+        if (url) {
+            err += `\nURL: ${url}`;
+        }
     }
-  }
-  if (err) {
-    const chunks = []
-    res.setEncoding?.('utf8')
+    if (err) {
+        const chunks = [];
+        res.setEncoding?.('utf8');
+        res.on?.('data', chunk => {
+            if (chunk) {
+                chunks.push(String(chunk));
+            }
+        });
+        res.on?.('end', () => {
+            let errorMessage = err;
+            let body;
+            if (chunks.length > 0) {
+                body = chunks.join('');
+                errorMessage += `\nResponse body: ${sanitizeBody(body)}`;
+            }
+            const error = new HttpStatusError(errorMessage, statusCode ?? 0, url, body);
+            reject(error);
+        });
+        return;
+    }
+    const chunks = [];
+    let responseSize = 0;
+    res.setEncoding?.('utf8');
     res.on?.('data', chunk => {
-      if (chunk) {
-        chunks.push(String(chunk))
-      }
-    })
+        if (!chunk) {
+            return;
+        }
+        const chunkStr = String(chunk);
+        if (maxSize && responseSize + chunkStr.length > maxSize) {
+            res.destroy?.();
+            const error = new SizeLimitError(`Response size exceeds limit of ${maxSize} bytes${url ? ': ' + url : ''}`, url);
+            reject(error);
+            return;
+        }
+        responseSize += chunkStr.length;
+        chunks.push(chunkStr);
+    });
     res.on?.('end', () => {
-      let errorMessage = err
-      let body
-      if (chunks.length > 0) {
-        body = chunks.join('')
-        errorMessage += `\nResponse body: ${sanitizeBody(body)}`
-      }
-      const error = new HttpStatusError(errorMessage, statusCode ?? 0, url, body)
-      reject(error)
-    })
-    return
-  }
-  const chunks = []
-  let responseSize = 0
-  res.setEncoding?.('utf8')
-  res.on?.('data', chunk => {
-    if (!chunk) {
-      return
-    }
-    const chunkStr = String(chunk)
-    if (maxSize && responseSize + chunkStr.length > maxSize) {
-      res.destroy?.()
-      const error = new SizeLimitError(
-        `Response size exceeds limit of ${maxSize} bytes${url ? ': ' + url : ''}`,
-        url,
-      )
-      reject(error)
-      return
-    }
-    responseSize += chunkStr.length
-    chunks.push(chunkStr)
-  })
-  res.on?.('end', () => {
-    const rawData = chunks.join('')
-    if (contentType === 'application/json') {
-      try {
-        const data = parseHttpResponseContent(rawData, contentType)
-        resolve(data)
-        return
-      } catch (e) {
-        const error = new JsonParseError('Failed to parse JSON response', e)
-        reject(error)
-        return
-      }
-    }
-    resolve(rawData)
-  })
-}
+        const rawData = chunks.join('');
+        if (contentType === 'application/json') {
+            try {
+                const data = parseHttpResponseContent(rawData, contentType);
+                resolve(data);
+                return;
+            }
+            catch (e) {
+                const error = new JsonParseError('Failed to parse JSON response', e);
+                reject(error);
+                return;
+            }
+        }
+        resolve(rawData);
+    });
+};
 //# sourceMappingURL=handleResponse.js.map
