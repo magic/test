@@ -1,3 +1,7 @@
-import log from '@magic/log';
-import type { TestResult } from '../../types.js';
-export declare const processWorkerResults: (results: TestResult[], rawResults: TestResult[], logger?: typeof log.warn) => TestResult[];
+import log from '@magic/log'
+import type { TestResult } from '../../types.js'
+export declare const processWorkerResults: (
+  results: TestResult[],
+  rawResults: TestResult[],
+  logger?: typeof log.warn,
+) => TestResult[]

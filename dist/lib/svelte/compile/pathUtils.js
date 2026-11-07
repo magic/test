@@ -1,65 +1,65 @@
-import fs from '@magic/fs';
+import fs from '@magic/fs'
 export const EXTENSION_CANDIDATES = [
-    '',
-    '.js',
-    '.svelte',
-    '.ts',
-    '/index.js',
-    '/index.svelte',
-    '/index.ts',
-];
+  '',
+  '.js',
+  '.svelte',
+  '.ts',
+  '/index.js',
+  '/index.svelte',
+  '/index.ts',
+]
 /** Extension candidates for $app/* shim files. */
-export const SHIM_EXTENSION_CANDIDATES = ['.ts', '.js', '/index.ts', '/index.js'];
-export const FALLBACK_CANDIDATES = ['index.js', 'src/index.js', './dist/index.js'];
-export const isSkipPattern = (spec) => {
-    if (!spec) {
-        return true;
-    }
-    return (spec.startsWith('./') || spec.startsWith('../') || spec.startsWith('$') || spec.startsWith('/'));
-};
+export const SHIM_EXTENSION_CANDIDATES = ['.ts', '.js', '/index.ts', '/index.js']
+export const FALLBACK_CANDIDATES = ['index.js', 'src/index.js', './dist/index.js']
+export const isSkipPattern = spec => {
+  if (!spec) {
+    return true
+  }
+  return (
+    spec.startsWith('./') || spec.startsWith('../') || spec.startsWith('$') || spec.startsWith('/')
+  )
+}
 export const resolveFilePath = async (base, extensions = EXTENSION_CANDIDATES) => {
-    for (const ext of extensions) {
-        const candidate = base + ext;
-        if (await fs.exists(candidate)) {
-            try {
-                if (ext === '') {
-                    const stat = await fs.stat(candidate);
-                    if (stat.isDirectory()) {
-                        const siblingFile = base + '.js';
-                        if (await fs.exists(siblingFile)) {
-                            return siblingFile;
-                        }
-                        const indexPath = candidate + '/index.js';
-                        if (await fs.exists(indexPath)) {
-                            return indexPath;
-                        }
-                        continue;
-                    }
-                }
+  for (const ext of extensions) {
+    const candidate = base + ext
+    if (await fs.exists(candidate)) {
+      try {
+        if (ext === '') {
+          const stat = await fs.stat(candidate)
+          if (stat.isDirectory()) {
+            const siblingFile = base + '.js'
+            if (await fs.exists(siblingFile)) {
+              return siblingFile
             }
-            catch {
-                continue;
+            const indexPath = candidate + '/index.js'
+            if (await fs.exists(indexPath)) {
+              return indexPath
             }
-            return candidate;
+            continue
+          }
         }
-        if (base.endsWith('.js') && ext !== '') {
-            const noJsExt = base.slice(0, -3) + ext;
-            if (await fs.exists(noJsExt)) {
-                try {
-                    if (ext === '') {
-                        const stat = await fs.stat(noJsExt);
-                        if (stat.isDirectory()) {
-                            continue;
-                        }
-                    }
-                }
-                catch {
-                    continue;
-                }
-                return noJsExt;
-            }
-        }
+      } catch {
+        continue
+      }
+      return candidate
     }
-    return null;
-};
+    if (base.endsWith('.js') && ext !== '') {
+      const noJsExt = base.slice(0, -3) + ext
+      if (await fs.exists(noJsExt)) {
+        try {
+          if (ext === '') {
+            const stat = await fs.stat(noJsExt)
+            if (stat.isDirectory()) {
+              continue
+            }
+          }
+        } catch {
+          continue
+        }
+        return noJsExt
+      }
+    }
+  }
+  return null
+}
 //# sourceMappingURL=pathUtils.js.map

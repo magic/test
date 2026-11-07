@@ -1,4 +1,4 @@
-import { parseSync } from 'oxc-parser';
+import { parseSync } from 'oxc-parser'
 /**
  * Parse JS/TS source into a plain, ESTree-shaped AST using the oxc parser
  * (the same parser that powers oxlint).
@@ -10,14 +10,14 @@ import { parseSync } from 'oxc-parser';
  * @typescript-eslint/parser behavior — callers rely on try/catch fallbacks.
  */
 export const parseAst = (code, filename = 'file.ts') => {
-    const { program, errors } = parseSync(filename, code, {
-        sourceType: 'module',
-        range: true,
-        preserveParens: false,
-    });
-    if (errors.length > 0) {
-        throw new SyntaxError(errors[0]?.message ?? 'Syntax error');
-    }
-    return program;
-};
+  const { program, errors } = parseSync(filename, code, {
+    sourceType: 'module',
+    range: true,
+    preserveParens: false,
+  })
+  if (errors.length > 0) {
+    throw new SyntaxError(errors[0]?.message ?? 'Syntax error')
+  }
+  return program
+}
 //# sourceMappingURL=parseAst.js.map

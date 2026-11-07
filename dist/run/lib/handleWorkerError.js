@@ -1,15 +1,15 @@
-import log from '@magic/log';
-import { getTestKey, cleanError, ERRORS } from '../../lib/index.js';
-import { createFailResult } from './index.js';
+import log from '@magic/log'
+import { getTestKey, cleanError, ERRORS } from '../../lib/index.js'
+import { createFailResult } from './index.js'
 export const handleWorkerError = (testToRun, error, rawResults, logger = log.error) => {
-    logger(ERRORS.E_TEST_FN, {
-        testKey: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
-        testName: testToRun.name,
-        parent: testToRun.parent,
-        error: cleanError(error),
-    });
-    const failResult = createFailResult(testToRun);
-    rawResults.push(failResult);
-    return failResult;
-};
+  logger(ERRORS.E_TEST_FN, {
+    testKey: testToRun.key || getTestKey(testToRun.pkg, testToRun.parent, testToRun.name),
+    testName: testToRun.name,
+    parent: testToRun.parent,
+    error: cleanError(error),
+  })
+  const failResult = createFailResult(testToRun)
+  rawResults.push(failResult)
+  return failResult
+}
 //# sourceMappingURL=handleWorkerError.js.map

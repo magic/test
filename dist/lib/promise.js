@@ -1,4 +1,4 @@
-import is from '@magic/types';
+import is from '@magic/types'
 /**
  * Result of calling a wrapped function — either a single value or an array of values.
  */
@@ -7,28 +7,30 @@ import is from '@magic/types';
  * and either returns a single argument or an array of arguments to the wrapped function.
  * Pre-allocates array with length hint for better performance.
  */
-export const argHandler = (r) => (...args) => {
+export const argHandler =
+  r =>
+  (...args) => {
     // Pre-allocate with length hint
-    const returnArgs = new Array(args.length);
-    let len = 0;
+    const returnArgs = new Array(args.length)
+    let len = 0
     for (let i = 0; i < args.length; i++) {
-        const arg = args[i];
-        if (is.defined(arg) && !is.null(arg)) {
-            returnArgs[len++] = arg;
-        }
+      const arg = args[i]
+      if (is.defined(arg) && !is.null(arg)) {
+        returnArgs[len++] = arg
+      }
     }
     if (len === 1) {
-        return r(returnArgs[0]);
+      return r(returnArgs[0])
     }
     // Truncate to actual length if multiple args
     if (len > 0) {
-        returnArgs.length = len;
-        return r(returnArgs);
+      returnArgs.length = len
+      return r(returnArgs)
     }
-    r(undefined);
-};
+    r(undefined)
+  }
 /**
  * Wraps a function into a Promise-returning function, passing arguments via `argHandler`.
  */
-export const promise = (fn) => () => new Promise(r => fn(argHandler(r)));
+export const promise = fn => () => new Promise(r => fn(argHandler(r)))
 //# sourceMappingURL=promise.js.map

@@ -6,25 +6,25 @@
  * The order within each list is the execution order.
  */
 export const BEFORE_ALL_KEYS = [
-    '/beforeAll.js',
-    '/beforeall.js',
-    '/beforeAll.ts',
-    '/beforeall.ts',
-    '/beforeAll.mjs',
-    '/beforeall.mjs',
-];
+  '/beforeAll.js',
+  '/beforeall.js',
+  '/beforeAll.ts',
+  '/beforeall.ts',
+  '/beforeAll.mjs',
+  '/beforeall.mjs',
+]
 export const AFTER_ALL_KEYS = [
-    '/afterAll.js',
-    '/afterall.js',
-    '/afterAll.ts',
-    '/afterall.ts',
-    '/afterAll.mjs',
-    '/afterall.mjs',
-];
+  '/afterAll.js',
+  '/afterall.js',
+  '/afterAll.ts',
+  '/afterall.ts',
+  '/afterAll.mjs',
+  '/afterall.mjs',
+]
 /** Basenames of beforeAll hook files, in execution order. */
-export const beforeAllFileNames = BEFORE_ALL_KEYS.map(k => k.slice(1));
+export const beforeAllFileNames = BEFORE_ALL_KEYS.map(k => k.slice(1))
 /** Basenames of afterAll hook files, in execution order. */
-export const afterAllFileNames = AFTER_ALL_KEYS.map(k => k.slice(1));
-export const isBeforeAllFile = (basename) => beforeAllFileNames.includes(basename);
-export const isAfterAllFile = (basename) => afterAllFileNames.includes(basename);
+export const afterAllFileNames = AFTER_ALL_KEYS.map(k => k.slice(1))
+export const isBeforeAllFile = basename => beforeAllFileNames.includes(basename)
+export const isAfterAllFile = basename => afterAllFileNames.includes(basename)
 //# sourceMappingURL=hookFiles.js.map

@@ -1,18 +1,21 @@
-import type { TestCollection, TestObject, WrappedTest } from '../../types.js';
+import type { TestCollection, TestObject, WrappedTest } from '../../types.js'
 interface WalkableTest {
-    before?: unknown;
-    after?: unknown;
-    fn?: unknown;
-    tests?: unknown;
-    beforeEach?: unknown;
-    afterEach?: unknown;
-    beforeAll?: unknown;
-    afterAll?: unknown;
-    nested?: unknown;
+  before?: unknown
+  after?: unknown
+  fn?: unknown
+  tests?: unknown
+  beforeEach?: unknown
+  afterEach?: unknown
+  beforeAll?: unknown
+  afterAll?: unknown
+  nested?: unknown
 }
 /**
  * Walk test structure recursively, calling visitor on each test.
  * Return true from visitor to stop walking (early exit).
  */
-export declare const walkTests: (tests: TestCollection | TestObject | WrappedTest[], visitor: (test: WalkableTest) => boolean | void) => boolean;
-export {};
+export declare const walkTests: (
+  tests: TestCollection | TestObject | WrappedTest[],
+  visitor: (test: WalkableTest) => boolean | void,
+) => boolean
+export {}

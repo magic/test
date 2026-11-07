@@ -1,1 +1,1 @@
-export { getWorkerPool, WORKER_LIMIT, getEffectiveWorkerLimit } from '../../lib/workerPool.js';
+export { getWorkerPool, WORKER_LIMIT, getEffectiveWorkerLimit } from '../../lib/workerPool.js'

@@ -6,14 +6,18 @@
  * self-reference) are broken with the `seen` set; a first visit already
  * collects everything beneath a node, so skipping later visits loses nothing.
  */
-export declare const collectComponentPaths: (node: unknown, out: Set<string>, seen: WeakSet<object>) => void;
+export declare const collectComponentPaths: (
+  node: unknown,
+  out: Set<string>,
+  seen: WeakSet<object>,
+) => void
 /**
  * Resolve a component reference (import-map specifier, absolute or relative
  * path) to an existing file, or null. Unresolvable `#` specs are dropped
  * (the mount surfaces the real error later) instead of falling back to a
  * literal `#...` path that can never exist.
  */
-export declare const resolveComponentPath: (componentPath: string) => Promise<string | null>;
+export declare const resolveComponentPath: (componentPath: string) => Promise<string | null>
 /**
  * Pre-compile all Svelte components referenced by the collected tests.
  *
@@ -26,4 +30,4 @@ export declare const resolveComponentPath: (componentPath: string) => Promise<st
  * Failures are logged but non-fatal: the actual mount surfaces the error at
  * test time.
  */
-export declare const warmComponentCompiles: (tests: unknown) => Promise<void>;
+export declare const warmComponentCompiles: (tests: unknown) => Promise<void>

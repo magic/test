@@ -1,1 +1,1 @@
-export declare const findProjectRoot: (sourceDir: string) => Promise<string>;
+export declare const findProjectRoot: (sourceDir: string) => Promise<string>

@@ -1,27 +1,30 @@
-import is from '@magic/types';
+import is from '@magic/types'
 /**
  * Execute a single test function with proper isolation
  */
 export const executeTest = async (fn, _key, componentFile, componentProps, componentContext) => {
-    if (componentFile) {
-        const { mount } = await import('../../lib/svelte/mount.js');
-        const { target, component: instance, unmount, css, } = await mount(componentFile, { props: componentProps, context: componentContext });
-        try {
-            if (is.function(fn)) {
-                return await fn({ target, component: instance, unmount, css });
-            }
-        }
-        finally {
-            await unmount();
-            target.remove();
-        }
+  if (componentFile) {
+    const { mount } = await import('../../lib/svelte/mount.js')
+    const {
+      target,
+      component: instance,
+      unmount,
+      css,
+    } = await mount(componentFile, { props: componentProps, context: componentContext })
+    try {
+      if (is.function(fn)) {
+        return await fn({ target, component: instance, unmount, css })
+      }
+    } finally {
+      await unmount()
+      target.remove()
     }
-    if (is.function(fn)) {
-        return await fn();
-    }
-    else if (is.promise(fn)) {
-        return await fn;
-    }
-    return fn;
-};
+  }
+  if (is.function(fn)) {
+    return await fn()
+  } else if (is.promise(fn)) {
+    return await fn
+  }
+  return fn
+}
 //# sourceMappingURL=executeTest.js.map

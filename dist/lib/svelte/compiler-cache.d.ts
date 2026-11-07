@@ -1,1 +1,1 @@
-export declare const getSvelteCompiler: () => Promise<typeof import("svelte/compiler")>;
+export declare const getSvelteCompiler: () => Promise<typeof import('svelte/compiler')>

@@ -6,8 +6,12 @@
  * and either returns a single argument or an array of arguments to the wrapped function.
  * Pre-allocates array with length hint for better performance.
  */
-export declare const argHandler: (r: (arg: unknown | undefined) => void) => (...args: Array<unknown | undefined | null>) => void;
+export declare const argHandler: (
+  r: (arg: unknown | undefined) => void,
+) => (...args: Array<unknown | undefined | null>) => void
 /**
  * Wraps a function into a Promise-returning function, passing arguments via `argHandler`.
  */
-export declare const promise: (fn: (handler: (...args: unknown[]) => void) => void) => (() => Promise<unknown | undefined>);
+export declare const promise: (
+  fn: (handler: (...args: unknown[]) => void) => void,
+) => () => Promise<unknown | undefined>

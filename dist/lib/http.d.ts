@@ -1,12 +1,12 @@
-import nodeHttp from 'node:http';
-import nodeHttps from 'node:https';
-type BodyObject = Record<string, unknown>;
-type RequestBody = string | BodyObject;
+import nodeHttp from 'node:http'
+import nodeHttps from 'node:https'
+type BodyObject = Record<string, unknown>
+type RequestBody = string | BodyObject
 export interface HttpOptions {
-    timeout?: number;
-    rejectUnauthorized?: boolean;
-    maxSize?: number;
-    requestOptions?: nodeHttp.RequestOptions & nodeHttps.RequestOptions;
+  timeout?: number
+  rejectUnauthorized?: boolean
+  maxSize?: number
+  requestOptions?: nodeHttp.RequestOptions & nodeHttps.RequestOptions
 }
 /**
  * Perform an HTTP GET request.
@@ -17,7 +17,7 @@ export interface HttpOptions {
  *
  * const data = await get('https://self-signed.badssl.com', { rejectUnauthorized: false })
  */
-export declare const get: (url: string, options?: HttpOptions) => Promise<unknown>;
+export declare const get: (url: string, options?: HttpOptions) => Promise<unknown>
 /**
  * Perform an HTTP POST request with optional JSON body.
  * Automatically handles both HTTP and HTTPS protocols based on URL.
@@ -29,12 +29,16 @@ export declare const get: (url: string, options?: HttpOptions) => Promise<unknow
  *
  * const result = await post('https://self-signed.badssl.com', { data: 'test' }, { rejectUnauthorized: false })
  */
-export declare const post: (url: string, body?: RequestBody, options?: HttpOptions) => Promise<unknown>;
+export declare const post: (
+  url: string,
+  body?: RequestBody,
+  options?: HttpOptions,
+) => Promise<unknown>
 /**
  * HTTP utility object with get and post methods.
  */
 export declare const http: {
-    get: (url: string, options?: HttpOptions) => Promise<unknown>;
-    post: (url: string, body?: RequestBody, options?: HttpOptions) => Promise<unknown>;
-};
-export {};
+  get: (url: string, options?: HttpOptions) => Promise<unknown>
+  post: (url: string, body?: RequestBody, options?: HttpOptions) => Promise<unknown>
+}
+export {}

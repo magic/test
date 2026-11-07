@@ -1,1 +1,1 @@
-export { resolve, load } from './tsLoader.js';
+export { resolve, load } from './tsLoader.js'

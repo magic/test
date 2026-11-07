@@ -1,68 +1,71 @@
-import fs from '@magic/fs';
-import path from 'node:path';
-import { writeAtomic } from '../../caches/persistentCache.js';
+import fs from '@magic/fs'
+import path from 'node:path'
+import { writeAtomic } from '../../caches/persistentCache.js'
 class WriteQueue {
-    pendingWrites = new Map();
-    flushPromise = null;
-    batchSize;
-    flushInterval;
-    lastFlush = Date.now();
-    constructor(batchSize = 50, flushIntervalMs = 10) {
-        this.batchSize = batchSize;
-        this.flushInterval = flushIntervalMs;
+  pendingWrites = new Map()
+  flushPromise = null
+  batchSize
+  flushInterval
+  lastFlush = Date.now()
+  constructor(batchSize = 50, flushIntervalMs = 10) {
+    this.batchSize = batchSize
+    this.flushInterval = flushIntervalMs
+  }
+  async write(filePath, content) {
+    // Add to pending batch
+    this.pendingWrites.set(filePath, { path: filePath, content })
+    // Flush if batch is full or enough time has passed
+    const shouldFlush =
+      this.pendingWrites.size >= this.batchSize || Date.now() - this.lastFlush >= this.flushInterval
+    if (shouldFlush) {
+      await this.flush()
     }
-    async write(filePath, content) {
-        // Add to pending batch
-        this.pendingWrites.set(filePath, { path: filePath, content });
-        // Flush if batch is full or enough time has passed
-        const shouldFlush = this.pendingWrites.size >= this.batchSize || Date.now() - this.lastFlush >= this.flushInterval;
-        if (shouldFlush) {
-            await this.flush();
-        }
-        return filePath;
+    return filePath
+  }
+  /**
+   * Eagerly flush writes for a specific file path.
+   * Call this before returning import URLs to ensure file exists.
+   */
+  async flushPath(filePath) {
+    const request = this.pendingWrites.get(filePath)
+    if (request) {
+      this.pendingWrites.delete(filePath)
+      await fs.mkdir(path.dirname(request.path), { recursive: true })
+      await writeAtomic(request.path, request.content)
     }
-    /**
-     * Eagerly flush writes for a specific file path.
-     * Call this before returning import URLs to ensure file exists.
-     */
-    async flushPath(filePath) {
-        const request = this.pendingWrites.get(filePath);
-        if (request) {
-            this.pendingWrites.delete(filePath);
-            await fs.mkdir(path.dirname(request.path), { recursive: true });
-            await writeAtomic(request.path, request.content);
-        }
+  }
+  /**
+   * Flush all pending writes to disk in parallel
+   */
+  async flush() {
+    if (this.pendingWrites.size === 0) {
+      return
     }
-    /**
-     * Flush all pending writes to disk in parallel
-     */
-    async flush() {
-        if (this.pendingWrites.size === 0) {
-            return;
-        }
-        // If already flushing, wait for it
-        if (this.flushPromise) {
-            await this.flushPromise;
-            return;
-        }
-        this.flushPromise = (async () => {
-            const writes = [...this.pendingWrites.values()];
-            this.pendingWrites.clear();
-            this.lastFlush = Date.now();
-            // Write all files in parallel (atomic renames — readers never see
-            // partial files)
-            await Promise.all(writes.map(async (w) => {
-                await fs.mkdir(path.dirname(w.path), { recursive: true });
-                await writeAtomic(w.path, w.content);
-            }));
-            this.flushPromise = null;
-        })();
-        await this.flushPromise;
+    // If already flushing, wait for it
+    if (this.flushPromise) {
+      await this.flushPromise
+      return
     }
-    get pendingCount() {
-        return this.pendingWrites.size;
-    }
+    this.flushPromise = (async () => {
+      const writes = [...this.pendingWrites.values()]
+      this.pendingWrites.clear()
+      this.lastFlush = Date.now()
+      // Write all files in parallel (atomic renames — readers never see
+      // partial files)
+      await Promise.all(
+        writes.map(async w => {
+          await fs.mkdir(path.dirname(w.path), { recursive: true })
+          await writeAtomic(w.path, w.content)
+        }),
+      )
+      this.flushPromise = null
+    })()
+    await this.flushPromise
+  }
+  get pendingCount() {
+    return this.pendingWrites.size
+  }
 }
 // Singleton instance
-export const writeQueue = new WriteQueue();
+export const writeQueue = new WriteQueue()
 //# sourceMappingURL=writeQueue.js.map

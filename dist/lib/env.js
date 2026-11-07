@@ -1,47 +1,49 @@
 /**
  * Check if NODE_ENV is set to 'production'
  */
-export const isNodeProd = () => process.env.NODE_ENV === 'production';
+export const isNodeProd = () => process.env.NODE_ENV === 'production'
 /**
  * Check if NODE_ENV is set to 'development'
  */
-export const isNodeDev = () => process.env.NODE_ENV === 'development';
+export const isNodeDev = () => process.env.NODE_ENV === 'development'
 /**
  * Check if the '-p' argument is present in process.argv
  */
-export const isProd = () => process.argv.includes('-p');
+export const isProd = () => process.argv.includes('-p')
 /**
  * Check if verbose output is enabled.
  * Set by `t -l/--verbose` via env (the child unit process doesn't inherit argv),
  * with a direct-argv fallback for `node unit.js --verbose`.
  */
-export const isVerbose = () => process.env.MAGIC_TEST_VERBOSE === '1' || process.argv.includes('--verbose');
+export const isVerbose = () =>
+  process.env.MAGIC_TEST_VERBOSE === '1' || process.argv.includes('--verbose')
 /**
  * Get the error length limit from environment variable
  * Returns 0 for no limit (--verbose sets this), undefined if not set
  */
 export const getErrorLength = () => {
-    const envVal = process.env.MAGIC_TEST_ERROR_LENGTH;
-    if (envVal !== undefined) {
-        return parseInt(envVal, 10);
-    }
-    if (isVerbose()) {
-        return 0;
-    }
-    return undefined;
-};
+  const envVal = process.env.MAGIC_TEST_ERROR_LENGTH
+  if (envVal !== undefined) {
+    return parseInt(envVal, 10)
+  }
+  if (isVerbose()) {
+    return 0
+  }
+  return undefined
+}
 /**
  * Check if slow-test timing output is enabled.
  * Set by `t -s/--slow/--timing` via env (the child unit process doesn't
  * inherit argv), with a direct-argv fallback for `node unit.js --timing`.
  */
-export const isTimingEnabled = () => process.env.MAGIC_TEST_TIMING === '1' || process.argv.includes('--timing');
+export const isTimingEnabled = () =>
+  process.env.MAGIC_TEST_TIMING === '1' || process.argv.includes('--timing')
 export const env = {
-    isNodeProd,
-    isNodeDev,
-    isProd,
-    isVerbose,
-    getErrorLength,
-    isTimingEnabled,
-};
+  isNodeProd,
+  isNodeDev,
+  isProd,
+  isVerbose,
+  getErrorLength,
+  isTimingEnabled,
+}
 //# sourceMappingURL=env.js.map

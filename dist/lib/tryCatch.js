@@ -1,9 +1,10 @@
-export const tryCatch = (fn, ...args) => async () => {
+export const tryCatch =
+  (fn, ...args) =>
+  async () => {
     try {
-        return await fn(...args);
+      return await fn(...args)
+    } catch (e) {
+      return e
     }
-    catch (e) {
-        return e;
-    }
-};
+  }
 //# sourceMappingURL=tryCatch.js.map

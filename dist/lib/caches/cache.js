@@ -1,145 +1,142 @@
-import path from 'node:path';
-import fs from '@magic/fs';
-import { ddlInitWatchdog } from '../svelte/compile/ddl.js';
-ddlInitWatchdog();
-import { LRUCache } from './LRUCache.js';
-import { getCwd } from '../../constants.js';
-import { getCachedCompile, recordCompile } from './persistentCache.js';
-import is from '@magic/types';
+import path from 'node:path'
+import fs from '@magic/fs'
+import { ddlInitWatchdog } from '../svelte/compile/ddl.js'
+ddlInitWatchdog()
+import { LRUCache } from './LRUCache.js'
+import { getCwd } from '../../constants.js'
+import { getCachedCompile, recordCompile } from './persistentCache.js'
+import is from '@magic/types'
 // Export LRUCache for external use
-export { LRUCache };
+export { LRUCache }
 // Re-export persistent cache functions
-export { clearCache } from './persistentCache.js';
+export { clearCache } from './persistentCache.js'
 // Unified LRU caches
-export const cache = new LRUCache(4096);
-export const importCache = new LRUCache(4096);
-export const packageExportCache = new LRUCache(4096);
-export const barrelCache = new LRUCache(4096);
+export const cache = new LRUCache(4096)
+export const importCache = new LRUCache(4096)
+export const packageExportCache = new LRUCache(4096)
+export const barrelCache = new LRUCache(4096)
 // Unified promise deduplication map
 // Keys prefixed: 'barrel:', 'svelte:', 'exports:', 'pkg:', 'resolve:', 'cmgr:'
-export const pendingPromises = new Map();
+export const pendingPromises = new Map()
 /**
  * Centralized cache manager for Svelte compilation
  * Handles: promise dedup (shared pendingPromises map), memory cache, disk cache
  */
 export class CacheManager {
-    memoryCache = new Map();
-    // Cache stats
-    hits = 0;
-    misses = 0;
-    /**
-     * Get cached result or compile with deduplication
-     * Returns result with cache status attached
-     */
-    async getOrCompile(filePath, compileFn) {
-        const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(getCwd(), filePath);
-        const key = `cmgr:${absPath}`;
-        // Check shared promise dedup first
-        const pending = pendingPromises.get(key);
-        if (pending) {
-            this.hits++;
-            const result = await pending;
-            return { ...result, cacheStatus: { cached: true, source: 'promise' } };
-        }
-        // Check memory cache
-        const cached = this.memoryCache.get(absPath);
-        if (cached) {
-            try {
-                const stats = await fs.stat(absPath);
-                if (stats.mtimeMs === cached.mtime) {
-                    this.hits++;
-                    return { ...cached.data, cacheStatus: { cached: true, source: 'memory' } };
-                }
-            }
-            catch {
-                // File might not exist
-            }
-        }
-        // Check disk cache (only for Svelte files with basic result type)
-        const diskCached = await this.checkDiskCache(absPath);
-        if (diskCached) {
-            this.hits++;
-            const data = diskCached;
-            this.memoryCache.set(absPath, { data, mtime: diskCached.mtime });
-            return { ...data, cacheStatus: { cached: true, source: 'disk' } };
-        }
-        // Need to compile
-        this.misses++;
-        // Create promise BEFORE starting work to prevent concurrent duplicates
-        const compilePromise = (async () => {
-            try {
-                const result = await compileFn();
-                // Store in memory cache
-                try {
-                    const stats = await fs.stat(absPath);
-                    this.memoryCache.set(absPath, { data: result, mtime: stats.mtimeMs });
-                }
-                catch {
-                    // Ignore
-                }
-                // Write to disk cache if it's the right type
-                if (this.isSvelteResult(result)) {
-                    await this.writeDiskCache(absPath, result.js);
-                }
-                return result;
-            }
-            finally {
-                pendingPromises.delete(key);
-            }
-        })();
-        pendingPromises.set(key, compilePromise);
-        const result = await compilePromise;
-        return { ...result, cacheStatus: { cached: false, source: null } };
+  memoryCache = new Map()
+  // Cache stats
+  hits = 0
+  misses = 0
+  /**
+   * Get cached result or compile with deduplication
+   * Returns result with cache status attached
+   */
+  async getOrCompile(filePath, compileFn) {
+    const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(getCwd(), filePath)
+    const key = `cmgr:${absPath}`
+    // Check shared promise dedup first
+    const pending = pendingPromises.get(key)
+    if (pending) {
+      this.hits++
+      const result = await pending
+      return { ...result, cacheStatus: { cached: true, source: 'promise' } }
     }
-    /**
-     * Type guard to check if result is a Svelte compilation result
-     */
-    isSvelteResult(result) {
-        return is.objectNative(result) && 'js' in result;
-    }
-    /**
-     * Check disk cache for a compiled Svelte file
-     */
-    async checkDiskCache(filePath) {
-        if (!filePath.endsWith('.svelte')) {
-            return null;
+    // Check memory cache
+    const cached = this.memoryCache.get(absPath)
+    if (cached) {
+      try {
+        const stats = await fs.stat(absPath)
+        if (stats.mtimeMs === cached.mtime) {
+          this.hits++
+          return { ...cached.data, cacheStatus: { cached: true, source: 'memory' } }
         }
-        // Try persistent cache (hash-based)
-        const cached = await getCachedCompile(filePath);
-        if (cached) {
-            const stats = await fs.stat(filePath);
-            return { js: cached.js, css: cached.css, mtime: stats.mtimeMs };
+      } catch {
+        // File might not exist
+      }
+    }
+    // Check disk cache (only for Svelte files with basic result type)
+    const diskCached = await this.checkDiskCache(absPath)
+    if (diskCached) {
+      this.hits++
+      const data = diskCached
+      this.memoryCache.set(absPath, { data, mtime: diskCached.mtime })
+      return { ...data, cacheStatus: { cached: true, source: 'disk' } }
+    }
+    // Need to compile
+    this.misses++
+    // Create promise BEFORE starting work to prevent concurrent duplicates
+    const compilePromise = (async () => {
+      try {
+        const result = await compileFn()
+        // Store in memory cache
+        try {
+          const stats = await fs.stat(absPath)
+          this.memoryCache.set(absPath, { data: result, mtime: stats.mtimeMs })
+        } catch {
+          // Ignore
         }
-        return null;
-    }
-    /**
-     * Write compiled result to disk cache
-     */
-    async writeDiskCache(filePath, js) {
-        // Write to persistent cache (hash-based)
-        await recordCompile(filePath, js);
-    }
-    /**
-     * Get cache stats
-     */
-    getStats() {
-        const total = this.hits + this.misses;
-        const hitRate = total > 0 ? ((this.hits / total) * 100).toFixed(1) : '0.0';
-        return { hits: this.hits, misses: this.misses, hitRate };
-    }
-    /**
-     * Reset all caches
-     */
-    reset() {
-        for (const key of Array.from(pendingPromises.keys())) {
-            if (key.startsWith('cmgr:')) {
-                pendingPromises.delete(key);
-            }
+        // Write to disk cache if it's the right type
+        if (this.isSvelteResult(result)) {
+          await this.writeDiskCache(absPath, result.js)
         }
-        this.memoryCache.clear();
-        this.hits = 0;
-        this.misses = 0;
+        return result
+      } finally {
+        pendingPromises.delete(key)
+      }
+    })()
+    pendingPromises.set(key, compilePromise)
+    const result = await compilePromise
+    return { ...result, cacheStatus: { cached: false, source: null } }
+  }
+  /**
+   * Type guard to check if result is a Svelte compilation result
+   */
+  isSvelteResult(result) {
+    return is.objectNative(result) && 'js' in result
+  }
+  /**
+   * Check disk cache for a compiled Svelte file
+   */
+  async checkDiskCache(filePath) {
+    if (!filePath.endsWith('.svelte')) {
+      return null
     }
+    // Try persistent cache (hash-based)
+    const cached = await getCachedCompile(filePath)
+    if (cached) {
+      const stats = await fs.stat(filePath)
+      return { js: cached.js, css: cached.css, mtime: stats.mtimeMs }
+    }
+    return null
+  }
+  /**
+   * Write compiled result to disk cache
+   */
+  async writeDiskCache(filePath, js) {
+    // Write to persistent cache (hash-based)
+    await recordCompile(filePath, js)
+  }
+  /**
+   * Get cache stats
+   */
+  getStats() {
+    const total = this.hits + this.misses
+    const hitRate = total > 0 ? ((this.hits / total) * 100).toFixed(1) : '0.0'
+    return { hits: this.hits, misses: this.misses, hitRate }
+  }
+  /**
+   * Reset all caches
+   */
+  reset() {
+    for (const key of Array.from(pendingPromises.keys())) {
+      if (key.startsWith('cmgr:')) {
+        pendingPromises.delete(key)
+      }
+    }
+    this.memoryCache.clear()
+    this.hits = 0
+    this.misses = 0
+  }
 }
-export const cacheManager = new CacheManager();
+export const cacheManager = new CacheManager()
 //# sourceMappingURL=cache.js.map

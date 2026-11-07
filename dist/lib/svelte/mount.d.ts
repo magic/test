@@ -1,20 +1,23 @@
-import type { CssObject, ComponentProps, ContextOption } from '../../types.js';
+import type { CssObject, ComponentProps, ContextOption } from '../../types.js'
 /**
  * Create a raw snippet for passing as children prop
  */
-export declare const createSnippet: (renderFn: string | (() => string)) => unknown;
+export declare const createSnippet: (renderFn: string | (() => string)) => unknown
 /**
  * Wait for Svelte to update the DOM after state changes
  */
-export declare const tick: () => Promise<void>;
+export declare const tick: () => Promise<void>
 interface MountResult {
-    target: HTMLElement;
-    component: Record<string, unknown>;
-    unmount: () => Promise<void>;
-    css: CssObject | null;
+  target: HTMLElement
+  component: Record<string, unknown>
+  unmount: () => Promise<void>
+  css: CssObject | null
 }
-export declare const mount: (filePath: string, options?: {
-    props?: ComponentProps;
-    context?: ContextOption;
-}) => Promise<MountResult>;
-export {};
+export declare const mount: (
+  filePath: string,
+  options?: {
+    props?: ComponentProps
+    context?: ContextOption
+  },
+) => Promise<MountResult>
+export {}

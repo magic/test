@@ -1,5 +1,5 @@
-import type { Program } from 'oxc-parser';
-export type { Program };
+import type { Program } from 'oxc-parser'
+export type { Program }
 /**
  * Parse JS/TS source into a plain, ESTree-shaped AST using the oxc parser
  * (the same parser that powers oxlint).
@@ -10,4 +10,4 @@ export type { Program };
  * Throws a SyntaxError on syntax errors, mirroring the previous
  * @typescript-eslint/parser behavior — callers rely on try/catch fallbacks.
  */
-export declare const parseAst: (code: string, filename?: string) => Program;
+export declare const parseAst: (code: string, filename?: string) => Program

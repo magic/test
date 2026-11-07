@@ -1,1 +1,1 @@
-export declare const getTempFilePath: (sourceFilePath: string) => string;
+export declare const getTempFilePath: (sourceFilePath: string) => string

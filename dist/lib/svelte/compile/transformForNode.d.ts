@@ -1,1 +1,1 @@
-export declare const transformForNode: (code: string, filePath: string) => string;
+export declare const transformForNode: (code: string, filePath: string) => string

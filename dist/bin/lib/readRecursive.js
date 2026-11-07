@@ -1,255 +1,255 @@
-var __rewriteRelativeImportExtension = (this && this.__rewriteRelativeImportExtension) || function (path, preserveJsx) {
-    if (typeof path === "string" && /^\.\.?\//.test(path)) {
-        return path.replace(/\.(tsx)$|((?:\.d)?)((?:\.[^./]+?)?)\.([cm]?)ts$/i, function (m, tsx, d, ext, cm) {
-            return tsx ? preserveJsx ? ".jsx" : ".js" : d && (!ext || !cm) ? m : (d + ext + "." + cm.toLowerCase() + "js");
-        });
+var __rewriteRelativeImportExtension =
+  (this && this.__rewriteRelativeImportExtension) ||
+  function (path, preserveJsx) {
+    if (typeof path === 'string' && /^\.\.?\//.test(path)) {
+      return path.replace(
+        /\.(tsx)$|((?:\.d)?)((?:\.[^./]+?)?)\.([cm]?)ts$/i,
+        function (m, tsx, d, ext, cm) {
+          return tsx
+            ? preserveJsx
+              ? '.jsx'
+              : '.js'
+            : d && (!ext || !cm)
+              ? m
+              : d + ext + '.' + cm.toLowerCase() + 'js'
+        },
+      )
     }
-    return path;
-};
-import path from 'node:path';
-import { pathToFileURL, fileURLToPath } from 'node:url';
-import fs from '@magic/fs';
-import is from '@magic/types';
-import { initDOM } from '../../lib/dom/index.js';
-import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js';
-import { loadTestDefines, parseDefineValue } from './loadTestDefines.js';
-import { resolveSvelteOnlyExports, writeTempFile, } from '../../lib/svelte/compile/resolveSvelteOnlyExports.js';
+    return path
+  }
+import path from 'node:path'
+import { pathToFileURL, fileURLToPath } from 'node:url'
+import fs from '@magic/fs'
+import is from '@magic/types'
+import { initDOM } from '../../lib/dom/index.js'
+import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js'
+import { loadTestDefines, parseDefineValue } from './loadTestDefines.js'
+import {
+  resolveSvelteOnlyExports,
+  writeTempFile,
+} from '../../lib/svelte/compile/resolveSvelteOnlyExports.js'
 /**
  * Type guard for ImportResult.
  */
-const isImportResult = (obj) => {
-    return (is.objectNative(obj) &&
-        'type' in obj &&
-        (obj.type === 'file' || obj.type === 'directory' || obj.type === 'error' || obj.type === 'skip'));
-};
-const CONCURRENCY_LIMIT = 50;
-const importFile = async (filePath) => {
-    try {
-        const isUrl = filePath.startsWith('file://');
-        const fsPath = isUrl ? fileURLToPath(filePath) : filePath;
-        const code = await fs.readFile(fsPath, 'utf-8');
-        const transformedCode = await resolveSvelteOnlyExports(code, path.dirname(fsPath));
-        let importPath;
-        if (transformedCode !== code) {
-            const tempFile = await writeTempFile(filePath, transformedCode);
-            importPath = pathToFileURL(tempFile).href;
-        }
-        else {
-            importPath = isUrl ? filePath : pathToFileURL(fsPath).href;
-        }
-        // Ensure DOM globals exist in this process before importing the test
-        // file: files that only type-import @magic/test never trigger the index
-        // module's initDOM() call, and DOM-dependent source modules (e.g. svelte)
-        // would otherwise fail with "window is not defined". initGlobals is
-        // idempotent.
-        initDOM();
-        const mod = await import(__rewriteRelativeImportExtension(importPath));
-        // catch es6 export default
-        if (is.module(mod)) {
-            const m = { ...mod };
-            if (is.ownProp(m, 'default')) {
-                return m.default;
-            }
-            else {
-                return m;
-            }
-        }
-        else {
-            return mod;
-        }
+const isImportResult = obj => {
+  return (
+    is.objectNative(obj) &&
+    'type' in obj &&
+    (obj.type === 'file' || obj.type === 'directory' || obj.type === 'error' || obj.type === 'skip')
+  )
+}
+const CONCURRENCY_LIMIT = 50
+const importFile = async filePath => {
+  try {
+    const isUrl = filePath.startsWith('file://')
+    const fsPath = isUrl ? fileURLToPath(filePath) : filePath
+    const code = await fs.readFile(fsPath, 'utf-8')
+    const transformedCode = await resolveSvelteOnlyExports(code, path.dirname(fsPath))
+    let importPath
+    if (transformedCode !== code) {
+      const tempFile = await writeTempFile(filePath, transformedCode)
+      importPath = pathToFileURL(tempFile).href
+    } else {
+      importPath = isUrl ? filePath : pathToFileURL(fsPath).href
     }
-    catch (err) {
-        // Node caches failed ESM evaluations: when several test files import the
-        // same broken module they all reject with the SAME Error instance.
-        // Wrap it in a fresh error instead of mutating, so each file's message
-        // stays independent (mutating the shared instance would prepend
-        // "Failed to import test file: X" once per file and pollute every
-        // reported error).
-        const original = is.error(err) ? err : new Error(String(err));
-        const error = new Error(`Failed to import test file: ${filePath}\n${original.message}`);
-        if (is.ownProp(original, 'code')) {
-            ;
-            error.code = original.code;
-        }
-        error.cause = original;
-        if (process.env.MAGIC_TEST_VERBOSE_ERRORS) {
-            console.error('Import error details for', filePath, err);
-        }
-        throw error;
+    // Ensure DOM globals exist in this process before importing the test
+    // file: files that only type-import @magic/test never trigger the index
+    // module's initDOM() call, and DOM-dependent source modules (e.g. svelte)
+    // would otherwise fail with "window is not defined". initGlobals is
+    // idempotent.
+    initDOM()
+    const mod = await import(__rewriteRelativeImportExtension(importPath))
+    // catch es6 export default
+    if (is.module(mod)) {
+      const m = { ...mod }
+      if (is.ownProp(m, 'default')) {
+        return m.default
+      } else {
+        return m
+      }
+    } else {
+      return mod
     }
-};
-const visitedDirs = new Set();
+  } catch (err) {
+    // Node caches failed ESM evaluations: when several test files import the
+    // same broken module they all reject with the SAME Error instance.
+    // Wrap it in a fresh error instead of mutating, so each file's message
+    // stays independent (mutating the shared instance would prepend
+    // "Failed to import test file: X" once per file and pollute every
+    // reported error).
+    const original = is.error(err) ? err : new Error(String(err))
+    const error = new Error(`Failed to import test file: ${filePath}\n${original.message}`)
+    if (is.ownProp(original, 'code')) {
+      error.code = original.code
+    }
+    error.cause = original
+    if (process.env.MAGIC_TEST_VERBOSE_ERRORS) {
+      console.error('Import error details for', filePath, err)
+    }
+    throw error
+  }
+}
+const visitedDirs = new Set()
 /**
  * Reset visitedDirs between test runs to prevent stale symlink cycle detection
  */
 export const resetVisitedDirs = () => {
-    visitedDirs.clear();
-};
+  visitedDirs.clear()
+}
 const readRecursiveImpl = async (dir = '', onProgress) => {
-    const testDir = path.join(process.cwd(), 'test');
-    const targetDir = path.join(testDir, dir);
-    let tests = {};
-    const errors = [];
-    // first resolve test/{dir/?}index.js or index.ts
-    // if they exist, we will simply import it as is and do no recursion.
-    let indexFilePath = path.join(targetDir, 'index.js');
-    const indexFileTsPath = path.join(targetDir, 'index.ts');
-    if (await fs.exists(indexFileTsPath)) {
-        indexFilePath = indexFileTsPath;
+  const testDir = path.join(process.cwd(), 'test')
+  const targetDir = path.join(testDir, dir)
+  let tests = {}
+  const errors = []
+  // first resolve test/{dir/?}index.js or index.ts
+  // if they exist, we will simply import it as is and do no recursion.
+  let indexFilePath = path.join(targetDir, 'index.js')
+  const indexFileTsPath = path.join(targetDir, 'index.ts')
+  if (await fs.exists(indexFileTsPath)) {
+    indexFilePath = indexFileTsPath
+  }
+  const { getViteDefine } = await import('../../lib/svelte/viteConfig/index.js')
+  const testDefines = await loadTestDefines(process.cwd())
+  let processedCount = 0
+  if (await fs.exists(indexFilePath)) {
+    // if index.js exists, we will simply import it as is and do no recursion.
+    const fileP = indexFilePath.replace(testDir, '')
+    const importPath = pathToFileURL(indexFilePath).href
+    try {
+      const defines = {
+        ...(await getViteDefine(indexFilePath)),
+        ...testDefines,
+      }
+      const g = globalThis
+      for (const [key, value] of Object.entries(defines)) {
+        g[key] = typeof value === 'string' ? parseDefineValue(value) : value
+      }
+      const imported = await importFile(importPath)
+      tests[fileP] = imported
+      processedCount = 1
+      // Report progress
+      if (onProgress) {
+        onProgress(1)
+      }
+    } catch (err) {
+      const error = is.error(err) ? err : new Error(String(err))
+      errors.push({ file: fileP, error })
     }
-    const { getViteDefine } = await import('../../lib/svelte/viteConfig/index.js');
-    const testDefines = await loadTestDefines(process.cwd());
-    let processedCount = 0;
-    if (await fs.exists(indexFilePath)) {
-        // if index.js exists, we will simply import it as is and do no recursion.
-        const fileP = indexFilePath.replace(testDir, '');
-        const importPath = pathToFileURL(indexFilePath).href;
+  } else {
+    // if dir/index.js does not exist, require all files and subdirectories of files
+    const files = await fs.readdir(targetDir)
+    const filteredFiles = files.filter(f => !f.startsWith('.'))
+    // Use allSettled with concurrency limit to prevent file descriptor exhaustion
+    const results = await limitedPromiseAllSettled(filteredFiles, CONCURRENCY_LIMIT, async file => {
+      const filePath = path.join(targetDir, file)
+      // Check for symlink cycles using realpath
+      let realPath
+      try {
+        realPath = await fs.realpath(filePath)
+      } catch {
+        // If realpath fails, skip this file/directory
+        return { type: 'skip', file }
+      }
+      // Check if we've already visited this real path (circular symlink protection)
+      if (visitedDirs.has(realPath)) {
+        return { type: 'skip', file }
+      }
+      const stat = await fs.stat(filePath)
+      if (stat.isDirectory()) {
+        visitedDirs.add(realPath)
         try {
-            const defines = {
-                ...(await getViteDefine(indexFilePath)),
-                ...testDefines,
-            };
-            const g = globalThis;
-            for (const [key, value] of Object.entries(defines)) {
-                g[key] = typeof value === 'string' ? parseDefineValue(value) : value;
-            }
-            const imported = await importFile(importPath);
-            tests[fileP] = imported;
-            processedCount = 1;
-            // Report progress
-            if (onProgress) {
-                onProgress(1);
-            }
+          // Recursively get tests and file count from child directory
+          const deepResult = await readRecursiveImpl(dir ? path.join(dir, file) : file)
+          processedCount += deepResult.fileCount
+          if (onProgress) {
+            onProgress(processedCount)
+          }
+          return { type: 'directory', file, tests: deepResult.tests }
+        } catch (err) {
+          const relPath = path.join(dir || '', file)
+          const error = is.error(err) ? err : new Error(String(err))
+          return { type: 'error', file: relPath, error }
         }
-        catch (err) {
-            const error = is.error(err) ? err : new Error(String(err));
-            errors.push({ file: fileP, error });
+      } else if (stat.isFile()) {
+        if (!file.endsWith('js') && !file.endsWith('mjs') && !file.endsWith('ts')) {
+          return { type: 'skip', file }
         }
+        if (file.endsWith('.d.ts')) {
+          return { type: 'skip', file }
+        }
+        const fileP = filePath.replace(testDir, '')
+        try {
+          const defines = {
+            ...(await getViteDefine(filePath)),
+            ...testDefines,
+          }
+          const g = globalThis
+          for (const [key, value] of Object.entries(defines)) {
+            g[key] = typeof value === 'string' ? parseDefineValue(value) : value
+          }
+          const test = await importFile(filePath)
+          processedCount++
+          if (onProgress) {
+            onProgress(processedCount)
+          }
+          return { type: 'file', file: fileP, test }
+        } catch (err) {
+          const error = is.error(err) ? err : new Error(String(err))
+          return { type: 'error', file: fileP, error }
+        }
+      }
+      return { type: 'skip', file }
+    })
+    // Process results
+    for (const result of results) {
+      if (!result) {
+        continue
+      }
+      if (result.status === 'fulfilled') {
+        const value = result.value
+        if (!isImportResult(value)) {
+          // Unexpected result type, treat as skip
+          continue
+        }
+        if (value.type === 'file' && value.test !== undefined && value.file) {
+          tests[value.file] = value.test
+        } else if (value.type === 'directory' && value.tests !== undefined) {
+          tests = {
+            ...tests,
+            ...value.tests,
+          }
+        } else if (value.type === 'error') {
+          // value.error is defined for error type
+          const err = value.error || new Error('Unknown import error')
+          errors.push({ file: value.file || 'unknown', error: err })
+        }
+        // skip type is ignored
+      } else {
+        // This shouldn't happen as we catch all rejections, but just in case
+        errors.push({ file: 'unknown', error: new Error(String(result.reason)) })
+      }
     }
-    else {
-        // if dir/index.js does not exist, require all files and subdirectories of files
-        const files = await fs.readdir(targetDir);
-        const filteredFiles = files.filter(f => !f.startsWith('.'));
-        // Use allSettled with concurrency limit to prevent file descriptor exhaustion
-        const results = await limitedPromiseAllSettled(filteredFiles, CONCURRENCY_LIMIT, async (file) => {
-            const filePath = path.join(targetDir, file);
-            // Check for symlink cycles using realpath
-            let realPath;
-            try {
-                realPath = await fs.realpath(filePath);
-            }
-            catch {
-                // If realpath fails, skip this file/directory
-                return { type: 'skip', file };
-            }
-            // Check if we've already visited this real path (circular symlink protection)
-            if (visitedDirs.has(realPath)) {
-                return { type: 'skip', file };
-            }
-            const stat = await fs.stat(filePath);
-            if (stat.isDirectory()) {
-                visitedDirs.add(realPath);
-                try {
-                    // Recursively get tests and file count from child directory
-                    const deepResult = await readRecursiveImpl(dir ? path.join(dir, file) : file);
-                    processedCount += deepResult.fileCount;
-                    if (onProgress) {
-                        onProgress(processedCount);
-                    }
-                    return { type: 'directory', file, tests: deepResult.tests };
-                }
-                catch (err) {
-                    const relPath = path.join(dir || '', file);
-                    const error = is.error(err) ? err : new Error(String(err));
-                    return { type: 'error', file: relPath, error };
-                }
-            }
-            else if (stat.isFile()) {
-                if (!file.endsWith('js') && !file.endsWith('mjs') && !file.endsWith('ts')) {
-                    return { type: 'skip', file };
-                }
-                if (file.endsWith('.d.ts')) {
-                    return { type: 'skip', file };
-                }
-                const fileP = filePath.replace(testDir, '');
-                try {
-                    const defines = {
-                        ...(await getViteDefine(filePath)),
-                        ...testDefines,
-                    };
-                    const g = globalThis;
-                    for (const [key, value] of Object.entries(defines)) {
-                        g[key] = typeof value === 'string' ? parseDefineValue(value) : value;
-                    }
-                    const test = await importFile(filePath);
-                    processedCount++;
-                    if (onProgress) {
-                        onProgress(processedCount);
-                    }
-                    return { type: 'file', file: fileP, test };
-                }
-                catch (err) {
-                    const error = is.error(err) ? err : new Error(String(err));
-                    return { type: 'error', file: fileP, error };
-                }
-            }
-            return { type: 'skip', file };
-        });
-        // Process results
-        for (const result of results) {
-            if (!result) {
-                continue;
-            }
-            if (result.status === 'fulfilled') {
-                const value = result.value;
-                if (!isImportResult(value)) {
-                    // Unexpected result type, treat as skip
-                    continue;
-                }
-                if (value.type === 'file' && value.test !== undefined && value.file) {
-                    tests[value.file] = value.test;
-                }
-                else if (value.type === 'directory' && value.tests !== undefined) {
-                    tests = {
-                        ...tests,
-                        ...value.tests,
-                    };
-                }
-                else if (value.type === 'error') {
-                    // value.error is defined for error type
-                    const err = value.error || new Error('Unknown import error');
-                    errors.push({ file: value.file || 'unknown', error: err });
-                }
-                // skip type is ignored
-            }
-            else {
-                // This shouldn't happen as we catch all rejections, but just in case
-                errors.push({ file: 'unknown', error: new Error(String(result.reason)) });
-            }
-        }
+  }
+  if (errors.length > 0) {
+    // Log errors but don't throw - continue with tests that loaded successfully
+    const errorMessages = errors
+      .map(e => {
+        const code = e.error.code ? ` [${e.error.code}]` : ''
+        return `${e.file}${code}: ${e.error.message}`
+      })
+      .join('\n')
+    console.error(`${errors.length} test file(s) failed to load (continuing): ${errorMessages}`)
+    if (process.env.MAGIC_TEST_VERBOSE_ERRORS) {
+      for (const e of errors) {
+        console.error('--- error details for', e.file, '---')
+        console.error(e.error)
+      }
     }
-    if (errors.length > 0) {
-        // Log errors but don't throw - continue with tests that loaded successfully
-        const errorMessages = errors
-            .map(e => {
-            const code = e.error.code
-                ? ` [${e.error.code}]`
-                : '';
-            return `${e.file}${code}: ${e.error.message}`;
-        })
-            .join('\n');
-        console.error(`${errors.length} test file(s) failed to load (continuing): ${errorMessages}`);
-        if (process.env.MAGIC_TEST_VERBOSE_ERRORS) {
-            for (const e of errors) {
-                console.error('--- error details for', e.file, '---');
-                console.error(e.error);
-            }
-        }
-    }
-    return { tests, fileCount: processedCount };
-};
+  }
+  return { tests, fileCount: processedCount }
+}
 export const readRecursive = async (dir = '', onProgress) => {
-    const result = await readRecursiveImpl(dir, onProgress);
-    return result.tests;
-};
+  const result = await readRecursiveImpl(dir, onProgress)
+  return result.tests
+}
 //# sourceMappingURL=readRecursive.js.map

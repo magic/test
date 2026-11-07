@@ -8,7 +8,7 @@
  * Falls back to the getCwd() package.json if no package.json is found up the tree
  * (or the input is not an absolute path).
  */
-export declare const findNearestPackageJson: (fromPath: string) => Promise<string>;
+export declare const findNearestPackageJson: (fromPath: string) => Promise<string>
 /**
  * Resolve a "#-prefixed" import-map specifier against a package.json
  * "imports" mapping (e.g. "#lib/*": "./src/lib/*",
@@ -24,4 +24,7 @@ export declare const findNearestPackageJson: (fromPath: string) => Promise<strin
  * are applied. Returns the absolute file path, or null if no mapping matches
  * or no candidate file exists.
  */
-export declare const resolveImportMapSpecifier: (specifier: string, pkgJsonPath: string) => Promise<string | null>;
+export declare const resolveImportMapSpecifier: (
+  specifier: string,
+  pkgJsonPath: string,
+) => Promise<string | null>

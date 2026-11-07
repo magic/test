@@ -18,16 +18,19 @@
  * MAGIC_TEST_PREWARM=0 disables the prewarm.
  * MAGIC_TEST_PREWARM_WORKERS sets the prewarm thread count (default 4).
  */
-import path from 'node:path';
-import { Worker } from 'node:worker_threads';
-import { pathToFileURL } from 'node:url';
-import log from '@magic/log';
-import { collectComponentPaths, resolveComponentPath, } from '../../lib/svelte/compile/warmComponentCompiles.js';
-import { loadManifest, getCachedCompile } from '../../lib/caches/persistentCache.js';
-import { traceStart, traceEnd } from '../../lib/trace/timing.js';
-const DEFAULT_PREWARM_WORKERS = 4;
-const DEFAULT_PREWARM_TIMEOUT_MS = 120_000;
-const WARM_PROBE_SAMPLE = 5;
+import path from 'node:path'
+import { Worker } from 'node:worker_threads'
+import { pathToFileURL } from 'node:url'
+import log from '@magic/log'
+import {
+  collectComponentPaths,
+  resolveComponentPath,
+} from '../../lib/svelte/compile/warmComponentCompiles.js'
+import { loadManifest, getCachedCompile } from '../../lib/caches/persistentCache.js'
+import { traceStart, traceEnd } from '../../lib/trace/timing.js'
+const DEFAULT_PREWARM_WORKERS = 4
+const DEFAULT_PREWARM_TIMEOUT_MS = 120_000
+const WARM_PROBE_SAMPLE = 5
 /**
  * Skip the prewarm when the package graph is already warm: a fresh/cold
  * cache is the case the prewarm protects against; on a warm cache it is pure
@@ -36,93 +39,103 @@ const WARM_PROBE_SAMPLE = 5;
  * the graph needs (re)building.
  */
 const graphLooksWarm = async () => {
-    const m = await loadManifest();
-    if (!m) {
-        return false;
+  const m = await loadManifest()
+  if (!m) {
+    return false
+  }
+  const entries = Object.keys(m.sources).filter(k =>
+    k.includes(`${path.sep}node_modules${path.sep}`),
+  )
+  if (entries.length === 0) {
+    return false
+  }
+  for (const sourcePath of entries.slice(0, WARM_PROBE_SAMPLE)) {
+    try {
+      if (await getCachedCompile(sourcePath)) {
+        return true
+      }
+    } catch {
+      // source deleted since recording → stale entry, keep probing
     }
-    const entries = Object.keys(m.sources).filter(k => k.includes(`${path.sep}node_modules${path.sep}`));
-    if (entries.length === 0) {
-        return false;
-    }
-    for (const sourcePath of entries.slice(0, WARM_PROBE_SAMPLE)) {
-        try {
-            if (await getCachedCompile(sourcePath)) {
-                return true;
-            }
-        }
-        catch {
-            // source deleted since recording → stale entry, keep probing
-        }
-    }
-    return false;
-};
+  }
+  return false
+}
 const chunk = (arr, size) => {
-    const out = [];
-    for (let i = 0; i < arr.length; i += size) {
-        out.push(arr.slice(i, i + size));
-    }
-    return out;
-};
+  const out = []
+  for (let i = 0; i < arr.length; i += size) {
+    out.push(arr.slice(i, i + size))
+  }
+  return out
+}
 const runPrewarmWorker = (urls, timeoutMs) => {
-    return new Promise(resolve => {
-        let settled = false;
-        const finish = (results) => {
-            if (settled) {
-                return;
-            }
-            settled = true;
-            clearTimeout(timer);
-            void worker.terminate();
-            resolve(results);
-        };
-        const failed = (error) => urls.map(url => ({ url, ok: false, error }));
-        const worker = new Worker(new URL('./prewarmWorker.js', import.meta.url), {
-            workerData: { urls },
-        });
-        const timer = setTimeout(() => finish(failed('prewarm timeout')), timeoutMs);
-        worker.on('message', message => finish(message));
-        worker.on('error', error => finish(failed(String(error))));
-        worker.on('exit', () => finish([]));
-    });
-};
-export const prewarmComponentGraphs = async (tests) => {
-    if (process.env.MAGIC_TEST_PREWARM === '0') {
-        return;
+  return new Promise(resolve => {
+    let settled = false
+    const finish = results => {
+      if (settled) {
+        return
+      }
+      settled = true
+      clearTimeout(timer)
+      void worker.terminate()
+      resolve(results)
     }
-    const components = new Set();
-    collectComponentPaths(tests, components, new WeakSet());
-    if (components.size === 0) {
-        return;
+    const failed = error => urls.map(url => ({ url, ok: false, error }))
+    const worker = new Worker(new URL('./prewarmWorker.js', import.meta.url), {
+      workerData: { urls },
+    })
+    const timer = setTimeout(() => finish(failed('prewarm timeout')), timeoutMs)
+    worker.on('message', message => finish(message))
+    worker.on('error', error => finish(failed(String(error))))
+    worker.on('exit', () => finish([]))
+  })
+}
+export const prewarmComponentGraphs = async tests => {
+  if (process.env.MAGIC_TEST_PREWARM === '0') {
+    return
+  }
+  const components = new Set()
+  collectComponentPaths(tests, components, new WeakSet())
+  if (components.size === 0) {
+    return
+  }
+  // Warm cache → nothing to build; the test workers reuse the disk cache
+  // directly (the probe is a handful of hash checks, not a graph walk).
+  if (await graphLooksWarm()) {
+    return
+  }
+  const urls = []
+  for (const component of components) {
+    const abs = await resolveComponentPath(component)
+    if (abs) {
+      urls.push(pathToFileURL(abs).href)
     }
-    // Warm cache → nothing to build; the test workers reuse the disk cache
-    // directly (the probe is a handful of hash checks, not a graph walk).
-    if (await graphLooksWarm()) {
-        return;
+  }
+  if (urls.length === 0) {
+    return
+  }
+  const workerCount = Math.max(
+    1,
+    Math.min(
+      DEFAULT_PREWARM_WORKERS,
+      urls.length,
+      Number(process.env.MAGIC_TEST_PREWARM_WORKERS) || DEFAULT_PREWARM_WORKERS,
+    ),
+  )
+  const timeoutMs = Number(process.env.MAGIC_TEST_PREWARM_TIMEOUT_MS) || DEFAULT_PREWARM_TIMEOUT_MS
+  const id = traceStart('prewarmComponents')
+  const slices = chunk(urls, Math.ceil(urls.length / workerCount))
+  const results = (
+    await Promise.all(slices.map(slice => runPrewarmWorker(slice, timeoutMs)))
+  ).flat()
+  const warmed = results.filter(r => r.ok).length
+  const failed = results.length - warmed
+  if (failed > 0 && process.env.MAGIC_TEST_VERBOSE_ERRORS) {
+    for (const r of results) {
+      if (!r.ok) {
+        log.error('[prewarm] failed to import', r.url, r.error)
+      }
     }
-    const urls = [];
-    for (const component of components) {
-        const abs = await resolveComponentPath(component);
-        if (abs) {
-            urls.push(pathToFileURL(abs).href);
-        }
-    }
-    if (urls.length === 0) {
-        return;
-    }
-    const workerCount = Math.max(1, Math.min(DEFAULT_PREWARM_WORKERS, urls.length, Number(process.env.MAGIC_TEST_PREWARM_WORKERS) || DEFAULT_PREWARM_WORKERS));
-    const timeoutMs = Number(process.env.MAGIC_TEST_PREWARM_TIMEOUT_MS) || DEFAULT_PREWARM_TIMEOUT_MS;
-    const id = traceStart('prewarmComponents');
-    const slices = chunk(urls, Math.ceil(urls.length / workerCount));
-    const results = (await Promise.all(slices.map(slice => runPrewarmWorker(slice, timeoutMs)))).flat();
-    const warmed = results.filter(r => r.ok).length;
-    const failed = results.length - warmed;
-    if (failed > 0 && process.env.MAGIC_TEST_VERBOSE_ERRORS) {
-        for (const r of results) {
-            if (!r.ok) {
-                log.error('[prewarm] failed to import', r.url, r.error);
-            }
-        }
-    }
-    traceEnd(id, `${warmed} warmed, ${failed} failed`);
-};
+  }
+  traceEnd(id, `${warmed} warmed, ${failed} failed`)
+}
 //# sourceMappingURL=prewarmComponents.js.map

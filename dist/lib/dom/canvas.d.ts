@@ -1,1 +1,1 @@
-export declare const createCanvasPolyfill: () => void;
+export declare const createCanvasPolyfill: () => void

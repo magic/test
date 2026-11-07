@@ -1,1 +1,1 @@
-export declare const VITE_CONFIG_NAMES: string[];
+export declare const VITE_CONFIG_NAMES: string[]

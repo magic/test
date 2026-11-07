@@ -1,1 +1,1 @@
-export declare const getTestKey: (pkg?: string, parent?: string, name?: string) => string;
+export declare const getTestKey: (pkg?: string, parent?: string, name?: string) => string

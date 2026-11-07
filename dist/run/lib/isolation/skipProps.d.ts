@@ -1,1 +1,1 @@
-export declare const skipProps: Set<string>;
+export declare const skipProps: Set<string>

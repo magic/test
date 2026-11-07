@@ -1,1 +1,1 @@
-export declare const acquireLock: (filePath: string) => Promise<() => void>;
+export declare const acquireLock: (filePath: string) => Promise<() => void>

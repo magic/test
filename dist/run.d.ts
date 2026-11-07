@@ -1,38 +1,38 @@
-import type { TestSuites } from './types.js';
+import type { TestSuites } from './types.js'
 /**
  * @typedef {Record<string, unknown>} TestSuitesRecord
  */
 /** @type {boolean} */
-export declare let aborted: boolean;
+export declare let aborted: boolean
 /**
  * Abort the current test run and clean up temp directories
  */
-export declare const abort: () => Promise<void>;
+export declare const abort: () => Promise<void>
 /**
  * Reset abort flag
  */
-export declare const resetAbort: () => void;
+export declare const resetAbort: () => void
 type RunOptions = {
-    shards?: number;
-    shardId?: number;
-    workers?: number;
-    clearCache?: boolean;
-    globalStartTime?: [number, number];
-};
+  shards?: number
+  shardId?: number
+  workers?: number
+  clearCache?: boolean
+  globalStartTime?: [number, number]
+}
 /**
  * Outcome of a completed test run.
  */
 export type RunResult = {
-    /** true if any test failed */
-    failed: boolean;
-};
+  /** true if any test failed */
+  failed: boolean
+}
 /**
  * FNV-1a hash function for sharding
  * @param {string} testPath
  * @param {number} totalShards
  * @returns {number}
  */
-export declare const getShardForTest: (testPath: string, totalShards: number) => number;
+export declare const getShardForTest: (testPath: string, totalShards: number) => number
 /**
  * @typedef {Object} RunOptions
  * @property {number} [shards] - Number of shards to split tests into
@@ -44,5 +44,8 @@ export declare const getShardForTest: (testPath: string, totalShards: number) =>
  * @param {RunOptions} [options] - Run options including sharding
  * @returns {Promise<RunResult | Error | void>} - Run result, an error if no tests were found, or void if aborted
  */
-export declare const run: (tests: TestSuites | (() => TestSuites), options?: RunOptions) => Promise<RunResult | Error | void>;
-export {};
+export declare const run: (
+  tests: TestSuites | (() => TestSuites),
+  options?: RunOptions,
+) => Promise<RunResult | Error | void>
+export {}
