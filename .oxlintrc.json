@@ -2,12 +2,12 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript"],
   "categories": {
-    "correctness": "off"
+    "correctness": "error"
   },
   "env": {
     "builtin": true
   },
-  "ignorePatterns": ["node_modules", "dist", "coverage", "*.config.js", "docs", "docsrc"],
+  "ignorePatterns": ["node_modules", "dist", "coverage", "*.config.js", "docs"],
   "rules": {
     "constructor-super": "error",
     "for-direction": "error",

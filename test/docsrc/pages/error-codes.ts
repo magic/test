@@ -1,15 +1,13 @@
 import is from '@magic/types'
 import type { Test } from '#src/types.js'
 
-import { View } from '#docsrc/pages/error-codes.mjs'
+import { View } from '#docsrc/pages/error-codes.js'
 
 export default [
   {
     name: 'View is function',
-    fn: () => {
-      return is.function(View)
-    },
-    expect: true,
+    fn: () => View,
+    expect: is.function,
   },
   {
     name: 'View returns array',
@@ -18,5 +16,15 @@ export default [
       return is.arr(result) && result.length > 0
     },
     expect: true,
+  },
+   {
+    name: 'View returns array',
+    fn: View,
+    expect: is.arr,
+  },
+   {
+    name: 'View returns non-empty array',
+    fn: View,
+    expect: is.not.empty,
   },
 ] satisfies Test[]

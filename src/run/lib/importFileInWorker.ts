@@ -2,21 +2,7 @@ import is from '@magic/types'
 
 import { initDOM } from '../../lib/dom/index.js'
 import { getViteDefine } from '../../lib/svelte/viteConfig/index.js'
-import { loadTestDefines } from '../../bin/lib/loadTestDefines.js'
-
-/**
- * Vite define values may be pre-stringified JSON (e.g. '"my url"') or raw
- * literals (e.g. a bare 'http://localhost:9000'). Parse JSON when possible,
- * otherwise keep the raw string so a non-JSON define does not crash the
- * whole import.
- */
-const parseDefineValue = (value: string): unknown => {
-  try {
-    return JSON.parse(value)
-  } catch {
-    return value
-  }
-}
+import { loadTestDefines, parseDefineValue } from '../../bin/lib/loadTestDefines.js'
 
 export const importFileInWorker = async (filePath: string): Promise<unknown> => {
   try {
@@ -25,9 +11,9 @@ export const importFileInWorker = async (filePath: string): Promise<unknown> => 
       ...(await getViteDefine(filePath)),
       ...(await loadTestDefines(rootDir)),
     }
+    const g = globalThis as Record<string, unknown>
     for (const [key, value] of Object.entries(defines)) {
-      // @ts-expect-error - dynamic globalThis property assignment
-      globalThis[key] = typeof value === 'string' ? parseDefineValue(value) : value
+      g[key] = typeof value === 'string' ? parseDefineValue(value) : value
     }
 
     // Ensure DOM globals exist in this worker before importing the test

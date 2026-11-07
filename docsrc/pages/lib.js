@@ -437,7 +437,7 @@ mock.log.timeEnd('operation')   // Logs timing end if not NODE_ENV=production
 
   p([
     'Full documentation for every has.* check, including has.not, lives on the ',
-    Link({ to: '/has/' }, 'has page'),
+    Link({ to: '/lib/has/' }, 'has page'),
     '.',
   ]),
 

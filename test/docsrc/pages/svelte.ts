@@ -1,6 +1,6 @@
 import is from '@magic/types'
 import type { Test } from '#src/types.js'
-import { View } from '#docsrc/pages/svelte.mjs'
+import { View } from '#docsrc/pages/svelte.js'
 
 export default [
   {

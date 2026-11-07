@@ -1,5 +1,3 @@
-// export { getWorkerPool } from './getWorkerPool.js'
-// export { isolation } from './isolation.js'
 export { testNeedsIsolation } from './testNeedsIsolation.js'
 export { wrapTest } from './wrapTest.js'
 export { runIsolatedArray, runSequentialHooked, runParallelArray } from './arrayStrategies.js'

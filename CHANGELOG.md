@@ -1,5 +1,12 @@
 ### Changelog
 
+#### 0.3.52
+
+- feat: default worker reuse on — a file's isolated tests now run sequentially in one shared worker by default (faster, ~22 s → ~15 s wall time on a 159-test SvelteKit suite). Set `MAGIC_TEST_WORKER_REUSE=0` to force one fresh worker per test (full per-test isolation).
+- fix: remove run-tests.sh
+- test: silence console.log for info message test
+- fix: replace canvas with @napi-rs/canvas
+
 #### 0.3.51
 
 - feat: changed usage of `--production` / `-p` flag — reads prod mode from CLI arg instead of `NODE_ENV`, sets `MAGIC_TEST_ENV`; SvelteKit dev/prod sentinels read `MAGIC_TEST_ENV` instead of `NODE_ENV`

@@ -4,21 +4,45 @@ export const View = () => [
   p([
     'Testing Svelte components with @magic/test has different',
     ' capabilities depending on the Svelte version.',
+    'These limitations are inherited from svelte.',
   ]),
+
+  p(
+    'The svelte 4 functionality is not tested, we moved all our libraries to svelte 5, there be dragons.',
+  ),
 
   h2({}, 'Feature Comparison'),
 
-  Pre(`
-| Feature | Svelte 4 | Svelte 5 |
-| :------ | :------: | :------: |
-| Component mounting | ✅ | ✅ |
-| Component interaction | ✅ | ✅ |
-| Auto-export ($state/$derived) | ❌ | ✅ |
-| Runes | ❌ | ✅ |
-| compileSvelte | ✅ | ✅ |
-| createStaticPage | ✅ | ✅ |
-| SvelteKit mocks | ✅ | ✅ |
-`),
+  table([
+    tr([th('Feature'), th('Svelte 4'), th('Svelte 5')]),
+    tr([
+      td('Component mounting'),
+      td({ class: 'align-center' }, '✅'),
+      td({ class: 'align-center' }, '✅'),
+    ]),
+    tr([
+      td('Component interaction'),
+      td({ class: 'align-center' }, '✅'),
+      td({ class: 'align-center' }, '✅'),
+    ]),
+    tr([td('Auto-export ($state/$derived)'), td('❌'), td({ class: 'align-center' }, '✅')]),
+    tr([td('Runes'), td('❌'), td({ class: 'align-center' }, '✅')]),
+    tr([
+      td('compileSvelte'),
+      td({ class: 'align-center' }, '✅'),
+      td({ class: 'align-center' }, '✅'),
+    ]),
+    tr([
+      td('createStaticPage'),
+      td({ class: 'align-center' }, '✅'),
+      td({ class: 'align-center' }, '✅'),
+    ]),
+    tr([
+      td('SvelteKit mocks'),
+      td({ class: 'align-center' }, '✅'),
+      td({ class: 'align-center' }, '✅'),
+    ]),
+  ]),
 
   h2({}, 'What Works in Both'),
 
@@ -98,9 +122,5 @@ export default [
 `),
 
   h2({}, 'See Also'),
-
-  ul([
-    li([Link({ to: '/svelte/' }, 'Svelte Testing Guide')]),
-    li([Link({ to: '/svelte-auto-export-faq/' }, 'Svelte Auto-Export FAQ')]),
-  ]),
+  Link({ to: '/svelte/' }, 'Svelte Testing Guide'),
 ]

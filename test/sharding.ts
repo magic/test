@@ -1,15 +1,7 @@
 import is from '@magic/types'
 import { tryCatch } from '#lib/tryCatch.js'
+import { getShardForTest } from '#src/run.js'
 import type { TestCase } from '#src/types.js'
-
-const getShardForTest = (testPath: string, totalShards: number): number => {
-  let hash = 2166136261
-  for (let i = 0; i < testPath.length; i++) {
-    hash ^= testPath.charCodeAt(i)
-    hash = Math.imul(hash, 16777619)
-  }
-  return (hash >>> 0) % totalShards
-}
 
 export default [
   {

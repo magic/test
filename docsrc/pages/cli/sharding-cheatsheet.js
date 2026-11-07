@@ -1,5 +1,5 @@
 export const View = () => [
-  h1({ id: 'cli-sharding-cheatsheet' }, 'CLI Sharding Cheat-Sheet'),
+  h1({ id: 'cli/sharding-cheatsheet' }, 'CLI Sharding Cheat-Sheet'),
 
   p('Run tests in parallel across multiple processes to speed up large test suites:'),
 
@@ -79,7 +79,7 @@ npm run test:shard:0 & npm run test:shard:1 & npm run test:shard:2 & npm run tes
 
   ul([
     li([Link({ to: '/cli/' }, 'CLI & Usage'), ' - full CLI documentation']),
-    li([Link({ to: '/cli-flags-reference/' }, 'CLI Flags Reference'), ' - detailed flag list']),
-    li([Link({ to: '/performance-tips/' }, 'Performance Tips'), ' - optimization techniques']),
+    li([Link({ to: '/cli/flags/' }, 'CLI Flags Reference'), ' - detailed flag list']),
+    li([Link({ to: '/cli/performance-tips/' }, 'Performance Tips'), ' - optimization techniques']),
   ]),
 ]

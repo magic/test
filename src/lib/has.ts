@@ -1,7 +1,14 @@
 import is from '@magic/types'
 
 type Predicate = (value: unknown) => boolean
-type Check = Predicate | unknown
+
+/**
+ * A check is either a predicate (called with the value) or a literal
+ * (compared via is.deep.equal). Typed unknown by design — every value is a
+ * valid literal; isPredicate() does the runtime discrimination.
+ * (Writing `Predicate | unknown` here would collapse to unknown anyway.)
+ */
+type Check = unknown
 
 const isPredicate = (check: Check): check is Predicate => is.function(check)
 

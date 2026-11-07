@@ -8,6 +8,20 @@ const DEFINE_FILE_NAMES = ['.defines.mjs', '.defines.ts', 'defines.mjs', 'define
   f => `test/${f}`,
 )
 
+/**
+ * Vite define values may be pre-stringified JSON (e.g. '"my url"') or raw
+ * literals (e.g. a bare 'http://localhost:9000'). Parse JSON when possible,
+ * otherwise keep the raw string so a non-JSON define does not crash the
+ * whole import.
+ */
+export const parseDefineValue = (value: string): unknown => {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return value
+  }
+}
+
 export const loadTestDefines = async (rootDir: string): Promise<Record<string, unknown>> => {
   for (const relPath of DEFINE_FILE_NAMES) {
     const filePath = path.join(rootDir, relPath)

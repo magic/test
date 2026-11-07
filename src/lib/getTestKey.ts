@@ -1,23 +1,25 @@
 export const getTestKey = (pkg?: string, parent?: string, name?: string): string => {
   let key = ''
-  if (parent && parent !== pkg) {
+  let parentKey = parent
+  let testName = name
+  if (parentKey && parentKey !== pkg) {
     key = `${pkg}`
   }
-  if (parent && parent !== name) {
-    if (!parent.startsWith('/') && parent !== pkg) {
-      parent = `.${parent}`
+  if (parentKey && parentKey !== testName) {
+    if (!parentKey.startsWith('/') && parentKey !== pkg) {
+      parentKey = `.${parentKey}`
     }
-    key += `${parent}`
+    key += `${parentKey}`
   }
 
-  if (name) {
-    if (parent && parent !== name && parent !== pkg && !name.startsWith('/')) {
+  if (testName) {
+    if (parentKey && parentKey !== testName && parentKey !== pkg && !testName.startsWith('/')) {
       key += '#'
-    } else if (!name.startsWith('/')) {
-      name = `/${name}`
+    } else if (!testName.startsWith('/')) {
+      testName = `/${testName}`
     }
 
-    key += name
+    key += testName
   }
   return key
 }

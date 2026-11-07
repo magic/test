@@ -3,6 +3,6 @@ export default {
   PUBLIC: 'docs',
   WEB_ROOT: '/test/',
   URL: 'magic.github.io/test',
-  THEME: 'docs',
+  THEME: 'docs-extended',
   HOIST: ['LightSwitch', 'NoSpy'],
 }

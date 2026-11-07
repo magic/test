@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createRequire } from 'node:module'
 import is from '@magic/types'
 
 // Type-only import: erased at compile time, no runtime native-module load.
-import type { Canvas, Image } from '@napi-rs/canvas/node-canvas.js'
+import type { Canvas } from '@napi-rs/canvas/node-canvas.js'
 
 type CanvasModule = typeof import('@napi-rs/canvas/node-canvas.js')
 
@@ -51,7 +50,7 @@ export const createCanvasPolyfill = (): void => {
     return
   }
 
-  origGetContext = HTMLCanvasElement.prototype.getContext as any
+  origGetContext = HTMLCanvasElement.prototype.getContext
 
   HTMLCanvasElement.prototype.getContext = function (
     this: { width: number; height: number; _nodeCanvas?: Canvas },
@@ -71,49 +70,59 @@ export const createCanvasPolyfill = (): void => {
       this._nodeCanvas = createCanvas(this.width || 300, this.height || 150)
     }
 
-    const ctx: any = this._nodeCanvas.getContext('2d')
+    const ctx = this._nodeCanvas.getContext('2d')
 
-    const originalDrawImage = ctx.drawImage.bind(ctx)
+    // The runtime napi-rs 2d context speaks the node-canvas API (variable
+    // drawImage args, toDataURL on the context) which does not match the DOM
+    // lib types for SKRSContext2D, so the polyfill installs its shims through
+    // this locally-typed view. The original methods are kept for delegation.
+    const shim = ctx as unknown as {
+      drawImage: (image: unknown, ...args: unknown[]) => void
+      toDataURL?: (mimeType?: string, quality?: number) => string
+    }
+    const originalDrawImage = shim.drawImage.bind(shim)
     // napi-rs keeps encoding on the canvas object, not the 2d context
-    const originalToDataURL = (this._nodeCanvas as any).toDataURL?.bind(this._nodeCanvas)
+    const originalToDataURL = this._nodeCanvas.toDataURL.bind(this._nodeCanvas) as (
+      mimeType?: string,
+      quality?: number,
+    ) => string
 
-    const drawImageFn = (
-      img:
-        | Canvas
-        | Image
-        | { _nodeCanvasImage?: unknown; width: number; height: number; src?: string },
-      ...drawArgs: unknown[]
-    ): void => {
-      if (is.instance(img, NativeImage) || ('_nodeCanvasImage' in img && img._nodeCanvasImage)) {
-        const nodeImg = is.instance(img, NativeImage) ? img : img._nodeCanvasImage
-        return originalDrawImage(nodeImg, ...drawArgs)
+    const drawImageFn = (img: unknown, ...drawArgs: unknown[]): void => {
+      if (!is.object(img)) {
+        originalDrawImage(img, ...drawArgs)
+        return
+      }
+      const imgLike = img as { _nodeCanvasImage?: unknown; src?: string }
+
+      if (is.instance(img, NativeImage) || (imgLike && imgLike._nodeCanvasImage)) {
+        const nodeImg = is.instance(img, NativeImage) ? img : imgLike._nodeCanvasImage
+        originalDrawImage(nodeImg, ...drawArgs)
+        return
       }
 
       if (is.instance(img, NativeCanvas)) {
-        return originalDrawImage(img, ...drawArgs)
+        originalDrawImage(img, ...drawArgs)
+        return
       }
 
-      const imgSrc = (img as { src?: string }).src
+      const imgSrc = imgLike?.src
       if (is.string(imgSrc) && imgSrc.startsWith('data:image')) {
         loadImage(imgSrc)
-          .then((loadedImg: unknown) => {
+          .then(loadedImg => {
             originalDrawImage(loadedImg, ...drawArgs)
           })
           .catch(() => {})
         return
       }
 
-      return originalDrawImage(
-        img as Canvas | Image,
-        ...(drawArgs as [Canvas | Image, ...unknown[]]),
-      )
+      originalDrawImage(img, ...drawArgs)
     }
 
     const toDataURLFn = (mimeType = 'image/png', quality?: number): string =>
-      originalToDataURL?.(mimeType, quality) || ''
+      originalToDataURL(mimeType, quality) || ''
 
-    ctx.drawImage = drawImageFn
-    ctx.toDataURL = toDataURLFn
+    shim.drawImage = drawImageFn
+    shim.toDataURL = toDataURLFn
 
     return ctx
   }

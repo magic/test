@@ -177,7 +177,7 @@ Ran 7 tests in 12ms. Passed 7/7 100%
 
   p([
     'For a detailed guide, see the ',
-    Link({ to: '/performance-tips/' }, 'Performance Tips'),
+    Link({ to: '/cli/performance-tips/' }, 'Performance Tips'),
     ' page.',
   ]),
 
@@ -195,7 +195,7 @@ t --shards 4 --shard-id 0
 
   p([
     'For a detailed guide, see the ',
-    Link({ to: '/common-pitfalls/' }, 'Common Pitfalls'),
+    Link({ to: '/cli/common-pitfalls/' }, 'Common Pitfalls'),
     ' page.',
   ]),
 

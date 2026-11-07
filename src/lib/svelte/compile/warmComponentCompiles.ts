@@ -1,5 +1,6 @@
 import path from 'node:path'
 
+import fs from '@magic/fs'
 import log from '@magic/log'
 import is from '@magic/types'
 
@@ -14,9 +15,15 @@ type ComponentRef = { component?: string | [string, Record<string, unknown>?] }
  * Recursively collect component paths referenced by test entries.
  * Handles arrays, nested test objects, and both the `component: 'path'` and
  * `component: ['path', props]` forms. Functions (lazy tests) and other
- * non-data values are skipped.
+ * non-data values are skipped. Cyclic object graphs (config plugins often
+ * self-reference) are broken with the `seen` set; a first visit already
+ * collects everything beneath a node, so skipping later visits loses nothing.
  */
-const collectComponentPaths = (node: unknown, out: Set<string>, seen: WeakSet<object>): void => {
+export const collectComponentPaths = (
+  node: unknown,
+  out: Set<string>,
+  seen: WeakSet<object>,
+): void => {
   if (is.array(node)) {
     if (seen.has(node)) {
       return
@@ -47,14 +54,31 @@ const collectComponentPaths = (node: unknown, out: Set<string>, seen: WeakSet<ob
   }
 }
 
-const resolveComponentPath = async (componentPath: string): Promise<string | null> => {
+/**
+ * Resolve a component reference (import-map specifier, absolute or relative
+ * path) to an existing file, or null. Unresolvable `#` specs are dropped
+ * (the mount surfaces the real error later) instead of falling back to a
+ * literal `#...` path that can never exist.
+ */
+export const resolveComponentPath = async (componentPath: string): Promise<string | null> => {
   try {
+    let abs: string
     if (componentPath.startsWith('#')) {
-      const pkgJsonPath = await findNearestPackageJson(componentPath)
+      // Import-map specifier (e.g. "#lib/Foo.svelte") — resolve against the
+      // project's package.json, same as the component mount path.
+      const pkgJsonPath = await findNearestPackageJson(getCwd())
       const resolved = await resolveImportMapSpecifier(componentPath, pkgJsonPath)
-      return resolved || path.resolve(getCwd(), componentPath)
+      if (!resolved) {
+        return null
+      }
+      abs = resolved
+    } else {
+      abs = path.isAbsolute(componentPath) ? componentPath : path.resolve(getCwd(), componentPath)
     }
-    return path.isAbsolute(componentPath) ? componentPath : path.resolve(getCwd(), componentPath)
+    if (!(await fs.exists(abs))) {
+      return null
+    }
+    return abs
   } catch {
     return null
   }

@@ -195,7 +195,7 @@ const roles = ['admin', 'root', 'user']
   Pre(`
 {
   fn: () => phoneNumber,
-  expect: has.matches(/^\d{3}-\d{4}$/),
+  expect: has.matches(/^d{3}-d{4}$/),
   info: 'phone number is valid format',
 }
 `),

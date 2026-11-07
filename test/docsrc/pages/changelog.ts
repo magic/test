@@ -1,17 +1,17 @@
 import is from '@magic/types'
 import type { Test } from '#src/types.js'
-import { View } from '#docsrc/pages/changelog.mjs'
+import { View } from '#docsrc/pages/changelog.js'
 
 export default [
   {
-    name: 'docsrc/pages/changelog.mjs View is function',
+    name: 'docsrc/pages/changelog.js View is function',
     fn: () => {
-      return is.function(View)
+      return View
     },
-    expect: true,
+    expect: is.function,
   },
   {
-    name: 'docsrc/pages/changelog.mjs View returns array of html strings',
+    name: 'docsrc/pages/changelog.js View returns array of html strings',
     fn: () => {
       const result = View()
       return result.length > 0 && result.every(el => is.string(el))
@@ -19,7 +19,7 @@ export default [
     expect: true,
   },
   {
-    name: 'docsrc/pages/changelog.mjs View has h1 changelog heading',
+    name: 'docsrc/pages/changelog.js View has h1 changelog heading',
     fn: () => {
       const result = View()
       return result.some(el => el.includes('<h1 id="changelog">'))
@@ -27,7 +27,7 @@ export default [
     expect: true,
   },
   {
-    name: 'docsrc/pages/changelog.mjs View has version headings',
+    name: 'docsrc/pages/changelog.js View has version headings',
     fn: () => {
       const result = View()
       const h2s = result.filter(el => el.includes('<h2>'))
@@ -36,7 +36,7 @@ export default [
     expect: true,
   },
   {
-    name: 'docsrc/pages/changelog.mjs View has list items',
+    name: 'docsrc/pages/changelog.js View has list items',
     fn: () => {
       const result = View()
       const lists = result.filter(el => el.includes('<ul>') || el.includes('<li>'))

@@ -1,22 +1,21 @@
 import is from '@magic/types'
 import type { Test } from '#src/types.js'
-import { View } from '#docsrc/pages/cli.mjs'
+import { View } from '#docsrc/pages/cli.js'
 
 export default [
   {
     name: 'View is function',
-    fn: async () => {
-      const { View } = await import('../../../docsrc/pages/cli.mjs')
-      return is.function(View)
-    },
-    expect: true,
+    fn: () => View,
+    expect: is.function,
   },
   {
     name: 'View returns array',
-    fn: async () => {
-      const result = View()
-      return is.arr(result) && result.length > 0
-    },
-    expect: true,
+    fn: View,
+    expect: is.arr,
+  },
+  {
+    name: 'View returns non-empty array',
+    fn: View,
+    expect: is.not.empty,
   },
 ] satisfies Test[]

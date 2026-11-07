@@ -22,14 +22,12 @@ import path from 'node:path'
 import { Worker } from 'node:worker_threads'
 import { pathToFileURL } from 'node:url'
 
-import fs from '@magic/fs'
 import log from '@magic/log'
-import is from '@magic/types'
 
 import {
-  resolveImportMapSpecifier,
-  findNearestPackageJson,
-} from '../../lib/svelte/compile/resolveImportMap.js'
+  collectComponentPaths,
+  resolveComponentPath,
+} from '../../lib/svelte/compile/warmComponentCompiles.js'
 import { loadManifest, getCachedCompile } from '../../lib/caches/persistentCache.js'
 import { traceStart, traceEnd } from '../../lib/trace/timing.js'
 
@@ -71,57 +69,6 @@ interface PrewarmResult {
   url: string
   ok: boolean
   error?: string
-}
-
-/**
- * Collect `component` strings from the test data. Test exports are arbitrary
- * module values (e.g. a linter config), so the object graph can contain
- * cycles — config plugin objects often self-reference. The visited set
- * breaks those cycles (and
- * skips repeated shared subtrees); a first visit already collects everything
- * beneath a node, so skipping later visits loses nothing.
- */
-const collectComponentPaths = (node: unknown, out: Set<string>, seen: WeakSet<object>): void => {
-  if (is.array(node) || is.objectNative(node)) {
-    if (seen.has(node)) {
-      return
-    }
-    seen.add(node)
-  }
-  if (is.array(node)) {
-    for (const item of node) {
-      collectComponentPaths(item, out, seen)
-    }
-    return
-  }
-  if (is.objectNative(node)) {
-    if (is.string(node.component)) {
-      out.add(node.component)
-    }
-    for (const value of Object.values(node)) {
-      collectComponentPaths(value, out, seen)
-    }
-  }
-}
-
-const resolveComponentPath = async (component: string): Promise<string | null> => {
-  let abs: string
-  if (component.startsWith('#')) {
-    // Import-map specifier (e.g. "#lib/Foo.svelte") — resolve against the
-    // project's package.json, same as the component mount path.
-    const pkgJsonPath = await findNearestPackageJson(process.cwd())
-    const resolved = await resolveImportMapSpecifier(component, pkgJsonPath)
-    if (!resolved) {
-      return null
-    }
-    abs = resolved
-  } else {
-    abs = path.isAbsolute(component) ? component : path.resolve(process.cwd(), component)
-  }
-  if (!(await fs.exists(abs))) {
-    return null
-  }
-  return abs
 }
 
 const chunk = <T>(arr: T[], size: number): T[][] => {

@@ -1,12 +1,3 @@
-// Re-export from main types
-// export type {
-//   CssObject,
-//   ResolveAndCompileResult,
-//   CompileCacheEntry,
-//   ImportCacheEntry,
-//   BarrelCacheEntry,
-// } from '../../../types.js'
-
 // ExportInfo is specific to this module
 export interface ExportInfo {
   name: string

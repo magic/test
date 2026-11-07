@@ -3,7 +3,7 @@ export const state = {
 
   description: [
     'Declaratively test your ecmascript module files.',
-    ' No transpiling required.',
+    ' No transpiling required for ecmascript.',
     ' Incredibly fast.',
   ],
 
@@ -45,7 +45,7 @@ export const state = {
         { to: '/lib/#lib-error', text: 'error' },
         { to: '/lib/#lib-mock', text: 'mock' },
         { to: '/lib/#lib-mock-log', text: 'mock.log' },
-        { to: '/has/', text: 'has' },
+        { to: '/lib/has/', text: 'has' },
         { to: '/lib/#lib-version', text: 'version' },
         { to: '/lib/#lib-dom', text: 'DOM Environment' },
       ],
@@ -61,8 +61,7 @@ export const state = {
         { to: '/svelte/#lib-sveltekit-mocks', text: 'SvelteKit Mocks' },
         { to: '/svelte/#lib-create-static-page', text: 'createStaticPage' },
         { to: '/svelte/#lib-compile-svelte', text: 'compileSvelte' },
-        { to: '/svelte-4-vs-5/', text: 'Svelte 4 vs 5' },
-        { to: '/svelte-auto-export-faq/', text: 'Auto-Export FAQ' },
+        { to: '/svelte/4-vs-5/', text: 'Svelte 4 vs 5' },
       ],
     },
     {
@@ -77,10 +76,10 @@ export const state = {
         { to: '/cli/#verbose-output', text: 'Verbose Output' },
         { to: '/cli/#performance-tips', text: 'Performance Tips' },
         { to: '/cli/#common-pitfalls', text: 'Common Pitfalls' },
-        { to: '/cli-flags-reference/', text: 'CLI Flags Reference' },
-        { to: '/cli-sharding-cheatsheet/', text: 'Sharding Cheat-Sheet' },
-        { to: '/performance-tips/', text: 'Performance Tips' },
-        { to: '/common-pitfalls/', text: 'Common Pitfalls' },
+        { to: '/cli/flags/', text: 'CLI Flags Reference' },
+        { to: '/cli/sharding-cheatsheet/', text: 'Sharding Cheat-Sheet' },
+        { to: '/cli/performance-tips/', text: 'Performance Tips' },
+        { to: '/cli/common-pitfalls/', text: 'Common Pitfalls' },
       ],
     },
     {
