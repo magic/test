@@ -17,12 +17,12 @@ export default [
     },
     expect: true,
   },
-   {
+  {
     name: 'View returns array',
     fn: View,
     expect: is.arr,
   },
-   {
+  {
     name: 'View returns non-empty array',
     fn: View,
     expect: is.not.empty,
