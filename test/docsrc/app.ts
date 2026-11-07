@@ -1,7 +1,7 @@
 import is from '@magic/types'
 import type { Test } from '#src/types.js'
 
-import { state } from '#docsrc/app.mjs'
+import { state } from '#docsrc/app.js'
 
 export default [
   {
