@@ -26,7 +26,9 @@ type FnReturnType<F> = F extends () => Promise<infer R>
         : unknown
 
 export type TestExpect<T = unknown> =
-  ((result: T) => boolean | Promise<boolean>) | T | (TestExpect<T> | T)[]
+  | ((result: T) => boolean | Promise<boolean>)
+  | T
+  | (TestExpect<T> | T)[]
 
 /**
  * Info passed to a context factory function: the mount target and processed props.
@@ -38,7 +40,8 @@ export type ContextInfo = { target: HTMLElement; props: Record<string, unknown> 
  * function receiving the mount target and props.
  */
 export type ContextOption =
-  Record<PropertyKey, unknown> | ((info: ContextInfo) => Record<PropertyKey, unknown>)
+  | Record<PropertyKey, unknown>
+  | ((info: ContextInfo) => Record<PropertyKey, unknown>)
 
 export interface Test {
   /** Additional information about the test. */

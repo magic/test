@@ -50,7 +50,8 @@ export const compileBarrel = async (
     }
 
     const pending = pendingPromises.get(`barrel:${filePath}`) as
-      Promise<{ filePath: string; js: string; wrapperAbsPath: string }> | undefined
+      | Promise<{ filePath: string; js: string; wrapperAbsPath: string }>
+      | undefined
     if (pending) {
       ddl('barrel PENDING-HIT ' + path.basename(filePath))
       ddlHold('barrel:' + filePath, path.basename(filePath))

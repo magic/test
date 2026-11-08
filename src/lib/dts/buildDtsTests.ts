@@ -22,7 +22,8 @@ const rel = (root: string, file: string): string =>
   path.relative(root, file).split(path.sep).join('/')
 
 type FileCheck =
-  { file: string; ok: true; result: DtsCheckResult } | { file: string; ok: false; error: unknown }
+  | { file: string; ok: true; result: DtsCheckResult }
+  | { file: string; ok: false; error: unknown }
 
 /**
  * Run the type check for every collected .d.ts file up front (in parallel, one

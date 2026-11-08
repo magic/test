@@ -25,7 +25,9 @@ import { CACHE_DIR, getCwd } from '../../constants.js'
 // Svelte is optional - only required when .svelte files are tested
 let svelteAvailable = false
 let svelteCompilerCache:
-  Promise<typeof import('svelte/compiler')> | typeof import('svelte/compiler') | null = null
+  | Promise<typeof import('svelte/compiler')>
+  | typeof import('svelte/compiler')
+  | null = null
 
 try {
   const mod = await import('svelte/compiler')

@@ -35,7 +35,8 @@ export const compileSvelte = async (
 ): Promise<CompileSvelteReturn> => {
   // Legacy promise dedup for direct callers (prefer CacheManager for new code)
   const pending = pendingPromises.get(`svelte:${filePath}`) as
-    Promise<CompileSvelteReturn> | undefined
+    | Promise<CompileSvelteReturn>
+    | undefined
   if (pending) {
     ddl('svelte PENDING-HIT ' + path.basename(filePath))
     ddlHold('svelte:' + filePath, path.basename(filePath))

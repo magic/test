@@ -1,14 +1,35 @@
 {
   "name": "@magic/test",
   "version": "0.3.51",
-  "author": "Wizards & Witches",
   "description": "simple yet powerful unit testing library",
-  "license": "AGPL-3.0",
   "homepage": "https://magic.github.io/test",
+  "bugs": {
+    "url": "https://github.com/magic/test/issues"
+  },
+  "license": "AGPL-3.0",
+  "author": "Wizards & Witches",
+  "contributors": [
+    {
+      "name": "jascha ehrenreich",
+      "github": "jaeh"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/magic/test.git"
+  },
+  "bin": {
+    "magic-test": "dist/bin/t.js",
+    "magic-test-native": "dist/bin/node-test-runner.js",
+    "t": "dist/bin/t.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "type": "module",
   "imports": {
     "#src": "./src/index.js",
     "#src/*": "./src/*",
@@ -19,11 +40,6 @@
   "exports": {
     ".": "./dist/index.js",
     "./svelte": "./dist/svelte.js"
-  },
-  "bin": {
-    "t": "dist/bin/t.js",
-    "magic-test": "dist/bin/t.js",
-    "magic-test-native": "dist/bin/node-test-runner.js"
   },
   "scripts": {
     "start": "node dist/bin/t.js -p",
@@ -44,20 +60,6 @@
     "tsc:test": "tsc -p tsconfig.test.json --noEmit",
     "check": "npm run tsc && npm run tsc:test && npm run lint",
     "lint": "oxlint"
-  },
-  "engines": {
-    "node": ">=22.18.0"
-  },
-  "engineStrict": true,
-  "files": [
-    "dist"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/magic/test.git"
-  },
-  "bugs": {
-    "url": "https://github.com/magic/test/issues"
   },
   "dependencies": {
     "@magic/cases": "0.0.14",
@@ -80,7 +82,7 @@
     "@magic-modules/pre": "0.0.12",
     "@magic-themes/docs": "0.0.15",
     "@magic/core": "0.0.161",
-    "@magic/format": "0.0.76",
+    "@magic/format": "0.0.77",
     "@magic/lint": "0.0.3",
     "@rsvelte/oxlint-plugin": "0.2.6",
     "@types/node": "26.6.6",
@@ -92,12 +94,10 @@
     "glob": "^14.0.4",
     "minimatch": "^11.0.1"
   },
-  "contributors": [
-    {
-      "name": "jascha ehrenreich",
-      "github": "jaeh"
-    }
-  ],
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "engineStrict": true,
   "allowScripts": {
     "@swc/core@1.15.47": true
   }
