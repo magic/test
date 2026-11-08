@@ -65,6 +65,7 @@ export const compileBarrel = async (filePath, importChain = [], knownExports) =>
         return await compileBarrelImpl(filePath, currentChain, knownExports)
       } finally {
         pendingPromises.delete(`barrel:${filePath}`)
+        ddlRelease('barrel:' + filePath, path.basename(filePath))
       }
     })()
     pendingPromises.set(`barrel:${filePath}`, compilePromise)

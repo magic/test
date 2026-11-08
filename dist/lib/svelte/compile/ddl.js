@@ -33,12 +33,13 @@ export const ddlRelease = (key, waiter) => {
   }
 }
 let watchdogStarted = false
+let watchdogInterval = null
 const startWatchdog = () => {
   if (watchdogStarted) {
     return
   }
   watchdogStarted = true
-  setInterval(() => {
+  const interval = setInterval(() => {
     process._rawDebug(`[DDL-hb] loop-alive`)
     if (!g.__DDL || g.__DDL.map.size === 0) {
       return
@@ -49,10 +50,27 @@ const startWatchdog = () => {
     }
     process._rawDebug(`[DDL-waiting] ${parts.join(' | ')}`)
   }, 5000)
+  // Debug aid only: never let the watchdog itself keep the process alive. A
+  // real deadlock is kept alive by its own handles (worker/timer/socket), so
+  // the unref'd interval still fires while the process is pinned.
+  interval.unref()
+  watchdogInterval = interval
+}
+const clearWatchdog = () => {
+  if (watchdogInterval) {
+    clearInterval(watchdogInterval)
+    watchdogInterval = null
+  }
+  watchdogStarted = false
 }
 export const ddlInitWatchdog = () => {
   if (process.env.MAGIC_TEST_DDL) {
     startWatchdog()
+  }
+}
+export const ddlClearWatchdog = () => {
+  if (process.env.MAGIC_TEST_DDL) {
+    clearWatchdog()
   }
 }
 //# sourceMappingURL=ddl.js.map

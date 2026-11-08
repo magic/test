@@ -19,7 +19,7 @@ var __rewriteRelativeImportExtension =
     return path
   }
 import path from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { fileURLToPath } from 'node:url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 import(__rewriteRelativeImportExtension(path.join(__dirname, 'lib/registerLoader.js')))
@@ -355,17 +355,19 @@ const main = async () => {
 }
 export { discoveredFiles }
 export default main
-// Only auto-run when executed directly (node dist/bin/node-test-runner.js or
-// node --test ...). Importing the module (e.g. from tests) must not trigger
-// the runner or process.exit.
-const isDirectRun =
-  typeof process.argv[1] === 'string' &&
-  process.argv[1].length > 0 &&
-  pathToFileURL(process.argv[1]).href === import.meta.url
-if (isDirectRun) {
-  main().catch(e => {
+// Only run the unit runner and install global handlers when executed
+// directly (node dist/bin/unit.js). Importing this module (e.g. from tests)
+// must not kick off the run or register process-level handlers.
+// fs.realpathSync resolves symlinks so the check works when the bin is invoked
+// via a symlinked node_modules (e.g. pnpm, npm workspaces).
+const isMain =
+  process.argv[1] && fs.realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)
+if (isMain) {
+  try {
+    await main()
+  } catch (e) {
     console.error(e)
     process.exit(1)
-  })
+  }
 }
 //# sourceMappingURL=node-test-runner.js.map

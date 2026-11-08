@@ -2,7 +2,7 @@
 // Register TypeScript loader before other imports
 import './lib/registerLoader.js'
 import fs from 'node:fs'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { fileURLToPath } from 'node:url'
 import log from '@magic/log'
 import is from '@magic/types'
 import { run, abort } from '../run.js'
