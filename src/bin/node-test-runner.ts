@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -50,7 +50,7 @@ const discoveredFiles: string[] = []
 
 // Hook file names/order: canonical list lives in src/lib/hookFiles.ts
 
-const scanDir = async (dir: string): Promise<void> => {
+export const scanDir = async (dir: string): Promise<void> => {
   const exists = await fs.exists(dir)
   if (!exists) {
     return
@@ -74,7 +74,7 @@ const scanDir = async (dir: string): Promise<void> => {
   }
 }
 
-const extractExport = async (filePath: string): Promise<Record<string, unknown> | null> => {
+export const extractExport = async (filePath: string): Promise<Record<string, unknown> | null> => {
   try {
     const mod = await import(filePath)
     return mod
@@ -118,7 +118,7 @@ const processHookFiles = async () => {
   }
 }
 
-const getTestName = (testObj: WrappedTest, filePath: string, index: number): string => {
+export const getTestName = (testObj: WrappedTest, filePath: string, index: number): string => {
   if (testObj.info) {
     return String(testObj.info)
   }
@@ -133,7 +133,7 @@ const getTestName = (testObj: WrappedTest, filePath: string, index: number): str
   return `${baseName} ${index + 1}`
 }
 
-const convertTest = async (
+export const convertTest = async (
   testObj: WrappedTest,
   filePath: string,
   index: number,
@@ -200,7 +200,7 @@ const convertTest = async (
   }
 }
 
-const convertSuite = async (tests: unknown, filePath: string): Promise<TestItem[]> => {
+export const convertSuite = async (tests: unknown, filePath: string): Promise<TestItem[]> => {
   if (!tests) {
     return []
   }
@@ -263,7 +263,7 @@ const convertSuite = async (tests: unknown, filePath: string): Promise<TestItem[
   return []
 }
 
-const processFile = async (filePath: string): Promise<RunnerSuite[]> => {
+export const processFile = async (filePath: string): Promise<RunnerSuite[]> => {
   const mod = await extractExport(filePath)
 
   if (!mod) {
@@ -423,9 +423,21 @@ const main = async () => {
   await registerTests()
 }
 
-main().catch(e => {
-  console.error(e)
-  process.exit(1)
-})
+export { discoveredFiles }
 
 export default main
+
+// Only auto-run when executed directly (node dist/bin/node-test-runner.js or
+// node --test ...). Importing the module (e.g. from tests) must not trigger
+// the runner or process.exit.
+const isDirectRun =
+  typeof process.argv[1] === 'string' &&
+  process.argv[1].length > 0 &&
+  pathToFileURL(process.argv[1]).href === import.meta.url
+
+if (isDirectRun) {
+  main().catch(e => {
+    console.error(e)
+    process.exit(1)
+  })
+}
