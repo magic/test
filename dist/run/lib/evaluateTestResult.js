@@ -14,16 +14,16 @@ export const evaluateTestResult = async (res, expect) => {
       pass = exp === res || exp === true
     }
   } else if (Array.isArray(expect)) {
-    const hasPredicates = expect.some(f => typeof f === 'function')
+    const hasPredicates = expect.some(f => is.function(f))
     if (hasPredicates) {
       expString = expect
       const results = []
       for (const e of expect) {
-        if (typeof e === 'function') {
+        if (is.function(e)) {
           results.push(Boolean(await e(res)))
-        } else if (e === null || is.undefined(e)) {
+        } else if (is.null(e) || is.undefined(e)) {
           results.push(e === res)
-        } else if (typeof e !== 'object') {
+        } else if (!is.object(e)) {
           results.push(e === res)
         } else {
           results.push(is.deep.equal(e, res))

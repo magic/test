@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Register TypeScript loader before other imports
 import './lib/registerLoader.js'
-import { pathToFileURL } from 'node:url'
+import fs from 'node:fs'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import log from '@magic/log'
 import is from '@magic/types'
 import { run, abort } from '../run.js'
@@ -114,11 +115,11 @@ export const shutdown = async () => {
 // Only run the unit runner and install global handlers when executed
 // directly (node dist/bin/unit.js). Importing this module (e.g. from tests)
 // must not kick off the run or register process-level handlers.
-const isDirectRun =
-  typeof process.argv[1] === 'string' &&
-  process.argv[1].length > 0 &&
-  pathToFileURL(process.argv[1]).href === import.meta.url
-if (isDirectRun) {
+// fs.realpathSync resolves symlinks so the check works when the bin is invoked
+// via a symlinked node_modules (e.g. pnpm, npm workspaces).
+const isMain =
+  process.argv[1] && fs.realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)
+if (isMain) {
   init()
   process.on('unhandledRejection', handleError).on('uncaughtException', handleError)
   process.on('SIGTERM', shutdown).on('SIGINT', shutdown)
