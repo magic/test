@@ -48,9 +48,9 @@ const tests: TestCase[] = [
       const store = new Store()
       const time: [number, number] = [1234567890, 123]
       store.set({ startTime: time })
-      return store.state.startTime !== null
+      return store.state.startTime
     },
-    expect: true,
+    expect: (v: unknown) => v !== null,
     info: 'set updates startTime',
   },
   // set results
@@ -58,9 +58,9 @@ const tests: TestCase[] = [
     fn: () => {
       const store = new Store()
       store.set({ results: { test: { all: 1, pass: 1 } } })
-      return store.state.results !== undefined ? 1 : 0
+      return store.state.results !== undefined
     },
-    expect: 1,
+    expect: true,
     info: 'set updates results',
   },
   // set arbitrary key

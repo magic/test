@@ -6,6 +6,8 @@ import { transformForNode } from '#lib/svelte/compile/transformForNode.js'
 import { parallelMap, MAX_CONCURRENT } from '#lib/svelte/compile/parallelMap.js'
 import { acquireLock } from '#lib/svelte/compile/acquireLock.js'
 import { CACHE_DIR, getCwd } from '#src/constants.js'
+import { has } from '#lib/has.js'
+import is from '@magic/types'
 import type { TestCase } from '#src/types.js'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
@@ -28,18 +30,18 @@ const tests: TestCase[] = [
     fn: () => {
       const src = path.join(getCwd(), 'src', 'Button.svelte')
       const tmp = getTempFilePath(src)
-      return tmp.startsWith(CACHE_DIR) && tmp.endsWith('Button.svelte.js')
+      return tmp
     },
-    expect: true,
+    expect: has.string(CACHE_DIR, 'Button.svelte.js'),
     info: 'getTempFilePath maps .svelte to CACHE_DIR .svelte.js',
   },
   {
     fn: () => {
       const src = path.join(getCwd(), 'test', 'nested', 'Card.svelte')
       const tmp = getTempFilePath(src)
-      return path.basename(tmp) === 'Card.svelte.js'
+      return path.basename(tmp)
     },
-    expect: true,
+    expect: 'Card.svelte.js',
     info: 'getTempFilePath preserves nested directory structure',
   },
 
@@ -62,9 +64,9 @@ const tests: TestCase[] = [
         path.join(getCwd(), 'a', 'b'),
         path.join(getCwd(), 'a', 'c', 'd.js'),
       )
-      return result === '../c/d.js' || result === './c/d.js'
+      return result
     },
-    expect: true,
+    expect: has.oneOf('../c/d.js', './c/d.js'),
     info: 'computeRelativePath handles parent traversal',
   },
 
@@ -86,21 +88,21 @@ const tests: TestCase[] = [
   },
 
   // --- parallelMap ---
-  { fn: () => MAX_CONCURRENT === 5, expect: true, info: 'MAX_CONCURRENT is 5' },
+  { fn: () => MAX_CONCURRENT, expect: 5, info: 'MAX_CONCURRENT is 5' },
   {
     fn: async () => {
       const out = await parallelMap([1, 2, 3, 4, 5, 6], async n => n * 2)
-      return JSON.stringify(out) === JSON.stringify([2, 4, 6, 8, 10, 12])
+      return out
     },
-    expect: true,
+    expect: [2, 4, 6, 8, 10, 12],
     info: 'parallelMap preserves order',
   },
   {
     fn: async () => {
       const out = await parallelMap([], async (n: number) => n)
-      return out.length === 0
+      return out
     },
-    expect: true,
+    expect: [],
     info: 'parallelMap with empty array',
   },
   {
@@ -119,17 +121,17 @@ const tests: TestCase[] = [
         },
         2,
       )
-      return maxActive <= 2 && out.length === 8
+      return { maxActive, count: out.length }
     },
-    expect: true,
+    expect: (v: { maxActive: number; count: number }) => v.maxActive <= 2 && v.count === 8,
     info: 'parallelMap respects concurrency limit',
   },
   {
     fn: async () => {
       const out = await parallelMap([1, 2, 3], async (n, i) => i * 10 + n)
-      return JSON.stringify(out) === JSON.stringify([1, 12, 23])
+      return out
     },
-    expect: true,
+    expect: [1, 12, 23],
     info: 'parallelMap passes index to fn',
   },
 
@@ -137,9 +139,9 @@ const tests: TestCase[] = [
   {
     fn: async () => {
       const release = await acquireLock('/tmp/lock-a')
-      return typeof release === 'function'
+      return release
     },
-    expect: true,
+    expect: is.function,
     info: 'acquireLock returns a release function',
   },
   {

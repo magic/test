@@ -191,9 +191,9 @@ export default [
       )
       const result = html(target)
       await unmount()
-      return result.includes('class="types"')
+      return result
     },
-    expect: true,
+    expect: has.string('class="types"'),
     info: '$app/types provides type exports as non-null objects',
   },
   // $app/forms deserialize error case
@@ -251,9 +251,9 @@ export default [
       await flushSyncSvelte()
       await tick()
       const result = html(target)
-      return result.includes('invalidate')
+      return result
     },
-    expect: true,
+    expect: has.string('invalidate'),
     info: '$app/navigation invalidate function works',
   },
   // $app/navigation preload
@@ -264,9 +264,9 @@ export default [
       await flushSyncSvelte()
       await tick()
       const result = html(target)
-      return result.includes('preload')
+      return result
     },
-    expect: true,
+    expect: has.string('preload'),
     info: '$app/navigation preload function works',
   },
   // $app/server remote functions

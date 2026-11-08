@@ -1,4 +1,5 @@
 import is from '@magic/types'
+import { has } from '#lib/has.js'
 import { initGlobals } from '#lib/dom/globals.js'
 
 export default {
@@ -40,9 +41,9 @@ export default {
         h.append('key', 'value1')
         h.append('key', 'value2')
         const combined = h.get('key') || ''
-        return combined.includes('value1') && combined.includes('value2')
+        return combined
       },
-      expect: true,
+      expect: has.string('value1', 'value2'),
       info: 'Headers.get returns combined values',
     },
   ],

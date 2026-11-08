@@ -1,4 +1,5 @@
 import is from '@magic/types'
+import { has } from '#lib/has.js'
 import { initGlobals } from '#lib/dom/globals.js'
 
 export default {
@@ -28,9 +29,9 @@ export default {
     {
       fn: () => {
         const ws = new WebSocket('ws://localhost')
-        return ws.url.includes('localhost')
+        return ws.url
       },
-      expect: true,
+      expect: has.string('localhost'),
       info: 'WebSocket has url property with localhost',
     },
     {

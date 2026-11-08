@@ -19,9 +19,9 @@ export default [
       const globalStartTime: [number, number] = [Date.now(), 0]
       store.set({ globalStartTime })
       const result = getDuration(store, 'globalStartTime')
-      return result !== undefined
+      return result
     },
-    expect: true,
+    expect: (v: unknown) => v !== undefined,
     info: 'getDuration with globalStartTime returns duration',
   },
   // getDuration with startTime returns duration
@@ -31,9 +31,9 @@ export default [
       const startTime: [number, number] = [Date.now(), 0]
       store.set({ startTime })
       const result = getDuration(store)
-      return result !== undefined && result !== ''
+      return result
     },
-    expect: true,
+    expect: (v: unknown) => v !== undefined && v !== '',
     info: 'getDuration with startTime returns non-empty duration',
   },
   // getDuration with invalid startTime returns empty string

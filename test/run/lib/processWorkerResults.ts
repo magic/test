@@ -33,9 +33,9 @@ export default [
       const results = [createResult({ name: 'test1' }), createResult({ name: 'test2' })]
       const rawResults: TestResult[] = []
       processWorkerResults(results, rawResults, silentLogger)
-      return rawResults.length === 2
+      return rawResults.length
     },
-    expect: true,
+    expect: 2,
     info: 'pushes all results to rawResults',
   },
   {
@@ -43,9 +43,9 @@ export default [
       const results = [createResult({ name: 'test1' })]
       const rawResults: TestResult[] = []
       processWorkerResults(results, rawResults, silentLogger)
-      return rawResults[0]?.name === 'test1'
+      return rawResults[0]?.name
     },
-    expect: true,
+    expect: 'test1',
     info: 'preserves result order in rawResults',
   },
   {

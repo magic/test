@@ -39,9 +39,9 @@ export default {
       fn: () => {
         const dp = new DOMParser()
         const doc = dp.parseFromString('<invalid', 'text/xml')
-        return doc.documentElement !== null && doc.documentElement.tagName.length > 0
+        return doc.documentElement?.tagName ?? null
       },
-      expect: true,
+      expect: (v: string | null) => v !== null && v.length > 0,
       info: 'DOMParser returns document even for invalid XML',
     },
   ],

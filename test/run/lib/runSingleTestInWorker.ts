@@ -1,4 +1,6 @@
 import { runSingleTestInWorker } from '#src/run/lib/runSingleTestInWorker.js'
+import { has } from '#lib/has.js'
+import is from '@magic/types'
 import type { Test } from '#src/types.js'
 
 export default [
@@ -12,9 +14,9 @@ export default [
         'parent',
         'nofn',
       )
-      return r.pass === false && r.result === undefined && r.msg === ''
+      return r
     },
-    expect: true,
+    expect: has.properties({ pass: false, result: undefined, msg: '' }),
     info: 'test without fn returns fail result with empty msg',
   },
   // passing test
@@ -27,9 +29,9 @@ export default [
         'parent',
         'ok',
       )
-      return r.pass === true && r.result === 2 && r.name === 'ok'
+      return r
     },
-    expect: true,
+    expect: has.properties({ pass: true, result: 2, name: 'ok' }),
     info: 'passing test returns pass=true with result',
   },
   // failing test
@@ -42,9 +44,9 @@ export default [
         'parent',
         'bad',
       )
-      return r.pass === false && r.result === 1 && r.expect === 99
+      return r
     },
-    expect: true,
+    expect: has.properties({ pass: false, result: 1, expect: 99 }),
     info: 'failing test returns pass=false with result and expect',
   },
   // msg is a cleaned function string
@@ -57,9 +59,9 @@ export default [
         'parent',
         'msg',
       )
-      return typeof r.msg === 'string' && r.msg.length > 0
+      return r.msg
     },
-    expect: true,
+    expect: [is.str, has.matches(/./)],
     info: 'msg is a non-empty cleaned function string',
   },
   // name/parent/pkg are propagated
@@ -72,11 +74,9 @@ export default [
         'myparent',
         'theName',
       )
-      return (
-        r.name === 'theName' && r.parent === 'myparent' && r.pkg === 'mypkg' && r.key === 'the-key'
-      )
+      return r
     },
-    expect: true,
+    expect: has.properties({ name: 'theName', parent: 'myparent', pkg: 'mypkg', key: 'the-key' }),
     info: 'name, parent, pkg, and key are propagated to result',
   },
   // empty parent defaults to empty string
@@ -89,9 +89,9 @@ export default [
         '',
         'noparent',
       )
-      return r.parent === ''
+      return r.parent
     },
-    expect: true,
+    expect: '',
     info: 'empty testParent becomes empty string in result',
   },
   // info is propagated
@@ -111,9 +111,9 @@ export default [
         'parent',
         'info',
       )
-      return r.info === 'my info'
+      return r.info
     },
-    expect: true,
+    expect: 'my info',
     info: 'info field is propagated to result',
   },
   // async fn
@@ -132,9 +132,9 @@ export default [
         'parent',
         'async',
       )
-      return r.pass === true && r.result === 'done'
+      return r
     },
-    expect: true,
+    expect: has.properties({ pass: true, result: 'done' }),
     info: 'async fn is awaited',
   },
   // throwing fn returns pass=false (not thrown)
@@ -155,9 +155,9 @@ export default [
         'parent',
         'throw',
       )
-      return r.pass === false
+      return r.pass
     },
-    expect: true,
+    expect: false,
     info: 'throwing fn yields pass=false without throwing',
   },
 ] satisfies Test[]

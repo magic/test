@@ -276,9 +276,9 @@ export default [
       const inputEl = doc.createElement('input')
       doc.body.appendChild(inputEl)
       input(inputEl, 'test value')
-      return inputEl.value === 'test value'
+      return inputEl.value
     },
-    expect: true,
+    expect: 'test value',
     info: 'input sets input value',
   },
   // change
@@ -454,7 +454,7 @@ export default [
       input.type = 'checkbox'
       doc.body.appendChild(input)
       checked(input)
-      return input.checked === true
+      return input.checked
     },
     expect: true,
     info: 'checked sets checkbox checked state',

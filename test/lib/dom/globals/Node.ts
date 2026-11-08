@@ -31,9 +31,9 @@ export default {
     {
       fn: () => {
         const el = globalThis.document.createElement('div')
-        return el.parentNode === null || is.instance(el.parentNode, Node)
+        return el.parentNode
       },
-      expect: true,
+      expect: (v: unknown) => v === null || is.instance(v, Node),
       info: 'Node has parentNode property',
     },
     {

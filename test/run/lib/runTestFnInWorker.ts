@@ -1,4 +1,6 @@
 import { runTestFnInWorker } from '#src/run/lib/runTestFnInWorker.js'
+import { has } from '#lib/has.js'
+import is from '@magic/types'
 import type { TestCase } from '#src/types.js'
 import type { WrappedTest } from '#src/types.js'
 
@@ -15,20 +17,23 @@ const tests: TestCase[] = [
   {
     fn: async () => {
       const r = await runTestFnInWorker(makeTest({ fn: () => 1 + 1, expect: 2 }), 'key1')
-      return (
-        r.pass === true && r.result === 2 && r.afterError === null && r.afterCleanupError === null
-      )
+      return r
     },
-    expect: true,
+    expect: has.properties({
+      pass: true,
+      result: 2,
+      afterError: null,
+      afterCleanupError: null,
+    }),
     info: 'passing fn returns pass=true with result',
   },
   // fn that fails
   {
     fn: async () => {
       const r = await runTestFnInWorker(makeTest({ fn: () => 1, expect: 2 }), 'key2')
-      return r.pass === false && r.result === 1 && r.exp === 2
+      return r
     },
-    expect: true,
+    expect: has.properties({ pass: false, result: 1, exp: 2 }),
     info: 'failing fn returns pass=false with result and exp',
   },
   // fn returning promise
@@ -38,9 +43,9 @@ const tests: TestCase[] = [
         makeTest({ fn: async () => 'done', expect: 'done' }),
         'key3',
       )
-      return r.pass === true && r.result === 'done'
+      return r
     },
-    expect: true,
+    expect: has.properties({ pass: true, result: 'done' }),
     info: 'async fn is awaited',
   },
   // fn as plain value
@@ -50,9 +55,9 @@ const tests: TestCase[] = [
         makeTest({ fn: 'literal' as never, expect: 'literal' }),
         'key4',
       )
-      return r.pass === true && r.result === 'literal'
+      return r
     },
-    expect: true,
+    expect: has.properties({ pass: true, result: 'literal' }),
     info: 'plain value fn returned as-is',
   },
   // fn as promise directly
@@ -62,9 +67,9 @@ const tests: TestCase[] = [
         makeTest({ fn: Promise.resolve(7) as never, expect: 7 }),
         'key5',
       )
-      return r.pass === true && r.result === 7
+      return r
     },
-    expect: true,
+    expect: has.properties({ pass: true, result: 7 }),
     info: 'promise fn awaited directly',
   },
   // fn that throws
@@ -79,9 +84,9 @@ const tests: TestCase[] = [
         }),
         'key6',
       )
-      return r.pass === false
+      return r.pass
     },
-    expect: true,
+    expect: false,
     info: 'throwing fn returns pass=false',
   },
   // before hook runs and cleanup is invoked
@@ -102,9 +107,13 @@ const tests: TestCase[] = [
         }),
         'key7',
       )
-      return beforeCalled && cleanupCalled && r.pass === true && r.afterCleanupError === null
+      return { r, beforeCalled, cleanupCalled }
     },
-    expect: true,
+    expect: has.properties({
+      beforeCalled: true,
+      cleanupCalled: true,
+      r: has.properties({ pass: true, afterCleanupError: null }),
+    }),
     info: 'before hook runs and returned cleanup is invoked',
   },
   // before hook that throws
@@ -120,9 +129,9 @@ const tests: TestCase[] = [
         }),
         'key8',
       )
-      return r.afterCleanupError !== null && String(r.afterCleanupError).includes('before failed')
+      return r
     },
-    expect: true,
+    expect: has.property('afterCleanupError', (e: unknown) => String(e).includes('before failed')),
     info: 'before hook error captured in afterCleanupError',
   },
   // before as promise
@@ -139,9 +148,9 @@ const tests: TestCase[] = [
         }),
         'key9',
       )
-      return ran && r.pass === true
+      return { r, ran }
     },
-    expect: true,
+    expect: has.properties({ ran: true, r: has.properties({ pass: true }) }),
     info: 'promise before is awaited',
   },
   // after hook runs
@@ -158,9 +167,12 @@ const tests: TestCase[] = [
         }),
         'key10',
       )
-      return afterCalled && r.pass === true && r.afterError === null
+      return { r, afterCalled }
     },
-    expect: true,
+    expect: has.properties({
+      afterCalled: true,
+      r: has.properties({ pass: true, afterError: null }),
+    }),
     info: 'after hook runs',
   },
   // after hook that throws
@@ -176,9 +188,9 @@ const tests: TestCase[] = [
         }),
         'key11',
       )
-      return String(r.afterError).includes('after failed')
+      return r
     },
-    expect: true,
+    expect: has.property('afterError', (e: unknown) => String(e).includes('after failed')),
     info: 'after hook error captured in afterError',
   },
   // runs > 1 all passing
@@ -196,9 +208,10 @@ const tests: TestCase[] = [
         }),
         'key12',
       )
-      return r.pass === true && count === 3 && Array.isArray(r.result) && r.result.length === 3
+      return { count, pass: r.pass, result: r.result }
     },
-    expect: true,
+    expect: (v: { count: number; pass: boolean; result: unknown }) =>
+      v.pass === true && v.count === 3 && is.arr(v.result) && v.result.length === 3,
     info: 'runs=3 executes fn 3 times and collects results',
   },
   // runs > 1 with one failing
@@ -216,9 +229,9 @@ const tests: TestCase[] = [
         }),
         'key13',
       )
-      return r.pass === false && count === 2
+      return { count, pass: r.pass }
     },
-    expect: true,
+    expect: has.properties({ count: 2, pass: false }),
     info: 'runs=2 with one failing run returns pass=false',
   },
   // cleanup that throws
@@ -236,9 +249,12 @@ const tests: TestCase[] = [
         }),
         'key14',
       )
-      return r.pass === true && String(r.afterCleanupError).includes('cleanup failed')
+      return r
     },
-    expect: true,
+    expect: has.properties({
+      pass: true,
+      afterCleanupError: (e: unknown) => String(e).includes('cleanup failed'),
+    }),
     info: 'cleanup error captured but pass stays true',
   },
 ]

@@ -1,5 +1,6 @@
 import { mount, html } from '#src/lib/svelte/index.js'
 import type { TestContext, TestCase } from '#src/types.js'
+import { has } from '#lib/has.js'
 
 const component = 'src/lib/svelte/testFixtures/components/Tabs.svelte'
 const tabs = [
@@ -11,15 +12,15 @@ export default [
   {
     component,
     props: { tabs },
-    fn: ({ target }: TestContext) => html(target).includes('class="tab active"'),
-    expect: true,
+    fn: ({ target }: TestContext) => html(target),
+    expect: has.string('class="tab active"'),
     info: 'renders tabs with first tab active',
   },
   {
     component,
     props: { tabs },
-    fn: ({ target }: TestContext) => html(target).includes('Tab B'),
-    expect: true,
+    fn: ({ target }: TestContext) => html(target),
+    expect: has.string('Tab B'),
     info: 'renders tabs with Tab B',
   },
   {
@@ -71,8 +72,8 @@ export default [
   {
     component,
     props: { tabs: [] },
-    fn: ({ target }: TestContext) => html(target).includes('class="tabs"'),
-    expect: true,
+    fn: ({ target }: TestContext) => html(target),
+    expect: has.string('class="tabs"'),
     info: 'renders tabs container with empty tabs',
   },
   {

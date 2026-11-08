@@ -3,6 +3,8 @@ import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 import { getSvelteExports } from '#lib/svelte/compile/getSvelteExports.js'
+import { has } from '#lib/has.js'
+import is from '@magic/types'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtureBase = path.join(
@@ -23,9 +25,9 @@ export default [
     fn: async () => {
       const barrelPath = path.join(fixtureBase, 'Index.svelte.js')
       const exports = await getSvelteExports(barrelPath)
-      return exports.length === 2
+      return exports
     },
-    expect: true,
+    expect: is.len.eq(2),
     info: 'getSvelteExports returns correct number of exports',
   },
   {
@@ -33,18 +35,18 @@ export default [
       const barrelPath = path.join(fixtureBase, 'Index.svelte.js')
       const exports = await getSvelteExports(barrelPath)
       const names = exports.map(e => e.name)
-      return names.includes('TestComponent') && names.includes('TitleComponent')
+      return names
     },
-    expect: true,
+    expect: has.includes('TestComponent', 'TitleComponent'),
     info: 'getSvelteExports returns correct export names including alias',
   },
   {
     fn: async () => {
       const barrelPath = path.join(fixtureBase, 'EmptyBarrel.svelte.js')
       const exports = await getSvelteExports(barrelPath)
-      return exports.length === 0
+      return exports
     },
-    expect: true,
+    expect: [],
     info: 'getSvelteExports returns empty array for empty barrel',
   },
   {
@@ -52,18 +54,18 @@ export default [
       const barrelPath = path.join(fixtureBase, 'Index.svelte.js')
       const exports1 = await getSvelteExports(barrelPath)
       const exports2 = await getSvelteExports(barrelPath)
-      return exports1.length === exports2.length && exports1.length === 2
+      return { len1: exports1.length, len2: exports2.length }
     },
-    expect: true,
+    expect: (v: { len1: number; len2: number }) => v.len1 === v.len2 && v.len1 === 2,
     info: 'getSvelteExports returns consistent results on multiple calls',
   },
   {
     fn: async () => {
       const barrelPath = path.join(fixtureBase, 'Index.svelte.js')
       const exports = await getSvelteExports(barrelPath)
-      return exports.every(e => e.path.endsWith('.svelte'))
+      return exports.map(e => e.path)
     },
-    expect: true,
+    expect: (v: string[]) => v.every(p => p.endsWith('.svelte')),
     info: 'getSvelteExports returns valid Svelte paths',
   },
   {
@@ -75,15 +77,20 @@ export default [
       const barrelPath = path.join(fixtureBase, 'ImportMapBarrel.svelte.js')
       const exports = await getSvelteExports(barrelPath)
       const firstExport = exports[0]
-      return (
-        exports.length === 1 &&
-        firstExport != null &&
-        firstExport.name === 'TestComponent' &&
-        firstExport.path === path.join(fixtureBase, '..', 'components', 'TestComponent.svelte') &&
-        fs.existsSync(firstExport.path)
-      )
+      return {
+        count: exports.length,
+        exists: firstExport ? fs.existsSync(firstExport.path) : false,
+        first: firstExport,
+      }
     },
-    expect: true,
+    expect: has.properties({
+      count: 1,
+      exists: true,
+      first: has.properties({
+        name: 'TestComponent',
+        path: path.join(fixtureBase, '..', 'components', 'TestComponent.svelte'),
+      }),
+    }),
     info: 'getSvelteExports resolves #-prefixed import-map sources against package.json imports',
   },
   {
@@ -92,17 +99,17 @@ export default [
       // package.json (a nested package scope), not in the repo root -
       // resolution must use the barrel file's nearest package.json.
       const barrelPath = path.join(fixtureBase, '..', 'importMapPkg', 'src', 'Barrel.svelte.js')
-      const expected = path.join(fixtureBase, '..', 'importMapPkg', 'src', 'Foo.svelte')
       const exports = await getSvelteExports(barrelPath)
       const firstExport = exports[0]
-      return (
-        exports.length === 1 &&
-        firstExport != null &&
-        firstExport.name === 'Foo' &&
-        firstExport.path === expected
-      )
+      return { count: exports.length, first: firstExport }
     },
-    expect: true,
+    expect: has.properties({
+      count: 1,
+      first: has.properties({
+        name: 'Foo',
+        path: path.join(fixtureBase, '..', 'importMapPkg', 'src', 'Foo.svelte'),
+      }),
+    }),
     info: 'getSvelteExports resolves #-prefixed sources against the nearest package.json (not CWD)',
   },
 ]

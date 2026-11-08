@@ -1,4 +1,5 @@
 import { html, tick } from '#lib/svelte/index.js'
+import { has } from '#lib/has.js'
 import type { TestContext, TestCase } from '#src/types.js'
 
 const component = '#lib/svelte/testFixtures/components/CounterWithProps.svelte'
@@ -8,8 +9,9 @@ export default [
     component,
     props: { initial: 10, step: 5 },
     fn: async ({ target }: TestContext) => {
-      return html(target).includes('10')
+      return html(target)
     },
+    expect: has.string('10'),
     info: 'renders with initial value',
   },
   {
@@ -60,31 +62,35 @@ export default [
   {
     component,
     fn: async ({ target }: TestContext) => {
-      return html(target).includes('+1') && html(target).includes('-1')
+      return html(target)
     },
+    expect: has.string('+1', '-1'),
     info: 'uses default step of 1',
   },
   {
     component,
     props: { step: 3 },
     fn: async ({ target }: TestContext) => {
-      return html(target).includes('+3') && html(target).includes('-3')
+      return html(target)
     },
+    expect: has.string('+3', '-3'),
     info: 'uses custom step value in button labels',
   },
   {
     component,
     props: { initial: 5 },
     fn: async ({ target, component: instance }: TestContext) => {
-      return instance['count'] === 5 && html(target).includes('5')
+      return { count: instance['count'], html: html(target) }
     },
+    expect: has.properties({ count: 5, html: has.string('5') }),
     info: 'uses custom initial value',
   },
   {
     component,
     fn: async ({ target, component: instance }: TestContext) => {
-      return html(target).includes('+1') && html(target).includes('-1') && instance['count'] === 0
+      return { count: instance['count'], html: html(target) }
     },
+    expect: has.properties({ count: 0, html: has.string('+1', '-1') }),
     info: 'uses default initial of 0 when not provided',
   },
 ] satisfies TestCase[]

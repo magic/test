@@ -47,9 +47,9 @@ export default [
       // fn receives nothing extra; arguments are untouched
       const arg = { ok: true }
       const res = await withSvelteKitStore(() => arg)
-      return res === arg
+      return { res, arg }
     },
-    expect: true,
+    expect: (v: { res: unknown; arg: object }) => v.res === v.arg,
     info: 'no-op: identity of returned value preserved',
   },
 ] satisfies TestCase[]

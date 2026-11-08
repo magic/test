@@ -5,9 +5,9 @@ export default [
   {
     fn: async () => {
       const result = await tryStat('./package.json')
-      return result !== null
+      return result
     },
-    expect: true,
+    expect: (v: unknown) => v !== null,
     info: 'tryStat returns stat for existing file',
   },
   {
@@ -21,9 +21,9 @@ export default [
   {
     fn: async () => {
       const result = await tryStat('./test')
-      return result !== null
+      return result
     },
-    expect: true,
+    expect: (v: unknown) => v !== null,
     info: 'tryStat returns stat for existing directory',
   },
 ] satisfies TestCase[]

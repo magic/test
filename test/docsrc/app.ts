@@ -14,9 +14,9 @@ export default [
   {
     name: 'docsrc/app.mjs has title',
     fn: async () => {
-      return state.title === '@magic/test'
+      return state.title
     },
-    expect: true,
+    expect: '@magic/test',
   },
   {
     name: 'docsrc/app.mjs has menu',

@@ -1,4 +1,5 @@
 import { mount, html } from '#lib/svelte/index.js'
+import { has } from '#lib/has.js'
 import type { TestContext, TestCase } from '#src/types.js'
 
 const component = '#lib/svelte/testFixtures/components/Toggle.svelte'
@@ -9,9 +10,9 @@ export default [
     props: { label: 'Enable', initial: false },
     fn: async ({ target }: TestContext) => {
       const result = html(target)
-      return result.includes('Enable') && result.includes('OFF')
+      return result
     },
-    expect: true,
+    expect: has.string('Enable', 'OFF'),
     info: 'renders toggle with label and initial state OFF',
   },
   {

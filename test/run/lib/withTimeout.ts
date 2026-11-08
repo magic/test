@@ -1,4 +1,5 @@
 import { withTimeout } from '#src/run/lib/withTimeout.js'
+import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
 
 export default [
@@ -12,7 +13,6 @@ export default [
   },
   {
     fn: async () => {
-      let timedOut = false
       try {
         await withTimeout(
           new Promise((_, reject) => setTimeout(() => reject(new Error('delayed')), 20)),
@@ -20,11 +20,11 @@ export default [
           'test-key',
         )
       } catch (e) {
-        timedOut = (e as Error).message.includes('timed out')
+        return (e as Error).message
       }
-      return timedOut
+      return ''
     },
-    expect: true,
+    expect: has.string('timed out'),
     info: 'rejects when promise rejects within timeout',
   },
   {
@@ -45,15 +45,14 @@ export default [
   },
   {
     fn: async () => {
-      let rejected = false
       try {
         await withTimeout(Promise.reject(new Error('fail')), 100, 'test-key')
-      } catch {
-        rejected = true
+      } catch (e) {
+        return (e as Error).message
       }
-      return rejected
+      return ''
     },
-    expect: true,
+    expect: has.string('fail'),
     info: 'propagates rejection when no timeout',
   },
 ] satisfies TestCase[]

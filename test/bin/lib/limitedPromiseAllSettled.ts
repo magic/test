@@ -127,9 +127,9 @@ export default [
   {
     fn: async () => {
       const results = await limitedPromiseAllSettled([1, 2], 10, async _x => _x)
-      return results.every(r => r.status === 'fulfilled')
+      return results.map(r => r.status)
     },
-    expect: true,
+    expect: ['fulfilled', 'fulfilled'],
     info: 'limit > items processes all immediately',
   },
 ] satisfies TestCase[]

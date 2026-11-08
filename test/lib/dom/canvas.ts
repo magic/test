@@ -1,4 +1,5 @@
 import is from '@magic/types'
+import { has } from '#lib/has.js'
 import { createCanvasPolyfill } from '#lib/dom/canvas.js'
 import type { TestCase } from '#src/types.js'
 
@@ -33,9 +34,9 @@ export default [
       const canvas = document.createElement('canvas')
       // webgl might not exist in happy-dom, but we can try
       const ctx = canvas.getContext('webgl')
-      return ctx !== undefined
+      return ctx
     },
-    expect: true,
+    expect: (v: unknown) => v !== undefined,
     info: 'canvas.getContext("webgl") returns something (may be null)',
   },
   // toDataURL exists on context
@@ -80,9 +81,9 @@ export default [
       canvas.width = 300
       canvas.height = 150
       const ctx = canvas.getContext('2d') as { canvas: { width: number; height: number } } | null
-      return ctx?.canvas.width === 300 && ctx?.canvas.height === 150
+      return { width: ctx?.canvas.width, height: ctx?.canvas.height }
     },
-    expect: true,
+    expect: has.properties({ width: 300, height: 150 }),
     info: 'canvas dimensions are preserved in context',
   },
   // toDataURL with custom mime type
@@ -111,9 +112,10 @@ export default [
       const ctx1 = canvas1.getContext('2d')
       const ctx2 = canvas2.getContext('2d')
       // Different canvas elements should have different context instances
-      return ctx1 !== null && ctx2 !== null && ctx1 !== ctx2
+      return { ctx1, ctx2 }
     },
-    expect: true,
+    expect: (v: { ctx1: unknown; ctx2: unknown }) =>
+      v.ctx1 !== null && v.ctx2 !== null && v.ctx1 !== v.ctx2,
     info: 'different canvases get different contexts',
   },
 ] satisfies TestCase[]

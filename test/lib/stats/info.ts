@@ -1,4 +1,5 @@
 import { info } from '#lib/stats/info.js'
+import { has } from '#lib/has.js'
 import { createStore } from '#lib/store.js'
 import type { Test, TestResults } from '#src/types.js'
 
@@ -7,7 +8,7 @@ export default [
   {
     fn: () => {
       const store = createStore()
-      return info([], store) === true
+      return info([], store)
     },
     expect: true,
     info: 'info with no results returns true',
@@ -17,7 +18,7 @@ export default [
     fn: () => {
       const store = createStore()
       store.set({ results: {} })
-      return info([], store) === true
+      return info([], store)
     },
     expect: true,
     info: 'info with empty suites array returns true',
@@ -27,11 +28,9 @@ export default [
     fn: () => {
       const store = createStore()
       store.set({ results: { test1: { all: 1, pass: 1 } } })
-      return (
-        info(
-          [{ name: 'test1', parent: '', pkg: '', pass: 0, fail: 0, all: 0, tests: [] }],
-          store,
-        ) === true
+      return info(
+        [{ name: 'test1', parent: '', pkg: '', pass: 0, fail: 0, all: 0, tests: [] }],
+        store,
       )
     },
     expect: true,
@@ -51,9 +50,9 @@ export default [
       store.set({ results: { test1: { all: 10, pass: 8 } } })
       info([{ name: 'test1', parent: '', pkg: '', pass: 0, fail: 0, all: 0, tests: [] }], store)
       const results = store.get<TestResults>('results')
-      return results?.test1?.all === 10 && results?.test1?.pass === 8
+      return { all: results?.test1?.all, pass: results?.test1?.pass }
     },
-    expect: true,
+    expect: has.properties({ all: 10, pass: 8 }),
     info: 'info can read results from store',
   },
 ] satisfies Test[]

@@ -12,17 +12,17 @@ export default {
     {
       fn: () => {
         const ts = new TransformStream()
-        return ts.readable !== null && ts.readable !== undefined
+        return ts.readable
       },
-      expect: true,
+      expect: (v: unknown) => v !== null && v !== undefined,
       info: 'TransformStream has readable property',
     },
     {
       fn: () => {
         const ts = new TransformStream()
-        return ts.writable !== null && ts.writable !== undefined
+        return ts.writable
       },
-      expect: true,
+      expect: (v: unknown) => v !== null && v !== undefined,
       info: 'TransformStream has writable property',
     },
     {

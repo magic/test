@@ -22,17 +22,17 @@ export default [
     name: 'View has magictest h1 heading',
     fn: () => {
       const result = View()
-      return is.arr(result) && result.some(el => el.includes('<h1 id="magictest">'))
+      return result
     },
-    expect: true,
+    expect: [is.arr, (v: string[]) => v.some(el => el.includes('<h1 id="magictest">'))],
   },
   {
     name: 'View has getting-started section',
     fn: () => {
       const result = View()
-      return result.some(el => el.includes('id="getting-started"'))
+      return result
     },
-    expect: true,
+    expect: (v: string[]) => v.some(el => el.includes('id="getting-started"')),
   },
   {
     name: 'View has code blocks',

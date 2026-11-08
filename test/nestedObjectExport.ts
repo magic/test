@@ -5,12 +5,12 @@ const cbFn = (e: Error | null, a: unknown, cb: (e: Error | null, a: unknown) => 
 
 export default {
   testRunBefore: {
-    fn: () => true,
+    fn: () => process.env.testVar,
     before: () => {
       process.env.testVar = 't'
       return () => delete process.env.testVar
     },
-    expect: () => process.env.testVar === 't',
+    expect: 't',
     info: 'Test before function by setting process.env.testVar',
   },
   testRunAfter: {

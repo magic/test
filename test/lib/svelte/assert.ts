@@ -1,4 +1,5 @@
 import { initDOM } from '#lib/dom/index.js'
+import { has } from '#lib/has.js'
 import { html, text, props } from '#lib/svelte/assert.js'
 
 initDOM()
@@ -9,35 +10,35 @@ export default [
       const div = document.createElement('div')
       div.innerHTML = '<span>test</span>'
       const result = html(div)
-      return result.includes('<span>test</span>')
+      return result
     },
-    expect: true,
+    expect: has.string('<span>test</span>'),
     info: 'html returns innerHTML',
   },
   {
     fn: () => {
       const div = document.createElement('div')
       div.innerHTML = ''
-      return html(div) === ''
+      return html(div)
     },
-    expect: true,
+    expect: '',
     info: 'html returns empty string for empty element',
   },
   {
     fn: () => {
       const div = document.createElement('div')
       div.textContent = 'hello world'
-      return text(div) === 'hello world'
+      return text(div)
     },
-    expect: true,
+    expect: 'hello world',
     info: 'text returns textContent',
   },
   {
     fn: () => {
       const div = document.createElement('div')
-      return text(div) === ''
+      return text(div)
     },
-    expect: true,
+    expect: '',
     info: 'text returns empty string for empty element',
   },
   {
@@ -46,18 +47,18 @@ export default [
       div.setAttribute('class', 'test-class')
       div.setAttribute('id', 'test-id')
       const result = props(div)
-      return result.class === 'test-class' && result.id === 'test-id'
+      return result
     },
-    expect: true,
+    expect: has.properties({ class: 'test-class', id: 'test-id' }),
     info: 'props returns element attributes',
   },
   {
     fn: () => {
       const div = document.createElement('div')
       const result = props(div)
-      return Object.keys(result).length === 0
+      return result
     },
-    expect: true,
+    expect: {},
     info: 'props returns empty object for element with no attributes',
   },
   {
@@ -65,18 +66,18 @@ export default [
       const div = document.createElement('div')
       div.setAttribute('data-test', 'value')
       const result = props(div)
-      return result['data-test'] === 'value'
+      return result
     },
-    expect: true,
+    expect: has.property('data-test', 'value'),
     info: 'props returns data attributes',
   },
   {
     fn: () => {
       const div = document.createElement('div')
       div.innerHTML = '<p>paragraph</p><span>span</span>'
-      return html(div).includes('<p>paragraph</p>')
+      return html(div)
     },
-    expect: true,
+    expect: has.string('<p>paragraph</p>'),
     info: 'html handles multiple child elements',
   },
   {
@@ -84,9 +85,9 @@ export default [
       const div = document.createElement('div')
       div.innerHTML = '<a href="#">link</a>'
       const result = html(div)
-      return result.includes('<a')
+      return result
     },
-    expect: true,
+    expect: has.string('<a'),
     info: 'html returns complete markup',
   },
 ]

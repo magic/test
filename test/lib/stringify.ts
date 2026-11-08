@@ -91,9 +91,9 @@ const tests: TestCase[] = [
     fn: () => {
       const result = stringify('x'.repeat(80))
       // Should be 70 chars, not 80
-      return is.string(result) && result.length === 70
+      return result
     },
-    expect: true,
+    expect: [is.str, is.len.eq(70)],
     info: 'respects default error length limit (70)',
   },
   // Test stringify with array containing function

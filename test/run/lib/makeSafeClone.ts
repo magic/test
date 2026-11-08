@@ -1,5 +1,6 @@
 import is from '@magic/types'
 import { makeSafeClone } from '#src/run/lib/makeSafeClone.js'
+import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
 
 export default [
@@ -31,17 +32,17 @@ export default [
   {
     fn: () => {
       const bigIntValue = BigInt(123)
-      return makeSafeClone(bigIntValue) === bigIntValue
+      return { clone: makeSafeClone(bigIntValue), original: bigIntValue }
     },
-    expect: true,
+    expect: (v: { clone: unknown; original: bigint }) => v.clone === v.original,
     info: 'returns BigInt as-is',
   },
   {
     fn: () => {
       const sym = Symbol('test')
-      return makeSafeClone(sym) === sym
+      return { clone: makeSafeClone(sym), original: sym }
     },
-    expect: true,
+    expect: (v: { clone: unknown; original: symbol }) => v.clone === v.original,
     info: 'returns Symbol as-is',
   },
   {
@@ -82,9 +83,9 @@ export default [
     fn: () => {
       const err = new Error('test error')
       const clone = makeSafeClone(err)
-      return is.object(clone) || is.string(clone)
+      return clone
     },
-    expect: true,
+    expect: (v: unknown) => is.object(v) || is.string(v),
     info: 'handles Error objects',
   },
   // Error path tests - trigger structuredClone failure and fallback
@@ -102,9 +103,9 @@ export default [
       const obj = new Proxy({ a: 1 }, handler)
       // This should trigger the error path and fallback to JSON.stringify or String
       const result = makeSafeClone(obj)
-      return is.string(result) || is.object(result)
+      return result
     },
-    expect: true,
+    expect: (v: unknown) => is.string(v) || is.object(v),
     info: 'handles objects that fail structuredClone (line 15-16 path)',
   },
   {
@@ -114,19 +115,19 @@ export default [
       const obj = { [sym]: 'value' }
       // This should either clone successfully or fall back gracefully
       const result = makeSafeClone(obj)
-      return is.string(result) || is.object(result)
+      return result
     },
-    expect: true,
+    expect: (v: unknown) => is.string(v) || is.object(v),
     info: 'handles objects with symbol keys',
   },
   {
     fn: () => {
       // Object that can be cloned by structuredClone
       const obj = { nested: { value: 42 }, arr: [1, 2, 3] }
-      const result = makeSafeClone(obj) as typeof obj
-      return result.nested.value === 42 && result.arr[0] === 1
+      const result = makeSafeClone(obj)
+      return result
     },
-    expect: true,
+    expect: { nested: { value: 42 }, arr: [1, 2, 3] },
     info: 'deeply nested objects are cloned correctly',
   },
   {
@@ -134,9 +135,9 @@ export default [
       // Object with undefined values
       const obj = { a: undefined, b: null, c: 1 }
       const result = makeSafeClone(obj)
-      return is.objectNative(result) && 'a' in result && 'b' in result && result.c === 1
+      return result
     },
-    expect: true,
+    expect: has.properties({ a: undefined, b: null, c: 1 }),
     info: 'handles undefined and null values',
   },
 ] satisfies TestCase[]

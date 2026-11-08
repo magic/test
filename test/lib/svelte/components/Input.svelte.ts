@@ -1,21 +1,22 @@
 import { html, trigger } from '#lib/svelte/index.js'
 import { flushSync } from 'svelte'
 import type { TestContext, TestCase } from '#src/types.js'
+import { has } from '#lib/has.js'
 
 const component = '#lib/svelte/testFixtures/components/Input.svelte'
 
 export default [
   {
     component,
-    fn: ({ target }: TestContext) => html(target).includes('text-input'),
-    expect: true,
+    fn: ({ target }: TestContext) => html(target),
+    expect: has.string('text-input'),
     info: 'renders text input element',
   },
   {
     component,
     props: { placeholder: 'Enter text...' },
-    fn: ({ target }: TestContext) => html(target).includes('Enter text...'),
-    expect: true,
+    fn: ({ target }: TestContext) => html(target),
+    expect: has.string('Enter text...'),
     info: 'renders input with custom placeholder',
   },
   {
@@ -40,15 +41,15 @@ export default [
   {
     component,
     props: { value: 'test' },
-    fn: ({ target }: TestContext) => html(target).includes('Length: 4'),
-    expect: true,
+    fn: ({ target }: TestContext) => html(target),
+    expect: has.string('Length: 4'),
     info: 'shows correct length for initial value',
   },
   {
     component,
     props: { value: '' },
-    fn: ({ target }: TestContext) => html(target).includes('Type here...'),
-    expect: true,
+    fn: ({ target }: TestContext) => html(target),
+    expect: has.string('Type here...'),
     info: 'uses default placeholder when not specified',
   },
   {
@@ -60,8 +61,8 @@ export default [
   {
     component,
     props: { value: '' },
-    fn: ({ target }: TestContext) => html(target).includes('Length: 0'),
-    expect: true,
+    fn: ({ target }: TestContext) => html(target),
+    expect: has.string('Length: 0'),
     info: 'shows Length: 0 for empty value',
   },
   {
@@ -74,8 +75,8 @@ export default [
   {
     component,
     props: { value: 'hello' },
-    fn: ({ target }: TestContext) => html(target).includes('Length: 5'),
-    expect: true,
+    fn: ({ target }: TestContext) => html(target),
+    expect: has.string('Length: 5'),
     info: 'shows correct length for hello',
   },
   {

@@ -1,4 +1,6 @@
 import { getWorkerPool, getEffectiveWorkerLimit } from '#lib/workerPool.js'
+import * as reexported from '#src/run/lib/getWorkerPool.js'
+import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
@@ -36,9 +38,9 @@ const tests: TestCase[] = [
       } else {
         process.env.MAGIC_TEST_WORKERS = original
       }
-      return result === 4
+      return result
     },
-    expect: true,
+    expect: 4,
     info: 'MAGIC_TEST_WORKERS env var honored',
   },
   {
@@ -52,9 +54,9 @@ const tests: TestCase[] = [
         process.env.MAGIC_TEST_WORKERS = original
       }
       // falls back to availableParallelism - 2
-      return result >= 1
+      return result
     },
-    expect: true,
+    expect: (v: number) => v >= 1,
     info: 'invalid env var falls back to parallelism',
   },
   {
@@ -67,9 +69,9 @@ const tests: TestCase[] = [
       } else {
         process.env.MAGIC_TEST_WORKERS = original
       }
-      return result >= 1
+      return result
     },
-    expect: true,
+    expect: (v: number) => v >= 1,
     info: 'env var 0 clamped to at least 1',
   },
   {
@@ -80,9 +82,9 @@ const tests: TestCase[] = [
       if (original !== undefined) {
         process.env.MAGIC_TEST_WORKERS = original
       }
-      return result >= 1
+      return result
     },
-    expect: true,
+    expect: (v: number) => v >= 1,
     info: 'no env var falls back to parallelism',
   },
   // pool queues tasks beyond the limit
@@ -101,9 +103,9 @@ const tests: TestCase[] = [
         }),
       )
       const results = await Promise.all(tasks)
-      return maxConcurrent === 1 && JSON.stringify(results) === JSON.stringify([1, 2, 3, 4, 5])
+      return { maxConcurrent, results }
     },
-    expect: true,
+    expect: has.properties({ maxConcurrent: 1, results: [1, 2, 3, 4, 5] }),
     info: 'pool with limit 1 serializes tasks in order',
   },
   // pool releases slots on task completion
@@ -126,9 +128,9 @@ const tests: TestCase[] = [
       })
       await Promise.all([t1, t2, t3])
       // t3 must start after t2 finishes (limit 2)
-      return order[0] === 1 && order[1] === 2 && order[2] === 3 && order[3] === 5
+      return order.slice(0, 4)
     },
-    expect: true,
+    expect: [1, 2, 3, 5],
     info: 'queued task starts when a slot frees up',
   },
   // pool propagates errors and releases slot
@@ -145,9 +147,9 @@ const tests: TestCase[] = [
       }
       // pool should still accept work after error
       const next = await pool(async () => 'recovered')
-      return caught && next === 'recovered'
+      return { caught, next }
     },
-    expect: true,
+    expect: has.properties({ caught: true, next: 'recovered' }),
     info: 'pool releases slot after task error',
   },
   // default limit from getWorkerPool() (no arg)
@@ -155,10 +157,24 @@ const tests: TestCase[] = [
     fn: async () => {
       const pool = getWorkerPool()
       const r = await pool(async () => 'ok')
-      return r === 'ok'
+      return r
     },
-    expect: true,
+    expect: 'ok',
     info: 'getWorkerPool() without limit works',
+  },
+  // re-export module identity
+  {
+    fn: () => {
+      return {
+        samePool: reexported.getWorkerPool === getWorkerPool,
+        sameLimit: reexported.getEffectiveWorkerLimit === getEffectiveWorkerLimit,
+        workerLimitIsPositiveNumber:
+          typeof reexported.WORKER_LIMIT === 'number' && reexported.WORKER_LIMIT > 0,
+      }
+    },
+    expect: (v: { samePool: boolean; sameLimit: boolean; workerLimitIsPositiveNumber: boolean }) =>
+      v.samePool && v.sameLimit && v.workerLimitIsPositiveNumber,
+    info: 'run/lib/getWorkerPool re-exports the same helpers as lib/workerPool',
   },
 ]
 

@@ -38,7 +38,7 @@ export default {
         const canvas = globalThis.document.createElement('canvas')
         return canvas.width
       },
-      expect: (t: number) => t === 300,
+      expect: 300,
       info: 'HTMLCanvasElement width defaults to 300',
     },
   ],

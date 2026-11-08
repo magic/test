@@ -1,4 +1,5 @@
 import { html } from '#lib/svelte/index.js'
+import { has } from '#lib/has.js'
 import type { TestContext } from '#src/types.js'
 
 const component = '#lib/svelte/testFixtures/components/Modal.svelte'
@@ -9,9 +10,9 @@ export default [
     props: { open: false, title: 'Test Modal' },
     fn: async ({ target }: TestContext) => {
       const result = html(target)
-      return result === '' || result === '<!---->'
+      return result
     },
-    expect: true,
+    expect: has.oneOf('', '<!---->'),
     info: 'does not render when open is false',
   },
   {
@@ -19,9 +20,9 @@ export default [
     props: { open: true, title: 'Test Modal' },
     fn: async ({ target }: TestContext) => {
       const result = html(target)
-      return result.includes('modal-overlay') && result.includes('Test Modal')
+      return result
     },
-    expect: true,
+    expect: has.string('modal-overlay', 'Test Modal'),
     info: 'renders modal when open is true',
   },
 ]

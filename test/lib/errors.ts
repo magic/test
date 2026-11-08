@@ -1,4 +1,5 @@
 import is from '@magic/types'
+import { has } from '#lib/has.js'
 import { ERRORS, ERROR_MESSAGES, createError } from '#lib/errors.js'
 import type { TestCase } from '#src/types.js'
 
@@ -69,49 +70,49 @@ export default [
   {
     fn: () => {
       const err = new Error('inner')
-      return ERROR_MESSAGES.E_TEST_EXPECT('myTest', err).includes('myTest')
+      return ERROR_MESSAGES.E_TEST_EXPECT('myTest', err)
     },
-    expect: true,
+    expect: has.string('myTest'),
     info: 'E_TEST_EXPECT includes test name',
   },
   {
     fn: () => {
       const err = new Error('hook failed')
-      return ERROR_MESSAGES.E_TEST_BEFORE('myTest', err).includes('hook failed')
+      return ERROR_MESSAGES.E_TEST_BEFORE('myTest', err)
     },
-    expect: true,
+    expect: has.string('hook failed'),
     info: 'E_TEST_BEFORE includes error',
   },
   {
     fn: () => {
       const err = new Error('beforeEach failed')
-      return ERROR_MESSAGES.E_TEST_BEFORE_EACH('myTest', err).includes('beforeEach failed')
+      return ERROR_MESSAGES.E_TEST_BEFORE_EACH('myTest', err)
     },
-    expect: true,
+    expect: has.string('beforeEach failed'),
     info: 'E_TEST_BEFORE_EACH generates correct message',
   },
   {
     fn: () => {
       const err = new Error('after failed')
-      return ERROR_MESSAGES.E_TEST_AFTER('myTest', err).includes('after failed')
+      return ERROR_MESSAGES.E_TEST_AFTER('myTest', err)
     },
-    expect: true,
+    expect: has.string('after failed'),
     info: 'E_TEST_AFTER generates correct message',
   },
   {
     fn: () => {
       const err = new Error('afterEach failed')
-      return ERROR_MESSAGES.E_TEST_AFTER_EACH('myTest', err).includes('afterEach failed')
+      return ERROR_MESSAGES.E_TEST_AFTER_EACH('myTest', err)
     },
-    expect: true,
+    expect: has.string('afterEach failed'),
     info: 'E_TEST_AFTER_EACH generates correct message',
   },
   {
     fn: () => {
       const err = new Error('fn failed')
-      return ERROR_MESSAGES.E_TEST_FN('myTest', err).includes('fn failed')
+      return ERROR_MESSAGES.E_TEST_FN('myTest', err)
     },
-    expect: true,
+    expect: has.string('fn failed'),
     info: 'E_TEST_FN generates correct message',
   },
   {

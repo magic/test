@@ -1,11 +1,12 @@
 import is from '@magic/types'
 import fs from '@magic/fs'
+import { has } from '#lib/has.js'
 
 export default [
   {
     fn: async () => {
       const pkgExists = await fs.exists('package.json')
-      return pkgExists === true
+      return pkgExists
     },
     expect: true,
     info: 'fs.exists works for existing file',
@@ -13,41 +14,41 @@ export default [
   {
     fn: async () => {
       const missingExists = await fs.exists('/nonexistent/path/xyz')
-      return missingExists === false
+      return missingExists
     },
-    expect: true,
+    expect: false,
     info: 'fs.exists returns false for missing file',
   },
   {
     fn: async () => {
       const result = await fs.stat('package.json')
-      return is.objectNative(result) && 'mtimeMs' in result
+      return result
     },
-    expect: true,
+    expect: [is.objectNative, has.key('mtimeMs')],
     info: 'fs.stat returns an object with mtimeMs',
   },
   {
     fn: async () => {
       const content = await fs.readFile('package.json', 'utf-8')
       const parsed = JSON.parse(content)
-      return parsed.name === '@magic/test'
+      return parsed.name
     },
-    expect: true,
+    expect: '@magic/test',
     info: 'fs.readFile reads file content correctly',
   },
   {
     fn: async () => {
       const entries = await fs.readdir('src/lib/caches')
-      return is.array(entries) && entries.length > 0
+      return entries
     },
-    expect: true,
+    expect: [is.arr, (v: unknown[]) => v.length > 0],
     info: 'fs.readdir returns array of entries',
   },
   {
     fn: async () => {
       const absPath = new URL(import.meta.url).pathname
       const exists = await fs.exists(absPath)
-      return exists === true
+      return exists
     },
     expect: true,
     info: 'fs.exists works with absolute paths',

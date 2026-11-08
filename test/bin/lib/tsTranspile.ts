@@ -1,18 +1,19 @@
 import is from '@magic/types'
+import { has } from '#lib/has.js'
 import { transpileWithTypescript } from '#src/bin/lib/tsTranspile.js'
 
 export default [
   {
-    fn: () => is.fn(transpileWithTypescript),
-    expect: true,
+    fn: () => transpileWithTypescript,
+    expect: is.function,
     info: 'transpileWithTypescript is exported and is a function',
   },
   {
     fn: () => {
       const result = transpileWithTypescript('const x: number = 42')
-      return is.string(result) && result.includes('x')
+      return result
     },
-    expect: true,
+    expect: [is.str, has.string('x')],
     info: 'strips TypeScript type annotation from const',
   },
   {
@@ -26,41 +27,41 @@ export default [
   {
     fn: () => {
       const result = transpileWithTypescript('class Greeter { greet(): string { return "hello" } }')
-      return is.string(result) && result.includes('class') && result.includes('greet')
+      return result
     },
-    expect: true,
+    expect: [is.str, has.string('class', 'greet')],
     info: 'transforms class with typed methods',
   },
   {
     fn: () => {
       const result = transpileWithTypescript('const fn = (a: string): number => 0')
-      return is.string(result) && result.includes('a')
+      return result
     },
-    expect: true,
+    expect: [is.str, has.string('a')],
     info: 'strips typed arrow function parameters',
   },
   {
     fn: () => {
       const result = transpileWithTypescript('let x: Array<string> = []')
-      return is.string(result)
+      return result
     },
-    expect: true,
+    expect: is.str,
     info: 'handles generic type parameters',
   },
   {
     fn: () => {
       const result = transpileWithTypescript('')
-      return is.string(result)
+      return result
     },
-    expect: true,
+    expect: is.str,
     info: 'empty string produces valid output (adds "use strict")',
   },
   {
     fn: () => {
       const result = transpileWithTypescript('export type Foo = { name: string; age: number }')
-      return is.string(result)
+      return result
     },
-    expect: true,
+    expect: is.str,
     info: 'handles export type declarations',
   },
   {
@@ -78,9 +79,9 @@ export default [
       const result = transpileWithTypescript(
         'async function fetch(url: string): Promise<string> { return "" }',
       )
-      return is.string(result) && result.includes('async') && result.includes('fetch')
+      return result
     },
-    expect: true,
+    expect: [is.str, has.string('async', 'fetch')],
     info: 'handles async function with typed params and return',
   },
   {

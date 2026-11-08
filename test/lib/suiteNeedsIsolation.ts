@@ -1,4 +1,5 @@
 import { suiteNeedsIsolation } from '#lib/suiteNeedsIsolation.js'
+import { has } from '#lib/has.js'
 import { walkTests } from '#lib/analysis/testWalker.js'
 import type { Test } from '#src/types.js'
 
@@ -131,9 +132,9 @@ export default [
       walkTests(null, () => {
         visited++
       })
-      return visited === 0
+      return visited
     },
-    expect: true,
+    expect: 0,
     info: 'walkTests with null visits nothing',
   },
   // walkTests visits each test in array
@@ -148,9 +149,9 @@ export default [
           }
         },
       )
-      return visited.length === 1 && visited[0] === 'a'
+      return visited
     },
-    expect: true,
+    expect: ['a'],
     info: 'walkTests visits array elements',
   },
   // walkTests early exit when visitor returns true
@@ -161,9 +162,9 @@ export default [
         count++
         return true
       })
-      return count === 1
+      return count
     },
-    expect: true,
+    expect: 1,
     info: 'walkTests stops early when visitor returns true',
   },
   // walkTests recurses into test.tests
@@ -181,9 +182,9 @@ export default [
         }
         return false
       })
-      return visitedKeys.includes('leaf')
+      return visitedKeys
     },
-    expect: true,
+    expect: has.includes('leaf'),
     info: 'walkTests recurses into nested keys',
   },
   // walkTests visits object top-level hooks then nested
@@ -205,9 +206,9 @@ export default [
           return false
         },
       )
-      return visited.includes('hooks') && visited.includes('test')
+      return visited
     },
-    expect: true,
+    expect: has.includes('hooks', 'test'),
     info: 'walkTests visits top-level hooks and nested tests',
   },
 ] satisfies Test[]

@@ -1,5 +1,7 @@
 import path from 'node:path'
 import { statCached, existsCached, clearPathCache } from '#lib/caches/pathCache.js'
+import { has } from '#lib/has.js'
+import is from '@magic/types'
 import type { TestCase } from '#src/types.js'
 
 const CWD = process.cwd()
@@ -12,13 +14,9 @@ const tests: TestCase[] = [
     fn: async () => {
       clearPathCache()
       const result = await statCached(existingFile)
-      return (
-        result.exists === true &&
-        typeof result.mtime === 'number' &&
-        typeof result.size === 'number'
-      )
+      return result
     },
-    expect: true,
+    expect: has.properties({ exists: true, mtime: is.num, size: is.num }),
     info: 'statCached returns exists=true with mtime and size for existing file',
   },
   // statCached for missing file
@@ -26,9 +24,9 @@ const tests: TestCase[] = [
     fn: async () => {
       clearPathCache()
       const result = await statCached(missingFile)
-      return result.exists === false
+      return result.exists
     },
-    expect: true,
+    expect: false,
     info: 'statCached returns exists=false for missing file',
   },
   // statCached caches the result (second call returns same object)
@@ -37,9 +35,9 @@ const tests: TestCase[] = [
       clearPathCache()
       const first = await statCached(existingFile)
       const second = await statCached(existingFile)
-      return first === second
+      return { first, second }
     },
-    expect: true,
+    expect: (v: { first: unknown; second: unknown }) => v.first === v.second,
     info: 'statCached returns cached object on second call',
   },
   // existsCached for existing file
@@ -68,9 +66,9 @@ const tests: TestCase[] = [
       clearPathCache()
       const second = await statCached(existingFile)
       // after clear, a new object is created
-      return first !== second && second.exists === true
+      return { same: first === second, exists: second.exists }
     },
-    expect: true,
+    expect: has.properties({ same: false, exists: true }),
     info: 'clearPathCache invalidates cached entries',
   },
   // mixed existing/missing entries can be cached together
@@ -79,9 +77,9 @@ const tests: TestCase[] = [
       clearPathCache()
       const a = await statCached(existingFile)
       const b = await statCached(missingFile)
-      return a.exists === true && b.exists === false
+      return { a: a.exists, b: b.exists }
     },
-    expect: true,
+    expect: has.properties({ a: true, b: false }),
     info: 'mixed existing and missing paths cache independently',
   },
 ]

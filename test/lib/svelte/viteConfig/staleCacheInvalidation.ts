@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { has } from '#lib/has.js'
 import { fs } from '@magic/fs'
 import { CACHE_DIR } from '#src/constants.js'
 import { loadViteAliases } from '#lib/svelte/viteConfig/loadViteAliases.js'
@@ -50,9 +51,9 @@ export default {
         )
         const after = await loadViteAliases(root)
 
-        return [before.length === 0, after]
+        return { before, after }
       },
-      expect: [true, [{ find: '$sc', replacement: '/a' }]],
+      expect: has.properties({ before: [], after: [{ find: '$sc', replacement: '/a' }] }),
       info: 'stale negative cache invalidated when config appears',
     },
     {
@@ -99,9 +100,13 @@ export default {
         const second = await loadViteAliases(root)
         const third = await loadViteAliases(root)
 
-        return [first, second.length === 0, third.length === 0]
+        return { first, second, third }
       },
-      expect: [[{ find: '$sc', replacement: '/a' }], true, true],
+      expect: has.properties({
+        first: [{ find: '$sc', replacement: '/a' }],
+        second: [],
+        third: [],
+      }),
       info: 'stale positive cache invalidated when config is deleted',
     },
     {

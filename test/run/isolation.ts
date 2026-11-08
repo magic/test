@@ -1,6 +1,9 @@
 import is from '@magic/types'
 import { isolation } from '#src/run/isolation.js'
+import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
+
+const re = /test/gi
 
 export default [
   {
@@ -8,36 +11,33 @@ export default [
     fn: () => {
       const obj = { a: 1, b: { c: 2 } }
       const cloned = isolation.deepClone(obj)
-      return obj !== cloned && cloned.b.c === 2
+      return { clone: cloned, original: obj }
     },
-    expect: true,
+    expect: (v: { clone: { a: number; b: { c: number } }; original: object }) =>
+      v.clone !== v.original && v.clone.b.c === 2,
   },
   {
     name: 'isolation deepClone with Date',
     fn: () => {
       const date = new Date('2024-01-01')
       const cloned = isolation.deepClone(date)
-      return cloned.getTime() === date.getTime()
+      return [cloned.getTime(), date.getTime()]
     },
-    expect: true,
+    expect: (v: [number, number]) => v[0] === v[1],
   },
   {
     name: 'isolation deepClone with RegExp',
-    fn: () => {
-      const re = /test/gi
-      const cloned = isolation.deepClone(re)
-      return cloned.source === re.source && cloned.flags === re.flags
-    },
-    expect: true,
+    fn: () => isolation.deepClone(re),
+    expect: has.properties({ source: 'test', flags: 'gi' }),
   },
   {
     name: 'isolation deepClone with Set',
     fn: () => {
       const set = new Set([1, 2, 3])
       const cloned = isolation.deepClone(set)
-      return cloned.has(1) && cloned.has(2) && cloned.has(3)
+      return [...(cloned as Set<number>)].sort()
     },
-    expect: true,
+    expect: [1, 2, 3],
   },
   {
     name: 'isolation deepClone with Map',
@@ -46,34 +46,33 @@ export default [
         ['a', 1],
         ['b', 2],
       ])
-      const cloned = isolation.deepClone(map)
-      return cloned.get('a') === 1 && cloned.get('b') === 2
+      const cloned = isolation.deepClone(map) as Map<string, number>
+      return { a: cloned.get('a'), b: cloned.get('b') }
     },
-    expect: true,
+    expect: { a: 1, b: 2 },
   },
   {
     name: 'isolation deepClone returns primitives',
-    fn: () => {
-      return isolation.deepClone(42) === 42
-    },
-    expect: true,
+    fn: () => isolation.deepClone(42),
+    expect: 42,
   },
   {
     name: 'isolation deepClone returns null',
-    fn: () => {
-      return isolation.deepClone(null) === null
-    },
-    expect: true,
+    fn: () => isolation.deepClone(null),
+    expect: null,
   },
   {
     name: 'isolation deepClone with Symbol-keyed properties',
     fn: () => {
       const sym = Symbol('test')
-      const obj = { [sym]: 'value', regular: 'prop' }
+      const obj = { [sym]: 'value', regular: 'prop' } as { regular: string }
       const cloned = isolation.deepClone(obj)
-      return obj !== cloned && cloned.regular === 'prop'
+      return { clone: cloned, original: obj, regular: (cloned as { regular: string }).regular }
     },
-    expect: true,
+    expect: [
+      (v: { clone: object; original: object }) => v.clone !== v.original,
+      has.properties({ regular: 'prop' }),
+    ],
   },
   {
     name: 'isolation deepClone with getter/setter',
@@ -86,20 +85,20 @@ export default [
         },
       }
       const cloned = isolation.deepClone(obj)
-      const result = cloned.value
-      return getterCalled && result === 42
+      const value = (cloned as typeof obj).value
+      return { getterCalled, value }
     },
-    expect: true,
+    expect: has.properties({ getterCalled: true, value: 42 }),
   },
   {
     name: 'isolation deepClone with non-enumerable properties',
     fn: () => {
       const obj = { visible: 1 }
       Object.defineProperty(obj, 'hidden', { value: 2, enumerable: false })
-      const cloned = isolation.deepClone(obj)
-      return cloned.visible === 1 && Object.hasOwn(cloned, 'hidden')
+      const cloned = isolation.deepClone(obj) as typeof obj
+      return { visible: cloned.visible, hasHidden: Object.hasOwn(cloned, 'hidden') }
     },
-    expect: true,
+    expect: has.properties({ visible: 1, hasHidden: true }),
   },
   {
     name: 'isolation deepClone preserves prototype',
@@ -124,9 +123,9 @@ export default [
     fn: () => {
       const err = new Error('test error')
       const cloned = isolation.deepClone(err)
-      return cloned === err
+      return { clone: cloned, original: err }
     },
-    expect: true,
+    expect: (v: { clone: unknown; original: Error }) => v.clone === v.original,
   },
   {
     name: 'isolation deepClone returns Function unchanged',
@@ -135,9 +134,9 @@ export default [
         return 42
       }
       const cloned = isolation.deepClone(fn)
-      return cloned === fn
+      return { clone: cloned, original: fn }
     },
-    expect: true,
+    expect: (v: { clone: unknown; original: () => number }) => v.clone === v.original,
   },
   {
     name: 'isolation deepClone handles circular reference',
@@ -145,9 +144,10 @@ export default [
       const obj: { a: number; self?: object } = { a: 1, self: undefined }
       obj.self = obj
       const cloned = isolation.deepClone(obj)
-      return cloned !== obj && cloned.a === 1 && cloned.self === cloned
+      return { clone: cloned, original: obj }
     },
-    expect: true,
+    expect: (v: { clone: { a: number; self?: object }; original: object }) =>
+      v.clone !== v.original && v.clone.a === 1 && v.clone.self === v.clone,
   },
   {
     name: 'isolation deepClone handles array circular reference',
@@ -155,27 +155,34 @@ export default [
       const arr: Array<number | number[]> = [1, 2]
       arr.push(arr as number[])
       const cloned = isolation.deepClone(arr)
-      return cloned !== arr && cloned[0] === 1 && cloned[2] === cloned
+      return { clone: cloned, original: arr }
     },
-    expect: true,
+    expect: (v: { clone: Array<number | number[]>; original: Array<number | number[]> }) =>
+      v.clone !== v.original && v.clone[0] === 1 && v.clone[2] === v.clone,
   },
   {
     name: 'isolation deepClone with TypedArray',
     fn: () => {
       const arr = new Uint8Array([1, 2, 3])
       const cloned = isolation.deepClone(arr)
-      return cloned.length === 3 && cloned[0] === 1 && cloned[1] === 2 && cloned[2] === 3
+      return Array.from(cloned as Uint8Array)
     },
-    expect: true,
+    expect: [1, 2, 3],
   },
   {
     name: 'isolation deepClone with nested circular in object',
     fn: () => {
       const inner = { b: 1 }
       const outer = { a: inner, nested: inner }
-      const cloned = isolation.deepClone(outer) as typeof outer
-      return cloned.a !== outer.a && cloned.nested !== outer.nested && cloned.a === cloned.nested
+      const cloned = isolation.deepClone(outer)
+      return { clone: cloned, original: outer }
     },
-    expect: true,
+    expect: (v: {
+      clone: { a: { b: number }; nested: { b: number } }
+      original: { a: { b: number }; nested: { b: number } }
+    }) =>
+      v.clone.a !== v.original.a &&
+      v.clone.nested !== v.original.nested &&
+      v.clone.a === v.clone.nested,
   },
 ] satisfies TestCase[]

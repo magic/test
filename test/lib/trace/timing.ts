@@ -10,6 +10,8 @@ import {
   getTraceSummary,
   getTraceData,
 } from '#lib/trace/timing.js'
+import { has } from '#lib/has.js'
+import is from '@magic/types'
 import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [
@@ -17,9 +19,9 @@ const tests: TestCase[] = [
   {
     fn: () => {
       disableTracing()
-      return isTracingEnabled() === false
+      return isTracingEnabled()
     },
-    expect: true,
+    expect: false,
     info: 'disableTracing turns tracing off',
   },
   // enableTracing
@@ -28,7 +30,7 @@ const tests: TestCase[] = [
       enableTracing()
       const wasEnabled = isTracingEnabled()
       disableTracing()
-      return wasEnabled === true
+      return wasEnabled
     },
     expect: true,
     info: 'enableTracing turns tracing on',
@@ -37,9 +39,9 @@ const tests: TestCase[] = [
   {
     fn: () => {
       disableTracing()
-      return traceStart('op') === 'op'
+      return traceStart('op')
     },
-    expect: true,
+    expect: 'op',
     info: 'traceStart returns name when disabled',
   },
   // traceStart returns id when enabled
@@ -48,18 +50,18 @@ const tests: TestCase[] = [
       enableTracing()
       const id = traceStart('op2')
       disableTracing()
-      return typeof id === 'string' && id.length > 0 && id !== 'op2'
+      return id
     },
-    expect: true,
+    expect: (v: unknown) => is.string(v) && v.length > 0 && v !== 'op2',
     info: 'traceStart returns unique id when enabled',
   },
   // traceEnd returns undefined when disabled
   {
     fn: () => {
       disableTracing()
-      return traceEnd('some-id') === undefined
+      return traceEnd('some-id')
     },
-    expect: true,
+    expect: undefined,
     info: 'traceEnd returns undefined when disabled',
   },
   // traceEnd returns undefined for unknown id
@@ -68,9 +70,9 @@ const tests: TestCase[] = [
       enableTracing()
       const result = traceEnd('nonexistent-id')
       disableTracing()
-      return result === undefined
+      return result
     },
-    expect: true,
+    expect: undefined,
     info: 'traceEnd returns undefined for unknown id',
   },
   // traceStart + traceEnd round trip returns duration
@@ -80,9 +82,9 @@ const tests: TestCase[] = [
       const id = traceStart('roundtrip')
       const duration = traceEnd(id, 'compiled')
       disableTracing()
-      return typeof duration === 'number' && duration >= 0
+      return duration
     },
-    expect: true,
+    expect: [is.num, (v: number) => v >= 0],
     info: 'traceStart/traceEnd round trip returns duration',
   },
   // traceEnd with cache hit details
@@ -92,9 +94,9 @@ const tests: TestCase[] = [
       const id = traceStart('cache-test')
       const duration = traceEnd(id, 'cache hit')
       disableTracing()
-      return typeof duration === 'number'
+      return duration
     },
-    expect: true,
+    expect: is.num,
     info: 'traceEnd handles cache hit details',
   },
   // traceEnd with cached [memory] details
@@ -104,9 +106,9 @@ const tests: TestCase[] = [
       const id = traceStart('cache-test2')
       const duration = traceEnd(id, 'cached [disk]')
       disableTracing()
-      return typeof duration === 'number'
+      return duration
     },
-    expect: true,
+    expect: is.num,
     info: 'traceEnd handles cached [disk] details',
   },
   // traceAsync success
@@ -115,27 +117,27 @@ const tests: TestCase[] = [
       enableTracing()
       const result = await traceAsync('async-op', async () => 'value', 'compiled')
       disableTracing()
-      return result === 'value'
+      return result
     },
-    expect: true,
+    expect: 'value',
     info: 'traceAsync returns fn result',
   },
   // traceAsync error propagation
   {
     fn: async () => {
       enableTracing()
-      let caught = false
+      let msg = ''
       try {
         await traceAsync('async-err', async () => {
           throw new Error('async fail')
         })
       } catch (e) {
-        caught = e instanceof Error && e.message === 'async fail'
+        msg = (e as Error).message
       }
       disableTracing()
-      return caught
+      return msg
     },
-    expect: true,
+    expect: 'async fail',
     info: 'traceAsync propagates errors',
   },
   // getTraceSummary returns entries
@@ -145,15 +147,12 @@ const tests: TestCase[] = [
       const id = traceStart('summary-op Counter.svelte')
       traceEnd(id, 'compiled')
       const summary = getTraceSummary()
-      const has = summary.some(
-        (e: { name?: string; component?: string }) =>
-          e.name === 'summary-op Counter.svelte' && e.component === 'Counter.svelte',
-      )
       resetTraces()
       disableTracing()
-      return has
+      return summary
     },
-    expect: true,
+    expect: (s: { name?: string; component?: string }[]) =>
+      s.some(e => e.name === 'summary-op Counter.svelte' && e.component === 'Counter.svelte'),
     info: 'getTraceSummary includes entries with component extraction',
   },
   // getTraceSummary extracts component from filename
@@ -171,9 +170,9 @@ const tests: TestCase[] = [
       const plain = summary.find((e: { name?: string }) => e.name === 'plain-op')
       resetTraces()
       disableTracing()
-      return card?.component === 'Card.svelte' && plain?.component === undefined
+      return { card: card?.component, plain: plain?.component }
     },
-    expect: true,
+    expect: has.properties({ card: 'Card.svelte', plain: undefined }),
     info: 'component extracted only for filename-like last segment',
   },
   // getTraceData is alias of getTraceSummary
@@ -186,9 +185,9 @@ const tests: TestCase[] = [
       const b = getTraceData()
       resetTraces()
       disableTracing()
-      return Array.isArray(a) && a.length === b.length
+      return { a, b }
     },
-    expect: true,
+    expect: (v: { a: unknown; b: unknown[] }) => Array.isArray(v.a) && v.a.length === v.b.length,
     info: 'getTraceData matches getTraceSummary',
   },
   // resetTraces clears entries
@@ -200,9 +199,9 @@ const tests: TestCase[] = [
       resetTraces()
       const summary = getTraceSummary()
       disableTracing()
-      return summary.length === 0
+      return summary
     },
-    expect: true,
+    expect: [],
     info: 'resetTraces clears all trace entries',
   },
   // printTraceSummary with entries (smoke test)
@@ -244,9 +243,9 @@ const tests: TestCase[] = [
       } finally {
         console.log = origLog
       }
-      return !printed
+      return printed
     },
-    expect: true,
+    expect: false,
     info: 'printTraceSummary is a no-op when disabled',
   },
 ]

@@ -1,5 +1,6 @@
 import { html, props } from '#lib/svelte/index.js'
 import type { TestContext, TestCase } from '#src/types.js'
+import { has } from '#lib/has.js'
 
 const component = '#lib/svelte/testFixtures/components/Button.svelte'
 
@@ -20,8 +21,8 @@ export default [
   {
     component,
     props: { variant: 'danger' },
-    fn: ({ target }: TestContext) => html(target).includes('btn danger'),
-    expect: true,
+    fn: ({ target }: TestContext) => html(target),
+    expect: has.string('btn danger'),
     info: 'renders button with danger variant',
   },
   {
@@ -65,16 +66,16 @@ export default [
     fn: ({ target }: TestContext) => {
       const _button = target.querySelector('button')!
       // onclick is passed as an event handler attribute
-      return html(target).includes('btn primary')
+      return html(target)
     },
-    expect: true,
+    expect: has.string('btn primary'),
     info: 'button renders with correct class',
   },
   {
     component,
     props: { variant: 'outline' },
-    fn: ({ target }: TestContext) => html(target).includes('btn outline'),
-    expect: true,
+    fn: ({ target }: TestContext) => html(target),
+    expect: has.string('btn outline'),
     info: 'renders button with custom variant class',
   },
   {

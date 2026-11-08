@@ -1,4 +1,5 @@
 import is from '@magic/types'
+import { has } from '#lib/has.js'
 import { initGlobals } from '#lib/dom/globals.js'
 
 export default {
@@ -32,9 +33,9 @@ export default {
         const el = globalThis.document.createElement('div')
         el.textContent = 'test'
         const result = xs.serializeToString(el)
-        return result.includes('test')
+        return result
       },
-      expect: true,
+      expect: has.string('test'),
       info: 'XMLSerializer.serializeToString includes text content',
     },
     {

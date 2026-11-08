@@ -1,6 +1,7 @@
 import log from '@magic/log'
 import { runSuite } from '#src/run/suite.js'
 import { createStore } from '#lib/store.js'
+import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
 import is from '@magic/types'
 
@@ -17,9 +18,9 @@ export default [
         tests: [],
         store,
       })
-      return result === undefined
+      return result
     },
-    expect: true,
+    expect: undefined,
   },
   {
     name: 'runSuite with index.mjs returns undefined',
@@ -33,9 +34,9 @@ export default [
         tests: [],
         store,
       })
-      return result === undefined
+      return result
     },
-    expect: true,
+    expect: undefined,
   },
   {
     name: 'runSuite runs nested object exports',
@@ -51,9 +52,9 @@ export default [
         },
         store,
       })
-      return result && result.tests && result.tests.length > 0
+      return result?.tests?.length
     },
-    expect: true,
+    expect: (v: number | undefined) => is.number(v) && is.gt(v, 0),
   },
   {
     name: 'runSuite runs array of tests',
@@ -70,9 +71,9 @@ export default [
         ],
         store,
       })
-      return result && result.tests && result.tests.length === 2
+      return result?.tests?.length
     },
-    expect: true,
+    expect: 2,
   },
   {
     name: 'runSuite handles beforeAll hook',
@@ -92,9 +93,9 @@ export default [
         },
         store,
       })
-      return result && !!beforeAllCalled
+      return { hasResult: !!result, called: beforeAllCalled }
     },
-    expect: true,
+    expect: has.properties({ hasResult: true, called: true }),
   },
   {
     name: 'runSuite handles afterAll hook',
@@ -114,9 +115,9 @@ export default [
         },
         store,
       })
-      return result && !!afterAllCalled
+      return { hasResult: !!result, called: afterAllCalled }
     },
-    expect: true,
+    expect: has.properties({ hasResult: true, called: true }),
   },
   {
     name: 'runSuite beforeAll that returns cleanup function calls it after tests',
@@ -138,9 +139,9 @@ export default [
         },
         store,
       })
-      return result && !!cleanupCalled
+      return { hasResult: !!result, called: cleanupCalled }
     },
-    expect: true,
+    expect: has.properties({ hasResult: true, called: true }),
   },
   {
     name: 'runSuite returns suite with name property',
@@ -154,9 +155,9 @@ export default [
         tests: [{ fn: true, expect: true, name: 'test', pkg: 'p', parent: '' }],
         store,
       })
-      return result && result.name === 'named-suite'
+      return result?.name
     },
-    expect: true,
+    expect: 'named-suite',
   },
   {
     name: 'runSuite returns suite with parent property',
@@ -170,9 +171,9 @@ export default [
         tests: [{ fn: true, expect: true, name: 'test', pkg: 'p', parent: '' }],
         store,
       })
-      return result && result.parent === 'parent-suite'
+      return result?.parent
     },
-    expect: true,
+    expect: 'parent-suite',
   },
   {
     name: 'runSuite returns suite with pkg property',
@@ -186,9 +187,9 @@ export default [
         tests: [{ fn: true, expect: true, name: 'test', pkg: 'p', parent: '' }],
         store,
       })
-      return result && result.pkg === 'my-pkg-suite'
+      return result?.pkg
     },
-    expect: true,
+    expect: 'my-pkg-suite',
   },
   {
     name: 'runSuite returns suite with duration property',
@@ -222,8 +223,8 @@ export default [
         },
         store,
       })
-      return result && result.tests && result.tests.length > 0
+      return result?.tests?.length
     },
-    expect: true,
+    expect: (v: number | undefined) => is.number(v) && v > 0,
   },
 ] satisfies TestCase[]

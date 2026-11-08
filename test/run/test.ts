@@ -1,6 +1,9 @@
+import { is } from '@magic/types'
+
 import { runTest } from '#src/run/test.js'
 import { createStore } from '#lib/store.js'
-import type { TestCase } from '#src/types.js'
+import { has } from '#lib/has.js'
+import type { TestCase, TestResult } from '#src/types.js'
 
 export default [
   {
@@ -16,9 +19,9 @@ export default [
         },
         store,
       )) as { tests?: unknown[] } | undefined
-      return result && 'tests' in result && result.tests && result.tests.length > 0
+      return result?.tests?.length
     },
-    expect: true,
+    expect: (v: number | undefined) => is.number(v) && v > 0,
   },
   {
     name: 'runTest returns pass=true for passing test',
@@ -34,7 +37,7 @@ export default [
         },
         store,
       )
-      return result && result.pass === true
+      return result?.pass
     },
     expect: true,
   },
@@ -52,7 +55,7 @@ export default [
         },
         store,
       )
-      return result && result.pass === true
+      return result?.pass
     },
     expect: true,
   },
@@ -69,7 +72,7 @@ export default [
         },
         store,
       )
-      return result && result.pass === true
+      return result?.pass
     },
     expect: true,
   },
@@ -87,7 +90,7 @@ export default [
         },
         store,
       )
-      return result && result.pass === true
+      return result?.pass
     },
     expect: true,
   },
@@ -111,9 +114,9 @@ export default [
         },
         store,
       )
-      return result && !!result.pass && !!cleanupCalled
+      return { pass: !!result?.pass, cleanupCalled }
     },
-    expect: true,
+    expect: has.properties({ pass: true, cleanupCalled: true }),
   },
   {
     name: 'runTest handles after hook',
@@ -133,9 +136,9 @@ export default [
         },
         store,
       )
-      return result && !!result.pass && !!afterCalled
+      return { pass: !!result?.pass, afterCalled }
     },
-    expect: true,
+    expect: has.properties({ pass: true, afterCalled: true }),
   },
 
   {
@@ -153,9 +156,9 @@ export default [
         },
         store,
       )
-      return result && 'info' in result && result.info === 'test info message'
+      return (result as TestResult)?.info
     },
-    expect: true,
+    expect: 'test info message',
   },
   {
     name: 'runTest returns result object with expected value',
@@ -171,8 +174,8 @@ export default [
         },
         store,
       )
-      return result && 'result' in result && result.result === 'actual'
+      return (result as TestResult)?.result
     },
-    expect: true,
+    expect: 'actual',
   },
 ] satisfies TestCase[]

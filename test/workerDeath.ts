@@ -242,9 +242,10 @@ srv.close()
 process.exit(0)
 `
       const r = await runChild(['--input-type=module', '-e', script], repoRoot, {}, 15000)
-      return { ...r, label: 'remote-fetch', ok: r.code === 0 && r.out.includes('OK') }
+      return { ...r, label: 'remote-fetch' }
     },
-    expect: (result: unknown) => (result as { ok: boolean }).ok,
+    expect: (result: { code: number; out: string }) =>
+      result.code === 0 && result.out.includes('OK'),
     info: 'remote fetch bounded: non-responding http module times out with a clear error (was: hang)',
   },
 ] satisfies TestCase[]

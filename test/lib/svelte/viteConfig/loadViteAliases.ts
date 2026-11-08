@@ -28,9 +28,9 @@ export default {
         const root = makeRoot('no-config')
         await fs.mkdirp(root)
         const result = await loadViteAliases(root)
-        return is.array(result) && result.length === 0
+        return result
       },
-      expect: true,
+      expect: [],
       info: 'returns [] when no config file exists',
     },
     {
@@ -48,9 +48,9 @@ export default {
           `,
         )
         const result = await loadViteAliases(root)
-        return is.array(result) && result.length === 1
+        return result
       },
-      expect: true,
+      expect: is.len.eq(1),
       info: 'loads aliases from config',
     },
     {

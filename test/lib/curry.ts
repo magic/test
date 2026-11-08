@@ -7,9 +7,9 @@ const tests: TestCase[] = [
     fn: () => {
       const sum = (a: number, b: number) => a + b
       const curried = curry(sum, 5)
-      return typeof curried === 'function' && curried(3) === 8
+      return (curried as (n: number) => number)(3)
     },
-    expect: true,
+    expect: 8,
     info: 'curry(sum, 5) returns function that adds 5 to argument',
   },
   // curry with function as first argument, two pre-filled args (immediate call)
@@ -17,9 +17,9 @@ const tests: TestCase[] = [
     fn: () => {
       const sum = (a: number, b: number) => a + b
       const result = curry(sum, 2, 3)
-      return result === 5
+      return result
     },
-    expect: true,
+    expect: 5,
     info: 'curry(sum, 2, 3) returns 5 (immediate call)',
   },
   // curry with function as first arg, no pre-filled args (returns function that needs all args)
@@ -27,11 +27,9 @@ const tests: TestCase[] = [
     fn: () => {
       const sum = (a: number, b: number) => a + b
       const curried = curry(sum)
-      return (
-        typeof curried === 'function' && typeof curried(2) === 'function' && curried(2)(3) === 5
-      )
+      return (curried as (n: number) => (n: number) => number)(2)(3)
     },
-    expect: true,
+    expect: 5,
     info: 'curry(sum) returns function that needs all args',
   },
   // curry with function that takes 0 args
@@ -39,9 +37,9 @@ const tests: TestCase[] = [
     fn: () => {
       const getFive = () => 5
       const result = curry(getFive)
-      return result === 5
+      return result
     },
-    expect: true,
+    expect: 5,
     info: 'curry(getFive) returns 5 immediately',
   },
   // curry with function that takes 1 arg
@@ -49,9 +47,9 @@ const tests: TestCase[] = [
     fn: () => {
       const double = (x: number) => x * 2
       const curried = curry(double)
-      return typeof curried === 'function' && curried(5) === 10
+      return (curried as (n: number) => number)(5)
     },
-    expect: true,
+    expect: 10,
     info: 'curry(double) returns function that doubles argument',
   },
   // curry with function that takes 3 args
@@ -60,9 +58,9 @@ const tests: TestCase[] = [
       const sum3 = (a: number, b: number, c: number) => a + b + c
       const curried = curry(sum3, 1)
       const curried2 = (curried as (a: number) => unknown)(2)
-      return typeof curried2 === 'function' && curried2(3) === 6
+      return (curried2 as (n: number) => number)(3)
     },
-    expect: true,
+    expect: 6,
     info: 'curry(sum3, 1) chains correctly for 3-arg function',
   },
   // curry with function as last argument (finds function in args)
@@ -70,9 +68,9 @@ const tests: TestCase[] = [
     fn: () => {
       const sum = (a: number, b: number) => a + b
       const curried = curry(5, sum)
-      return typeof curried === 'function' && curried(3) === 8
+      return (curried as (n: number) => number)(3)
     },
-    expect: true,
+    expect: 8,
     info: 'curry(5, sum) finds function in args',
   },
   // Error: no function provided at all
@@ -80,14 +78,12 @@ const tests: TestCase[] = [
     fn: () => {
       try {
         curry(1, 2, 3)
-        return false
+        return 'no-error'
       } catch (e) {
-        return (
-          e instanceof Error && e.message === 'curry expects a function as first or last argument'
-        )
+        return (e as Error).message
       }
     },
-    expect: true,
+    expect: 'curry expects a function as first or last argument',
     info: 'curry throws error when no function provided',
   },
   // Error: too many arguments
@@ -96,12 +92,12 @@ const tests: TestCase[] = [
       try {
         const sum = (a: number, b: number) => a + b
         curry(sum, 1, 2, 3)
-        return false
+        return 'no-error'
       } catch (e) {
-        return e instanceof Error && e.message === 'too many arguments passed to curried function'
+        return (e as Error).message
       }
     },
-    expect: true,
+    expect: 'too many arguments passed to curried function',
     info: 'curry throws error when too many arguments provided',
   },
   // Error: function not found in args
@@ -109,14 +105,12 @@ const tests: TestCase[] = [
     fn: () => {
       try {
         curry('not a function', 1, 2, 'also not a function')
-        return false
+        return 'no-error'
       } catch (e) {
-        return (
-          e instanceof Error && e.message === 'curry expects a function as first or last argument'
-        )
+        return (e as Error).message
       }
     },
-    expect: true,
+    expect: 'curry expects a function as first or last argument',
     info: 'curry throws error when function not found',
   },
   // curry with undefined as first arg, function as second
@@ -124,9 +118,9 @@ const tests: TestCase[] = [
     fn: () => {
       const sum = (a: number, b: number) => a + b
       const curried = curry(undefined, sum)
-      return typeof curried === 'function' && isNaN(curried(3))
+      return (curried as (n: number) => number)(3)
     },
-    expect: true,
+    expect: Number.isNaN,
     info: 'curry(undefined, sum) pre-fills with undefined',
   },
   // curry with null as first arg, function as second
@@ -134,9 +128,9 @@ const tests: TestCase[] = [
     fn: () => {
       const sum = (a: number, b: number) => a + b
       const curried = curry(null, sum)
-      return typeof curried === 'function' && curried(3) === 3
+      return (curried as (n: number) => number)(3)
     },
-    expect: true,
+    expect: 3,
     info: 'curry(null, sum) pre-fills with null',
   },
   // curry with empty string as first arg, function as second
@@ -144,9 +138,9 @@ const tests: TestCase[] = [
     fn: () => {
       const sum = (a: number, b: number) => a + b
       const curried = curry('', sum)
-      return typeof curried === 'function' && curried(3) == 3 // empty string results in string
+      return (curried as (n: number) => string)(3)
     },
-    expect: true,
+    expect: '3', // empty string results in string
     info: 'curry("", sum) pre-fills with empty string',
   },
   // curry with number as first arg, function as second
@@ -154,9 +148,9 @@ const tests: TestCase[] = [
     fn: () => {
       const sum = (a: number, b: number) => a + b
       const curried = curry(42, sum)
-      return typeof curried === 'function' && curried(3) === 45
+      return (curried as (n: number) => number)(3)
     },
-    expect: true,
+    expect: 45,
     info: 'curry(42, sum) pre-fills with number',
   },
 ]

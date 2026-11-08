@@ -1,4 +1,5 @@
 import { html, createSnippet } from '#lib/svelte/index.js'
+import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
 
 const component = '#lib/svelte/testFixtures/components/SnippetButton.svelte'
@@ -9,7 +10,8 @@ export default [
     props: {
       children: createSnippet(() => '<span>Click me</span>'),
     },
-    fn: ({ target }) => html(target).includes('Click me'),
+    fn: ({ target }) => html(target),
+    expect: has.string('Click me'),
     info: 'renders snippet content',
   },
   {
@@ -18,7 +20,8 @@ export default [
       children: createSnippet(() => '<span>Custom Content</span>'),
       variant: 'primary',
     },
-    fn: ({ target }) => html(target).includes('Custom Content'),
+    fn: ({ target }) => html(target),
+    expect: has.string('Custom Content'),
     info: 'renders custom snippet content',
   },
   {
@@ -36,7 +39,8 @@ export default [
       children: createSnippet(() => '<span>Enabled Button</span>'),
       disabled: false,
     },
-    fn: ({ target }) => !target.querySelector('button')!.disabled,
+    fn: ({ target }) => target.querySelector('button')!.disabled,
+    expect: false,
     info: 'button is enabled when disabled prop is false',
   },
   {
@@ -45,7 +49,8 @@ export default [
       children: createSnippet(() => '<span>Variant Test</span>'),
       variant: 'secondary',
     },
-    fn: ({ target }) => html(target).includes('btn secondary'),
+    fn: ({ target }) => html(target),
+    expect: has.string('btn secondary'),
     info: 'renders button with secondary variant class',
   },
   {
@@ -71,7 +76,8 @@ export default [
       children: createSnippet(() => '<span>Primary Button</span>'),
       variant: 'primary',
     },
-    fn: ({ target }) => html(target).includes('btn primary'),
+    fn: ({ target }) => html(target),
+    expect: has.string('btn primary'),
     info: 'renders button with primary variant class',
   },
   {
@@ -80,7 +86,8 @@ export default [
       children: createSnippet(() => '<span>Custom Variant</span>'),
       variant: 'custom',
     },
-    fn: ({ target }) => html(target).includes('btn custom'),
+    fn: ({ target }) => html(target),
+    expect: has.string('btn custom'),
     info: 'renders button with custom variant class',
   },
   {
@@ -88,7 +95,8 @@ export default [
     props: {
       children: createSnippet(() => '<span>Default disabled</span>'),
     },
-    fn: ({ target }) => !target.querySelector('button')!.disabled,
+    fn: ({ target }) => target.querySelector('button')!.disabled,
+    expect: false,
     info: 'button is enabled by default when disabled not provided',
   },
   {
@@ -98,7 +106,11 @@ export default [
       variant: undefined,
       disabled: undefined,
     },
-    fn: ({ target }) => html(target).includes('btn') && !target.querySelector('button')!.disabled,
+    fn: ({ target }) => ({
+      html: html(target),
+      disabled: target.querySelector('button')!.disabled,
+    }),
+    expect: (v: { html: string; disabled: boolean }) => v.html.includes('btn') && !v.disabled,
     info: 'handles undefined props for both variant and disabled',
   },
 ] satisfies TestCase[]

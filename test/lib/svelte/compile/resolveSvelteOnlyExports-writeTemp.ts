@@ -40,18 +40,18 @@ export default [
       const code = 'export const x = 123'
       const path1 = await writeTempFile('dedup1.js', code)
       const path2 = await writeTempFile('dedup1.js', code)
-      return path1 === path2
+      return { path1, path2 }
     },
-    expect: true,
+    expect: (v: { path1: string; path2: string }) => v.path1 === v.path2,
     info: 'writeTempFile deduplicates pending writes for same path',
   },
   {
     fn: async () => {
       const path1 = await writeTempFile('a.js', 'export const a = 1')
       const path2 = await writeTempFile('b.js', 'export const b = 2')
-      return path1 !== path2
+      return { path1, path2 }
     },
-    expect: true,
+    expect: (v: { path1: string; path2: string }) => v.path1 !== v.path2,
     info: 'writeTempFile returns different paths for different files',
   },
   {

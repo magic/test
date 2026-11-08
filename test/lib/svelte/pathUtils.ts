@@ -6,7 +6,20 @@ import {
   FALLBACK_CANDIDATES,
 } from '#lib/svelte/compile/pathUtils.js'
 import { getCwd } from '#src/constants.js'
+import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
+
+const beforeAllBase = path.join(getCwd(), 'test', 'beforeAll')
+const pkgJsonPath = path.join(getCwd(), 'package.json')
+const buttonJsPath = path.join(
+  getCwd(),
+  'src',
+  'lib',
+  'svelte',
+  'testFixtures',
+  'components',
+  'Button.js',
+)
 
 const tests: TestCase[] = [
   // isSkipPattern
@@ -20,13 +33,13 @@ const tests: TestCase[] = [
 
   // EXTENSION_CANDIDATES
   {
-    fn: () => EXTENSION_CANDIDATES.includes('') && EXTENSION_CANDIDATES.includes('.svelte'),
-    expect: true,
+    fn: () => EXTENSION_CANDIDATES,
+    expect: has.includes('', '.svelte'),
     info: 'EXTENSION_CANDIDATES contains empty and .svelte',
   },
   {
-    fn: () => FALLBACK_CANDIDATES.includes('index.js'),
-    expect: true,
+    fn: () => FALLBACK_CANDIDATES,
+    expect: has.includes('index.js'),
     info: 'FALLBACK_CANDIDATES contains index.js',
   },
 
@@ -34,64 +47,51 @@ const tests: TestCase[] = [
   {
     fn: async () => {
       // an existing .js file relative to getCwd()
-      const base = path.join(getCwd(), 'test', 'beforeAll')
       // beforeAll.ts exists
-      return (await resolveFilePath(base)) === base + '.ts'
+      return await resolveFilePath(beforeAllBase)
     },
-    expect: true,
+    expect: beforeAllBase + '.ts',
     info: 'resolveFilePath finds .ts file',
   },
   {
     fn: async () => {
       const base = path.join(getCwd(), 'test', 'nonexistent-file-xyz')
-      return (await resolveFilePath(base)) === null
+      return await resolveFilePath(base)
     },
-    expect: true,
+    expect: null,
     info: 'resolveFilePath returns null when nothing found',
   },
   {
     fn: async () => {
       // package.json exists
-      const base = path.join(getCwd(), 'package.json')
-      return (await resolveFilePath(base)) === base
+      return await resolveFilePath(pkgJsonPath)
     },
-    expect: true,
+    expect: pkgJsonPath,
     info: 'resolveFilePath returns exact existing file',
   },
   {
     fn: async () => {
       // restrict to only .mjs extension -> found for beforeAll.mjs
-      const base = path.join(getCwd(), 'test', 'beforeAll')
-      return (await resolveFilePath(base, ['.mjs'])) === base + '.mjs'
+      return await resolveFilePath(beforeAllBase, ['.mjs'])
     },
-    expect: true,
+    expect: beforeAllBase + '.mjs',
     info: 'resolveFilePath with restricted extensions finds .mjs',
   },
   {
     fn: async () => {
       // restrict to only .svx extension -> nothing found
-      const base = path.join(getCwd(), 'test', 'beforeAll')
-      return (await resolveFilePath(base, ['.svx'])) === null
+      return await resolveFilePath(beforeAllBase, ['.svx'])
     },
-    expect: true,
+    expect: null,
     info: 'resolveFilePath with non-matching extension returns null',
   },
   {
     fn: async () => {
       // .js base with .svelte sibling: #lib/svelte/testFixtures/components/Button.svelte
       // base ends in .js: .../Button.js -> strip to Button + .svelte
-      const base = path.join(
-        getCwd(),
-        'src',
-        'lib',
-        'svelte',
-        'testFixtures',
-        'components',
-        'Button.js',
-      )
-      return (await resolveFilePath(base)) === base.slice(0, -3) + '.svelte'
+      return await resolveFilePath(buttonJsPath)
     },
-    expect: true,
+    expect: buttonJsPath.slice(0, -3) + '.svelte',
     info: 'resolveFilePath swaps .js for .svelte sibling',
   },
 ]

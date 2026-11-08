@@ -1,4 +1,5 @@
 import { html, tick } from '#lib/svelte/index.js'
+import { has } from '#lib/has.js'
 import type { TestContext, TestCase } from '#src/types.js'
 
 const component = '#lib/svelte/testFixtures/components/List.svelte'
@@ -15,9 +16,9 @@ export default [
     },
     fn: async ({ target }: TestContext) => {
       const result = html(target)
-      return result.includes('My List') && result.includes('Item 1') && result.includes('Item 2')
+      return result
     },
-    expect: true,
+    expect: has.string('My List', 'Item 1', 'Item 2'),
     info: 'renders list with items and title',
   },
   {
@@ -50,27 +51,27 @@ export default [
     component,
     props: { items: [] },
     fn: async ({ target }: TestContext) => {
-      return html(target).includes('Total: 0')
+      return html(target)
     },
-    expect: true,
+    expect: has.string('Total: 0'),
     info: 'shows Total: 0 for empty list',
   },
   {
     component,
     props: { items: [{ id: 1, text: 'Item 1' }] },
     fn: async ({ target }: TestContext) => {
-      return html(target).includes('Total: 1')
+      return html(target)
     },
-    expect: true,
+    expect: has.string('Total: 1'),
     info: 'shows correct total for list with items',
   },
   {
     component,
     props: { items: [{ id: 1, text: 'Item 1' }] },
     fn: async ({ target }: TestContext) => {
-      return html(target).includes('List')
+      return html(target)
     },
-    expect: true,
+    expect: has.string('List'),
     info: 'uses default title when not provided',
   },
   {

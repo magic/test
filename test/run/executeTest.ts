@@ -1,4 +1,5 @@
 import { executeTest } from '#src/run/lib/executeTest.js'
+import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [
@@ -50,7 +51,7 @@ const tests: TestCase[] = [
       const obj = { a: 1 }
       return executeTest(obj, 'key')
     },
-    expect: (result: unknown) => result !== null && (result as { a?: number }).a === 1,
+    expect: has.properties({ a: 1 }),
     info: 'executeTest returns object as-is',
   },
   // function that throws
@@ -80,9 +81,9 @@ const tests: TestCase[] = [
         'key',
         '#lib/svelte/testFixtures/components/Button.svelte',
       )
-      return result === 123 && sawContext
+      return { result, sawContext }
     },
-    expect: true,
+    expect: has.properties({ result: 123, sawContext: true }),
     info: 'executeTest mounts component and passes { target, component, unmount } to fn',
   },
   // component with props
@@ -95,9 +96,9 @@ const tests: TestCase[] = [
         '#lib/svelte/testFixtures/components/Button.svelte',
         { variant: 'danger' },
       )
-      return (result as string).includes('btn danger')
+      return result as string
     },
-    expect: true,
+    expect: has.string('btn danger'),
     info: 'executeTest passes props to component (renders danger variant)',
   },
   // #lib import map path resolves via package.json "imports" mapping
@@ -105,14 +106,15 @@ const tests: TestCase[] = [
     fn: async () => {
       try {
         await executeTest(() => 42, 'key', '#lib/svelte/mount.ts')
-        return false // should not reach here
+        return 'no-error-thrown' // should not reach here
       } catch (err) {
         // Should fail during Svelte compilation (not file not found)
         // since mount.ts exists but is not a .svelte component
-        return err instanceof Error && !err.message.includes('Svelte component not found')
+        return (err as Error).message
       }
     },
-    expect: true,
+    expect: (msg: string) =>
+      msg !== 'no-error-thrown' && !msg.includes('Svelte component not found'),
     info: 'executeTest resolves #lib import map paths for component files',
   },
   // unmount is called even if fn throws

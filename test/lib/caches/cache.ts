@@ -1,4 +1,5 @@
 import { CacheManager, pendingPromises } from '#lib/caches/cache.js'
+import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
 
 // TestCache for generic type
@@ -26,9 +27,9 @@ export default [
     fn: () => {
       const cm = new CacheManager<TestCache>()
       const stats = cm.getStats()
-      return stats.hits === 0 && stats.misses === 0 && stats.hitRate === '0.0'
+      return stats
     },
-    expect: true,
+    expect: has.properties({ hits: 0, misses: 0, hitRate: '0.0' }),
     info: 'new CacheManager has zero stats',
   },
   // reset clears state
@@ -39,9 +40,9 @@ export default [
       cm.hits = 3
       cm.reset()
       const stats = cm.getStats()
-      return stats.misses === 0 && stats.hits === 0
+      return stats
     },
-    expect: true,
+    expect: has.properties({ misses: 0, hits: 0 }),
     info: 'reset clears hits and misses',
   },
   // isSvelteResult type guard - valid result
@@ -69,9 +70,9 @@ export default [
     fn: () => {
       const cm = new CacheManager<TestCache>()
       const priv = getPrivate(cm)
-      return !priv.isSvelteResult({ css: 'style' })
+      return priv.isSvelteResult({ css: 'style' })
     },
-    expect: true,
+    expect: false,
     info: 'isSvelteResult returns false without js',
   },
   // isSvelteResult type guard - null
@@ -79,9 +80,9 @@ export default [
     fn: () => {
       const cm = new CacheManager<TestCache>()
       const priv = getPrivate(cm)
-      return !priv.isSvelteResult(null)
+      return priv.isSvelteResult(null)
     },
-    expect: true,
+    expect: false,
     info: 'isSvelteResult returns false for null',
   },
   // isSvelteResult type guard - undefined
@@ -89,9 +90,9 @@ export default [
     fn: () => {
       const cm = new CacheManager<TestCache>()
       const priv = getPrivate(cm)
-      return !priv.isSvelteResult(undefined)
+      return priv.isSvelteResult(undefined)
     },
-    expect: true,
+    expect: false,
     info: 'isSvelteResult returns false for undefined',
   },
   // isSvelteResult type guard - array
@@ -99,9 +100,9 @@ export default [
     fn: () => {
       const cm = new CacheManager<TestCache>()
       const priv = getPrivate(cm)
-      return !priv.isSvelteResult(['code'])
+      return priv.isSvelteResult(['code'])
     },
-    expect: true,
+    expect: false,
     info: 'isSvelteResult returns false for array',
   },
   // isSvelteResult type guard - string
@@ -109,9 +110,9 @@ export default [
     fn: () => {
       const cm = new CacheManager<TestCache>()
       const priv = getPrivate(cm)
-      return !priv.isSvelteResult('not an object')
+      return priv.isSvelteResult('not an object')
     },
-    expect: true,
+    expect: false,
     info: 'isSvelteResult returns false for string',
   },
   // memoryCache starts empty
@@ -119,9 +120,9 @@ export default [
     fn: () => {
       const cm = new CacheManager<TestCache>()
       const priv = getPrivate(cm)
-      return priv.memoryCache.size === 0
+      return priv.memoryCache.size
     },
-    expect: true,
+    expect: 0,
     info: 'memoryCache is initially empty',
   },
   // reset clears pending cmgr: entries from the shared pendingPromises map
@@ -130,9 +131,9 @@ export default [
       const cm = new CacheManager<TestCache>()
       pendingPromises.set('cmgr:/tmp/nonexistent-test-file', Promise.resolve(undefined))
       cm.reset()
-      return !pendingPromises.has('cmgr:/tmp/nonexistent-test-file')
+      return pendingPromises.has('cmgr:/tmp/nonexistent-test-file')
     },
-    expect: true,
+    expect: false,
     info: 'reset clears cmgr: entries from shared pendingPromises',
   },
   // hit rate calculation
@@ -142,9 +143,9 @@ export default [
       cm.hits = 3
       cm.misses = 1
       const stats = cm.getStats()
-      return stats.hitRate === '75.0'
+      return stats.hitRate
     },
-    expect: true,
+    expect: '75.0',
     info: 'hitRate calculates correctly as percentage',
   },
   // hit rate with no requests
@@ -152,9 +153,9 @@ export default [
     fn: () => {
       const cm = new CacheManager<TestCache>()
       const stats = cm.getStats()
-      return stats.hitRate === '0.0'
+      return stats.hitRate
     },
-    expect: true,
+    expect: '0.0',
     info: 'hitRate is 0.0 when no requests',
   },
   // multiple resets are idempotent
@@ -164,9 +165,9 @@ export default [
       cm.misses = 10
       cm.reset()
       cm.reset()
-      return cm.getStats().misses === 0
+      return cm.getStats().misses
     },
-    expect: true,
+    expect: 0,
     info: 'multiple resets work correctly',
   },
   // generic CacheManager with different type
@@ -174,9 +175,9 @@ export default [
     fn: () => {
       const cm = new CacheManager<{ value: number }>()
       const stats = cm.getStats()
-      return stats.hits === 0
+      return stats.hits
     },
-    expect: true,
+    expect: 0,
     info: 'CacheManager works with different generic types',
   },
 ] satisfies TestCase[]

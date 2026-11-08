@@ -1,4 +1,5 @@
 import is from '@magic/types'
+import { has } from '#lib/has.js'
 import { get, post, http } from '#lib/http.js'
 import type { TestCase } from '#src/types.js'
 
@@ -37,48 +38,48 @@ export default [
         const { get } = http as { get: (url: string, opts?: unknown) => unknown }
         try {
           get('')
-          return false
+          return ''
         } catch (e) {
-          return (e as Error).message.includes('Invalid URL')
+          return (e as Error).message
         }
       }),
-    expect: true,
+    expect: has.string('Invalid URL'),
     info: 'get throws for empty string URL',
   },
   {
     fn: () => {
       try {
         get(42 as unknown as string)
-        return false
+        return ''
       } catch (e) {
-        return (e as Error).message.includes('Invalid URL')
+        return (e as Error).message
       }
     },
-    expect: true,
+    expect: has.string('Invalid URL'),
     info: 'get throws for non-string URL',
   },
   {
     fn: () => {
       try {
         get('ftp://example.com')
-        return false
+        return ''
       } catch (e) {
-        return (e as Error).message.includes('Unsupported protocol')
+        return (e as Error).message
       }
     },
-    expect: true,
+    expect: has.string('Unsupported protocol'),
     info: 'get throws for non-http protocol',
   },
   {
     fn: () => {
       try {
         get('not-a-valid-url')
-        return false
+        return ''
       } catch (e) {
-        return (e as Error).message.includes('Invalid URL')
+        return (e as Error).message
       }
     },
-    expect: true,
+    expect: has.string('Invalid URL'),
     info: 'get throws for invalid URL format',
   },
   // post URL validation
@@ -86,36 +87,36 @@ export default [
     fn: () => {
       try {
         post('')
-        return false
+        return ''
       } catch (e) {
-        return (e as Error).message.includes('Invalid URL')
+        return (e as Error).message
       }
     },
-    expect: true,
+    expect: has.string('Invalid URL'),
     info: 'post throws for empty string URL',
   },
   {
     fn: () => {
       try {
         post(42 as unknown as string)
-        return false
+        return ''
       } catch (e) {
-        return (e as Error).message.includes('Invalid URL')
+        return (e as Error).message
       }
     },
-    expect: true,
+    expect: has.string('Invalid URL'),
     info: 'post throws for non-string URL',
   },
   {
     fn: () => {
       try {
         post('ftp://example.com')
-        return false
+        return ''
       } catch (e) {
-        return (e as Error).message.includes('Unsupported protocol')
+        return (e as Error).message
       }
     },
-    expect: true,
+    expect: has.string('Unsupported protocol'),
     info: 'post throws for non-http protocol',
   },
   // shouldRejectUnauthorized env var

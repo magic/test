@@ -48,43 +48,28 @@ export default [
     info: 'returns false for empty string vs false',
   },
   {
-    fn: async () => {
-      const result = await evaluateTestResult(true, () => true)
-      return result.pass === true
-    },
+    fn: async () => (await evaluateTestResult(true, () => true)).pass,
     expect: true,
     info: 'handles function expectation returning true',
   },
   {
-    fn: async () => {
-      const result = await evaluateTestResult(false, () => false)
-      return result.pass
-    },
+    fn: async () => (await evaluateTestResult(false, () => false)).pass,
     expect: true,
     info: 'handles function expectation returning false (pass is true due to exp===res)',
   },
   {
-    fn: async () => {
-      const result = await evaluateTestResult(42, (res: number) => res > 40)
-      return result.pass === true
-    },
+    fn: async () => (await evaluateTestResult(42, (res: number) => res > 40)).pass,
     expect: true,
     info: 'handles function expectation with predicate',
   },
   {
-    fn: async () => {
-      const result = await evaluateTestResult(42, (res: number) => res > 50)
-      return result.pass === false
-    },
-    expect: true,
+    fn: async () => (await evaluateTestResult(42, (res: number) => res > 50)).pass,
+    expect: false,
     info: 'handles function expectation returning false for wrong value',
   },
   {
-    fn: async () => {
-      const result = await evaluateTestResult(Promise.resolve(42), Promise.resolve(42))
-      return result.pass === false
-    },
-    expect: true,
+    fn: async () => (await evaluateTestResult(Promise.resolve(42), Promise.resolve(42))).pass,
+    expect: false,
     info: 'handles promise expectation (strict equality fails)',
   },
 ] satisfies TestCase[]

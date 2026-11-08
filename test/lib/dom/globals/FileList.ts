@@ -36,9 +36,9 @@ export default {
         const input = globalThis.document.createElement('input')
         input.type = 'file'
         const item = input.files?.[0]
-        return item === null || item === undefined
+        return item
       },
-      expect: true,
+      expect: (v: unknown) => v === null || v === undefined,
       info: 'FileList indexed access returns null or undefined for empty',
     },
     {

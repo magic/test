@@ -33,18 +33,18 @@ export default [
       const result = await compileBarrel(barrelFixturePath)
       // Wrapper lives at the standard persistent-cache temp path (same naming
       // as getCachePath) so the recordCompile/getCachedCompile roundtrip works
-      return result.wrapperAbsPath === path.join(getCwd(), getTempFilePath(barrelFixturePath))
+      return result.wrapperAbsPath
     },
-    expect: true,
+    expect: path.join(getCwd(), getTempFilePath(barrelFixturePath)),
     info: 'compileBarrel writes the wrapper to the standard persistent-cache temp path',
   },
   {
     fn: async () => {
       barrelCache.delete(barrelFixturePath)
       const result = await compileBarrel(barrelFixturePath)
-      return result.js.includes('TestComponent')
+      return result.js
     },
-    expect: true,
+    expect: has.string('TestComponent'),
     info: 'compileBarrel generates wrapper code with TestComponent',
   },
   {
@@ -94,9 +94,9 @@ export default [
   {
     fn: async () => {
       const result = await compileBarrel(barrelWithTypeExportsPath)
-      return result.js.includes('type ')
+      return result.js
     },
-    expect: false,
+    expect: has.not.string('type '),
     info: 'compileBarrel filters out type-only exports',
   },
   {
@@ -106,9 +106,9 @@ export default [
       const before = barrelCache.has(cacheKey)
       await compileBarrel(barrelFixturePath)
       const after = barrelCache.has(cacheKey)
-      return before === false && after === true
+      return { before, after }
     },
-    expect: true,
+    expect: has.properties({ before: false, after: true }),
     info: 'compileBarrel caches result in barrelCache',
   },
   {
@@ -116,9 +116,9 @@ export default [
       barrelCache.delete(barrelFixturePath)
       const result1 = await compileBarrel(barrelFixturePath)
       const result2 = await compileBarrel(barrelFixturePath)
-      return result1.wrapperAbsPath === result2.wrapperAbsPath
+      return { a: result1.wrapperAbsPath, b: result2.wrapperAbsPath }
     },
-    expect: true,
+    expect: (v: { a: string; b: string }) => v.a === v.b,
     info: 'compileBarrel returns cached result on second call',
   },
 ] satisfies TestCase[]

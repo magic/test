@@ -1,4 +1,5 @@
 import is from '@magic/types'
+import { has } from '#lib/has.js'
 import { normalizeSingleAlias } from '#lib/svelte/viteConfig/normalizeSingleAlias.js'
 
 export default [
@@ -10,25 +11,28 @@ export default [
   {
     fn: () => {
       const result = normalizeSingleAlias({ find: '@', replacement: './src' }, '/tmp')
-      return result.find === '@' && result.replacement === '/tmp/src'
+      return result
     },
-    expect: true,
+    expect: has.properties({ find: '@', replacement: '/tmp/src' }),
     info: 'resolves relative replacement path',
   },
   {
     fn: () => {
       const result = normalizeSingleAlias({ find: /^@/, replacement: './src' }, '/tmp')
-      return is.regex(result.find) && result.find.source === '^@'
+      return result.find
     },
-    expect: true,
+    expect: [is.regex, has.properties({ source: '^@' })],
     info: 'handles RegExp object as find value',
   },
   {
     fn: () => {
       const result = normalizeSingleAlias({ find: '@/*', replacement: './src/*' }, '/tmp')
-      return is.regex(result.find) && result.replacement.endsWith('$1')
+      return result
     },
-    expect: true,
+    expect: [
+      has.properties({ find: is.regex }),
+      (v: { replacement: string }) => v.replacement.endsWith('$1'),
+    ],
     info: 'handles wildcard pattern with * suffix',
   },
   {
@@ -42,17 +46,20 @@ export default [
   {
     fn: () => {
       const result = normalizeSingleAlias({ find: null, replacement: './src' }, '/tmp')
-      return is.string(result.find) && result.replacement.endsWith('/src')
+      return result
     },
-    expect: true,
+    expect: [
+      has.properties({ find: is.str }),
+      (v: { replacement: string }) => v.replacement.endsWith('/src'),
+    ],
     info: 'handles non-string find value',
   },
   {
     fn: () => {
       const result = normalizeSingleAlias({ find: '/[invalid/g', replacement: './src' }, '/tmp')
-      return is.string(result.find) && result.find === '/[invalid/g'
+      return result.find
     },
-    expect: true,
+    expect: [is.str, '/[invalid/g'],
     info: 'handles invalid regex literal string',
   },
 ]

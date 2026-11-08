@@ -1,4 +1,5 @@
 import { handleWorkerError } from '#src/run/lib/handleWorkerError.js'
+import { has } from '#lib/has.js'
 import type { TestResult, TestCase } from '#src/types.js'
 
 const createTest = (overrides = {}): Parameters<typeof handleWorkerError>[0] => ({
@@ -18,9 +19,9 @@ export default [
       const error = new Error('test error')
       const test = createTest()
       const result = handleWorkerError(test, error, rawResults, silentErrorLog)
-      return result.pass === false && result.name === 'test-name'
+      return result
     },
-    expect: true,
+    expect: has.properties({ pass: false, name: 'test-name' }),
     info: 'returns fail result with test name',
   },
   {
@@ -29,9 +30,9 @@ export default [
       const error = new Error('test error')
       const test = createTest({ key: 'custom-key' })
       handleWorkerError(test, error, rawResults, silentErrorLog)
-      return rawResults[0]?.key === 'custom-key'
+      return rawResults[0]?.key
     },
-    expect: true,
+    expect: 'custom-key',
     info: 'pushes fail result to rawResults',
   },
   {
@@ -40,9 +41,9 @@ export default [
       const error = new Error('specific error')
       const test = createTest()
       handleWorkerError(test, error, rawResults, silentErrorLog)
-      return rawResults.length === 1
+      return rawResults.length
     },
-    expect: true,
+    expect: 1,
     info: 'adds exactly one result to rawResults',
   },
   {
@@ -50,9 +51,9 @@ export default [
       const rawResults: TestResult[] = []
       const test = createTest()
       const result = handleWorkerError(test, 'string error', rawResults, silentErrorLog)
-      return result.pass === false
+      return result.pass
     },
-    expect: true,
+    expect: false,
     info: 'handles non-Error argument',
   },
 ] satisfies TestCase[]

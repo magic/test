@@ -12,9 +12,9 @@ export default {
     {
       fn: () => {
         const ws = new WritableStream()
-        return ws.locked === false || ws.locked === undefined
+        return ws.locked
       },
-      expect: true,
+      expect: (v: unknown) => v === false || v === undefined,
       info: 'WritableStream.locked is false or undefined by default',
     },
     {

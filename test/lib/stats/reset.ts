@@ -1,4 +1,5 @@
 import { Store } from '#lib/store.js'
+import { has } from '#lib/has.js'
 import { reset } from '#lib/stats/reset.js'
 import type { TestCase } from '#src/types.js'
 
@@ -41,9 +42,9 @@ export default [
     fn: () => {
       const store = new Store()
       reset(store)
-      return store.state.pkg === '' && Object.keys(store.state.suites).length === 0
+      return { pkg: store.state.pkg, suiteCount: Object.keys(store.state.suites).length }
     },
-    expect: true,
+    expect: has.properties({ pkg: '', suiteCount: 0 }),
     info: 'reset works on fresh store',
   },
   // Multiple resets

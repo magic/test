@@ -1,4 +1,5 @@
 import { cleanError } from '#lib/cleanError.js'
+import { has } from '#lib/has.js'
 import type { Test } from '#src/types.js'
 import is from '@magic/types'
 
@@ -64,9 +65,9 @@ export default [
   {
     fn: () => {
       const original = { stack: '' }
-      return cleanError(original) === original
+      return { clone: cleanError(original), original }
     },
-    expect: true,
+    expect: (v: { clone: unknown; original: object }) => v.clone === v.original,
     info: 'cleanError({ stack: "" }) returns original object (empty stack is falsy)',
   },
   // cleanError with simple stack (no newline)
@@ -91,9 +92,9 @@ export default [
   {
     fn: () => {
       const result = cleanError(new Error('test error'))
-      return Array.isArray(result) && result[0] === 'Error: test error'
+      return result
     },
-    expect: true,
+    expect: [is.arr, has.at(0, 'Error: test error')],
     info: 'cleanError(new Error(...)) returns array with error message',
   },
   // cleanError with Error object containing stack trace
@@ -102,9 +103,9 @@ export default [
       const err = new Error('deep error')
       err.stack = 'Error: deep error\n    at cleanError.ts:5:10\n    at module.ts:10:20'
       const result = cleanError(err)
-      return Array.isArray(result) && result.length === 2
+      return result
     },
-    expect: true,
+    expect: [is.arr, is.len.eq(2)],
     info: 'cleanError with Error having stack trace returns 2-element array',
   },
   // cleanError with Error object with empty stack
@@ -112,9 +113,9 @@ export default [
     fn: () => {
       const err = new Error('no stack')
       err.stack = ''
-      return cleanError(err) === err
+      return { clone: cleanError(err), original: err }
     },
-    expect: true,
+    expect: (v: { clone: unknown; original: Error }) => v.clone === v.original,
     info: 'cleanError with empty stack returns original Error object',
   },
   // cleanError with Error having no stack property
@@ -122,9 +123,9 @@ export default [
     fn: () => {
       const err = new Error('no stack property')
       delete err.stack
-      return cleanError(err) === err
+      return { clone: cleanError(err), original: err }
     },
-    expect: true,
+    expect: (v: { clone: unknown; original: Error }) => v.clone === v.original,
     info: 'cleanError with no stack property returns original',
   },
 ] satisfies Test[]

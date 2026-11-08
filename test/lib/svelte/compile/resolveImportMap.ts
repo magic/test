@@ -5,6 +5,7 @@ import {
   resolveImportMapSpecifier,
   findNearestPackageJson,
 } from '#lib/svelte/compile/resolveImportMap.js'
+import { is } from '#src'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.join(__dirname, '..', '..', '..', '..')
@@ -30,44 +31,31 @@ export default [
       // not in the repo root - resolution must use the importing file's
       // package scope, not the repo root's.
       const resolved = await resolveImportMapSpecifier('#fix/Foo.svelte', fixturePkgJson)
-      return resolved === path.join(fixturePkgDir, 'src', 'Foo.svelte')
+      return resolved
     },
-    expect: true,
+    expect: path.join(fixturePkgDir, 'src', 'Foo.svelte'),
     info: 'resolveImportMapSpecifier resolves wildcard import-map entries to absolute paths',
   },
   {
-    fn: async () => {
-      // ".js" specifier with only a ".ts" file on disk -> .js -> .ts conversion
-      // (the "#fix-ts/*" map points at a dir that only contains .ts files)
-      const resolved = await resolveImportMapSpecifier('#fix-ts/thing.js', fixturePkgJson)
-      return resolved === path.join(fixturePkgDir, 'ts', 'thing.ts')
-    },
-    expect: true,
+    // ".js" specifier with only a ".ts" file on disk -> .js -> .ts conversion
+    // (the "#fix-ts/*" map points at a dir that only contains .ts files)
+    fn: async () => await resolveImportMapSpecifier('#fix-ts/thing.js', fixturePkgJson),
+    expect: path.join(fixturePkgDir, 'ts', 'thing.ts'),
     info: 'resolveImportMapSpecifier applies .js -> .ts conversion',
   },
   {
-    fn: async () => {
-      // Repo maps "#src": "./dist/index.js" (exact, non-wildcard entry)
-      const resolved = await resolveImportMapSpecifier('#src', repoPkgJson)
-      return resolved === path.join(repoRoot, 'dist', 'index.js')
-    },
-    expect: true,
+    fn: async () => await resolveImportMapSpecifier('#src', repoPkgJson),
+    expect: path.join(repoRoot, 'src', 'index.ts'),
     info: 'resolveImportMapSpecifier resolves exact-match entries',
   },
   {
-    fn: async () => {
-      const resolved = await resolveImportMapSpecifier('#unknown/nope.js', repoPkgJson)
-      return resolved === null
-    },
-    expect: true,
+    fn: async () => await resolveImportMapSpecifier('#unknown/nope.js', repoPkgJson),
+    expect: is.null,
     info: 'resolveImportMapSpecifier returns null for unknown specifiers',
   },
   {
-    fn: async () => {
-      const resolved = await resolveImportMapSpecifier('./relative.js', repoPkgJson)
-      return resolved === null
-    },
-    expect: true,
+    fn: async () => await resolveImportMapSpecifier('./relative.js', repoPkgJson),
+    expect: is.null,
     info: 'resolveImportMapSpecifier ignores non-# specifiers',
   },
   {
@@ -75,9 +63,9 @@ export default [
       // Walks up from the file to the nearest package.json (the fixture
       // package, NOT the repo root which also exists further up the tree).
       const pkgJson = await findNearestPackageJson(path.join(fixturePkgDir, 'src', 'Foo.svelte'))
-      return pkgJson === fixturePkgJson
+      return pkgJson
     },
-    expect: true,
+    expect: fixturePkgJson,
     info: 'findNearestPackageJson finds the nearest package.json for nested packages',
   },
   {
@@ -94,9 +82,9 @@ export default [
           'Index.svelte.js',
         ),
       )
-      return pkgJson === repoPkgJson
+      return pkgJson
     },
-    expect: true,
+    expect: repoPkgJson,
     info: 'findNearestPackageJson falls back to the repo root package.json',
   },
   {
@@ -106,20 +94,18 @@ export default [
         '#lib/svelte/compile/resolveImportMap.ts',
         repoPkgJson,
       )
-      return (
-        resolved === path.join(repoRoot, 'src', 'lib', 'svelte', 'compile', 'resolveImportMap.ts')
-      )
+      return resolved
     },
-    expect: true,
+    expect: path.join(repoRoot, 'src', 'lib', 'svelte', 'compile', 'resolveImportMap.ts'),
     info: 'resolveImportMapSpecifier resolves #lib/* to src/lib/*',
   },
   {
     fn: async () => {
       // Non-absolute input -> CWD package.json fallback
       const pkgJson = await findNearestPackageJson('relative/file.ts')
-      return pkgJson === path.resolve(process.cwd(), 'package.json')
+      return pkgJson
     },
-    expect: true,
+    expect: path.resolve(process.cwd(), 'package.json'),
     info: 'findNearestPackageJson falls back to CWD for non-absolute paths',
   },
 ]

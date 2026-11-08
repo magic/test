@@ -45,7 +45,7 @@ export default [
         parent: 'parent',
         info: 'test info',
       }),
-    expect: (r: { info: string }) => r.info === 'test info',
+    expect: has.property('info', 'test info'),
     info: 'uses provided info',
   },
   {
@@ -55,41 +55,41 @@ export default [
         pkg: 'pkg',
         parent: '',
       }),
-    expect: (r: { parent: string }) => r.parent === '',
+    expect: has.property('parent', ''),
     info: 'handles empty parent',
   },
   // Branch: error parameter creates error field
   {
     fn: () => {
       const result = createFailResult({ name: 'test', pkg: 'pkg', parent: '' }, new Error('boom'))
-      return is.array(result.error) && result.error.length >= 1
+      return result.error
     },
-    expect: true,
+    expect: [is.arr, (v: unknown[]) => v.length >= 1],
     info: 'attach cleaned error array when Error object provided',
   },
   {
     fn: () => {
       const result = createFailResult({ name: 'test', pkg: 'pkg', parent: '' }, 'string error')
-      return is.array(result.error)
+      return result.error
     },
-    expect: true,
+    expect: is.arr,
     info: 'non-Error values wrap to Error then clean to array',
   },
   {
     fn: () => {
       const result = createFailResult({ name: 'test', pkg: 'pkg', parent: '' }, undefined)
-      return 'error' in result === false
+      return 'error' in result
     },
-    expect: true,
+    expect: false,
     info: 'error field not added when undefined passed',
   },
   {
     fn: () => {
       const result = createFailResult({ name: 'test', pkg: 'pkg', parent: '' }, 42)
       const err = result.error as unknown[]
-      return is.array(err) && String(err[0] || '').includes('Error:')
+      return err
     },
-    expect: true,
+    expect: (e: unknown) => is.arr(e) && String((e as unknown[])[0] || '').includes('Error:'),
     info: 'primitives get wrapped and cleaned to array',
   },
 ] satisfies TestCase[]

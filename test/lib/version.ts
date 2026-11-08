@@ -194,9 +194,9 @@ export default [
       const lib = { fn: 'string' }
       const spec = { fn: (_v: unknown) => false }
       const results = version(lib as Record<string, unknown>, spec, 'lib')
-      return results.some(r => r.fn === false)
+      return results
     },
-    expect: true,
+    expect: (v: { fn: unknown }[]) => v.some(r => r.fn === false),
     info: 'returns false when function predicate fails',
   },
 ] satisfies TestCase[]

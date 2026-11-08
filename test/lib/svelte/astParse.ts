@@ -9,6 +9,8 @@ import {
   getExportNamedTargets,
   clearAstCache,
 } from '#lib/svelte/compile/astParse.js'
+import { has } from '#lib/has.js'
+import is from '@magic/types'
 import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [
@@ -16,75 +18,79 @@ const tests: TestCase[] = [
   {
     fn: () => {
       const imports = extractImportsSync('import { foo, bar } from "pkg";')
-      return (
-        imports.length === 1 &&
-        imports[0]!.source === 'pkg' &&
-        imports[0]!.localNames.includes('foo') &&
-        imports[0]!.localNames.includes('bar')
-      )
+      return imports
     },
-    expect: true,
+    expect: [
+      is.len.eq(1),
+      has.at(0, has.properties({ source: 'pkg', localNames: has.includes('foo', 'bar') })),
+    ],
     info: 'extractImportsSync extracts named imports with localNames',
   },
   {
     fn: () => {
       const imports = extractImportsSync('import def from "pkg";')
-      return imports.length === 1 && imports[0]!.localNames.includes('def')
+      return imports
     },
-    expect: true,
+    expect: [is.len.eq(1), has.at(0, has.properties({ localNames: has.includes('def') }))],
     info: 'extractImportsSync extracts default import',
   },
   {
     fn: () => {
       const imports = extractImportsSync('import * as ns from "pkg";')
-      return imports.length === 1 && imports[0]!.localNames.includes('ns')
+      return imports
     },
-    expect: true,
+    expect: [is.len.eq(1), has.at(0, has.properties({ localNames: has.includes('ns') }))],
     info: 'extractImportsSync extracts namespace import',
   },
   {
     fn: () => {
       const imports = extractImportsSync('import "side-effect";')
-      return imports.length === 1 && imports[0]!.localNames.length === 0
+      return imports
     },
-    expect: true,
+    expect: [is.len.eq(1), has.at(0, has.properties({ localNames: [] }))],
     info: 'extractImportsSync handles side-effect imports',
   },
   {
     fn: () => {
       const imports = extractImportsSync('const x = 1;')
-      return imports.length === 0
+      return imports
     },
-    expect: true,
+    expect: [],
     info: 'extractImportsSync returns empty for no imports',
   },
   {
     fn: () => {
       const imports = extractImportsSync('import a from "a";\nimport { b } from "b";')
-      return imports.length === 2 && imports[0]!.source === 'a' && imports[1]!.source === 'b'
+      return imports
     },
-    expect: true,
+    expect: [
+      is.len.eq(2),
+      has.at(0, has.properties({ source: 'a' })),
+      has.at(1, has.properties({ source: 'b' })),
+    ],
     info: 'extractImportsSync handles multiple imports',
   },
   {
     fn: () => {
       const imports = extractImportsSync('this is not valid code !!!')
-      return Array.isArray(imports) && imports.length === 0
+      return imports
     },
-    expect: true,
+    expect: [],
     info: 'extractImportsSync returns empty array on parse error',
   },
   {
     fn: () => {
       const code = 'import x from "pkg";'
       const imports = extractImportsSync(code)
-      return (
-        imports[0]!.start >= 0 &&
-        imports[0]!.end <= code.length &&
-        imports[0]!.originalText.includes('import')
-      )
+      return {
+        start: imports[0]!.start,
+        end: imports[0]!.end,
+        maxLen: code.length,
+        originalText: imports[0]!.originalText,
+      }
     },
-    expect: true,
+    expect: (v: { start: number; end: number; maxLen: number; originalText: string }) =>
+      v.start >= 0 && v.end <= v.maxLen && v.originalText.includes('import'),
     info: 'extractImportsSync provides correct range and originalText',
   },
 
@@ -146,9 +152,9 @@ const tests: TestCase[] = [
   {
     fn: () => {
       const r = getSvelteReexports('export { Foo } from "./Foo.svelte";')
-      return r.length === 1 && r[0]!.source === './Foo.svelte'
+      return r
     },
-    expect: true,
+    expect: [is.len.eq(1), has.at(0, has.properties({ source: './Foo.svelte' }))],
     info: 'getSvelteReexports detects named re-export from .svelte',
   },
   {
@@ -169,9 +175,13 @@ const tests: TestCase[] = [
   {
     fn: () => {
       const r = getSvelteReexports('export { A } from "./A.svelte";\nexport * from "./B.svelte";')
-      return r.length === 2 && r[0]!.source === './A.svelte' && r[1]!.source === './B.svelte'
+      return r
     },
-    expect: true,
+    expect: [
+      is.len.eq(2),
+      has.at(0, has.properties({ source: './A.svelte' })),
+      has.at(1, has.properties({ source: './B.svelte' })),
+    ],
     info: 'getSvelteReexports collects multiple re-exports',
   },
 
@@ -220,7 +230,7 @@ const tests: TestCase[] = [
       isSvelteCompiled('const b = 1')
       clearAstCache()
       // still works after clear
-      return hasSvelteRunes('const c = $state(2)') === true
+      return hasSvelteRunes('const c = $state(2)')
     },
     expect: true,
     info: 'clearAstCache resets cache without breaking analysis',
