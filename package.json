@@ -10,8 +10,8 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "imports": {
-    "#src": "./dist/index.js",
-    "#src/*": "./dist/*",
+    "#src": "./src/index.js",
+    "#src/*": "./src/*",
     "#test/*": "./test/*",
     "#docsrc/*": "./docsrc/*",
     "#lib/*": "./src/lib/*"
