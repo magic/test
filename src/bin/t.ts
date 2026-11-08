@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath } from 'node:url'
 
 import cli from '@magic/cli'
 import fs from '@magic/fs'
@@ -267,12 +267,12 @@ const shutdown = async (force = false) => {
 // Only run the CLI when executed directly (node dist/bin/t.js). Importing
 // this module (e.g. from tests) must not spawn the child runner or install
 // global signal handlers.
-const isDirectRun =
-  typeof process.argv[1] === 'string' &&
-  process.argv[1].length > 0 &&
-  pathToFileURL(process.argv[1]).href === import.meta.url
+// fs.realpathSync resolves symlinks so the check works when the bin is invoked
+// via a symlinked node_modules (e.g. pnpm, npm workspaces).
+const isMain =
+  process.argv[1] && fs.realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)
 
-if (isDirectRun) {
+if (isMain) {
   run()
 
   process
