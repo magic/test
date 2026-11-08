@@ -1,4 +1,10 @@
-import { ddl, ddlHold, ddlRelease, ddlInitWatchdog } from '#lib/svelte/compile/ddl.js'
+import {
+  ddl,
+  ddlClearWatchdog,
+  ddlHold,
+  ddlRelease,
+  ddlInitWatchdog,
+} from '#lib/svelte/compile/ddl.js'
 import type { TestCase } from '#src/types.js'
 
 // The ddl helpers only act when MAGIC_TEST_DDL is set, and they write through
@@ -145,6 +151,7 @@ export default [
             waiting: capture.some(m => m.includes('stuck <- holder')),
           }
         } finally {
+          ddlClearWatchdog()
           dropKey('stuck')
         }
       }),

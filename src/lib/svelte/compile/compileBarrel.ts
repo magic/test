@@ -79,6 +79,7 @@ export const compileBarrel = async (
         return await compileBarrelImpl(filePath, currentChain, knownExports)
       } finally {
         pendingPromises.delete(`barrel:${filePath}`)
+        ddlRelease('barrel:' + filePath, path.basename(filePath))
       }
     })()
 
