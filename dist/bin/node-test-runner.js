@@ -19,7 +19,7 @@ var __rewriteRelativeImportExtension =
     return path
   }
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 import(__rewriteRelativeImportExtension(path.join(__dirname, 'lib/registerLoader.js')))
@@ -41,7 +41,7 @@ const EXCLUDED_DIRS = ['node_modules', '.tmp', '.git']
 const INCLUDED_EXTENSIONS = ['.js', '.ts', '.mjs']
 const discoveredFiles = []
 // Hook file names/order: canonical list lives in src/lib/hookFiles.ts
-const scanDir = async dir => {
+export const scanDir = async dir => {
   const exists = await fs.exists(dir)
   if (!exists) {
     return
@@ -61,7 +61,7 @@ const scanDir = async dir => {
     }
   }
 }
-const extractExport = async filePath => {
+export const extractExport = async filePath => {
   try {
     const mod = await import(__rewriteRelativeImportExtension(filePath))
     return mod
@@ -101,7 +101,7 @@ const processHookFiles = async () => {
     }
   }
 }
-const getTestName = (testObj, filePath, index) => {
+export const getTestName = (testObj, filePath, index) => {
   if (testObj.info) {
     return String(testObj.info)
   }
@@ -114,7 +114,7 @@ const getTestName = (testObj, filePath, index) => {
   const baseName = path.basename(filePath, path.extname(filePath))
   return `${baseName} ${index + 1}`
 }
-const convertTest = async (testObj, filePath, index) => {
+export const convertTest = async (testObj, filePath, index) => {
   const testName = getTestName(testObj, filePath, index)
   const testFn = async () => {
     let fn = testObj.fn
@@ -169,7 +169,7 @@ const convertTest = async (testObj, filePath, index) => {
     after: testObj.after,
   }
 }
-const convertSuite = async (tests, filePath) => {
+export const convertSuite = async (tests, filePath) => {
   if (!tests) {
     return []
   }
@@ -223,7 +223,7 @@ const convertSuite = async (tests, filePath) => {
   }
   return []
 }
-const processFile = async filePath => {
+export const processFile = async filePath => {
   const mod = await extractExport(filePath)
   if (!mod) {
     return []
@@ -353,9 +353,19 @@ const main = async () => {
   await processHookFiles()
   await registerTests()
 }
-main().catch(e => {
-  console.error(e)
-  process.exit(1)
-})
+export { discoveredFiles }
 export default main
+// Only auto-run when executed directly (node dist/bin/node-test-runner.js or
+// node --test ...). Importing the module (e.g. from tests) must not trigger
+// the runner or process.exit.
+const isDirectRun =
+  typeof process.argv[1] === 'string' &&
+  process.argv[1].length > 0 &&
+  pathToFileURL(process.argv[1]).href === import.meta.url
+if (isDirectRun) {
+  main().catch(e => {
+    console.error(e)
+    process.exit(1)
+  })
+}
 //# sourceMappingURL=node-test-runner.js.map

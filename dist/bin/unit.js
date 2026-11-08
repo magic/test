@@ -1,14 +1,16 @@
 #!/usr/bin/env node
 // Register TypeScript loader before other imports
 import './lib/registerLoader.js'
+import { pathToFileURL } from 'node:url'
 import log from '@magic/log'
 import is from '@magic/types'
 import { run, abort } from '../run.js'
 import { maybeInjectMagic, readRecursive, resetVisitedDirs } from './lib/index.js'
 import { prewarmComponentGraphs } from './lib/prewarmComponents.js'
+import { buildDtsTestSuites } from '../lib/dts/index.js'
 // Create globalStartTime BEFORE anything else for accurate total timing
 const globalStartTime = log.hrtime()
-const getShardConfig = () => {
+export const getShardConfig = () => {
   const rawShards = process.env.MAGIC_TEST_SHARDING_SHARDS
   const rawShardId = process.env.MAGIC_TEST_SHARDING_ID
   const rawWorkers = process.env.MAGIC_TEST_WORKERS
@@ -36,6 +38,21 @@ const init = async () => {
         process.stdout.write(`\rCollecting tests: ${count} files processed`)
       }
     })
+    // Inject virtual .d.ts type-check suites (one test per declared symbol
+    // plus a "file compiles" test per declaration file) so `npm run test`
+    // also verifies the package's declaration files automatically.
+    // Disable with MAGIC_TEST_SKIP_DTS_TESTS=1.
+    if (!process.env.MAGIC_TEST_SKIP_DTS_TESTS) {
+      try {
+        const dtsSuites = await buildDtsTestSuites(process.cwd())
+        for (const [key, suite] of Object.entries(dtsSuites)) {
+          tests[key] = suite
+        }
+      } catch (e) {
+        // d.ts test generation must never break test collection
+        console.error('Failed to generate .d.ts type tests:', e)
+      }
+    }
     // Clear the progress line
     process.stdout.write('\r' + ' '.repeat(50) + '\r')
     if (tests) {
@@ -77,8 +94,7 @@ const init = async () => {
     process.exit(1)
   }
 }
-init()
-const handleError = error => {
+export const handleError = error => {
   if (is.string(error)) {
     error = new Error(error)
   }
@@ -90,10 +106,21 @@ const handleError = error => {
   process.exit(1)
 }
 process.on('unhandledRejection', handleError).on('uncaughtException', handleError)
-const shutdown = async () => {
+export const shutdown = async () => {
   log.warn('Received shutdown signal, aborting tests...')
   await abort()
   process.exit(1)
 }
-process.on('SIGTERM', shutdown).on('SIGINT', shutdown)
+// Only run the unit runner and install global handlers when executed
+// directly (node dist/bin/unit.js). Importing this module (e.g. from tests)
+// must not kick off the run or register process-level handlers.
+const isDirectRun =
+  typeof process.argv[1] === 'string' &&
+  process.argv[1].length > 0 &&
+  pathToFileURL(process.argv[1]).href === import.meta.url
+if (isDirectRun) {
+  init()
+  process.on('unhandledRejection', handleError).on('uncaughtException', handleError)
+  process.on('SIGTERM', shutdown).on('SIGINT', shutdown)
+}
 //# sourceMappingURL=unit.js.map

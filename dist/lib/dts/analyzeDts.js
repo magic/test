@@ -1,0 +1,184 @@
+import ts from 'typescript'
+/**
+ * Parse a .d.ts source and extract the declared symbols that can be verified
+ * by type-checking a probe:
+ *
+ * - interfaces / type aliases / classes / enums  -> type reference
+ * - functions / variables                        -> typeof reference
+ * - `declare module "x"`                         -> import its exports
+ * - `declare global { var x }`                   -> typeof x
+ * - `declare global { interface GlobalThis { x } }` -> typeof globalThis.x
+ *
+ * Non-exported declarations in module files are not reachable from outside
+ * and are skipped.
+ */
+export const analyzeDts = (source, fileName) => {
+  const sf = ts.createSourceFile(fileName, source, ts.ScriptTarget.ES2022, true)
+  const isModule = ts.isExternalModule(sf)
+  const symbols = []
+  const seen = new Set()
+  const add = symbol => {
+    if (!seen.has(symbol.key)) {
+      seen.add(symbol.key)
+      symbols.push(symbol)
+    }
+  }
+  const isExported = node =>
+    (node.modifiers ?? []).some(m => m.kind === ts.SyntaxKind.ExportKeyword)
+  /**
+   * Collect one named declaration (interface/type/class/enum/function/variable).
+   * `scope` is 'file' or the ambient module specifier it lives in.
+   */
+  const collectNamed = (node, scope, label) => {
+    const nameNode = node.name
+    if (!nameNode || nameNode.kind !== ts.SyntaxKind.Identifier) {
+      return
+    }
+    const name = nameNode.text
+    // module files: only exported declarations are reachable from a probe
+    if (scope === 'file' && isModule && !isExported(node)) {
+      return
+    }
+    const isValue =
+      ts.isFunctionDeclaration(node) ||
+      ts.isVariableDeclaration(node) ||
+      ts.isClassDeclaration(node)
+    let lines
+    if (scope === 'file' && !isModule) {
+      // ambient script file: names are global, the probe references them directly
+      lines = [{ kind: 'typeRef', alias: `p_${name}`, target: name, value: isValue, via: 'plain' }]
+    } else if (isValue) {
+      lines = [
+        { kind: 'importValue', name, from: scope },
+        { kind: 'typeRef', alias: `p_${name}`, target: name, value: true, via: 'plain' },
+      ]
+    } else {
+      lines = [
+        { kind: 'importType', name, from: scope },
+        { kind: 'typeRef', alias: `p_${name}`, target: name, value: false, via: 'plain' },
+      ]
+    }
+    add({
+      key: scope === 'file' ? `${label}:${name}` : `${label}:${scope}#${name}`,
+      displayName: scope === 'file' ? `${label} ${name}` : `${label} ${scope}#${name}`,
+      info:
+        scope === 'file'
+          ? `${label} ${name} is declared and usable`
+          : `${name} is exported by ambient module "${scope}"`,
+      lines,
+    })
+  }
+  /** Collect the exports of an ambient module declaration. */
+  const collectModuleBody = mod => {
+    const nameNode = mod.name
+    if (nameNode.kind !== ts.SyntaxKind.StringLiteral) {
+      return
+    }
+    const moduleName = nameNode.text
+    const body = mod.body
+    if (!body || body.statements.length === 0) {
+      // shorthand ambient module (`declare module "x";`) - just verify it resolves
+      add({
+        key: `module:${moduleName}`,
+        displayName: `module ${moduleName}`,
+        info: `ambient module "${moduleName}" is declared`,
+        lines: [{ kind: 'sideEffectImport', from: moduleName }],
+      })
+      return
+    }
+    for (const stmt of body.statements) {
+      if (!isExported(stmt)) {
+        continue
+      }
+      if (
+        ts.isInterfaceDeclaration(stmt) ||
+        ts.isTypeAliasDeclaration(stmt) ||
+        ts.isEnumDeclaration(stmt)
+      ) {
+        collectNamed(stmt, moduleName, 'type')
+      } else if (ts.isClassDeclaration(stmt)) {
+        collectNamed(stmt, moduleName, 'class')
+      } else if (ts.isFunctionDeclaration(stmt)) {
+        collectNamed(stmt, moduleName, 'function')
+      } else if (ts.isVariableStatement(stmt)) {
+        for (const decl of stmt.declarationList.declarations) {
+          collectNamed(decl, moduleName, 'value')
+        }
+      }
+    }
+  }
+  /** Collect globals from `declare global { ... }`. */
+  const collectGlobal = mod => {
+    const body = mod.body
+    if (!body) {
+      return
+    }
+    for (const stmt of body.statements) {
+      if (ts.isVariableStatement(stmt)) {
+        for (const decl of stmt.declarationList.declarations) {
+          if (decl.name.kind !== ts.SyntaxKind.Identifier) {
+            continue
+          }
+          const name = decl.name.text
+          add({
+            key: `global:${name}`,
+            displayName: `global ${name}`,
+            info: `global variable "${name}" is declared`,
+            lines: [
+              { kind: 'typeRef', alias: `p_${name}`, target: name, value: true, via: 'plain' },
+            ],
+          })
+        }
+      } else if (ts.isInterfaceDeclaration(stmt) && stmt.name.text === 'GlobalThis') {
+        for (const member of stmt.members) {
+          if (!ts.isPropertySignature(member) || member.name.kind !== ts.SyntaxKind.Identifier) {
+            continue
+          }
+          const name = member.name.text
+          add({
+            key: `global:${name}`,
+            displayName: `globalThis.${name}`,
+            info: `globalThis property "${name}" is declared`,
+            lines: [
+              {
+                kind: 'typeRef',
+                alias: `p_${name}`,
+                target: name,
+                value: false,
+                via: 'globalThis',
+              },
+            ],
+          })
+        }
+      }
+    }
+  }
+  for (const stmt of sf.statements) {
+    if (ts.isModuleDeclaration(stmt)) {
+      const isGlobal = stmt.name.kind === ts.SyntaxKind.Identifier && stmt.name.text === 'global'
+      if (isGlobal) {
+        collectGlobal(stmt)
+      } else {
+        collectModuleBody(stmt)
+      }
+      continue
+    }
+    if (ts.isInterfaceDeclaration(stmt)) {
+      collectNamed(stmt, 'file', 'interface')
+    } else if (ts.isTypeAliasDeclaration(stmt)) {
+      collectNamed(stmt, 'file', 'type')
+    } else if (ts.isClassDeclaration(stmt)) {
+      collectNamed(stmt, 'file', 'class')
+    } else if (ts.isEnumDeclaration(stmt)) {
+      collectNamed(stmt, 'file', 'enum')
+    } else if (ts.isFunctionDeclaration(stmt)) {
+      collectNamed(stmt, 'file', 'function')
+    } else if (ts.isVariableStatement(stmt)) {
+      for (const decl of stmt.declarationList.declarations) {
+        collectNamed(decl, 'file', 'value')
+      }
+    }
+  }
+  return { isModule, symbols }
+}
+//# sourceMappingURL=analyzeDts.js.map
