@@ -7,6 +7,14 @@
 - test: silence console.log for info message test
 - fix: replace canvas with @napi-rs/canvas
 - update dependencies, formatting and linting uses ox toolchain now.
+- fix: stop watchdog from pinning test process (f33b2aac)
+- bin/lib/registerLoader: avoid deprecated version of mod.register, better error handling (a88b264b)
+- src/bin: fix CLI execution checks, use `fs.realpathSync` instead of `urlToFilePath` (cb06d19b)
+- feat: type-check .d.ts files in every test run (204d331a)
+- add overrides for glob and minimatch (1a556be4)
+- pkg, oxlint.config.ts: use @magic/lint, update dependencies (d04b2671)
+- src/run.ts: export `getShardForTest` for testing (918dc0aa)
+- remove magic-string dependency, comes from svelte (7823d6ca)
 
 #### 0.3.51
 
