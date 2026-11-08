@@ -90,8 +90,8 @@
     "svelte": "5.57.3"
   },
   "overrides": {
-    "cookie": "^1.0.0",
-    "magic-string": "1.4.5"
+    "glob": "^14.0.4",
+    "minimatch": "^11.0.1"
   },
   "contributors": [
     {
