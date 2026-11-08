@@ -1,9 +1,11 @@
 import mod from 'node:module'
 
 try {
-  mod.register(new URL('./loader.js', import.meta.url).href)
-} catch (e) {
-  process.stderr.write(
-    '[registerLoader] ERROR: ' + (e instanceof Error ? e.message : String(e)) + '\n',
-  )
+  const { href } = new URL('./loader.js', import.meta.url)
+  const parentURL = new URL(import.meta.url)
+
+  mod.register(href, { parentURL })
+} catch (err) {
+  const e = err as Error
+  process.stderr.write(`[registerLoader] ERROR: ${e.message}\n`)
 }
