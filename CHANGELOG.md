@@ -6,6 +6,7 @@
 - fix: remove run-tests.sh
 - test: silence console.log for info message test
 - fix: replace canvas with @napi-rs/canvas
+- update dependencies, formatting and linting uses ox toolchain now.
 
 #### 0.3.51
 
