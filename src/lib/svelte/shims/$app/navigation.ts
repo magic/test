@@ -22,7 +22,7 @@ interface AfterNavigate {
 
 const getCtx = () => getContext() ?? getDefaultContext()
 
-export async function goto(
+export const goto = async (
   url: string | URL,
   opts: {
     replaceState?: boolean
@@ -30,7 +30,7 @@ export async function goto(
     noScroll?: boolean
     state?: Record<string, unknown>
   } = {},
-): Promise<void> {
+): Promise<void> => {
   const ctx = getCtx()
   const currentPage = get(ctx.page) as Page
   const from: URL = currentPage.url
@@ -116,41 +116,36 @@ export async function goto(
   return Promise.resolve()
 }
 
-export function pushState(url: string | URL, state: Record<string, unknown> = {}): void {
+export const pushState = (url: string | URL, state: Record<string, unknown> = {}): void => {
   const ctx = getCtx()
   const currentPage = get(ctx.page) as Page
   const targetUrl = is.string(url) ? new URL(url, currentPage.url.origin) : url
   ctx.page.set({ ...currentPage, url: targetUrl, ...state })
 }
 
-export function replaceState(url: string | URL, state: Record<string, unknown> = {}): void {
+export const replaceState = (url: string | URL, state: Record<string, unknown> = {}): void => {
   const ctx = getCtx()
   const currentPage = get(ctx.page) as Page
   const targetUrl = is.string(url) ? new URL(url, currentPage.url.origin) : url
   ctx.page.set({ ...currentPage, url: targetUrl, ...state })
 }
 
-export function invalidate(_resource: string | URL | ((url: URL) => boolean)): Promise<void> {
+export const invalidate = (_resource: string | URL | ((url: URL) => boolean)): Promise<void> => {
   return Promise.resolve()
 }
 
-export function invalidateAll(): Promise<void> {
-  return Promise.resolve()
-}
+export const invalidateAll = (): Promise<void> => Promise.resolve()
 
 type PreloadedData =
   | { type: 'loaded'; status: number; data: unknown }
   | { type: 'redirect'; location: string }
 
-export function preloadData(_href: string): Promise<PreloadedData> {
-  return Promise.resolve({ type: 'loaded', status: 200, data: {} })
-}
+export const preloadData = (_href: string): Promise<PreloadedData> =>
+  Promise.resolve({ type: 'loaded', status: 200, data: {} })
 
-export function preloadCode(_pathname: string): Promise<void> {
-  return Promise.resolve()
-}
+export const preloadCode = (_pathname: string): Promise<void> => Promise.resolve()
 
-export function beforeNavigate(cb: (nav: BeforeNavigate) => void): () => void {
+export const beforeNavigate = (cb: (nav: BeforeNavigate) => void): (() => void) => {
   const ctx = getCtx()
   ctx.callbacks.before.push(cb as (nav: Navigation) => void)
   return () => {
@@ -161,7 +156,7 @@ export function beforeNavigate(cb: (nav: BeforeNavigate) => void): () => void {
   }
 }
 
-export function afterNavigate(cb: (nav: AfterNavigate) => void): () => void {
+export const afterNavigate = (cb: (nav: AfterNavigate) => void): (() => void) => {
   const ctx = getCtx()
   ctx.callbacks.after.push(cb)
   return () => {
@@ -172,16 +167,16 @@ export function afterNavigate(cb: (nav: AfterNavigate) => void): () => void {
   }
 }
 
-export function onNavigate(cb: (nav: Navigation) => (() => void) | void): void {
+export const onNavigate = (cb: (nav: Navigation) => (() => void) | void): void => {
   const ctx = getCtx()
   ctx.callbacks.on.push(cb)
 }
 
-export function disableScrollHandling(): void {
+export const disableScrollHandling = (): void => {
   // no-op
 }
 
-export function reset() {
+export const reset = () => {
   const ctx = getDefaultContext()
   ctx.callbacks.before = []
   ctx.callbacks.after = []

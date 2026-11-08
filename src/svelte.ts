@@ -1,6 +1,6 @@
 let svelte: typeof import('svelte') | null = null
 
-export async function ensureSvelte() {
+export const ensureSvelte = async () => {
   if (!svelte) {
     try {
       svelte = await import('svelte')
@@ -8,7 +8,8 @@ export async function ensureSvelte() {
       throw new Error('svelte not installed. Run: npm install svelte')
     }
   }
-  return svelte!
+
+  return svelte
 }
 
 export * from './lib/svelte/index.js'

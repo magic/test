@@ -33,9 +33,9 @@ export const applyAction = async <Success extends ActionSuccess, Failure extends
   // This is a no-op implementation
 }
 
-export function deserialize<Success extends ActionSuccess, Failure extends ActionFailure>(
+export const deserialize = <Success extends ActionSuccess, Failure extends ActionFailure>(
   result: string,
-): ActionResult<Success, Failure> {
+): ActionResult<Success, Failure> => {
   try {
     return JSON.parse(result) as ActionResult<Success, Failure>
   } catch {
@@ -46,7 +46,7 @@ export function deserialize<Success extends ActionSuccess, Failure extends Actio
   }
 }
 
-export function enhance<Success extends ActionSuccess, Failure extends ActionFailure>(
+export const enhance = <Success extends ActionSuccess, Failure extends ActionFailure>(
   _formElement: HTMLFormElement,
   _submit?: (args: {
     formData: FormData
@@ -55,7 +55,7 @@ export function enhance<Success extends ActionSuccess, Failure extends ActionFai
     result: (res: ActionResult<Success, Failure>) => void
     update: (opts?: EnhanceOptions<Success, Failure>) => Promise<void>
   }) => void | Promise<void>,
-): { destroy(): void } {
+): { destroy(): void } => {
   // No-op enhancement - form submits normally
   // Return destroy function for cleanup
   return {

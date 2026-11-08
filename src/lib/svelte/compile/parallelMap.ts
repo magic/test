@@ -1,11 +1,11 @@
 // Parallel execution with concurrency limit
 export const MAX_CONCURRENT = 5
 
-export async function parallelMap<T, R>(
+export const parallelMap = async <T, R>(
   items: T[],
   fn: (item: T, index: number) => Promise<R>,
   concurrency: number = MAX_CONCURRENT,
-): Promise<R[]> {
+): Promise<R[]> => {
   const results: R[] = new Array(items.length)
   const executing: Promise<void>[] = []
 

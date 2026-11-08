@@ -1,35 +1,31 @@
 // Shim for $app/server
 // Server-only exports - returns null/stubs in test environment
 
-export function getRequestEvent(): null {
-  return null
-}
+export const getRequestEvent = (): null => null
 
-export function read(_asset: string): Response {
-  return new Response('Not found', { status: 404 })
-}
+export const read = (_asset: string): Response => new Response('Not found', { status: 404 })
 
-export function command(...args: unknown[]): unknown {
+export const command = (...args: unknown[]): unknown => {
   console.warn('$app/server: command() is not available in test environment')
   return args[args.length - 1]
 }
 
-export function form(...args: unknown[]): unknown {
+export const form = (...args: unknown[]): unknown => {
   console.warn('$app/server: form() is not available in test environment')
   return args[args.length - 1]
 }
 
-export function query(...args: unknown[]): unknown {
+export const query = (...args: unknown[]): unknown => {
   console.warn('$app/server: query() is not available in test environment')
   return args[args.length - 1]
 }
 
-export function prerender(...args: unknown[]): unknown {
+export const prerender = (...args: unknown[]): unknown => {
   console.warn('$app/server: prerender() is not available in test environment')
   return args[args.length - 1]
 }
 
-export function requested(_query: unknown, _limit?: number): unknown {
+export const requested = (_query: unknown, _limit?: number): unknown => {
   console.warn('$app/server: requested() is not available in test environment')
   return {
     [Symbol.iterator]: () => ({

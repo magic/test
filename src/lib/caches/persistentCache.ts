@@ -31,7 +31,7 @@ const hashCache = new LRUCache<string>(4096)
 // Atomic write: a concurrent reader (sibling worker) must never observe a
 // truncated/partial file — write to a unique temp name, then rename (POSIX
 // renames are atomic).
-export async function writeAtomic(filePath: string, content: string): Promise<void> {
+export const writeAtomic = async (filePath: string, content: string): Promise<void> => {
   const tmp = `${filePath}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`
   await fs.writeFile(tmp, content)
   try {
@@ -47,7 +47,7 @@ export async function writeAtomic(filePath: string, content: string): Promise<vo
 }
 
 // Compute SHA-256 hash of file content (with caching)
-async function hashFile(filePath: string): Promise<string> {
+const hashFile = async (filePath: string): Promise<string> => {
   const cached = hashCache.get(filePath)
   if (cached) {
     return cached
@@ -60,12 +60,12 @@ async function hashFile(filePath: string): Promise<string> {
 }
 
 // Get relative cache path for a source file
-function getCachePath(sourcePath: string): string {
+const getCachePath = (sourcePath: string): string => {
   const rel = path.relative(process.cwd(), sourcePath).replace(/\.svelte$/, '.svelte.js')
   return path.join(CACHE_DIR, rel)
 }
 
-export async function loadManifest(): Promise<CacheManifest | null> {
+export const loadManifest = async (): Promise<CacheManifest | null> => {
   try {
     const stats = await fs.stat(MANIFEST_FILE)
     if (manifestCache && stats.mtimeMs === manifestMtime) {
@@ -80,7 +80,7 @@ export async function loadManifest(): Promise<CacheManifest | null> {
   }
 }
 
-export async function saveManifest(manifest?: CacheManifest): Promise<void> {
+export const saveManifest = async (manifest?: CacheManifest): Promise<void> => {
   // Merge with the latest on-disk manifest so concurrent writers (parallel
   // test workers) don't clobber each other's entries: a stale in-memory copy
   // must not drop entries another worker recorded in the meantime.
@@ -102,9 +102,9 @@ export async function saveManifest(manifest?: CacheManifest): Promise<void> {
   await writeAtomic(MANIFEST_FILE, JSON.stringify(m, null, 2))
 }
 
-export async function getCachedCompile(
+export const getCachedCompile = async (
   sourcePath: string,
-): Promise<{ js: string; css: unknown } | null> {
+): Promise<{ js: string; css: unknown } | null> => {
   const m = await loadManifest()
   if (!m) {
     return null
@@ -133,7 +133,7 @@ export async function getCachedCompile(
   return { js, css: null }
 }
 
-export async function recordCompile(sourcePath: string, compiledJs: string): Promise<void> {
+export const recordCompile = async (sourcePath: string, compiledJs: string): Promise<void> => {
   let manifest = await loadManifest()
 
   if (!manifest) {
@@ -172,7 +172,7 @@ export async function recordCompile(sourcePath: string, compiledJs: string): Pro
   await saveManifest(manifest)
 }
 
-export async function clearCache(): Promise<void> {
+export const clearCache = async (): Promise<void> => {
   try {
     await fs.rmrf(CACHE_DIR)
   } catch {
@@ -184,6 +184,4 @@ export async function clearCache(): Promise<void> {
   await clearResolveTransformCache()
 }
 
-export function getCacheDir(): string {
-  return CACHE_DIR
-}
+export const getCacheDir = (): string => CACHE_DIR

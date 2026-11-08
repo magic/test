@@ -48,7 +48,7 @@ const createWorkerPool = (limit: number) => {
     }
   }
 
-  return async function run<T>(fn: () => Promise<T>): Promise<T> {
+  return async <T>(fn: () => Promise<T>): Promise<T> => {
     if (running < limit) {
       running++
       return fn().finally(release)

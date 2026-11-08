@@ -55,9 +55,9 @@ try {
 /**
  * Resolve a pathname by prepending the base path, or resolve a route ID with params.
  */
-export function resolve(
+export const resolve = (
   ...args: [pathname: string] | [routeId: string, params: Record<string, string>]
-): string {
+): string => {
   if (args.length === 1) {
     const pathname = args[0] as string
     if (
@@ -93,7 +93,7 @@ interface MatchResult {
  * Match a URL to a route ID.
  * Very simple implementation: converts routeId like /blog/[slug] to regex.
  */
-export function match(url: string | URL): Promise<MatchResult | null> {
+export const match = (url: string | URL): Promise<MatchResult | null> => {
   try {
     const urlStr = is.string(url) ? url : url.href || url.toString()
     // This shim does not have route config; return null or try to match common patterns
@@ -129,7 +129,7 @@ export function match(url: string | URL): Promise<MatchResult | null> {
 /**
  * Asset helper: prefix with assets or base.
  */
-export function asset(file: string): string {
+export const asset = (file: string): string => {
   const prefix = assets || base
   return prefix + file
 }

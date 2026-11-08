@@ -5,7 +5,7 @@
 import { writable, get, type Readable } from 'svelte/store'
 import { getDefaultContext, type Page, type Navigation } from './state.js'
 
-function createPageStore(): Readable<Page> {
+const createPageStore = (): Readable<Page> => {
   const ctx = getDefaultContext()
   const { subscribe } = writable<Page>(get(ctx.page) as Page)
   return {
@@ -13,7 +13,7 @@ function createPageStore(): Readable<Page> {
   }
 }
 
-function createNavigatingStore(): Readable<Navigation | null> {
+const createNavigatingStore = (): Readable<Navigation | null> => {
   const ctx = getDefaultContext()
   const { subscribe } = writable<Navigation | null>(get(ctx.navigating) as Navigation | null)
   return {
