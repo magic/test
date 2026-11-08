@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import cli from '@magic/cli'
 import fs from '@magic/fs'
@@ -65,6 +66,73 @@ npm example:
   },
 })
 
+export interface BuildUnitCommandProps {
+  isProd: boolean
+  isWin: boolean
+  cwd: string
+  name: string
+  include: string[]
+  exclude: string[] | null
+}
+
+/**
+ * Build the child command for the unit.js runner:
+ *   prod:  node unit.js
+ *   other: c8 --exclude ... --source-maps ... --include ... node unit.js
+ *
+ * Pure helper, exported for testing.
+ */
+export const buildUnitCommand = ({
+  isProd,
+  isWin,
+  cwd,
+  name,
+  include,
+  exclude,
+}: BuildUnitCommandProps) => {
+  let binPath = path.join(cwd, 'node_modules', '@magic', 'test', 'dist', 'bin')
+  if (name === '@magic/test') {
+    binPath = path.join(cwd, 'dist', 'bin')
+  }
+
+  const binFile = path.join(binPath, 'unit.js')
+
+  if (isProd) {
+    return { cmd: 'node', argv: [binFile] }
+  }
+
+  const c8Excludes = (exclude ?? ['test']).map(String)
+
+  // Always exclude declaration files from coverage. A bare `.d.ts` glob would
+  // only match a literal hidden file named `.d.ts`, so use `**/*.d.ts` to
+  // match declaration files at any depth.
+  const DTS_EXCLUDE = '**/*.d.ts'
+  if (!c8Excludes.includes(DTS_EXCLUDE)) {
+    c8Excludes.push(DTS_EXCLUDE)
+  }
+
+  const cmd = path.join(cwd, 'node_modules', '.bin', isWin ? 'c8.cmd' : 'c8')
+  const argv = [
+    ...c8Excludes.flatMap(ex => ['--exclude', ex]),
+    '--source-maps',
+    '--extension',
+    '.js',
+    '--extension',
+    '.mjs',
+    '--extension',
+    '.ts',
+    '--extension',
+    '.svelte',
+    '--exclude-after-remap',
+    '--all',
+    ...include.flatMap(inc => ['--include', inc]),
+    'node',
+    binFile,
+  ]
+
+  return { cmd, argv }
+}
+
 const run = async () => {
   const pkgPath = path.join(cwd, 'package.json')
   const content = await fs.readFile(pkgPath, 'utf-8')
@@ -77,13 +145,6 @@ const run = async () => {
     process.env.MAGIC_TEST_ENV = 'production'
   }
 
-  let binPath = path.join(cwd, 'node_modules', '@magic', 'test', 'dist', 'bin')
-  if (name === '@magic/test') {
-    binPath = path.join(cwd, 'dist', 'bin')
-  }
-
-  const binFile = path.join(binPath, 'unit.js')
-
   const isWin = process.platform === 'win32'
 
   const includeArgs = res.args.include || ['src']
@@ -92,6 +153,10 @@ const run = async () => {
   const { shards, shardId, errorLength, timeout, workers } = res.args
 
   const include = (is.array(includeArgs) ? includeArgs : [includeArgs]).map(String)
+
+  const exclude = userExclude
+    ? (is.array(userExclude) ? userExclude : [userExclude]).map(String)
+    : null
 
   // Forward verbose to the child process via env (argv is not inherited)
   if (res.args.verbose) {
@@ -125,43 +190,7 @@ const run = async () => {
     .concat(['--enable-source-maps'])
     .join(' ')
 
-  // Build the child command in one place:
-  //   prod:  node unit.js
-  //   other: c8 --exclude ... --source-maps ... --include ... node unit.js
-  let cmd: string
-  let argv: string[]
-  if (isProd) {
-    cmd = 'node'
-    argv = [binFile]
-  } else {
-    const c8Excludes = (
-      userExclude ? (is.array(userExclude) ? userExclude : [userExclude]) : ['test']
-    ).map(String)
-
-    // Always exclude .d.ts from coverage
-    if (!c8Excludes.includes('.d.ts')) {
-      c8Excludes.push('.d.ts')
-    }
-
-    cmd = path.join(cwd, 'node_modules', '.bin', isWin ? 'c8.cmd' : 'c8')
-    argv = [
-      ...c8Excludes.flatMap(ex => ['--exclude', ex]),
-      '--source-maps',
-      '--extension',
-      '.js',
-      '--extension',
-      '.mjs',
-      '--extension',
-      '.ts',
-      '--extension',
-      '.svelte',
-      '--exclude-after-remap',
-      '--all',
-      ...include.flatMap(inc => ['--include', inc]),
-      'node',
-      binFile,
-    ]
-  }
+  const { cmd, argv } = buildUnitCommand({ isProd, isWin, cwd, name, include, exclude })
 
   childProcess = await cli.spawn(cmd, argv)
 
@@ -180,8 +209,6 @@ const run = async () => {
     process.exitCode = 1
   })
 }
-
-run()
 
 const gracefulShutdown = async () => {
   log.warn('Received shutdown signal, aborting tests...')
@@ -237,7 +264,21 @@ const shutdown = async (force = false) => {
   }
 }
 
-process
-  .on('SIGTERM', () => shutdown(false))
-  .on('SIGINT', () => shutdown(false))
-  .on('SIGHUP', () => shutdown(false))
+// Only run the CLI when executed directly (node dist/bin/t.js). Importing
+// this module (e.g. from tests) must not spawn the child runner or install
+// global signal handlers.
+const isDirectRun =
+  typeof process.argv[1] === 'string' &&
+  process.argv[1].length > 0 &&
+  pathToFileURL(process.argv[1]).href === import.meta.url
+
+if (isDirectRun) {
+  run()
+
+  process
+    .on('SIGTERM', () => shutdown(false))
+    .on('SIGINT', () => shutdown(false))
+    .on('SIGHUP', () => shutdown(false))
+}
+
+export default { run, buildUnitCommand }
