@@ -1,5 +1,9 @@
 ### Changelog
 
+#### 0.3.55
+
+- importing virtual: modules does not crash the test suite, instead an empty module is returned, better than nothing...
+
 #### 0.3.54
 
 - update dependencies
