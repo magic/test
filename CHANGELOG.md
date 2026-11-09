@@ -1,5 +1,9 @@
 ### Changelog
 
+#### 0.3.54
+
+- update dependencies
+
 #### 0.3.53
 
 - feat: local c8 replacement — v8 coverage reader with source-map remapping and istanbul text report
