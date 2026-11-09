@@ -7,6 +7,7 @@ import { getDuration } from '../getDuration.js'
 import { Store } from '../store.js'
 import { isTestResult } from './isTestResult.js'
 import { printPercent } from './printPercent.js'
+import { RESULTS_FILE_ENV, writeRunSummary } from './resultsFile.js'
 
 import type { InputValue, Suite, Test, TestObject, TestResults } from '../../types.js'
 import path from 'node:path'
@@ -161,9 +162,20 @@ export const info = (suites: Suite[], store: Store, useLogging: boolean = true):
   const totalDuration = getDuration(store, 'globalStartTime')
   const percentage = all > 0 ? printPercent((pass / all) * 100) : printPercent(0)
 
+  const resultsFile = process.env[RESULTS_FILE_ENV]
+
   if (useLogging && all > 0) {
-    // Show total time if it differs from test execution time (indicates discovery overhead)
-    if (totalDuration && totalDuration !== duration) {
+    if (is.string(resultsFile) && resultsFile) {
+      // The parent (t.ts) prints the run summary after the coverage report;
+      // hand it the numbers instead of printing them here. A failed write
+      // must not break the run — the parent then just skips the summary.
+      try {
+        writeRunSummary(resultsFile, { all, pass, duration, totalDuration })
+      } catch (err) {
+        log.warn('could not write run summary file:', err as Error)
+      }
+    } else if (totalDuration && totalDuration !== duration) {
+      // Show total time if it differs from test execution time (indicates discovery overhead)
       log(`\nRan ${all} tests in ${duration}. Passed ${pass}/${all} ${percentage}%`)
       log(`Total time (including discovery): ${totalDuration}\n`)
     } else {
