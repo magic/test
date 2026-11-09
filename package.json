@@ -71,7 +71,7 @@
     "@magic/types": "0.1.40",
     "@napi-rs/canvas": "1.1.0",
     "happy-dom": "21.0.4",
-    "oxc-parser": "0.157.0",
+    "oxc-parser": "0.158.0",
     "typescript": "npm:@typescript/typescript6"
   },
   "devDependencies": {
@@ -81,8 +81,8 @@
     "@magic-modules/pre": "0.0.12",
     "@magic-themes/docs": "0.0.15",
     "@magic/core": "0.0.161",
-    "@magic/format": "0.0.77",
-    "@magic/lint": "0.0.3",
+    "@magic/format": "0.0.78",
+    "@magic/lint": "0.0.4",
     "@types/node": "26.6.6",
     "svelte": "5.57.3"
   },
