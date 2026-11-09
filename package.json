@@ -1,6 +1,6 @@
 {
   "name": "@magic/test",
-  "version": "0.3.52",
+  "version": "0.3.53",
   "description": "simple yet powerful unit testing library",
   "homepage": "https://magic.github.io/test",
   "bugs": {
