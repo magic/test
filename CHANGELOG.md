@@ -1,5 +1,16 @@
 ### Changelog
 
+#### 0.3.53
+
+- feat: local c8 replacement — v8 coverage reader with source-map remapping and istanbul text report
+- feat: coverage stats + summary output, results-file handoff between processes
+- feat: drop c8 dependency, test:native now uses `t --native`
+- feat: local coverage via NODE_V8_COVERAGE, add `--native` flag, summary printed after coverage
+- feat: cover stats summary, coverage table, results file output
+- chore: replace functions with const declarations
+- .gitignore: ignore /coverage and /.plans only in top dir
+- update dist
+
 #### 0.3.52
 
 - feat: default worker reuse on — a file's isolated tests now run sequentially in one shared worker by default (faster, ~22 s → ~15 s wall time on a 159-test SvelteKit suite). Set `MAGIC_TEST_WORKER_REUSE=0` to force one fresh worker per test (full per-test isolation).
