@@ -8,6 +8,11 @@ const __dirname = path.dirname(__filename)
 
 import(path.join(__dirname, 'lib/registerLoader.js'))
 
+import { stats } from '../lib/index.js'
+
+import cli from '@magic/cli'
+import log from '@magic/log'
+
 import { describe, before, after, it } from 'node:test'
 import fs from '@magic/fs'
 import is from '@magic/types'
@@ -406,6 +411,64 @@ const registerTests = async () => {
   })
 }
 
+// Re-exec node with NODE_V8_COVERAGE + source maps enabled, run this file as the
+// test suite, then generate the coverage report once the child exits (V8 flushes
+// coverage at process exit). The parent must be a plain `node` process — re-execing
+// `node --test` from within a `node --test` process triggers Node's recursion guard.
+// This is why `--coverage` works when invoked as `node node-test-runner.js --coverage`
+// but Node consumes `--coverage` when combined with `node --test`.
+const runCoverage = async (): Promise<void> => {
+  const reportsDir = path.join(cwd, 'coverage')
+  const tempDir = path.join(reportsDir, 'tmp')
+  await fs.mkdirp(tempDir)
+
+  const env = { ...process.env, NODE_V8_COVERAGE: tempDir } as Record<string, string>
+  env.NODE_OPTIONS = (process.env.NODE_OPTIONS || '')
+    .split(' ')
+    .filter(Boolean)
+    .concat(['--enable-source-maps'])
+    .join(' ')
+
+  // Strip --coverage so the child does not re-exec again; keep --test so Node runs
+  // this file as the test suite.
+  const childArgv = [
+    '--test',
+    fileURLToPath(import.meta.url),
+    ...process.argv.slice(2).filter(a => a !== '--coverage'),
+  ]
+  const child = cli.spawn(process.execPath, childArgv, { env })
+  child.ref()
+
+  let code = 0
+  await new Promise<void>(resolve => {
+    child.on('exit', c => {
+      code = c ?? 1
+      resolve()
+    })
+    child.on('error', err => {
+      log.error(err as Error)
+      code = 1
+      resolve()
+    })
+  })
+
+  try {
+    await stats.coverage({
+      tempDir,
+      cwd,
+      include: ['src'],
+      exclude: ['test', '**/*.d.ts'],
+      extensions: ['.js', '.mjs', '.ts', '.svelte'],
+      all: true,
+      excludeAfterRemap: true,
+    })
+  } catch (err) {
+    log.error(err as Error)
+  }
+
+  process.exitCode = code
+}
+
 const main = async () => {
   try {
     await maybeInjectMagic()
@@ -437,7 +500,16 @@ const isMain =
 
 if (isMain) {
   try {
-    await main()
+    // --coverage self-hosts the coverage pipeline: re-exec `node --test` with
+    // NODE_V8_COVERAGE set, then generate the report after the child exits.
+    // Node's --test mode consumes `--coverage` before it reaches process.argv,
+    // so use `node node-test-runner.js --coverage` (plain node) for direct runs,
+    // or `t --native` (= npm run test:native) which orchestrates coverage itself.
+    if (process.argv.includes('--coverage')) {
+      await runCoverage()
+    } else {
+      await main()
+    }
   } catch (e) {
     console.error(e)
     process.exit(1)

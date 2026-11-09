@@ -10,6 +10,8 @@ import log from '@magic/log'
 
 import { abort } from '../run.js'
 import { isolation } from '../run/isolation.js'
+import * as stats from '../lib/stats/index.js'
+import { RESULTS_FILE_ENV } from '../lib/stats/resultsFile.js'
 
 const cwd = process.cwd()
 let childProcess: ReturnType<typeof cli.spawn> | null = null
@@ -27,6 +29,7 @@ const res = cli({
     ['--slow', '--timing', '-s'],
     ['--workers', '--w', '-w'],
     ['--production', '--prod', '--p', '-p'],
+    ['--native'],
   ],
   // env: [[['--production', '--prod', '--p', '-p'], 'NODE_ENV', 'production']],
   help: {
@@ -43,6 +46,7 @@ const res = cli({
       '--slow': 'show slowest tests (alias: --timing, -s)',
       '--timing': 'show slowest tests (alias: --slow, -s)',
       '--workers': 'max parallel workers (default: auto, env: MAGIC_TEST_WORKERS)',
+      '--native': 'use the Node.js native test runner (node --test) instead of the unit runner',
     },
     header: `
 simple unit testing. runs all tests found in {cwd}/test/
@@ -53,6 +57,7 @@ see https://github.com/magic/test for info
 Usage:
 t -p => run tests without coverage
 t    => run tests with coverage
+t --native => run tests with the native node --test runner (with coverage)
 t -s => show slowest tests
 t -h => this help text
 
@@ -68,69 +73,86 @@ npm example:
 
 export interface BuildUnitCommandProps {
   isProd: boolean
-  isWin: boolean
   cwd: string
   name: string
   include: string[]
   exclude: string[] | null
+  /** run via `node --test node-test-runner.js` instead of `node unit.js` */
+  native?: boolean
+}
+
+/** coverage runtime options, applied by t.ts around the unit.js child */
+export interface CoverageRuntimeOptions {
+  /** directory V8 coverage data is written to (NODE_V8_COVERAGE) */
+  tempDir: string
+  /** reports output directory */
+  reportsDir: string
+  include: string[]
+  exclude: string[]
+  extensions: string[]
+  all: boolean
+  excludeAfterRemap: boolean
+}
+
+export interface UnitCommand {
+  cmd: string
+  argv: string[]
+  coverage: CoverageRuntimeOptions | null
 }
 
 /**
  * Build the child command for the unit.js runner:
- *   prod:  node unit.js
- *   other: c8 --exclude ... --source-maps ... --include ... node unit.js
+ *   prod:     node unit.js (no coverage)
+ *   coverage: node unit.js, with t.ts setting NODE_V8_COVERAGE and running
+ *             the local coverage report (src/lib/coverage) after exit.
  *
  * Pure helper, exported for testing.
  */
 export const buildUnitCommand = ({
   isProd,
-  isWin,
   cwd,
   name,
   include,
   exclude,
-}: BuildUnitCommandProps) => {
+  native = false,
+}: BuildUnitCommandProps): UnitCommand => {
   let binPath = path.join(cwd, 'node_modules', '@magic', 'test', 'dist', 'bin')
   if (name === '@magic/test') {
     binPath = path.join(cwd, 'dist', 'bin')
   }
 
-  const binFile = path.join(binPath, 'unit.js')
+  const binFile = path.join(binPath, native ? 'node-test-runner.js' : 'unit.js')
+  const runnerArgv = native ? ['--test', binFile] : [binFile]
 
   if (isProd) {
-    return { cmd: 'node', argv: [binFile] }
+    return { cmd: 'node', argv: runnerArgv, coverage: null }
   }
 
-  const c8Excludes = (exclude ?? ['test']).map(String)
+  const excludes = (exclude ?? ['test']).map(String)
 
   // Always exclude declaration files from coverage. A bare `.d.ts` glob would
   // only match a literal hidden file named `.d.ts`, so use `**/*.d.ts` to
   // match declaration files at any depth.
   const DTS_EXCLUDE = '**/*.d.ts'
-  if (!c8Excludes.includes(DTS_EXCLUDE)) {
-    c8Excludes.push(DTS_EXCLUDE)
+  if (!excludes.includes(DTS_EXCLUDE)) {
+    excludes.push(DTS_EXCLUDE)
   }
 
-  const cmd = path.join(cwd, 'node_modules', '.bin', isWin ? 'c8.cmd' : 'c8')
-  const argv = [
-    ...c8Excludes.flatMap(ex => ['--exclude', ex]),
-    '--source-maps',
-    '--extension',
-    '.js',
-    '--extension',
-    '.mjs',
-    '--extension',
-    '.ts',
-    '--extension',
-    '.svelte',
-    '--exclude-after-remap',
-    '--all',
-    ...include.flatMap(inc => ['--include', inc]),
-    'node',
-    binFile,
-  ]
+  const reportsDir = path.join(cwd, 'coverage')
 
-  return { cmd, argv }
+  return {
+    cmd: 'node',
+    argv: runnerArgv,
+    coverage: {
+      tempDir: path.join(reportsDir, 'tmp'),
+      reportsDir,
+      include: include.map(String),
+      exclude: excludes,
+      extensions: ['.js', '.mjs', '.ts', '.svelte'],
+      all: true,
+      excludeAfterRemap: true,
+    },
+  }
 }
 
 const run = async () => {
@@ -144,8 +166,6 @@ const run = async () => {
   if (isProd) {
     process.env.MAGIC_TEST_ENV = 'production'
   }
-
-  const isWin = process.platform === 'win32'
 
   const includeArgs = res.args.include || ['src']
   const userExclude = res.args.exclude
@@ -183,25 +203,74 @@ const run = async () => {
     process.env.MAGIC_TEST_WORKERS = String(workers)
   }
 
-  // Enable Node.js source map capture for c8 coverage remapping
+  // Enable Node.js source map capture for coverage remapping: Node caches
+  // the source map of every loaded script in the V8 coverage data, which
+  // the local coverage report uses to map dist/*.js back to src/*.ts.
   process.env.NODE_OPTIONS = (process.env.NODE_OPTIONS || '')
     .split(' ')
     .filter(Boolean)
     .concat(['--enable-source-maps'])
     .join(' ')
 
-  const { cmd, argv } = buildUnitCommand({ isProd, isWin, cwd, name, include, exclude })
+  const { cmd, argv, coverage } = buildUnitCommand({
+    isProd,
+    cwd,
+    name,
+    include,
+    exclude,
+    native: res.args.native,
+  })
 
-  childProcess = await cli.spawn(cmd, argv)
+  // prepare the V8 coverage temp directory (c8 used to do this for us)
+  // resultsFile: the unit.js child writes the run summary there so it can be
+  // printed AFTER the coverage report. Not set for `t --native`: the native
+  // runner keeps node --test's own summary, and its test files can spawn
+  // unit.js children (test/workerDeath.ts) that would clobber the file.
+  let spawnEnv = process.env
+  let resultsFile: string | null = null
+  if (coverage) {
+    await fs.rmrf(coverage.tempDir)
+    await fs.mkdirp(coverage.tempDir)
+    if (!res.args.native) {
+      resultsFile = path.join(coverage.tempDir, 'results.json')
+    }
+    spawnEnv = {
+      ...process.env,
+      NODE_V8_COVERAGE: coverage.tempDir,
+      ...(resultsFile ? { [RESULTS_FILE_ENV]: resultsFile } : {}),
+    }
+  }
+
+  childProcess = await cli.spawn(cmd, argv, { env: spawnEnv })
 
   // Wait for the child and adopt its exit code. Without ref() the parent
   // exits immediately after spawn and reports 0 no matter what unit.js did.
   childProcess.ref()
-  childProcess.on('exit', (code, signal) => {
+  childProcess.on('exit', async (code, signal) => {
     if (code === null && signal) {
       process.exitCode = 1
     } else if (code !== null && code !== 0) {
       process.exitCode = code
+    }
+    if (coverage) {
+      try {
+        await stats.coverage({
+          tempDir: coverage.tempDir,
+          cwd,
+          include: coverage.include,
+          exclude: coverage.exclude,
+          extensions: coverage.extensions,
+          all: coverage.all,
+          excludeAfterRemap: coverage.excludeAfterRemap,
+        })
+      } catch (err) {
+        log.error(err as Error)
+      }
+      // unit.js wrote the run summary to resultsFile; the native runner never
+      // does, so for `t --native` this silently no-ops
+      if (resultsFile) {
+        stats.summary(resultsFile)
+      }
     }
   })
   childProcess.on('error', err => {
