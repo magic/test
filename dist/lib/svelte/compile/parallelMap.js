@@ -1,6 +1,6 @@
 // Parallel execution with concurrency limit
 export const MAX_CONCURRENT = 5
-export async function parallelMap(items, fn, concurrency = MAX_CONCURRENT) {
+export const parallelMap = async (items, fn, concurrency = MAX_CONCURRENT) => {
   const results = new Array(items.length)
   const executing = []
   for (let i = 0; i < items.length; i++) {

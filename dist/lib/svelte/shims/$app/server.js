@@ -1,28 +1,24 @@
 // Shim for $app/server
 // Server-only exports - returns null/stubs in test environment
-export function getRequestEvent() {
-  return null
-}
-export function read(_asset) {
-  return new Response('Not found', { status: 404 })
-}
-export function command(...args) {
+export const getRequestEvent = () => null
+export const read = _asset => new Response('Not found', { status: 404 })
+export const command = (...args) => {
   console.warn('$app/server: command() is not available in test environment')
   return args[args.length - 1]
 }
-export function form(...args) {
+export const form = (...args) => {
   console.warn('$app/server: form() is not available in test environment')
   return args[args.length - 1]
 }
-export function query(...args) {
+export const query = (...args) => {
   console.warn('$app/server: query() is not available in test environment')
   return args[args.length - 1]
 }
-export function prerender(...args) {
+export const prerender = (...args) => {
   console.warn('$app/server: prerender() is not available in test environment')
   return args[args.length - 1]
 }
-export function requested(_query, _limit) {
+export const requested = (_query, _limit) => {
   console.warn('$app/server: requested() is not available in test environment')
   return {
     [Symbol.iterator]: () => ({

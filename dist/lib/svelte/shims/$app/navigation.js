@@ -6,7 +6,7 @@ import { get } from 'svelte/store'
 import { getContext, getDefaultContext } from './state.js'
 // OnNavigate extends AfterNavigate for type compatibility
 const getCtx = () => getContext() ?? getDefaultContext()
-export async function goto(url, opts = {}) {
+export const goto = async (url, opts = {}) => {
   const ctx = getCtx()
   const currentPage = get(ctx.page)
   const from = currentPage.url
@@ -81,31 +81,25 @@ export async function goto(url, opts = {}) {
   }
   return Promise.resolve()
 }
-export function pushState(url, state = {}) {
+export const pushState = (url, state = {}) => {
   const ctx = getCtx()
   const currentPage = get(ctx.page)
   const targetUrl = is.string(url) ? new URL(url, currentPage.url.origin) : url
   ctx.page.set({ ...currentPage, url: targetUrl, ...state })
 }
-export function replaceState(url, state = {}) {
+export const replaceState = (url, state = {}) => {
   const ctx = getCtx()
   const currentPage = get(ctx.page)
   const targetUrl = is.string(url) ? new URL(url, currentPage.url.origin) : url
   ctx.page.set({ ...currentPage, url: targetUrl, ...state })
 }
-export function invalidate(_resource) {
+export const invalidate = _resource => {
   return Promise.resolve()
 }
-export function invalidateAll() {
-  return Promise.resolve()
-}
-export function preloadData(_href) {
-  return Promise.resolve({ type: 'loaded', status: 200, data: {} })
-}
-export function preloadCode(_pathname) {
-  return Promise.resolve()
-}
-export function beforeNavigate(cb) {
+export const invalidateAll = () => Promise.resolve()
+export const preloadData = _href => Promise.resolve({ type: 'loaded', status: 200, data: {} })
+export const preloadCode = _pathname => Promise.resolve()
+export const beforeNavigate = cb => {
   const ctx = getCtx()
   ctx.callbacks.before.push(cb)
   return () => {
@@ -115,7 +109,7 @@ export function beforeNavigate(cb) {
     }
   }
 }
-export function afterNavigate(cb) {
+export const afterNavigate = cb => {
   const ctx = getCtx()
   ctx.callbacks.after.push(cb)
   return () => {
@@ -125,14 +119,14 @@ export function afterNavigate(cb) {
     }
   }
 }
-export function onNavigate(cb) {
+export const onNavigate = cb => {
   const ctx = getCtx()
   ctx.callbacks.on.push(cb)
 }
-export function disableScrollHandling() {
+export const disableScrollHandling = () => {
   // no-op
 }
-export function reset() {
+export const reset = () => {
   const ctx = getDefaultContext()
   ctx.callbacks.before = []
   ctx.callbacks.after = []

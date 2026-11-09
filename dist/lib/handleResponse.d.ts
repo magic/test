@@ -26,12 +26,12 @@ export declare class NetworkError extends Error {
  * Parse HTTP response body based on content-type.
  * Pure function for unit testing.
  */
-export declare function parseHttpResponseContent(rawData: string, contentType?: string): unknown
+export declare const parseHttpResponseContent: (rawData: string, contentType?: string) => unknown
 /**
  * Sanitize error response body for safe logging.
  * Pure function for unit testing.
  */
-export declare function sanitizeBody(body: string): string
+export declare const sanitizeBody: (body: string) => string
 /**
  * Handle an HTTP response, collecting data and resolving or rejecting a promise.
  * Automatically parses JSON responses based on content-type header.

@@ -51,7 +51,7 @@ try {
 /**
  * Resolve a pathname by prepending the base path, or resolve a route ID with params.
  */
-export function resolve(...args) {
+export const resolve = (...args) => {
   if (args.length === 1) {
     const pathname = args[0]
     if (
@@ -81,7 +81,7 @@ export function resolve(...args) {
  * Match a URL to a route ID.
  * Very simple implementation: converts routeId like /blog/[slug] to regex.
  */
-export function match(url) {
+export const match = url => {
   try {
     const urlStr = is.string(url) ? url : url.href || url.toString()
     // This shim does not have route config; return null or try to match common patterns
@@ -116,7 +116,7 @@ export function match(url) {
 /**
  * Asset helper: prefix with assets or base.
  */
-export function asset(file) {
+export const asset = file => {
   const prefix = assets || base
   return prefix + file
 }

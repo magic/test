@@ -3,14 +3,14 @@
 // Provides stores as Svelte stores for backward compatibility
 import { writable, get } from 'svelte/store'
 import { getDefaultContext } from './state.js'
-function createPageStore() {
+const createPageStore = () => {
   const ctx = getDefaultContext()
   const { subscribe } = writable(get(ctx.page))
   return {
     subscribe,
   }
 }
-function createNavigatingStore() {
+const createNavigatingStore = () => {
   const ctx = getDefaultContext()
   const { subscribe } = writable(get(ctx.navigating))
   return {

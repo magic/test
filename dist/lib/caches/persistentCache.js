@@ -15,7 +15,7 @@ const hashCache = new LRUCache(4096)
 // Atomic write: a concurrent reader (sibling worker) must never observe a
 // truncated/partial file — write to a unique temp name, then rename (POSIX
 // renames are atomic).
-export async function writeAtomic(filePath, content) {
+export const writeAtomic = async (filePath, content) => {
   const tmp = `${filePath}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`
   await fs.writeFile(tmp, content)
   try {
@@ -30,7 +30,7 @@ export async function writeAtomic(filePath, content) {
   }
 }
 // Compute SHA-256 hash of file content (with caching)
-async function hashFile(filePath) {
+const hashFile = async filePath => {
   const cached = hashCache.get(filePath)
   if (cached) {
     return cached
@@ -41,11 +41,11 @@ async function hashFile(filePath) {
   return hash
 }
 // Get relative cache path for a source file
-function getCachePath(sourcePath) {
+const getCachePath = sourcePath => {
   const rel = path.relative(process.cwd(), sourcePath).replace(/\.svelte$/, '.svelte.js')
   return path.join(CACHE_DIR, rel)
 }
-export async function loadManifest() {
+export const loadManifest = async () => {
   try {
     const stats = await fs.stat(MANIFEST_FILE)
     if (manifestCache && stats.mtimeMs === manifestMtime) {
@@ -59,7 +59,7 @@ export async function loadManifest() {
     return null
   }
 }
-export async function saveManifest(manifest) {
+export const saveManifest = async manifest => {
   // Merge with the latest on-disk manifest so concurrent writers (parallel
   // test workers) don't clobber each other's entries: a stale in-memory copy
   // must not drop entries another worker recorded in the meantime.
@@ -80,7 +80,7 @@ export async function saveManifest(manifest) {
   await fs.mkdirp(CACHE_DIR)
   await writeAtomic(MANIFEST_FILE, JSON.stringify(m, null, 2))
 }
-export async function getCachedCompile(sourcePath) {
+export const getCachedCompile = async sourcePath => {
   const m = await loadManifest()
   if (!m) {
     return null
@@ -103,7 +103,7 @@ export async function getCachedCompile(sourcePath) {
   const js = await fs.readFile(compiledPath, 'utf-8')
   return { js, css: null }
 }
-export async function recordCompile(sourcePath, compiledJs) {
+export const recordCompile = async (sourcePath, compiledJs) => {
   let manifest = await loadManifest()
   if (!manifest) {
     // Initialize new manifest
@@ -135,7 +135,7 @@ export async function recordCompile(sourcePath, compiledJs) {
   // Save manifest to disk
   await saveManifest(manifest)
 }
-export async function clearCache() {
+export const clearCache = async () => {
   try {
     await fs.rmrf(CACHE_DIR)
   } catch {
@@ -146,7 +146,5 @@ export async function clearCache() {
   hashCache.clear()
   await clearResolveTransformCache()
 }
-export function getCacheDir() {
-  return CACHE_DIR
-}
+export const getCacheDir = () => CACHE_DIR
 //# sourceMappingURL=persistentCache.js.map

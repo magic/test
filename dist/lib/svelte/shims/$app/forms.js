@@ -4,7 +4,7 @@ export const applyAction = async _result => {
   // In test environment, we can't update page state like a real browser
   // This is a no-op implementation
 }
-export function deserialize(result) {
+export const deserialize = result => {
   try {
     return JSON.parse(result)
   } catch {
@@ -14,7 +14,7 @@ export function deserialize(result) {
     }
   }
 }
-export function enhance(_formElement, _submit) {
+export const enhance = (_formElement, _submit) => {
   // No-op enhancement - form submits normally
   // Return destroy function for cleanup
   return {

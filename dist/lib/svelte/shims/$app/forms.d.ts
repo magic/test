@@ -23,10 +23,10 @@ interface EnhanceOptions<Success, Failure> {
 export declare const applyAction: <Success extends ActionSuccess, Failure extends ActionFailure>(
   _result: ActionResult<Success, Failure>,
 ) => Promise<void>
-export declare function deserialize<Success extends ActionSuccess, Failure extends ActionFailure>(
+export declare const deserialize: <Success extends ActionSuccess, Failure extends ActionFailure>(
   result: string,
-): ActionResult<Success, Failure>
-export declare function enhance<Success extends ActionSuccess, Failure extends ActionFailure>(
+) => ActionResult<Success, Failure>
+export declare const enhance: <Success extends ActionSuccess, Failure extends ActionFailure>(
   _formElement: HTMLFormElement,
   _submit?: (args: {
     formData: FormData
@@ -35,7 +35,7 @@ export declare function enhance<Success extends ActionSuccess, Failure extends A
     result: (res: ActionResult<Success, Failure>) => void
     update: (opts?: EnhanceOptions<Success, Failure>) => Promise<void>
   }) => void | Promise<void>,
-): {
+) => {
   destroy(): void
 }
 export {}

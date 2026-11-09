@@ -1,5 +1,5 @@
 let svelte = null
-export async function ensureSvelte() {
+export const ensureSvelte = async () => {
   if (!svelte) {
     try {
       svelte = await import('svelte')

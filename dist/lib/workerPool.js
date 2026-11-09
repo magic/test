@@ -40,7 +40,7 @@ const createWorkerPool = limit => {
       next()
     }
   }
-  return async function run(fn) {
+  return async fn => {
     if (running < limit) {
       running++
       return fn().finally(release)

@@ -4,7 +4,7 @@ interface AfterNavigate {
   to: URL
   type: string
 }
-export declare function goto(
+export declare const goto: (
   url: string | URL,
   opts?: {
     replaceState?: boolean
@@ -12,11 +12,13 @@ export declare function goto(
     noScroll?: boolean
     state?: Record<string, unknown>
   },
-): Promise<void>
-export declare function pushState(url: string | URL, state?: Record<string, unknown>): void
-export declare function replaceState(url: string | URL, state?: Record<string, unknown>): void
-export declare function invalidate(_resource: string | URL | ((url: URL) => boolean)): Promise<void>
-export declare function invalidateAll(): Promise<void>
+) => Promise<void>
+export declare const pushState: (url: string | URL, state?: Record<string, unknown>) => void
+export declare const replaceState: (url: string | URL, state?: Record<string, unknown>) => void
+export declare const invalidate: (
+  _resource: string | URL | ((url: URL) => boolean),
+) => Promise<void>
+export declare const invalidateAll: () => Promise<void>
 type PreloadedData =
   | {
       type: 'loaded'
@@ -27,11 +29,11 @@ type PreloadedData =
       type: 'redirect'
       location: string
     }
-export declare function preloadData(_href: string): Promise<PreloadedData>
-export declare function preloadCode(_pathname: string): Promise<void>
-export declare function beforeNavigate(cb: (nav: BeforeNavigate) => void): () => void
-export declare function afterNavigate(cb: (nav: AfterNavigate) => void): () => void
-export declare function onNavigate(cb: (nav: Navigation) => (() => void) | void): void
-export declare function disableScrollHandling(): void
-export declare function reset(): void
+export declare const preloadData: (_href: string) => Promise<PreloadedData>
+export declare const preloadCode: (_pathname: string) => Promise<void>
+export declare const beforeNavigate: (cb: (nav: BeforeNavigate) => void) => () => void
+export declare const afterNavigate: (cb: (nav: AfterNavigate) => void) => () => void
+export declare const onNavigate: (cb: (nav: Navigation) => (() => void) | void) => void
+export declare const disableScrollHandling: () => void
+export declare const reset: () => void
 export {}
