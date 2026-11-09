@@ -51,7 +51,7 @@
     "dev": "magic dev",
     "test": "node dist/bin/t.js -i docsrc -i src",
     "test:prepare": "tsc -p tsconfig.test.json",
-    "test:native": "node --test dist/bin/node-test-runner.js --coverage && c8 report",
+    "test:native": "node dist/bin/t.js --native",
     "test:ci": "node dist/bin/t.js -p",
     "coverage": "node dist/bin/t.js",
     "format": "f -w --exclude docs",
@@ -70,7 +70,6 @@
     "@magic/log": "0.1.23",
     "@magic/types": "0.1.40",
     "@napi-rs/canvas": "1.1.0",
-    "c8": "12.0.0",
     "happy-dom": "21.0.4",
     "oxc-parser": "0.157.0",
     "typescript": "npm:@typescript/typescript6"
@@ -84,10 +83,7 @@
     "@magic/core": "0.0.161",
     "@magic/format": "0.0.77",
     "@magic/lint": "0.0.3",
-    "@rsvelte/oxlint-plugin": "0.2.6",
     "@types/node": "26.6.6",
-    "oxlint": "1.92.0",
-    "prettier-plugin-svelte": "4.1.1",
     "svelte": "5.57.3"
   },
   "overrides": {
