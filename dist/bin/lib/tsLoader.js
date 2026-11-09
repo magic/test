@@ -12,6 +12,7 @@ import { writeQueue } from '../../lib/svelte/compile/writeQueue.js'
 import { hasSvelteRunes, extractImportsSync } from '../../lib/svelte/compile/astParse.js'
 import { getTempFilePath } from '../../lib/svelte/compile/getTempFilePath.js'
 import { transpileWithTypescript } from './tsTranspile.js'
+import { handleVirtualModule } from './virtual-module.js'
 import { compileSvelteWithWrite } from '../../lib/svelte/compile/compileSvelteWithWrite.js'
 import { findNearestPackageJson } from '../../lib/svelte/compile/resolveImportMap.js'
 import { writeTempFile } from '../../lib/svelte/compile/resolveSvelteOnlyExports.js'
@@ -397,6 +398,11 @@ const resolveRealPackageEntry = async specifier => {
 }
 const resolveImpl = async (specifier, context, nextResolve) => {
   try {
+    // Handle virtual: scheme (e.g. virtual:paraglide/<hash>/messages/_index.js)
+    // used by vite plugins like paraglide-js to generate virtual modules.
+    if (specifier.startsWith('virtual:')) {
+      return await handleVirtualModule(specifier)
+    }
     // Absolute remote URL imports (specifiers rewritten by
     // rewriteRemoteSource, or explicit http(s) imports): materialize directly.
     if (/^https?:\/\//.test(specifier)) {
