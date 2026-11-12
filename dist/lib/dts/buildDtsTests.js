@@ -57,9 +57,12 @@ const checkErrorMessage = (error, relFile) =>
  * tests to workers, which re-import test files from disk and cannot see
  * virtual suites. All compiler work happens in `checkAll` (imported, and run
  * at collection time), never inside the test functions.
+ *
+ * `excludes` are CLI --exclude glob patterns: matching declaration files
+ * (or everything below a matching directory) are not collected or checked.
  */
-export const buildDtsTestSuites = async root => {
-  const files = await collectDtsFiles(root)
+export const buildDtsTestSuites = async (root, excludes = []) => {
+  const files = await collectDtsFiles(root, excludes)
   const checks = await checkAll(files, root)
   const suites = {}
   for (const check of checks) {

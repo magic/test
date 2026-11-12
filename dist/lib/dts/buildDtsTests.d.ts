@@ -28,5 +28,11 @@ export declare const DTS_SUITE_PREFIX = '/__dts__/'
  * tests to workers, which re-import test files from disk and cannot see
  * virtual suites. All compiler work happens in `checkAll` (imported, and run
  * at collection time), never inside the test functions.
+ *
+ * `excludes` are CLI --exclude glob patterns: matching declaration files
+ * (or everything below a matching directory) are not collected or checked.
  */
-export declare const buildDtsTestSuites: (root: string) => Promise<Record<string, Test[]>>
+export declare const buildDtsTestSuites: (
+  root: string,
+  excludes?: string[],
+) => Promise<Record<string, Test[]>>
