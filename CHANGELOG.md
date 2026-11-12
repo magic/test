@@ -1,5 +1,9 @@
 ### Changelog
 
+#### 0.3.56
+
+- feat: `--exclude` / `-e` now also applies to the auto-generated .d.ts type tests — excluded dirs and files are not collected or checked
+
 #### 0.3.55
 
 - importing virtual: modules does not crash the test suite, instead an empty module is returned, better than nothing...
