@@ -38,6 +38,25 @@ export const getShardConfig = () => {
   return { shards, shardId, workers }
 }
 
+/**
+ * Parse MAGIC_TEST_EXCLUDE (JSON array of CLI --exclude patterns) set by the
+ * t.ts CLI. Used to exclude declaration files from the auto-generated .d.ts
+ * type-check suites. Invalid/absent values yield an empty list.
+ */
+export const getDtsExcludes = (): string[] => {
+  const raw = process.env.MAGIC_TEST_EXCLUDE
+  if (!raw) {
+    return []
+  }
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed.map(String) : []
+  } catch {
+    log.warn(`Invalid MAGIC_TEST_EXCLUDE, ignoring: ${raw}`)
+    return []
+  }
+}
+
 const init = async () => {
   try {
     await maybeInjectMagic()
@@ -60,7 +79,7 @@ const init = async () => {
     // Disable with MAGIC_TEST_SKIP_DTS_TESTS=1.
     if (!process.env.MAGIC_TEST_SKIP_DTS_TESTS) {
       try {
-        const dtsSuites = await buildDtsTestSuites(process.cwd())
+        const dtsSuites = await buildDtsTestSuites(process.cwd(), getDtsExcludes())
         for (const [key, suite] of Object.entries(dtsSuites)) {
           tests[key] = suite
         }

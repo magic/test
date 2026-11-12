@@ -38,7 +38,7 @@ const res = cli({
       '--help': 'this help text',
       '--verbose': 'more output',
       '--include': 'files to include in coverage',
-      '--exclude': 'files to exclude from coverage',
+      '--exclude': 'files to exclude from coverage and .d.ts type tests',
       '--shards': 'total number of shards',
       '--shard-id': 'shard id (0-indexed)',
       '--error-length': 'max length for error strings (default 70, 0 = no limit)',
@@ -201,6 +201,12 @@ const run = async () => {
   }
   if (workers !== undefined) {
     process.env.MAGIC_TEST_WORKERS = String(workers)
+  }
+  // Forward --exclude so the unit runner can exclude the same files/dirs from
+  // the auto-generated .d.ts type-check suites (only user-passed excludes;
+  // the coverage-only 'test' default is already covered by SKIP_DIRS).
+  if (exclude) {
+    process.env.MAGIC_TEST_EXCLUDE = JSON.stringify(exclude)
   }
 
   // Enable Node.js source map capture for coverage remapping: Node caches

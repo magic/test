@@ -2,6 +2,8 @@ import path from 'node:path'
 import fs from '@magic/fs'
 import type { Dirent } from 'node:fs'
 
+import { FileFilter } from '../coverage/filter.js'
+
 /**
  * Directory names that are never searched for .d.ts files.
  * `test` is excluded because test fixtures may intentionally contain broken
@@ -12,9 +14,18 @@ const SKIP_DIRS = new Set(['node_modules', 'dist', 'coverage', '.tmp', 'docs', '
 /**
  * Recursively collect all .d.ts files below rootDir.
  * Returns absolute paths, sorted for stable test ordering.
+ *
+ * `excludes` are CLI --exclude glob patterns (test-exclude semantics, relative
+ * to rootDir): matching files are skipped, a pattern like `foo` also skips
+ * everything below `foo`, and `!pattern` re-includes. They are additive on
+ * top of SKIP_DIRS, which always applies.
  */
-export const collectDtsFiles = async (rootDir: string): Promise<string[]> => {
+export const collectDtsFiles = async (
+  rootDir: string,
+  excludes: string[] = [],
+): Promise<string[]> => {
   const found: string[] = []
+  const filter = new FileFilter({ cwd: rootDir, exclude: excludes })
 
   const walk = async (dir: string): Promise<void> => {
     let entries: Dirent[]
@@ -35,7 +46,9 @@ export const collectDtsFiles = async (rootDir: string): Promise<string[]> => {
           await walk(full)
         }
       } else if (entry.isFile() && entry.name.endsWith('.d.ts')) {
-        found.push(full)
+        if (filter.shouldInstrument(full)) {
+          found.push(full)
+        }
       }
     }
   }
