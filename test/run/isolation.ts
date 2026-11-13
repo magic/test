@@ -185,6 +185,31 @@ export default [
       v.clone.nested !== v.original.nested &&
       v.clone.a === v.clone.nested,
   },
+  // --- snapshot/restore: things that must never be captured -------------
+  // deepClone turns these into broken shells ({} or a DOM copy with dead
+  // WeakRefs) that restore would install over the real globals.
+  {
+    name: 'snapshot skips method-only namespaces',
+    fn: () => ({
+      webassembly: isolation.shouldCaptureProperty('WebAssembly'),
+      intl: isolation.shouldCaptureProperty('Intl'),
+      atomics: isolation.shouldCaptureProperty('Atomics'),
+      customElements: isolation.shouldCaptureProperty('customElements'),
+    }),
+    expect: has.properties({
+      webassembly: false,
+      intl: false,
+      atomics: false,
+      customElements: false,
+    }),
+    info: 'WebAssembly/Intl/Atomics/customElements are never snapshot (clones are broken)',
+  },
+  {
+    name: 'snapshot skips the shared happy-dom window symbol',
+    fn: () => isolation.shouldCaptureProperty(Symbol.for('@magic/test.happy-dom.window')),
+    expect: false,
+    info: 'the shared window must never be captured/restored',
+  },
   {
     name: 'snapshot skips __DDL',
     fn: () => isolation.shouldCaptureProperty('__DDL'),
