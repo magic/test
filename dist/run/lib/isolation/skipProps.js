@@ -114,6 +114,23 @@ export const skipProps = new Set([
   'Proxy',
   'BigInt',
   'performance',
+  // Method-only namespaces: deepClone turns them into {} (their values are
+  // all functions, which JSON.stringify to undefined), and restoring that
+  // over the real thing breaks later tests ("WebAssembly.Module is not a
+  // constructor", broken Intl/Atomics/customElements). Never snapshot these.
+  'WebAssembly',
+  'Intl',
+  'Atomics',
+  'customElements',
+  // The shared happy-dom window is process-wide state. Deep-cloning it
+  // produces a broken shell (its internal WeakRefs become {}) that restore
+  // would install over the real window.
+  'Symbol(@magic/test.happy-dom.window)',
+  // DDL runtime singleton (src/lib/svelte/compile/ddl.ts), held by the
+  // 5s-watchdog test while other isolated tests run. The restore step that
+  // deletes properties unknown to the snapshot used to remove it mid-test
+  // (the rare "waiting: false" flake).
+  '__DDL',
   // Additional globals that shouldn't be captured
   'Function',
   'eval',

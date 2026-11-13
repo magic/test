@@ -61,6 +61,20 @@ const makeErrorResult = (testName, error) =>
     },
     error,
   )
+/**
+ * Reduce every payload field that may carry non-cloneable values (functions
+ * in result/expect/expString, hook errors) before postMessage; a single
+ * unclonable value would throw DataCloneError and kill the worker mid-batch.
+ */
+const safeResult = r => ({
+  ...r,
+  result: makeSafeClone(r.result),
+  expect: makeSafeClone(r.expect),
+  expString: makeSafeClone(r.expString),
+  afterCleanupError:
+    r.afterCleanupError !== undefined ? makeSafeClone(r.afterCleanupError) : undefined,
+  afterError: r.afterError !== undefined ? makeSafeClone(r.afterError) : undefined,
+})
 const main = async () => {
   const batchMode = workerData.batchMode === true
   if (batchMode) {
@@ -81,16 +95,13 @@ const runSingleMode = async () => {
     } finally {
       await cleanupSuite(tests, afterAllCleanup)
     }
-    const payload = {
-      ...result,
-      result: makeSafeClone(result?.result),
-    }
+    const payload = safeResult(result)
     if (parentPort) {
       parentPort.postMessage(payload)
     }
   } catch (e) {
     if (parentPort) {
-      parentPort.postMessage(makeErrorResult(testName, e))
+      parentPort.postMessage(safeResult(makeErrorResult(testName, e)))
     }
   }
 }
@@ -110,10 +121,7 @@ const runBatchMode = async () => {
         const result = await runWithHooks(tests, () =>
           runSingleTestFromFileInWorker(tests, testIndex, testPkg, testParent, testName),
         )
-        results.push({
-          ...result,
-          result: makeSafeClone(result.result),
-        })
+        results.push(safeResult(result))
       }
     } finally {
       await cleanupSuite(tests, afterAllCleanup)
@@ -123,7 +131,7 @@ const runBatchMode = async () => {
     }
   } catch (e) {
     if (parentPort) {
-      const results = testNames.map(name => makeErrorResult(name, e))
+      const results = testNames.map(name => safeResult(makeErrorResult(name, e)))
       parentPort.postMessage(results)
     }
   }
