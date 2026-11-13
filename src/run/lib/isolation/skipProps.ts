@@ -115,6 +115,11 @@ export const skipProps = new Set([
   'Proxy',
   'BigInt',
   'performance',
+  // DDL runtime singleton (src/lib/svelte/compile/ddl.ts), held by the
+  // 5s-watchdog test while other isolated tests run. The restore step that
+  // deletes properties unknown to the snapshot used to remove it mid-test
+  // (the rare "waiting: false" flake).
+  '__DDL',
   // Additional globals that shouldn't be captured
   'Function',
   'eval',

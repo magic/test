@@ -13,6 +13,12 @@ import type { TestCase } from '#src/types.js'
 // must set its own state defensively and never delete the shared __DDL object
 // (only its own keys), otherwise a sibling test's teardown wipes another
 // test's entries mid-flight.
+//
+// Cross-suite hazard: the 5s watchdog holds globalThis.__DDL while other
+// isolated main-thread tests run their snapshot/restore cycles. __DDL is in
+// the isolation skipProps list, so a sibling restore can no longer delete it
+// mid-test (the rare "waiting: false" flake). Covered by the "restore does
+// not delete a __DDL created after the snapshot" test in test/run/isolation.ts.
 type ProcWithDebug = { _rawDebug: unknown }
 const proc = process as unknown as ProcWithDebug
 

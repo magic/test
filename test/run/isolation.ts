@@ -185,4 +185,31 @@ export default [
       v.clone.nested !== v.original.nested &&
       v.clone.a === v.clone.nested,
   },
+  {
+    name: 'snapshot skips __DDL',
+    fn: () => isolation.shouldCaptureProperty('__DDL'),
+    expect: false,
+  },
+  // Deterministic regression for the rare "waiting: false" DDL watchdog
+  // flake: a snapshot taken while globalThis.__DDL does not exist must not
+  // delete it on restore (another test holds it for the 5s watchdog).
+  {
+    name: 'restore does not delete a __DDL created after the snapshot',
+    fn: () => {
+      delete (globalThis as Record<string, unknown>).__DDL
+      const snap = isolation.buildSnapshot()
+      ;(globalThis as Record<string, unknown>).__DDL = {
+        map: new Map([['stuck', ['holder']]]),
+      }
+      isolation.restoreProperties(snap)
+      const ddl = (globalThis as Record<string, unknown>).__DDL as
+        | { map: Map<string, unknown> }
+        | undefined
+      const survives = !!ddl && ddl.map.size === 1
+      delete (globalThis as Record<string, unknown>).__DDL
+      return { survives }
+    },
+    expect: has.properties({ survives: true }),
+    info: "the DDL watchdog singleton survives a concurrent test's restore (the rare flake)",
+  },
 ] satisfies TestCase[]
