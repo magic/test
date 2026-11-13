@@ -237,4 +237,48 @@ export default [
     expect: has.properties({ survives: true }),
     info: "the DDL watchdog singleton survives a concurrent test's restore (the rare flake)",
   },
+  // --- snapshot/restore: storage is synced, not replaced ----------------
+  {
+    name: 'restore re-populates live storage instead of replacing it',
+    fn: () => {
+      const KEY = 'iso-storage-restore-check'
+      const prior = localStorage.getItem(KEY)
+      localStorage.setItem(KEY, 'orig')
+      const snap = isolation.buildSnapshot()
+      localStorage.setItem(KEY, 'mutated')
+      isolation.restoreProperties(snap)
+      const restored = localStorage.getItem(KEY)
+      const live = typeof (localStorage as unknown as { getItem: unknown }).getItem === 'function'
+      if (prior === null) {
+        localStorage.removeItem(KEY)
+      } else {
+        localStorage.setItem(KEY, prior)
+      }
+      return { restored, live }
+    },
+    expect: has.properties({ restored: 'orig', live: true }),
+    info: 'localStorage keeps its live instance and gets its entries back',
+  },
+  // --- snapshot/restore: normal cleanup behavior is unchanged -----------
+  {
+    name: 'restore still restores snapshot values and deletes newer unknown globals',
+    fn: () => {
+      const KEEP = '__iso_cleanup_check_keep'
+      const OTHER = '__iso_cleanup_check_other'
+      delete (globalThis as Record<string, unknown>)[KEEP]
+      delete (globalThis as Record<string, unknown>)[OTHER]
+      ;(globalThis as Record<string, unknown>)[KEEP] = { marker: 1 }
+      const snap = isolation.buildSnapshot()
+      ;(globalThis as Record<string, unknown>)[KEEP] = { marker: 99 }
+      ;(globalThis as Record<string, unknown>)[OTHER] = { marker: 2 }
+      isolation.restoreProperties(snap)
+      const kept = (globalThis as Record<string, unknown>)[KEEP] as { marker?: number } | undefined
+      const other = (globalThis as Record<string, unknown>)[OTHER]
+      delete (globalThis as Record<string, unknown>)[KEEP]
+      delete (globalThis as Record<string, unknown>)[OTHER]
+      return { keptMarker: kept?.marker, otherGone: other === undefined }
+    },
+    expect: has.properties({ keptMarker: 1, otherGone: true }),
+    info: 'snapshot values are restored; globals created after the snapshot are cleaned up',
+  },
 ] satisfies TestCase[]

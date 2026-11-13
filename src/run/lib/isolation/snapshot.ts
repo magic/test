@@ -158,6 +158,65 @@ export const deepClone = <T>(value: T, seen: WeakMap<object, unknown> = new Weak
 }
 
 /**
+ * Storage-like detection: localStorage/sessionStorage (happy-dom Storage).
+ * These instances cannot be deep-cloned (their data lives in private state
+ * behind methods); a JSON clone is a broken shell that restore would
+ * install over the real storage.
+ */
+const isStorageLike = (value: unknown): value is Record<string, unknown> =>
+  is.object(value) &&
+  is.function((value as Record<string, unknown>).getItem) &&
+  is.function((value as Record<string, unknown>).setItem) &&
+  is.function((value as Record<string, unknown>).removeItem) &&
+  is.function((value as Record<string, unknown>).clear) &&
+  'length' in (value as object)
+
+const STORAGE_MARKER = '__storage'
+
+/**
+ * Capture a storage instance as its entries (restored by re-populating the
+ * LIVE instance instead of replacing it).
+ */
+const captureStorage = (storage: Record<string, unknown>): Record<string, unknown> => {
+  const entries: [string, string][] = []
+  try {
+    const s = storage as unknown as {
+      length: number
+      key: (i: number) => string | null
+      getItem: (k: string) => string | null
+    }
+    const length = Number(s.length) || 0
+    for (let i = 0; i < length; i++) {
+      const k = s.key(i)
+      if (k !== null && k !== undefined) {
+        entries.push([k, s.getItem(k) ?? ''])
+      }
+    }
+  } catch {
+    // best effort: restore with what we managed to read
+  }
+  return { [STORAGE_MARKER]: true, entries }
+}
+
+/**
+ * Restore captured storage entries into the live storage instance.
+ */
+const restoreStorage = (storage: Record<string, unknown>, entries: [string, string][]): void => {
+  try {
+    const s = storage as unknown as {
+      clear: () => void
+      setItem: (k: string, v: string) => void
+    }
+    s.clear()
+    for (const [k, v] of entries) {
+      s.setItem(k, v)
+    }
+  } catch {
+    // ignore: live storage is not restorable right now
+  }
+}
+
+/**
  * Whether a globalThis property should be captured into a snapshot.
  * O(1) lookup using Set.has().
  */
@@ -224,7 +283,9 @@ export const buildSnapshot = (): Snapshot => {
 
     if ('value' in desc) {
       try {
-        stored.value = deepClone(desc.value)
+        stored.value = isStorageLike(desc.value)
+          ? captureStorage(desc.value)
+          : deepClone(desc.value)
       } catch (e) {
         log.warn('Isolation: failed to deep clone property value for', String(key), ':', e)
         stored.value = desc.value
@@ -279,6 +340,19 @@ export const restoreProperties = (snapshot: Snapshot): void => {
     }
 
     const prop = reviveKeyFromString(keyStr)
+    // Storage instances are synced back into the live instance (see
+    // captureStorage); the stored value is a marker, not the storage — it
+    // must never be installed as a property.
+    if ('value' in stored) {
+      const v = stored.value as { __storage?: boolean; entries?: [string, string][] }
+      if (v && v.__storage === true) {
+        const live = (globalThis as Record<string | symbol, unknown>)[prop]
+        if (isStorageLike(live)) {
+          restoreStorage(live as Record<string, unknown>, v.entries ?? [])
+        }
+        continue
+      }
+    }
     try {
       const desc: PropertyDescriptor = {
         configurable: !!stored.configurable,
