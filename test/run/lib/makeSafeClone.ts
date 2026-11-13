@@ -60,16 +60,60 @@ export default [
       const result = makeSafeClone(() => {})
       return result
     },
-    expect: is.function,
-    info: 'returns function as-is for non-isolated fn',
+    expect: is.string,
+    info: 'stringifies a top-level function (payload-safe)',
   },
   {
     fn: () => {
       const result = makeSafeClone(function named() {})
       return result
     },
-    expect: is.function,
-    info: 'returns function as-is for named function',
+    expect: (v: unknown) => is.string(v) && v.includes('named'),
+    info: 'stringifies a named function (payload-safe)',
+  },
+  {
+    fn: () => {
+      const result = makeSafeClone({ n: 2, fn: () => 1 })
+      return result
+    },
+    expect: (v: { n: number; fn: unknown }) => v.n === 2 && is.string(v.fn),
+    info: 'stringifies nested functions, keeps object structure',
+  },
+  {
+    fn: () => {
+      const result = makeSafeClone([1, () => 2, { deep: { f: function x() {} } }])
+      return result
+    },
+    expect: (v: Array<unknown>) =>
+      v.length === 3 &&
+      v[0] === 1 &&
+      is.string(v[1]) &&
+      is.string((v[2] as { deep: { f: unknown } }).deep.f),
+    info: 'stringifies functions nested in arrays and objects',
+  },
+  {
+    fn: () => {
+      const obj: { a: number; self?: object } = { a: 1, self: undefined }
+      obj.self = obj
+      const clone = makeSafeClone(obj) as { a: number; self?: object }
+      return { clone, selfIsSelf: clone.self === clone }
+    },
+    expect: (v: { clone: { a: number }; selfIsSelf: boolean }) => v.clone.a === 1 && v.selfIsSelf,
+    info: 'preserves circular references',
+  },
+  {
+    fn: () => {
+      // The whole point: worker postMessage payloads must be cloneable
+      const payload = makeSafeClone({
+        result: { fn: () => 1, ok: true },
+        expect: (v: unknown) => v === true,
+        error: new Error('boom'),
+      })
+      structuredClone(payload)
+      return true
+    },
+    expect: true,
+    info: 'output is structuredClone-safe (no DataCloneError in postMessage)',
   },
   {
     fn: () => {
