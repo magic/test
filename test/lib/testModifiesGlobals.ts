@@ -132,6 +132,85 @@ export default [
   },
   {
     fn: () =>
+      testModifiesGlobals({
+        before: () => {
+          ;(globalThis as Record<string, unknown>).suiteGlobal = 'test'
+        },
+      }),
+    expect: true,
+    info: 'detects globalThis assignment (duplicate coverage via testModifiesGlobals)',
+  },
+  {
+    fn: () =>
+      testModifiesGlobals({
+        before: () => {
+          localStorage.setItem('k', 'v')
+        },
+      }),
+    expect: true,
+    info: 'detects localStorage modification',
+  },
+  {
+    fn: () =>
+      testModifiesGlobals({
+        before: () => {
+          const msg = 'the globalThis object and process.env are shared state'
+          void msg
+        },
+      }),
+    expect: false,
+    info: 'ignores globals mentioned inside string literals',
+  },
+  {
+    fn: () =>
+      testModifiesGlobals({
+        before: () => {
+          const msg = `globalThis.window and process.env in a template`
+          void msg
+        },
+      }),
+    expect: false,
+    info: 'ignores globals mentioned inside template literals',
+  },
+  {
+    fn: () =>
+      testModifiesGlobals({
+        before: () => {
+          // globalThis.foo = 'bar' (only in a comment)
+          const _local = 'test'
+        },
+      }),
+    expect: false,
+    info: 'ignores globals mentioned only in comments',
+  },
+  {
+    fn: () =>
+      testModifiesGlobals({
+        before: () => {
+          const globalStartTime = Date.now()
+          const windowWidth = 800
+          const selfContained = true
+          void globalStartTime
+          void windowWidth
+          void selfContained
+        },
+      }),
+    expect: false,
+    info: 'ignores identifiers that merely contain global names (globalStartTime, windowWidth, selfContained)',
+  },
+  {
+    fn: () =>
+      testModifiesGlobals({
+        before: () => {
+          const subprocess = { run: () => 1 }
+          subprocess.run()
+        },
+      }),
+    expect: false,
+    info: 'ignores subprocess. (word boundary before process.)',
+  },
+  {
+    fn: () =>
       suiteModifiesGlobals({
         beforeAll: () => {
           ;(globalThis as Record<string, unknown>).suiteGlobal = 'test'

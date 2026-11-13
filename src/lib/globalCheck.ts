@@ -2,13 +2,36 @@ import is from '@magic/types'
 import { walkTests } from './analysis/testWalker.js'
 import type { Test, TestCollection, TestObject } from '../types.js'
 
-const GLOBAL_MODIFICATION_RE = /(?:globalThis|window|global|self|process\.env)/
+// Match globals that a test might write to / read from. Word boundaries
+// keep identifiers like `globalStartTime` or `windowWidth` from tripping
+// the detector, and the literal-stripping below keeps string/template
+// mentions ("the globalThis object") from doing the same.
+const GLOBAL_MODIFICATION_RE =
+  /\b(?:globalThis|window|global|self|localStorage|sessionStorage)\b|\bprocess\./
+
+/**
+ * Remove string literals, template literals, and comments so their contents
+ * cannot produce false positives. Best effort — this is a heuristic detector,
+ * not a parser: edge cases fall back to the original text.
+ */
+const stripLiterals = (src: string): string => {
+  try {
+    return src
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      .replace(/\/\/[^\n]*/g, ' ')
+      .replace(/`(?:\\`|[^`])*`/g, '``')
+      .replace(/'(?:\\.|[^'\\\n])*'/g, "''")
+      .replace(/"(?:\\.|[^"\\\n])*"/g, '""')
+  } catch {
+    return src
+  }
+}
 
 export const functionModifiesGlobals = (fn: unknown): boolean => {
   if (!is.fn(fn)) {
     return false
   }
-  return GLOBAL_MODIFICATION_RE.test(fn.toString())
+  return GLOBAL_MODIFICATION_RE.test(stripLiterals(fn.toString()))
 }
 
 export const testModifiesGlobals = (test: Test): boolean => {
