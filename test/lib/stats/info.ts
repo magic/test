@@ -54,11 +54,14 @@ export default [
   // info sets default values when results missing
   {
     before: () => {
-      const oldLog = console.warn
+      const oldError = console.error
+      const oldWarn = console.warn
+      console.error = () => {}
       console.warn = () => {}
 
       return () => {
-        console.warn = oldLog
+        console.error = oldError
+        console.warn = oldWarn
       }
     },
     fn: () => {
