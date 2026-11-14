@@ -132,6 +132,11 @@ export const skipProps = new Set([
   // deletes properties unknown to the snapshot used to remove it mid-test
   // (the rare "waiting: false" flake).
   '__DDL',
+  // DOM timer tracking state (src/lib/dom/globals.ts) — runner infrastructure
+  // (an AsyncLocalStorage + ID sets), not test state. Cloning it would
+  // replace the live ALS with a dead plain object and break timer recording
+  // (and every setTimeout) after a restore.
+  'Symbol(@magic/test.dom-timers)',
   // Additional globals that shouldn't be captured
   'Function',
   'eval',

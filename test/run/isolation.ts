@@ -1,5 +1,6 @@
 import is from '@magic/types'
 import { isolation } from '#src/run/isolation.js'
+import { beginTimerScope, trackedDomTimerCount } from '#lib/dom/globals.js'
 import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
 
@@ -280,5 +281,30 @@ export default [
     },
     expect: has.properties({ keptMarker: 1, otherGone: true }),
     info: 'snapshot values are restored; globals created after the snapshot are cleaned up',
+  },
+  {
+    fn: () => {
+      // Force the DOM timer-tracking state to exist on globalThis, then
+      // snapshot + restore: the state (an AsyncLocalStorage + ID sets) must
+      // be skipped, or restore would install a dead clone and every later
+      // setTimeout (whose wrapper records into the state) would throw.
+      trackedDomTimerCount()
+      const snap = isolation.buildSnapshot()
+      const snapshotted = Object.keys(snap.props).includes('Symbol(@magic/test.dom-timers)')
+      isolation.restoreProperties(snap)
+      let fired = false
+      const scope = beginTimerScope()
+      scope.run(() => {
+        setTimeout(() => {
+          fired = true
+        }, 10)
+      })
+      const cleared = scope.end()
+      return new Promise<{ snapshotted: boolean; cleared: number; fired: boolean }>(res =>
+        setTimeout(() => res({ snapshotted, cleared, fired }), 50),
+      )
+    },
+    expect: has.properties({ snapshotted: false, cleared: 1, fired: false }),
+    info: 'the DOM timer state is not snapshotted; scopes keep working after a restore',
   },
 ] satisfies TestCase[]
