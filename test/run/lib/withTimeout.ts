@@ -13,16 +13,26 @@ export default [
   },
   {
     fn: async () => {
-      try {
-        await withTimeout(
-          new Promise((_, reject) => setTimeout(() => reject(new Error('delayed')), 20)),
-          10,
-          'test-key',
-        )
-      } catch (e) {
-        return (e as Error).message
-      }
-      return ''
+      // Deterministic version of the timer-race: reject the wrapped promise
+      // only after the timeout has fired. Two competing setTimeouts under
+      // load can settle on the same tick in creation order, which used to
+      // let the promise's timer win and flake this test.
+      let rejectPromise: (e: Error) => void
+      const promise = new Promise<void>((_, reject) => {
+        rejectPromise = reject
+      })
+      const race = withTimeout(promise, 5, 'test-key')
+      // Await the race itself: the 5ms timeout must settle it. A fixed
+      // 50ms wait instead is not deterministic — a synchronous main-thread
+      // block (snapshot build, svelte compile) can delay the 5ms timer past
+      // the wait, and the late rejection below would then win the race
+      // spuriously. The rejection only ever runs AFTER the race settled, so
+      // it can never win: either the timeout fired (pass) or the fn hangs
+      // into the test timeout (a real bug).
+      const raceMessage = race.catch(e => (e as Error).message)
+      const settled = await raceMessage
+      rejectPromise!(new Error('delayed'))
+      return settled
     },
     expect: has.string('timed out'),
     info: 'rejects when promise rejects within timeout',

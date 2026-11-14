@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { beginTimerScope } from '../lib/dom/globals.js'
 import { pathToFileURL } from 'node:url'
 
 import error from '@magic/error'
@@ -247,6 +248,18 @@ const runTestObject = async (
  * Run a suite of tests (recursively).
  */
 export const runSuite = async (props: SuiteInput): Promise<Suite | undefined> => {
+  // Suite-level timer scope: timers scheduled by beforeAll/afterAll (and any
+  // that outlive the per-test scopes) are cleared when the suite is done, not
+  // at process exit. Per-test scopes (runTest) nest inside via ALS.
+  const timerScope = beginTimerScope()
+  try {
+    return await timerScope.run(() => runSuiteCore(props))
+  } finally {
+    timerScope.end()
+  }
+}
+
+const runSuiteCore = async (props: SuiteInput): Promise<Suite | undefined> => {
   const store = props.store ?? new Store()
   const rawResults = props.rawResults ?? []
 

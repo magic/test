@@ -7,6 +7,7 @@ import { createFailResult } from './lib/index.js'
 import type { TestResult } from '../types.js'
 
 import { runSingleTestFromFileInWorker, importFileInWorker, makeSafeClone } from './lib/index.js'
+import { beginTimerScope } from '../lib/dom/globals.js'
 import { prewarmWorkerModules } from './lib/prewarmWorkerModules.js'
 
 import '../bin/lib/registerLoader.js'
@@ -100,10 +101,15 @@ const safeResult = (r: TestResult): TestResult =>
 const main = async () => {
   const batchMode = workerData.batchMode === true
 
-  if (batchMode) {
-    await runBatchMode()
-  } else {
-    await runSingleMode()
+  // Worker-lifetime (suite) scope: beforeAll/afterAll timers die with the
+  // worker's suite; per-test scopes (below) die per test. The worker is
+  // terminated right after, so this is also the in-worker guarantee that no
+  // test's timers leak into the next batch item or outlive the suite.
+  const suiteScope = beginTimerScope()
+  try {
+    await suiteScope.run(() => (batchMode ? runBatchMode() : runSingleMode()))
+  } finally {
+    suiteScope.end()
   }
 }
 
@@ -114,11 +120,15 @@ const runSingleMode = async () => {
     const { tests, afterAllCleanup } = await setupSuite(suiteSnapshot)
 
     let result: TestResult | undefined
+    const testScope = beginTimerScope()
     try {
-      result = await runWithHooks(tests, () =>
-        runSingleTestFromFileInWorker(tests, testIndex, testPkg, testParent, testName),
+      result = await testScope.run(() =>
+        runWithHooks(tests, () =>
+          runSingleTestFromFileInWorker(tests, testIndex, testPkg, testParent, testName),
+        ),
       )
     } finally {
+      testScope.end()
       await cleanupSuite(tests, afterAllCleanup)
     }
 
@@ -150,9 +160,19 @@ const runBatchMode = async () => {
         const testIndex = testIndices[i]
         const testName = testNames[i]
 
-        const result = await runWithHooks(tests, () =>
-          runSingleTestFromFileInWorker(tests, testIndex, testPkg, testParent, testName),
-        )
+        // Per-test scope: a batched test's timers never survive into the
+        // next test in the same worker (same globalThis).
+        const testScope = beginTimerScope()
+        let result: TestResult
+        try {
+          result = await testScope.run(() =>
+            runWithHooks(tests, () =>
+              runSingleTestFromFileInWorker(tests, testIndex, testPkg, testParent, testName),
+            ),
+          )
+        } finally {
+          testScope.end()
+        }
         results.push(safeResult(result))
       }
     } finally {

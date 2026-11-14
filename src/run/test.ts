@@ -6,6 +6,7 @@ import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
 import { runSuite } from './suite.js'
 import { executeTest, prepareTest, runTestCore, testNeedsIsolation } from './lib/index.js'
+import { beginTimerScope } from '../lib/dom/globals.js'
 import type { WrappedTest, TestResult, Suite, ContextOption } from '../types.js'
 
 type TestExecutionResult = {
@@ -93,57 +94,72 @@ export const runTest = async (
 
     let isolatedResult: TestExecutionResult
 
-    if (needsIsolation) {
-      isolatedResult = await isolation.executeIsolated(key, async () => {
-        let afterCleanup
+    // Per-test timer scope: everything this test schedules (before/fn/after
+    // hooks, component mount, the runner's own test timeout) is cleared when
+    // the test is done — success or failure — so leftover callbacks can't
+    // fire into later tests or keep the process alive.
+    const timerScope = beginTimerScope()
+    try {
+      isolatedResult = await timerScope.run(async () => {
+        if (needsIsolation) {
+          return await isolation.executeIsolated(key, async () => {
+            let afterCleanup
 
-        if (is.function(before) || is.promise(before)) {
-          try {
-            const result = is.function(before) ? await before(test) : await before
-            if (is.function(result)) {
-              afterCleanup = result as () => void | Promise<void>
+            if (is.function(before) || is.promise(before)) {
+              try {
+                const result = is.function(before) ? await before(test) : await before
+                if (is.function(result)) {
+                  afterCleanup = result as () => void | Promise<void>
+                }
+              } catch (e) {
+                log.error(ERRORS.E_TEST_BEFORE!, {
+                  testKey: key,
+                  testName: name,
+                  parent,
+                  error: toCleanError(e),
+                })
+              }
             }
-          } catch (e) {
-            log.error(ERRORS.E_TEST_BEFORE!, {
-              testKey: key,
-              testName: name,
-              parent,
-              error: toCleanError(e),
-            })
-          }
-        }
 
-        const execResult = await executeTestNoIsolation(
+            const execResult = await executeTestNoIsolation(
+              test,
+              key,
+              componentFile,
+              componentProps as Record<string, unknown> | undefined,
+              componentContext,
+            )
+
+            return { ...execResult, afterCleanup }
+          })
+        }
+        return await executeTestNoIsolation(
           test,
           key,
           componentFile,
           componentProps as Record<string, unknown> | undefined,
           componentContext,
         )
-
-        return { ...execResult, afterCleanup }
       })
-    } else {
-      isolatedResult = await executeTestNoIsolation(
-        test,
-        key,
-        componentFile,
-        componentProps as Record<string, unknown> | undefined,
-        componentContext,
-      )
-    }
 
-    if (is.function(isolatedResult.afterCleanup)) {
-      try {
-        await isolatedResult.afterCleanup()
-      } catch (e) {
-        log.error(ERRORS.E_TEST_AFTER!, {
-          testKey: key,
-          testName: name,
-          parent,
-          error: toCleanError(e),
+      const afterCleanup = isolatedResult.afterCleanup
+      if (is.function(afterCleanup)) {
+        await timerScope.run(async () => {
+          try {
+            await afterCleanup()
+          } catch (e) {
+            log.error(ERRORS.E_TEST_AFTER!, {
+              testKey: key,
+              testName: name,
+              parent,
+              error: toCleanError(e),
+            })
+          }
         })
       }
+    } finally {
+      // The test is done (result evaluated, afterCleanup run): clear whatever
+      // timers it left behind. finally so failed tests get swept too.
+      timerScope.end()
     }
 
     if (!isolatedResult.pass) {
