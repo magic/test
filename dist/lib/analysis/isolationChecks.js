@@ -12,7 +12,10 @@ export const testImportsMutableModuleState = async (tests, testFilePath) => {
   } catch {
     return false
   }
-  const fs = fsModule
+  // @magic/fs exposes readFile on its DEFAULT export, not the module
+  // namespace — reading it off the namespace silently yields undefined and
+  // kills the whole analysis (it returns false for every file).
+  const fs = fsModule.default
   let content
   try {
     content = fs.readFile ? await fs.readFile(testFilePath, 'utf-8') : undefined

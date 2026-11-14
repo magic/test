@@ -8,8 +8,8 @@ export {
 } from './types.js'
 export { parsePngDimensions, createImagePolyfill } from './image.js'
 export { createCanvasPolyfill } from './canvas.js'
-import { initGlobals } from './globals.js'
-export { initGlobals }
+import { initGlobals, hasTrackedTimerGlobals } from './globals.js'
+export { initGlobals, hasTrackedTimerGlobals }
 export declare const initDOM: () => {
   window: Window
   document: Document

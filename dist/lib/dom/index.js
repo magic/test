@@ -1,8 +1,8 @@
 export {} from './types.js'
 export { parsePngDimensions, createImagePolyfill } from './image.js'
 export { createCanvasPolyfill } from './canvas.js'
-import { initGlobals } from './globals.js'
-export { initGlobals }
+import { initGlobals, hasTrackedTimerGlobals } from './globals.js'
+export { initGlobals, hasTrackedTimerGlobals }
 export const initDOM = () => {
   return initGlobals()
 }

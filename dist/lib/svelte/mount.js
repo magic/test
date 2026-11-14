@@ -27,7 +27,7 @@ import {
   findNearestPackageJson,
   resolveImportMapSpecifier,
 } from '../../lib/svelte/compile/resolveImportMap.js'
-import { initDOM, getDocument, getWindow } from '../../lib/dom/index.js'
+import { initDOM, getDocument, getWindow, hasTrackedTimerGlobals } from '../../lib/dom/index.js'
 import { createContext, runWithContext } from './shims/$app/state.js'
 import { detectSvelteKitImports, needsSvelteKitContext } from './detect-sveltekit-imports.js'
 let svelteMount
@@ -216,15 +216,21 @@ const mountWithMutex = async (filePath, options, releaseMutex) => {
   }
   // Ensure globals are set before Svelte initialization
   // Using type assertion to handle happy-dom types conflicting with global types
-  Object.assign(globalThis, {
+  const globals = {
     document: doc,
     window: win,
     self: win,
-    setTimeout: win.setTimeout,
-    setInterval: win.setInterval,
-    clearTimeout: win.clearTimeout,
-    clearInterval: win.clearInterval,
-  })
+  }
+  // Never clobber the tracked timer wrappers (initGlobals) with the raw
+  // window methods — that would silently disable timer tracking for the
+  // rest of the run (this ran on every main-thread component mount).
+  if (!hasTrackedTimerGlobals()) {
+    globals.setTimeout = win.setTimeout
+    globals.setInterval = win.setInterval
+    globals.clearTimeout = win.clearTimeout
+    globals.clearInterval = win.clearInterval
+  }
+  Object.assign(globalThis, globals)
   await initSvelte()
   // Ensure any previously mounted component is properly unmounted before mounting a new one
   // This prevents issues with Svelte's internal state (listeners Map) getting corrupted

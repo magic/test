@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks'
 import is from '@magic/types'
 import { Document as HappyDocument, Window as HappyWindow } from 'happy-dom'
 import { createImagePolyfill } from './image.js'
@@ -28,6 +29,125 @@ export const define = (target, key, value) => {
     enumerable: true,
   })
 }
+// Marker for the installed timer wrappers (checked cross-module-copy:
+// src/lib/svelte/mount.ts must not clobber them with the raw window
+// methods — see hasTrackedTimerGlobals).
+const TRACKED_TIMER_KEY = Symbol.for('@magic/test.tracked-timer')
+const markTracked = fn => {
+  try {
+    Object.defineProperty(fn, TRACKED_TIMER_KEY, {
+      value: true,
+      enumerable: false,
+      configurable: true,
+      writable: false,
+    })
+  } catch {
+    // exotic function — the marker is a hint, not a contract
+  }
+}
+/**
+ * True when the process's setTimeout global is the tracked wrapper installed
+ * by initGlobals (as opposed to the raw window methods or node natives).
+ * Used by the svelte mount path, which must not overwrite them — doing so
+ * would silently disable timer tracking for the rest of the run (every
+ * main-thread component mount hit this).
+ */
+export const hasTrackedTimerGlobals = () => {
+  const st = globalThis.setTimeout
+  return !!st && st[TRACKED_TIMER_KEY] === true
+}
+const TIMER_STATE_KEY = Symbol.for('@magic/test.dom-timers')
+const getTimerState = () => {
+  const g = globalThis
+  let st = g[TIMER_STATE_KEY]
+  if (!st) {
+    st = {
+      registry: new Set(),
+      als: new AsyncLocalStorage(),
+    }
+    g[TIMER_STATE_KEY] = st
+  }
+  return st
+}
+const DOM_TIMER_TRACKING_CAP = 10_000
+const recordDomTimer = (id, kind) => {
+  const st = getTimerState()
+  st.registry.add(id)
+  // Long-lived workers must not grow the registry without bound; above the
+  // cap we drop tracking (scopes keep working — the registry only feeds the
+  // end-of-run backstop).
+  if (st.registry.size > DOM_TIMER_TRACKING_CAP) {
+    st.registry.clear()
+  }
+  const bucket = st.als.getStore()
+  if (bucket) {
+    if (kind === 'timeout') {
+      bucket.timeouts.add(id)
+    } else {
+      bucket.intervals.add(id)
+    }
+  }
+}
+const untrackDomTimer = id => {
+  getTimerState().registry.delete(id)
+}
+export const beginTimerScope = () => {
+  const st = getTimerState()
+  const bucket = { timeouts: new Set(), intervals: new Set() }
+  const end = () => {
+    let cleared = 0
+    for (const id of bucket.timeouts) {
+      try {
+        clearTimeout(id)
+        cleared++
+      } catch {
+        // never let a weird ID break teardown
+      }
+    }
+    for (const id of bucket.intervals) {
+      try {
+        clearInterval(id)
+        cleared++
+      } catch {
+        // never let a weird ID break teardown
+      }
+    }
+    bucket.timeouts.clear()
+    bucket.intervals.clear()
+    return cleared
+  }
+  return {
+    run: fn => st.als.run(bucket, fn),
+    end,
+  }
+}
+/**
+ * End-of-run backstop: unref (not clear) every ID still pending in the
+ * process-wide registry, so the process can exit naturally. Called by the
+ * CLI after the run — by then per-test/per-suite scopes have already cleared
+ * what they owned; anything left here escaped scoping (module-top-level
+ * schedules, timers created through replaced globals) and is no longer live
+ * test work. Returns how many IDs were processed.
+ */
+export const releaseDomHandles = () => {
+  const st = getTimerState()
+  let released = 0
+  for (const id of st.registry) {
+    try {
+      const t = id
+      if (t && typeof t.unref === 'function') {
+        t.unref()
+      }
+      released++
+    } catch {
+      // never let a weird timer ID break teardown
+    }
+  }
+  st.registry.clear()
+  return released
+}
+/** @internal test helper — how many DOM timers are currently tracked */
+export const trackedDomTimerCount = () => getTimerState().registry.size
 export const initGlobals = () => {
   if (!window && !document) {
     const existing = sharedWindow()
@@ -131,10 +251,40 @@ export const initGlobals = () => {
     }
   }
   define(globalThis, 'globalThis', globalThis)
-  define(globalThis, 'setTimeout', window.setTimeout)
-  define(globalThis, 'clearTimeout', window.clearTimeout)
-  define(globalThis, 'setInterval', window.setInterval)
-  define(globalThis, 'clearInterval', window.clearInterval)
+  // The wrappers always call the window's own methods (repeated initGlobals
+  // calls never double-wrap) and record IDs for the tracking above. They
+  // carry TRACKED_TIMER_KEY so other code (mount.ts) can tell them apart
+  // from the raw window methods.
+  const trackedSetTimeout = (cb, ms, ...args) => {
+    const id = window.setTimeout(cb, ms, ...args)
+    recordDomTimer(id, 'timeout')
+    return id
+  }
+  const trackedClearTimeout = id => {
+    untrackDomTimer(id)
+    window.clearTimeout(id)
+  }
+  const trackedSetInterval = (cb, ms, ...args) => {
+    const id = window.setInterval(cb, ms, ...args)
+    recordDomTimer(id, 'interval')
+    return id
+  }
+  const trackedClearInterval = id => {
+    untrackDomTimer(id)
+    window.clearInterval(id)
+  }
+  for (const fn of [
+    trackedSetTimeout,
+    trackedClearTimeout,
+    trackedSetInterval,
+    trackedClearInterval,
+  ]) {
+    markTracked(fn)
+  }
+  define(globalThis, 'setTimeout', trackedSetTimeout)
+  define(globalThis, 'clearTimeout', trackedClearTimeout)
+  define(globalThis, 'setInterval', trackedSetInterval)
+  define(globalThis, 'clearInterval', trackedClearInterval)
   define(globalThis, 'requestAnimationFrame', window.requestAnimationFrame)
   define(globalThis, 'cancelAnimationFrame', window.cancelAnimationFrame)
   define(globalThis, 'fetch', window.fetch)

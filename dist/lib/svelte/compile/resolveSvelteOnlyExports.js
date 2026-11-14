@@ -112,6 +112,28 @@ const degradedStore = new AsyncLocalStorage()
 // component with a deep graph can take well over 30 s; 90 s keeps the
 // deadlock guard without flaking loaded machines into broken barrels.
 const SVELTE_EXPORT_COMPILE_TIMEOUT_MS = 90000
+// Race a compile against a timeout WITHOUT leaking the timer: the bare
+// `Promise.race([work, timeout])` idiom leaves the timer pending for its full
+// duration even when the work settles first, and ref'd timers like that keep
+// the process alive long after the run (the CLI would have to hard-kill them
+// at exit). Clearing the timer in `finally` covers the timeout, success, and
+// rejection paths alike.
+const withCompileTimeout = async (work, label) => {
+  let timer
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error('compile timeout for ' + label)),
+      SVELTE_EXPORT_COMPILE_TIMEOUT_MS,
+    )
+  })
+  try {
+    return await Promise.race([work, timeoutPromise])
+  } finally {
+    if (timer) {
+      clearTimeout(timer)
+    }
+  }
+}
 const reentryOutputPath = p => {
   if (p.endsWith('.svelte')) {
     return path.join(getCwd(), getTempFilePath(p))
@@ -298,16 +320,10 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
     if (firstExp.isBatch && firstExp.source?.endsWith('.svelte')) {
       const absoluteSveltePath = path.resolve(jsDir, firstExp.source)
       try {
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(
-            () => reject(new Error('compile timeout for ' + absoluteSveltePath.split('/').pop())),
-            SVELTE_EXPORT_COMPILE_TIMEOUT_MS,
-          ),
-        )
-        const result = await Promise.race([
+        const result = await withCompileTimeout(
           compileSvelteOnlyExport(absoluteSveltePath, jsDir, exportNames),
-          timeoutPromise,
-        ])
+          path.basename(absoluteSveltePath),
+        )
         const compiledUrl = pathToFileURL(result).href
         const svelteDefaultName = path.basename(absoluteSveltePath, '.svelte')
         replacements.push({
@@ -342,16 +358,10 @@ const handleJsWithSvelteReexports = async (code, jsFilePath, _sourceDir, visited
     } else if (firstExp.source?.endsWith('.svelte')) {
       const absoluteSveltePath = path.resolve(jsDir, firstExp.source)
       try {
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(
-            () => reject(new Error('compile timeout for ' + absoluteSveltePath.split('/').pop())),
-            SVELTE_EXPORT_COMPILE_TIMEOUT_MS,
-          ),
-        )
-        const result = await Promise.race([
+        const result = await withCompileTimeout(
           compileSvelteOnlyExport(absoluteSveltePath, jsDir, exportNames),
-          timeoutPromise,
-        ])
+          path.basename(absoluteSveltePath),
+        )
         const compiledUrl = pathToFileURL(result).href
         const specifiers = exps.map(exp => {
           const exportName = exp.alias || exp.name

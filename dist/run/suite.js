@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { beginTimerScope } from '../lib/dom/globals.js'
 import { pathToFileURL } from 'node:url'
 import error from '@magic/error'
 import log from '@magic/log'
@@ -197,6 +198,17 @@ const runTestObject = async (
  * Run a suite of tests (recursively).
  */
 export const runSuite = async props => {
+  // Suite-level timer scope: timers scheduled by beforeAll/afterAll (and any
+  // that outlive the per-test scopes) are cleared when the suite is done, not
+  // at process exit. Per-test scopes (runTest) nest inside via ALS.
+  const timerScope = beginTimerScope()
+  try {
+    return await timerScope.run(() => runSuiteCore(props))
+  } finally {
+    timerScope.end()
+  }
+}
+const runSuiteCore = async props => {
   const store = props.store ?? new Store()
   const rawResults = props.rawResults ?? []
   const suite = {
@@ -273,7 +285,13 @@ export const runSuite = async props => {
       }
       return suite
     }
-    if (analysis.needsIsolation) {
+    // Object suites: route through the isolated (snapshot/restore) path when
+    // the suite needs it for structural reasons (needsIsolation) OR because
+    // it touches process globals / module state / ports / files (useWorkers).
+    // Without the second condition, an object suite whose only global contact
+    // is a beforeAll hook (e.g. `beforeAll: initGlobals`) runs on the main
+    // thread with no snapshot, leaking its mutations into later suites.
+    if (analysis.needsIsolation || analysis.useWorkers) {
       await isolation.executeSuiteIsolated(suiteKey, executeSuite)
     } else {
       await executeSuite()

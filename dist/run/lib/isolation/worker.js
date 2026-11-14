@@ -7,6 +7,54 @@
  * -------------------------------------------------------------------------- */
 import { Worker } from 'node:worker_threads'
 /**
+ * Terminations in flight: a settled round-trip calls worker.terminate(), but
+ * the thread keeps running (and its ref'd handle keeps the main process
+ * alive) until it actually exits. Track every terminate() promise so the end
+ * of a run can wait for them — otherwise a slow teardown (large-heap GC,
+ * loaded machine) delays process exit from milliseconds to minutes.
+ */
+const pendingWorkerExits = new Set()
+const trackTermination = worker => {
+  // `const` works: the .finally closure only runs after the assignment has
+  // completed, so the TDZ is never hit.
+  const pending = worker
+    .terminate()
+    .then(() => undefined)
+    .catch(() => undefined) // already-exited / killed workers reject; ignore
+    .finally(() => {
+      pendingWorkerExits.delete(pending)
+    })
+  pendingWorkerExits.add(pending)
+}
+/**
+ * Wait up to timeoutMs for all in-flight worker terminations to complete.
+ * Resolves true when everything drained, false on timeout (the caller
+ * decides — the CLI hard-exits, a library consumer can wait longer).
+ * The timeout timer is unref'd: it never keeps the process alive on its own.
+ */
+export const drainIsolationWorkers = (timeoutMs = 15_000) =>
+  new Promise(resolve => {
+    let settled = false
+    const finish = drained => {
+      if (settled) {
+        return
+      }
+      settled = true
+      clearTimeout(timer)
+      resolve(drained)
+    }
+    const timer = setTimeout(() => finish(false), timeoutMs)
+    timer.unref()
+    void (async () => {
+      while (!settled && pendingWorkerExits.size > 0) {
+        await Promise.all([...pendingWorkerExits])
+      }
+      if (!settled) {
+        finish(pendingWorkerExits.size === 0)
+      }
+    })()
+  })
+/**
  * Create a worker promise with shared error/signal handling.
  */
 const createWorkerPromise = (worker, transform, activeWorkers) => {
@@ -31,7 +79,7 @@ const createWorkerPromise = (worker, transform, activeWorkers) => {
       }
       settled = true
       cleanup()
-      void worker.terminate()
+      trackTermination(worker)
       reject(new Error(`Worker round-trip timed out after ${WORKER_TIMEOUT_MS} ms`))
     }, WORKER_TIMEOUT_MS)
     worker.on('message', result => {
@@ -40,7 +88,7 @@ const createWorkerPromise = (worker, transform, activeWorkers) => {
       }
       settled = true
       cleanup()
-      void worker.terminate()
+      trackTermination(worker)
       resolve(transform(result))
     })
     worker.on('error', err => {
@@ -49,7 +97,7 @@ const createWorkerPromise = (worker, transform, activeWorkers) => {
       }
       settled = true
       cleanup()
-      void worker.terminate()
+      trackTermination(worker)
       reject(err)
     })
     // Treat exit without a prior result message as a failure in ALL modes
