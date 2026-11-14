@@ -184,4 +184,75 @@ export default [
     expect: has.properties({ a: undefined, b: null, c: 1 }),
     info: 'handles undefined and null values',
   },
+  {
+    fn: () => {
+      const clone = makeSafeClone(
+        new Map<unknown, unknown>([
+          ['k', () => 1],
+          [2, 'v'],
+        ]),
+      ) as Map<unknown, unknown>
+      return { k: clone.get('k'), two: clone.get(2), size: clone.size }
+    },
+    expect: (v: { k: unknown; two: string; size: number }) =>
+      is.string(v.k) && v.two === 'v' && v.size === 2,
+    info: 'Map values are sanitized (functions stringified)',
+  },
+  {
+    fn: () => {
+      const clone = makeSafeClone(new Set([function namedF() {}, 42])) as Set<unknown>
+      const strings = [...clone].filter(v => is.string(v))
+      return {
+        size: clone.size,
+        hasNumber: clone.has(42),
+        namedF: strings.some(v => String(v).includes('namedF')),
+      }
+    },
+    expect: has.properties({ size: 2, hasNumber: true, namedF: true }),
+    info: 'Set values are sanitized (functions stringified)',
+  },
+  {
+    fn: () => {
+      const clone = makeSafeClone(new ArrayBuffer(16))
+      return { isAB: clone instanceof ArrayBuffer, bytes: (clone as ArrayBuffer).byteLength }
+    },
+    expect: (v: { isAB: boolean; bytes: number }) => v.isAB && v.bytes === 16,
+    info: 'ArrayBuffer is copied, not shared',
+  },
+  {
+    fn: () => {
+      const clone = makeSafeClone(new Uint8Array([1, 2, 3]))
+      return { isView: ArrayBuffer.isView(clone), copy: Array.from(clone as Uint8Array) }
+    },
+    expect: (v: { isView: boolean; copy: number[] }) => v.isView && v.copy.join(',') === '1,2,3',
+    info: 'TypedArrays are copied via slice',
+  },
+  {
+    fn: () => {
+      // DataView has no slice() — the catch path must return the value as-is
+      const view = new DataView(new ArrayBuffer(8))
+      const clone = makeSafeClone(view)
+      return clone === view
+    },
+    expect: true,
+    info: 'slice-less views (DataView) fall back to the original value',
+  },
+  {
+    fn: () => {
+      class Widget {
+        val = 1
+        method() {
+          return this.val
+        }
+      }
+      const clone = makeSafeClone(new Widget()) as { val?: number; method?: unknown }
+      return {
+        isPlain: Object.getPrototypeOf(clone) === Object.prototype,
+        val: clone.val,
+        methodDropped: !is.function(clone.method),
+      }
+    },
+    expect: has.properties({ isPlain: true, val: 1, methodDropped: true }),
+    info: 'class instances become plain objects (prototype methods dropped)',
+  },
 ] satisfies TestCase[]

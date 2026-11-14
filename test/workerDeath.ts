@@ -55,7 +55,10 @@ const runChild = async (
     timedOut = true
     child.kill('SIGKILL')
   }, guardMs)
-  const code = await new Promise<number | null>(resolve => child.on('exit', c => resolve(c)))
+  // 'close' fires after BOTH process exit and stdio EOF — awaiting 'exit'
+  // alone can read the report before the pipe has drained (output-loss
+  // flake under load).
+  const code = await new Promise<number | null>(resolve => child.on('close', c => resolve(c)))
   clearTimeout(killTimer)
   return { code, signal: child.signalCode ?? null, out, ms: Date.now() - started, timedOut }
 }

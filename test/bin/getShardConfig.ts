@@ -1,4 +1,5 @@
 import { getShardConfig, handleError } from '#src/bin/unit.js'
+import log from '@magic/log'
 import type { TestCase } from '#src/types.js'
 
 // getShardConfig reads process.env; tests in a file run in parallel, so
@@ -44,6 +45,12 @@ const withEnv = (values: Partial<Record<(typeof ENV_KEYS)[number], string>>, fn:
 
 const runHandleError = (input: Error | string) => {
   const originalExit = process.exit
+  // Mute the real log output handleError produces (log.error + log.warn);
+  // the test asserts on the exit code, not on console noise.
+  const originalError = log.error
+  const originalWarn = log.warn
+  log.error = (() => true) as typeof log.error
+  log.warn = (() => true) as typeof log.warn
   let exitCode: unknown
   process.exit = ((code: unknown) => {
     exitCode = code
@@ -58,6 +65,8 @@ const runHandleError = (input: Error | string) => {
     }
   } finally {
     process.exit = originalExit
+    log.error = originalError
+    log.warn = originalWarn
   }
 }
 
