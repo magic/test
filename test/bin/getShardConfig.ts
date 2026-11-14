@@ -90,6 +90,14 @@ export default [
     info: 'getShardConfig parses valid shards/id/workers',
   },
   {
+    before: () => {
+      const oldWarn = console.warn
+      console.warn = () => {}
+
+      return () => {
+        console.warn = oldWarn
+      }
+    },
     fn: () => withEnv({ MAGIC_TEST_SHARDING_SHARDS: 'not-a-number' }, () => getShardConfig()),
     expect: (v: { shards: number; shardId: number }) => v.shards === 1 && v.shardId === 0,
     info: 'getShardConfig falls back to 1 shard on invalid shards value',

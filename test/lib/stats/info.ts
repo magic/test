@@ -32,11 +32,19 @@ export default [
   },
   // info with empty test results should not crash
   {
+    before: () => {
+      const origLog = console.log
+      console.log = () => {}
+
+      return () => {
+        console.log = origLog
+      }
+    },
     fn: () => {
       const store = createStore()
-      store.set({ results: { test1: { all: 1, pass: 1 } } })
+      store.set({ results: { passingTest: { all: 1, pass: 1 } } })
       return info(
-        [{ name: 'test1', parent: '', pkg: '', pass: 0, fail: 0, all: 0, tests: [] }],
+        [{ name: 'passingTest', parent: '', pkg: '', pass: 0, fail: 0, all: 0, tests: [] }],
         store,
       )
     },
@@ -46,10 +54,11 @@ export default [
   // info sets default values when results missing
   {
     before: () => {
-      const oldLog = console.log
-      console.log = () => {}
+      const oldLog = console.warn
+      console.warn = () => {}
+
       return () => {
-        console.log = oldLog
+        console.warn = oldLog
       }
     },
     fn: () => {

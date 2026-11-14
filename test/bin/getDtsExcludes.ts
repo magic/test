@@ -51,6 +51,14 @@ export default [
     info: 'empty JSON array yields no excludes',
   },
   {
+    before: () => {
+      const oldWarn = console.warn
+      console.warn = () => {}
+
+      return () => {
+        console.warn = oldWarn
+      }
+    },
     fn: () => withEnv('not-json', () => getDtsExcludes()),
     expect: [],
     info: 'invalid JSON falls back to no excludes',
