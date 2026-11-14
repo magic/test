@@ -59,7 +59,7 @@
     "tsc": "tsc -p tsconfig.app.json --noEmit",
     "tsc:test": "tsc -p tsconfig.test.json --noEmit",
     "check": "npm run tsc && npm run tsc:test && npm run lint",
-    "lint": "oxlint"
+    "lint": "lint"
   },
   "dependencies": {
     "@magic/cases": "0.0.14",
