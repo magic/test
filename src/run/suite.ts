@@ -339,7 +339,13 @@ export const runSuite = async (props: SuiteInput): Promise<Suite | undefined> =>
       return suite
     }
 
-    if (analysis.needsIsolation) {
+    // Object suites: route through the isolated (snapshot/restore) path when
+    // the suite needs it for structural reasons (needsIsolation) OR because
+    // it touches process globals / module state / ports / files (useWorkers).
+    // Without the second condition, an object suite whose only global contact
+    // is a beforeAll hook (e.g. `beforeAll: initGlobals`) runs on the main
+    // thread with no snapshot, leaking its mutations into later suites.
+    if (analysis.needsIsolation || analysis.useWorkers) {
       await isolation.executeSuiteIsolated(suiteKey, executeSuite)
     } else {
       await executeSuite()

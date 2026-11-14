@@ -1,4 +1,6 @@
 import path from 'node:path'
+import { mkdtemp, writeFile, rm } from 'node:fs/promises'
+import os from 'node:os'
 import {
   testUsesFixedPorts,
   testUsesSharedFiles,
@@ -7,6 +9,22 @@ import {
 import type { TestCase } from '#src/types.js'
 
 const CWD = process.cwd()
+
+// Write a temp test file, run the detector against it, always clean up
+const withTempFile = async (
+  name: string,
+  content: string,
+  fn: (filePath: string) => Promise<unknown>,
+): Promise<unknown> => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'iso-check-'))
+  const filePath = path.join(dir, name)
+  await writeFile(filePath, content, 'utf8')
+  try {
+    return await fn(filePath)
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
+}
 
 const tests: TestCase[] = [
   // --- testUsesFixedPorts ---
@@ -141,6 +159,120 @@ const tests: TestCase[] = [
     },
     expect: false,
     info: 'testImportsMutableModuleState with no import mutation returns false',
+  },
+  {
+    fn: async () =>
+      withTempFile(
+        'no-imports.ts',
+        `export default [{ fn: () => 1, expect: 1, before: () => {} }]
+`,
+        fp => testImportsMutableModuleState([{ fn: () => {}, before: () => {} }], fp),
+      ),
+    expect: false,
+    info: 'a real file with no imports cannot mutate module state',
+  },
+  {
+    fn: async () =>
+      withTempFile(
+        'read-only-import.ts',
+        `import counter from './target.js'
+export default [{ fn: () => counter.value, expect: 0 }]
+`,
+        fp => testImportsMutableModuleState([{ fn: () => {}, before: () => {} }], fp),
+      ),
+    expect: false,
+    info: 'importing a module without mutating it is not flagged',
+  },
+  {
+    fn: async () =>
+      withTempFile(
+        'mutates-import.ts',
+        `import counter from './target.js'
+export default [{
+  before: () => {
+    counter.value = 1
+  },
+  fn: () => 1,
+  expect: 1,
+}]
+`,
+        fp =>
+          testImportsMutableModuleState(
+            [
+              {
+                fn: () => {},
+                before: () => {
+                  // @ts-expect-error test string
+                  counter.value = 1
+                },
+              },
+            ],
+            fp,
+          ),
+      ),
+    expect: true,
+    info: 'a before hook assigning to imported module state is flagged',
+  },
+  {
+    fn: async () =>
+      withTempFile(
+        'mutates-named-import.ts',
+        `import { counter } from './target.js'
+export default [{
+  after: () => {
+    counter.hits++
+  },
+  fn: () => 1,
+  expect: 1,
+}]
+`,
+        fp =>
+          testImportsMutableModuleState(
+            [
+              {
+                fn: () => {},
+                after: () => {
+                  // @ts-expect-error test string
+                  counter.hits++
+                },
+              },
+            ],
+            fp,
+          ),
+      ),
+    expect: true,
+    info: 'an after hook updating a named import is flagged',
+  },
+  {
+    fn: async () =>
+      // missing .ts file WITH a .js sibling: the .js fallback is read
+      withTempFile(
+        'sibling.ts.js',
+        `import counter from './target.js'
+export default [{
+  before: () => {
+    counter.value = 2
+  },
+  fn: () => 1,
+  expect: 1,
+}]
+`,
+        fp =>
+          testImportsMutableModuleState(
+            [
+              {
+                fn: () => {},
+                before: () => {
+                  // @ts-expect-error test string
+                  counter.value = 2
+                },
+              },
+            ],
+            fp.slice(0, -3), // point at the missing .ts path
+          ),
+      ),
+    expect: true,
+    info: 'missing .ts with a .js sibling reads the .js fallback',
   },
 ]
 

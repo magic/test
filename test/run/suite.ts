@@ -76,6 +76,34 @@ export default [
     expect: 2,
   },
   {
+    name: 'runSuite object suite with global-mutating beforeAll restores globals (useWorkers routing)',
+    fn: async () => {
+      const store = createStore()
+      store.set({ startTime: log.hrtime() })
+      const key = '__MAGIC_TEST_ROUTE_PROBE__'
+      delete (globalThis as Record<PropertyKey, unknown>)[key]
+      const result = await runSuite({
+        name: 'route-probe',
+        parent: 'suite-route1',
+        pkg: 'suite-route1-pkg',
+        tests: {
+          beforeAll: () => {
+            ;(globalThis as Record<PropertyKey, unknown>)[key] = 1
+          },
+          tests: [{ fn: () => 1, expect: 1, name: 'probe-test', pkg: 'p', parent: '' }],
+        },
+        store,
+      })
+      const leaked = (globalThis as Record<PropertyKey, unknown>)[key]
+      delete (globalThis as Record<PropertyKey, unknown>)[key]
+      return { ran: !!result, leaked }
+    },
+    // The suite mutates a process global in beforeAll, so analyzeSuite sets
+    // useWorkers; runTestObject must route it through the isolated
+    // (snapshot/restore) path or the probe would leak into the main thread.
+    expect: (v: { ran: boolean; leaked: unknown }) => v.ran && v.leaked === undefined,
+  },
+  {
     name: 'runSuite handles beforeAll hook',
     fn: async () => {
       const store = createStore()
