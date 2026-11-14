@@ -9,6 +9,7 @@ import log from '@magic/log'
 import is from '@magic/types'
 
 import { run, abort } from '../run.js'
+import { releaseDomHandles } from '../lib/dom/globals.js'
 
 import { maybeInjectMagic, readRecursive, resetVisitedDirs } from './lib/index.js'
 import { prewarmComponentGraphs } from './lib/prewarmComponents.js'
@@ -122,10 +123,23 @@ const init = async () => {
     const outcome = await run(tests, { shards, shardId, workers, globalStartTime })
 
     // run() no longer exits the process — the CLI decides the exit code.
-    if (outcome instanceof Error || (outcome && outcome.failed)) {
-      process.exit(1)
-    }
-    process.exit(0)
+    // process.exitCode (not process.exit) lets stdout flush first: a hard
+    // exit under load can drop the still-queued report (rare flake).
+    process.exitCode = outcome instanceof Error || (outcome && outcome.failed) ? 1 : 0
+
+    // The TS loader installs happy-dom globals process-wide (needed for
+    // .svelte.ts imports); the per-test/suite timer scopes already swept
+    // what tests owned. Whatever is still pending in the process registry
+    // escaped scoping (module-top-level schedules, replaced globals) and is
+    // no longer live test work — release it so the process exits naturally.
+    releaseDomHandles()
+
+    // Backstop for pathological handles (stuck worker thread, never-EOFed
+    // child pipe): hard-exit 30s after the report. unref'd — in the healthy
+    // case the process exits long before it fires (zero added latency).
+    setTimeout(() => {
+      process.exit(process.exitCode ?? 0)
+    }, 30_000).unref()
   } catch (e) {
     const err = e as CustomError
     err.code = 'E_MAGIC_TEST'

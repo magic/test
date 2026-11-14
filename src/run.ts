@@ -4,6 +4,7 @@ import log from '@magic/log'
 import { stats, createStore, ERRORS, Store } from './lib/index.js'
 import { BEFORE_ALL_KEYS, AFTER_ALL_KEYS } from './lib/hookFiles.js'
 import { runSuite } from './run/suite.js'
+import { drainIsolationWorkers } from './run/lib/isolation/worker.js'
 import { isolation } from './run/isolation.js'
 import { warmComponentCompiles } from './lib/svelte/compile/warmComponentCompiles.js'
 import type { TestSuites, TestCollection, CleanupFunction, TestResult } from './types.js'
@@ -278,6 +279,11 @@ export const run = async (
   if (isTraceEnabled()) {
     printTraceSummary()
   }
+
+  // Wait for in-flight worker terminations to actually complete: a settled
+  // round-trip's worker thread keeps its ref'd handle (and the process
+  // alive) until it exits, and a natural CLI exit must not race that.
+  await drainIsolationWorkers()
 
   // The library must not terminate the process — the CLI (bin/unit.ts)
   // decides the exit code from this result.

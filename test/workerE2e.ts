@@ -43,7 +43,7 @@ const runChild = async (
   // A nested run must not inherit the parent's results-file handoff: the
   // child would withhold its summary from stdout and overwrite the parent's
   // file. Children always report to stdout.
-  const childEnv: NodeJS.ProcessEnv = { ...process.env, ...env }
+  const childEnv: NodeJS.ProcessEnv = { ...process.env, ...CHILD_ENV, ...env }
   delete childEnv.MAGIC_TEST_RESULTS_FILE
   // The children are a vehicle, not a target: their own V8 coverage data
   // would land in the parent's temp dir and skew the merged report.
@@ -55,8 +55,11 @@ const runChild = async (
   })
   let out = ''
   // Children print ANSI colors even when piped — strip them so callers can
-  // assert on plain substrings like '2/2 100%' (colors would split it).
-  const strip = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, '')
+  // assert on plain substrings like '2/2 100%' (colors would split it). The
+  // regex is built from the char code: a literal \u001b escape trips the
+  // no-control-regex lint rule.
+  const ANSI_RE = new RegExp(String.fromCharCode(0x1b) + '\\[[0-9;]*m', 'g')
+  const strip = (s: string) => s.replace(ANSI_RE, '')
   child.stdout.on('data', d => {
     out += strip(String(d))
   })
@@ -232,5 +235,32 @@ export default [
     expect: (r: ChildResult) =>
       !r.timedOut && r.code === 0 && r.out.includes('Ran 2 tests') && r.out.includes('100%'),
     info: 'isolated array suite without beforeAll: hooked test in worker, unhooked test in parallel on the main thread',
+  },
+  {
+    fn: () =>
+      withChildProject(
+        'natural-exit',
+        `
+export default [
+  {
+    fn: () => {
+      // Fire-and-forget: never awaited, never cleared. The per-test timer
+      // scope sweeps it at test end (the CLI's releaseDomHandles backstop
+      // would unref any straggler at teardown) — without either, this 60s
+      // ref'd timer keeps the child alive far past the report.
+      setTimeout(() => {
+        ;(globalThis as Record<string, unknown>).__mtLeakFired = true
+      }, 60_000)
+      return 1
+    },
+    expect: 1,
+    info: 'leaks a 60s fire-and-forget timer',
+  },
+]
+`,
+      ),
+    expect: (r: ChildResult) =>
+      !r.timedOut && r.code === 0 && r.out.includes('Ran 1 test') && r.ms < 25000,
+    info: 'a leaked fire-and-forget timer does not stall the exit — the child reports and exits well under the 30s backstop',
   },
 ] satisfies TestCase[]
