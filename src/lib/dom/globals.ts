@@ -139,8 +139,11 @@ const recordDomTimer = (id: unknown, kind: 'timeout' | 'interval'): void => {
   }
   const bucket = st.als.getStore()
   if (bucket) {
-    if (kind === 'timeout') bucket.timeouts.add(id)
-    else bucket.intervals.add(id)
+    if (kind === 'timeout') {
+      bucket.timeouts.add(id)
+    } else {
+      bucket.intervals.add(id)
+    }
   }
 }
 

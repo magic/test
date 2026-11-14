@@ -1,7 +1,6 @@
 import path from 'node:path'
 
 import { prewarmWorkerModules } from '#src/run/lib/prewarmWorkerModules.js'
-import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
 
 const CWD = process.cwd()

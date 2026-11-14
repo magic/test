@@ -1,4 +1,3 @@
-import is from '@magic/types'
 import {
   initGlobals,
   beginTimerScope,
