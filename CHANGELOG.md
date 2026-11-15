@@ -1,5 +1,10 @@
 ### Changelog
 
+#### 0.3.57
+
+- @magic/deep mutated the values passed to is.deep.equal, leading to irregular test results in narrow edge cases
+- update dependencies
+
 #### 0.3.56
 
 - fix: rare DDL watchdog flake ("waiting: false") — `globalThis.__DDL` (the 5s-watchdog singleton held by test/lib/svelte/compile/ddl.ts) is now in the isolation skipProps list, so a sibling isolated test's snapshot/restore cycle can no longer delete it mid-test
