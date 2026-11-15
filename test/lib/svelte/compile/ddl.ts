@@ -138,9 +138,21 @@ export default [
       withEnv(async (capture, stub) => {
         ddlHold('stuck', 'holder')
         ddlInitWatchdog()
+        // Wait for the dump with a deadline far beyond one 5s interval. The
+        // interval is unref'd, so a tick whose deadline expires while the main
+        // thread is blocked by other parallel suites (coverage runs starve it
+        // for seconds at a time) only runs when the loop next turns — a rigid
+        // 5.6s window lapsed before the overdue tick could fire and the test
+        // failed. A single tick can also be lost if a sibling restores
+        // _rawDebug at its exact instant; the next interval retries it. A
+        // genuinely broken watchdog still fails via the runner's 30s per-test
+        // timeout.
         const start = Date.now()
-        while (Date.now() - start < 5600) {
-          if (capture.some(m => m.includes('[DDL-waiting]'))) {
+        while (Date.now() - start < 25_000) {
+          if (
+            capture.some(m => m.includes('[DDL-hb]')) &&
+            capture.some(m => m.includes('stuck <- holder'))
+          ) {
             break
           }
           // Parallel sibling tests restore env/_rawDebug as they finish, so
