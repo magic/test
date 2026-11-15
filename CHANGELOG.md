@@ -4,15 +4,10 @@
 
 - fix: rare DDL watchdog flake ("waiting: false") — `globalThis.__DDL` (the 5s-watchdog singleton held by test/lib/svelte/compile/ddl.ts) is now in the isolation skipProps list, so a sibling isolated test's snapshot/restore cycle can no longer delete it mid-test
 - fix: snapshot/restore no longer deep-clones `WebAssembly`, `Intl`, `Atomics`, `customElements`, or the shared happy-dom window — deep cloning turned them into broken shells (`WebAssembly.Module is not a constructor`, dead `WeakRef`s inside a cloned window) that restore installed over the real globals
-
 - fix: localStorage/sessionStorage are captured as entries and re-populated into the LIVE storage on restore instead of being replaced by a clone whose private state is empty
-
 - fix: worker postMessage payloads are sanitized recursively (functions nested in a test's result/expect become their source string) — a single unclonable value previously threw DataCloneError and killed the worker mid-batch, losing every remaining test of the file
-
 - fix: the globals detector no longer false-positives on global names inside string/template literals, comments, or as identifier substrings (`globalStartTime`, `windowWidth`, `subprocess.`) — fewer suites routed to unnecessary workers
-
 - test: deterministic regression for the __DDL restore race, storage restore, skipProps additions, and payload sanitization
-
 - feat: `--exclude` / `-e` now also applies to the auto-generated .d.ts type tests — excluded dirs and files are not collected or checked
 
 #### 0.3.55

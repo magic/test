@@ -55,8 +55,57 @@ const compilerOptions: ts.CompilerOptions = {
   target: ts.ScriptTarget.ES2022,
   module: ts.ModuleKind.ESNext,
   moduleResolution: ts.ModuleResolutionKind.Bundler,
-  // do not auto-include @types/* packages
-  types: [],
+}
+
+// Cache of the project's tsconfig (its compilerOptions.types + its path).
+// Re-validated per root + tsconfig mtime so long-lived processes pick up
+// edits (same revalidation pattern as the per-file check cache below).
+let tsconfigCache: {
+  root: string
+  mtimeMs: number
+  config: { types: string[]; configPath: string } | null
+} | null = null
+
+/**
+ * Read the project's tsconfig.json (following `extends`) and return its
+ * `compilerOptions.types` plus the config's path. The types feed the check
+ * program's `types` option (without it, the project's declared @types/*
+ * packages are not part of the check, so declarations that rely on them
+ * fail with TS2304); the path is set as `configFilePath` because auto type
+ * directives resolve relative to the tsconfig's directory.
+ *
+ * Missing/invalid tsconfig returns null (the caller falls back to no types,
+ * the previous behavior).
+ */
+const loadTsconfig = (root: string): { types: string[]; configPath: string } | null => {
+  try {
+    const tsconfigPath = path.join(root, 'tsconfig.json')
+    let mtimeMs = -1
+    try {
+      mtimeMs = statSync(tsconfigPath).mtimeMs
+    } catch {
+      // no tsconfig.json - mtime stays -1, the read below yields no config
+    }
+
+    if (tsconfigCache && tsconfigCache.root === root && tsconfigCache.mtimeMs === mtimeMs) {
+      return tsconfigCache.config
+    }
+
+    let config: { types: string[]; configPath: string } | null = null
+    const result = ts.readConfigFile(tsconfigPath, ts.sys.readFile)
+    if (!result.error && result.config) {
+      const parsed = ts.parseJsonConfigFileContent(result.config, ts.sys, root)
+      config = {
+        types: Array.isArray(parsed.options.types) ? [...parsed.options.types] : [],
+        configPath: tsconfigPath,
+      }
+    }
+
+    tsconfigCache = { root, mtimeMs, config }
+    return config
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -166,7 +215,19 @@ const checkImpl = async (file: string, root: string): Promise<DtsCheckResult> =>
   const probe = buildProbe(analysis, file)
   const probePath = path.join(path.dirname(file), PROBE_FILE_NAME)
 
-  const host = ts.createCompilerHost(compilerOptions)
+  const projectTsconfig = loadTsconfig(root)
+  const options: ts.CompilerOptions = {
+    ...compilerOptions,
+    // Include the project's @types/* packages (tsconfig.json
+    // compilerOptions.types) so the check matches the project's own type
+    // environment. The config path anchors the auto type-directive search to
+    // the project root. No tsconfig / no `types` field -> empty list (same
+    // as before this change).
+    types: projectTsconfig?.types ?? [],
+    ...(projectTsconfig ? { configFilePath: projectTsconfig.configPath } : {}),
+  }
+
+  const host = ts.createCompilerHost(options)
   const origGetSourceFile = host.getSourceFile.bind(host)
   const origFileExists = host.fileExists.bind(host)
   const origReadFile = host.readFile.bind(host)
@@ -191,7 +252,7 @@ const checkImpl = async (file: string, root: string): Promise<DtsCheckResult> =>
         )
       : origGetSourceFile(f, languageVersionOrOptions, onError, shouldCreateNewSourceFile)
 
-  const program = ts.createProgram([file, probePath], compilerOptions, host)
+  const program = ts.createProgram([file, probePath], options, host)
   const dtsSF = program.getSourceFile(file)
   const probeSF = program.getSourceFile(probePath)
 
@@ -243,27 +304,37 @@ const checkImpl = async (file: string, root: string): Promise<DtsCheckResult> =>
   }
 }
 
+/** mtime of a file, or 0 when it is missing. */
+const mtimeOf = (p: string): number => {
+  try {
+    return statSync(p).mtimeMs
+  } catch {
+    return 0
+  }
+}
+
 /**
  * Per-file check cache. Keyed by absolute path; entries are re-validated
- * against file mtime so long-lived processes see edits.
+ * against the file's and the project tsconfig's mtime so long-lived
+ * processes see edits to either (types can change without the .d.ts file
+ * changing).
  */
-const cache = new Map<string, { mtimeMs: number; promise: Promise<DtsCheckResult> }>()
+const cache = new Map<
+  string,
+  { mtimeMs: number; tsconfigMtimeMs: number; promise: Promise<DtsCheckResult> }
+>()
 
 export const checkDtsFile = (file: string, root: string): Promise<DtsCheckResult> => {
-  let mtimeMs = 0
-  try {
-    mtimeMs = statSync(file).mtimeMs
-  } catch {
-    // missing file - mtime stays 0, the check itself will report the error
-  }
+  const mtimeMs = mtimeOf(file)
+  const tsconfigMtimeMs = mtimeOf(path.join(root, 'tsconfig.json'))
 
   const existing = cache.get(file)
-  if (existing && existing.mtimeMs === mtimeMs) {
+  if (existing && existing.mtimeMs === mtimeMs && existing.tsconfigMtimeMs === tsconfigMtimeMs) {
     return existing.promise
   }
 
   const promise = checkImpl(file, root)
-  cache.set(file, { mtimeMs, promise })
+  cache.set(file, { mtimeMs, tsconfigMtimeMs, promise })
   promise.catch(() => cache.delete(file))
   return promise
 }
@@ -271,4 +342,5 @@ export const checkDtsFile = (file: string, root: string): Promise<DtsCheckResult
 /** Drop cached results (used by tests). */
 export const clearDtsCheckCache = (): void => {
   cache.clear()
+  tsconfigCache = null
 }
