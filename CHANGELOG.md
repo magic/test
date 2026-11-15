@@ -9,6 +9,7 @@
 - fix: the globals detector no longer false-positives on global names inside string/template literals, comments, or as identifier substrings (`globalStartTime`, `windowWidth`, `subprocess.`) — fewer suites routed to unnecessary workers
 - test: deterministic regression for the __DDL restore race, storage restore, skipProps additions, and payload sanitization
 - feat: `--exclude` / `-e` now also applies to the auto-generated .d.ts type tests — excluded dirs and files are not collected or checked
+- feat: .d.ts tests now use types declarations from tsconfig.json of the tested repository
 
 #### 0.3.55
 
