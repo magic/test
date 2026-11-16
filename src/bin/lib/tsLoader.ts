@@ -940,6 +940,22 @@ const loadImplInner = async (
     const filePath = url.replace('file://', '')
     if (await fs.exists(filePath)) {
       const source = await fs.readFile(filePath, 'utf-8')
+      // Files under the compile cache (compiled components and the
+      // node_modules_processed mirror) were already processed for node when
+      // written (processImports + transformForNode: $lib/#lib imports resolved
+      // to file: URLs, TypeScript stripped). Serve them verbatim: re-running
+      // resolveDollarLibImports + transpileWithTypeScript here produces a
+      // different (longer) in-memory source than the on-disk file, so V8
+      // coverage offsets (taken against the in-memory source) get remapped
+      // with the on-disk file's source map and show up as phantom uncovered
+      // statements/branches/functions, including ranges past EOF.
+      if (filePath.startsWith(path.join(getCwd(), CACHE_DIR) + path.sep)) {
+        return {
+          format: 'module',
+          source,
+          shortCircuit: true,
+        }
+      }
       const withResolvedImports = await resolveDollarLibImports(source, filePath)
       const transpiled = transpileWithTypeScript(withResolvedImports)
 
