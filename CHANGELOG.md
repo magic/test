@@ -1,5 +1,10 @@
 ### Changelog
 
+#### 0.3.58
+
+- fix: the ESM loader now serves `.svelte.js` files from the compile cache verbatim instead of re-transpiling them — the re-transpiled in-memory source was longer than the on-disk file, so V8 coverage offsets remapped against the on-disk source map produced phantom uncovered statements/branches/functions (some past EOF), capping branch coverage of Svelte projects at ~94% no matter how many tests were added
+- test: regression for verbatim serving of cache `.svelte.js` files (plus transpilation of `.svelte.js` files outside the cache, which is unchanged)
+
 #### 0.3.57
 
 - @magic/deep mutated the values passed to is.deep.equal, leading to irregular test results in narrow edge cases
