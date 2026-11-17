@@ -1,4 +1,4 @@
-import * as HappyDOM from 'happy-dom'
+import type * as HappyDOM from 'happy-dom'
 
 export const html = (target: unknown): string => (target as HappyDOM.HTMLElement).innerHTML
 

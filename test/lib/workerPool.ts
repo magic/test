@@ -248,10 +248,16 @@ const tests: TestCase[] = [
         return { throttled, restored, configured }
       } finally {
         setLoadSampler()
-        if (origAdaptive === undefined) delete process.env.MAGIC_TEST_ADAPTIVE
-        else process.env.MAGIC_TEST_ADAPTIVE = origAdaptive
-        if (origCi === undefined) delete process.env.CI
-        else process.env.CI = origCi
+        if (origAdaptive === undefined) {
+          delete process.env.MAGIC_TEST_ADAPTIVE
+        } else {
+          process.env.MAGIC_TEST_ADAPTIVE = origAdaptive
+        }
+        if (origCi === undefined) {
+          delete process.env.CI
+        } else {
+          process.env.CI = origCi
+        }
         tickAdaptiveLimitForTests()
       }
     },
@@ -280,10 +286,16 @@ const tests: TestCase[] = [
         const configured = getEffectiveWorkerLimit()
         return { limit, configured }
       } finally {
-        if (origAdaptive === undefined) delete process.env.MAGIC_TEST_ADAPTIVE
-        else process.env.MAGIC_TEST_ADAPTIVE = origAdaptive
-        if (origCi === undefined) delete process.env.CI
-        else process.env.CI = origCi
+        if (origAdaptive === undefined) {
+          delete process.env.MAGIC_TEST_ADAPTIVE
+        } else {
+          process.env.MAGIC_TEST_ADAPTIVE = origAdaptive
+        }
+        if (origCi === undefined) {
+          delete process.env.CI
+        } else {
+          process.env.CI = origCi
+        }
         setLoadSampler()
         tickAdaptiveLimitForTests()
       }
@@ -309,10 +321,16 @@ const tests: TestCase[] = [
         return { beforeThrottle, afterClear, wakeIsFunction, configured: getEffectiveWorkerLimit() }
       } finally {
         setLoadSampler()
-        if (origAdaptive === undefined) delete process.env.MAGIC_TEST_ADAPTIVE
-        else process.env.MAGIC_TEST_ADAPTIVE = origAdaptive
-        if (origCi === undefined) delete process.env.CI
-        else process.env.CI = origCi
+        if (origAdaptive === undefined) {
+          delete process.env.MAGIC_TEST_ADAPTIVE
+        } else {
+          process.env.MAGIC_TEST_ADAPTIVE = origAdaptive
+        }
+        if (origCi === undefined) {
+          delete process.env.CI
+        } else {
+          process.env.CI = origCi
+        }
         tickAdaptiveLimitForTests()
       }
     },
