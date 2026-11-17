@@ -1,11 +1,12 @@
 import type { TestCollection, TestObject, WrappedTest } from '../../types.js'
-import { walkTests } from './testWalker.js'
+
 import {
   getImportNames,
   mutatesImportedState,
   getPortPatterns,
   getFilePaths,
 } from './codeParser.js'
+import { walkTests } from './testWalker.js'
 
 interface FsModule {
   readFile?: (path: string, encoding?: string) => Promise<string | undefined>

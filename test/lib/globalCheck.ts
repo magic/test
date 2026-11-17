@@ -1,9 +1,10 @@
+import type { TestCase } from '#src/types.js'
+
 import {
   functionModifiesGlobals,
   testModifiesGlobals,
   suiteModifiesGlobals,
 } from '#lib/globalCheck.js'
-import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [
   // Test function with globalThis

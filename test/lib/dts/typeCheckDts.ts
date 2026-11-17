@@ -1,10 +1,11 @@
+import type { DtsCheckResult } from '#lib/dts/typeCheckDts.js'
+import type { TestCase } from '#src/types.js'
+
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
 import { checkDtsFile } from '#lib/dts/typeCheckDts.js'
-import type { DtsCheckResult } from '#lib/dts/typeCheckDts.js'
-import type { TestCase } from '#src/types.js'
 
 /**
  * Fixture for the tsconfig `types` behavior:

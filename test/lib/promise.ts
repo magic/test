@@ -1,6 +1,8 @@
-import is from '@magic/types'
-import { promise } from '#src/index.js'
 import type { TestCase } from '#src/types.js'
+
+import is from '@magic/types'
+
+import { promise } from '#src/index.js'
 
 const fnWithCb = (
   err: Error | null,

@@ -7,13 +7,14 @@
  * resolveAndCompileImport.ts.
  * -------------------------------------------------------------------------- */
 
+import type { ExportInfo } from './types.js'
+
 import path from 'node:path'
 
 import fs from '@magic/fs'
 
-import { parseFile, extractExports, extractImportedNamesFromCode } from './astParse.js'
 import { LRUCache } from '../../caches/LRUCache.js'
-import type { ExportInfo } from './types.js'
+import { parseFile, extractExports, extractImportedNamesFromCode } from './astParse.js'
 
 export interface ExportVisitor {
   onSvelteExport: (name: string, resolvedPath: string) => boolean // return false to stop

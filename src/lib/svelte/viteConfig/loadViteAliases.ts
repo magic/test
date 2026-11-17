@@ -1,11 +1,11 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
-import fs from '@magic/fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-import { findConfigFile } from './findConfigFile.js'
+import fs from '@magic/fs'
 
 import { aliasCache, type AliasEntry } from './cache.js'
+import { findConfigFile } from './findConfigFile.js'
 import { normalizeAlias } from './normalizeAlias.js'
 import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
 

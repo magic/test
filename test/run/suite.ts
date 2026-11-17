@@ -1,9 +1,11 @@
-import log from '@magic/log'
-import { runSuite } from '#src/run/suite.js'
-import { createStore } from '#lib/store.js'
-import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
+
+import log from '@magic/log'
 import is from '@magic/types'
+
+import { has } from '#lib/has.js'
+import { createStore } from '#lib/store.js'
+import { runSuite } from '#src/run/suite.js'
 
 export default [
   {

@@ -1,6 +1,7 @@
-import { mount, html } from '#src/lib/svelte/index.js'
 import type { TestContext, TestCase } from '#src/types.js'
+
 import { has } from '#lib/has.js'
+import { mount, html } from '#src/lib/svelte/index.js'
 
 const component = 'src/lib/svelte/testFixtures/components/Tabs.svelte'
 const tabs = [

@@ -1,6 +1,8 @@
-import is from '@magic/types'
-import { Store, createStore } from '#lib/store.js'
 import type { TestCase } from '#src/types.js'
+
+import is from '@magic/types'
+
+import { Store, createStore } from '#lib/store.js'
 
 const tests: TestCase[] = [
   // Initial state

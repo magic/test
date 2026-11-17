@@ -1,23 +1,3 @@
-import path from 'node:path'
-import { beginTimerScope } from '../lib/dom/globals.js'
-import { pathToFileURL } from 'node:url'
-
-import error from '@magic/error'
-import log from '@magic/log'
-import is from '@magic/types'
-
-import { runTest } from './test.js'
-import {
-  getFNS,
-  ERRORS,
-  suiteNeedsIsolation,
-  suiteModifiesGlobals,
-  testImportsMutableModuleState,
-  testUsesFixedPorts,
-  testUsesSharedFiles,
-} from '../lib/index.js'
-import { Store } from '../lib/store.js'
-import { isolation } from './isolation.js'
 import type {
   Suite,
   WrappedTest,
@@ -29,6 +9,25 @@ import type {
   TestCollection,
 } from '../types.js'
 
+import path from 'node:path'
+import { pathToFileURL } from 'node:url'
+
+import error from '@magic/error'
+import log from '@magic/log'
+import is from '@magic/types'
+
+import { beginTimerScope } from '../lib/dom/globals.js'
+import {
+  getFNS,
+  ERRORS,
+  suiteNeedsIsolation,
+  suiteModifiesGlobals,
+  testImportsMutableModuleState,
+  testUsesFixedPorts,
+  testUsesSharedFiles,
+} from '../lib/index.js'
+import { Store } from '../lib/store.js'
+import { isolation } from './isolation.js'
 import {
   handleSuiteHooks,
   suiteHasBeforeAllOrAfterAll,
@@ -36,6 +35,7 @@ import {
   runSequentialHooked,
   runParallelArray,
 } from './lib/index.js'
+import { runTest } from './test.js'
 
 /**
  * Type guard to check if an Error has a string `code` property.

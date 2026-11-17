@@ -1,15 +1,14 @@
+import type { TestResult } from '../types.js'
+
 import { parentPort, workerData } from 'node:worker_threads'
 
 import is from '@magic/types'
 
+import { beginTimerScope } from '../lib/dom/globals.js'
 import { restoreFromSnapshot } from './isolation.js'
 import { createFailResult } from './lib/index.js'
-import type { TestResult } from '../types.js'
-
 import { runSingleTestFromFileInWorker, importFileInWorker, makeSafeClone } from './lib/index.js'
-import { beginTimerScope } from '../lib/dom/globals.js'
 import { prewarmWorkerModules } from './lib/prewarmWorkerModules.js'
-
 import '../bin/lib/registerLoader.js'
 
 type SuiteSetup = {

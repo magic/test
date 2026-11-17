@@ -16,12 +16,12 @@ import path from 'node:path'
 
 import is from '@magic/types'
 
+import { getCwd } from '../../constants.js'
 import { compileSvelteWithWrite } from '../../lib/svelte/compile/compileSvelteWithWrite.js'
 import {
   resolveImportMapSpecifier,
   findNearestPackageJson,
 } from '../../lib/svelte/compile/resolveImportMap.js'
-import { getCwd } from '../../constants.js'
 
 type ComponentRef = { component?: string | [string, Record<string, unknown>?] }
 

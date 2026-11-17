@@ -1,3 +1,6 @@
+import type { TestCase } from '#src/types.js'
+
+import { has } from '#lib/has.js'
 import {
   getWorkerPool,
   getEffectiveWorkerLimit,
@@ -9,8 +12,6 @@ import {
   tickAdaptiveLimitForTests,
 } from '#lib/workerPool.js'
 import * as reexported from '#src/run/lib/getWorkerPool.js'
-import { has } from '#lib/has.js'
-import type { TestCase } from '#src/types.js'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 

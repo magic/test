@@ -1,4 +1,8 @@
+import type { TestCase } from '#src/types.js'
+
 import path from 'node:path'
+
+import { has } from '#lib/has.js'
 import {
   isSkipPattern,
   resolveFilePath,
@@ -6,8 +10,6 @@ import {
   FALLBACK_CANDIDATES,
 } from '#lib/svelte/compile/pathUtils.js'
 import { getCwd } from '#src/constants.js'
-import { has } from '#lib/has.js'
-import type { TestCase } from '#src/types.js'
 
 const beforeAllBase = path.join(getCwd(), 'test', 'beforeAll')
 const pkgJsonPath = path.join(getCwd(), 'package.json')

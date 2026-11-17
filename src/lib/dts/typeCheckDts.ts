@@ -1,11 +1,12 @@
-import path from 'node:path'
+import type { DtsAnalysis, DtsSymbol, ProbeLine } from './analyzeDts.js'
+
 import { statSync } from 'node:fs'
+import path from 'node:path'
 
 import fs from '@magic/fs'
-import ts from 'typescript'
 
+import ts from 'typescript'
 import { analyzeDts } from './analyzeDts.js'
-import type { DtsAnalysis, DtsSymbol, ProbeLine } from './analyzeDts.js'
 
 /**
  * Virtual file name (relative to the .d.ts directory) of the probe source.

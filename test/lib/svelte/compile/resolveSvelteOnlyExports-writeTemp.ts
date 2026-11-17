@@ -1,6 +1,8 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+
 import is from '@magic/types'
+
 import {
   writeTempFile,
   compileSvelteOnlyExport,

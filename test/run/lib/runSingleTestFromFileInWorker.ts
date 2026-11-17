@@ -1,7 +1,8 @@
-import { runSingleTestFromFileInWorker } from '#src/run/lib/runSingleTestFromFileInWorker.js'
-import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
 import type { WrappedTest } from '#src/types.js'
+
+import { has } from '#lib/has.js'
+import { runSingleTestFromFileInWorker } from '#src/run/lib/runSingleTestFromFileInWorker.js'
 
 const mkTest = (name: string, fn: () => unknown, expect: unknown): WrappedTest => ({
   name,

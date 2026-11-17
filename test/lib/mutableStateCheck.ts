@@ -1,10 +1,12 @@
+import type { TestCase, TestObject, WrappedTest } from '#src/types.js'
+
+import fs from '@magic/fs'
+
 import {
   testUsesFixedPorts,
   testUsesSharedFiles,
   testImportsMutableModuleState,
 } from '#lib/mutableStateCheck.js'
-import fs from '@magic/fs'
-import type { TestCase, TestObject, WrappedTest } from '#src/types.js'
 
 // Type for globalThis with index signature
 type GlobalAny = Record<string, unknown> & typeof globalThis

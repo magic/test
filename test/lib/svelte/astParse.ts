@@ -1,3 +1,8 @@
+import type { TestCase } from '#src/types.js'
+
+import is from '@magic/types'
+
+import { has } from '#lib/has.js'
 import {
   extractImportsSync,
   hasSvelteRunes,
@@ -9,9 +14,6 @@ import {
   getExportNamedTargets,
   clearAstCache,
 } from '#lib/svelte/compile/astParse.js'
-import { has } from '#lib/has.js'
-import is from '@magic/types'
-import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [
   // --- extractImportsSync ---

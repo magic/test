@@ -1,6 +1,10 @@
+import type { TestCase } from '#src/types.js'
+
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+
+import is from '@magic/types'
 
 import {
   extractNamedExportsRecursive,
@@ -10,8 +14,6 @@ import {
   isSvelteBarrel,
   traverseExports,
 } from '#lib/svelte/compile/exportAnalysis.js'
-import is from '@magic/types'
-import type { TestCase } from '#src/types.js'
 
 const SUV = '<script></script>\n'
 

@@ -1,5 +1,6 @@
 <script lang="ts">
   import is from '@magic/types'
+
   import { command, form, query, prerender, requested, query$batch } from '$app/server'
 
   const cmd = command(() => 'result')

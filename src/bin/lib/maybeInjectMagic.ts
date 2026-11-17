@@ -2,8 +2,8 @@ import path from 'node:path'
 
 import cases from '@magic/cases'
 import fs from '@magic/fs'
-import is from '@magic/types'
 import log from '@magic/log'
+import is from '@magic/types'
 
 import { toImportPath } from './pathTransform.js'
 

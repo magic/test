@@ -1,16 +1,18 @@
+import type { TestSuites, TestCollection } from '../../types.js'
+
 import path from 'node:path'
 import { pathToFileURL, fileURLToPath } from 'node:url'
 
 import fs from '@magic/fs'
 import is from '@magic/types'
+
 import { initDOM } from '../../lib/dom/index.js'
-import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js'
-import { loadTestDefines, parseDefineValue } from './loadTestDefines.js'
 import {
   resolveSvelteOnlyExports,
   writeTempFile,
 } from '../../lib/svelte/compile/resolveSvelteOnlyExports.js'
-import type { TestSuites, TestCollection } from '../../types.js'
+import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js'
+import { loadTestDefines, parseDefineValue } from './loadTestDefines.js'
 
 interface ImportResult {
   type: 'file' | 'directory' | 'error' | 'skip'

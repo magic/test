@@ -2,8 +2,9 @@ import nodeHttp from 'node:http'
 import nodeHttps from 'node:https'
 import { URL } from 'node:url'
 
-import { handleResponse } from './handleResponse.js'
 import is from '@magic/types'
+
+import { handleResponse } from './handleResponse.js'
 
 type BodyObject = Record<string, unknown>
 type RequestBody = string | BodyObject

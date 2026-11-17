@@ -1,8 +1,9 @@
-import { createRequire } from 'node:module'
-import is from '@magic/types'
-
 // Type-only import: erased at compile time, no runtime native-module load.
 import type { Canvas } from '@napi-rs/canvas/node-canvas.js'
+
+import { createRequire } from 'node:module'
+
+import is from '@magic/types'
 
 type CanvasModule = typeof import('@napi-rs/canvas/node-canvas.js')
 

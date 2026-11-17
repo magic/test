@@ -1,6 +1,6 @@
-import log from '@magic/log'
-
 import type { TestResult } from '../../types.js'
+
+import log from '@magic/log'
 
 export const processWorkerResults = (
   results: TestResult[],

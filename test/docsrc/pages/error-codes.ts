@@ -1,5 +1,6 @@
-import is from '@magic/types'
 import type { Test } from '#src/types.js'
+
+import is from '@magic/types'
 
 import { View } from '#docsrc/pages/error-codes.js'
 

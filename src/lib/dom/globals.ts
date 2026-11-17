@@ -1,8 +1,3 @@
-import { AsyncLocalStorage } from 'node:async_hooks'
-import { createRequire } from 'node:module'
-
-import is from '@magic/types'
-
 // Type-only at compile time; the RUNTIME load is lazy (see loadHappyDom)
 // because this module is imported for its pure timer-scoping utilities
 // (beginTimerScope) by processes that may never touch the DOM. happy-dom
@@ -10,8 +5,13 @@ import is from '@magic/types'
 // so keeping it out of the module graph of non-DOM paths is worth a lot.
 import type { Document as HappyDocument, Window as HappyWindow } from 'happy-dom'
 
-import { createImagePolyfill } from './image.js'
+import { AsyncLocalStorage } from 'node:async_hooks'
+import { createRequire } from 'node:module'
+
+import is from '@magic/types'
+
 import { createCanvasPolyfill } from './canvas.js'
+import { createImagePolyfill } from './image.js'
 
 let window: HappyWindow | null = null
 let document: HappyDocument | null = null

@@ -1,10 +1,11 @@
+import type { TestCase } from '#src/types.js'
+
 import { testModifiesGlobals, suiteModifiesGlobals } from '#lib/globalCheck.js'
 import {
   testImportsMutableModuleState,
   testUsesFixedPorts,
   testUsesSharedFiles,
 } from '#lib/mutableStateCheck.js'
-import type { TestCase } from '#src/types.js'
 
 export default [
   {

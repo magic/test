@@ -1,5 +1,6 @@
-import { buildUnitCommand } from '#src/bin/t.js'
 import type { TestCase } from '#src/types.js'
+
+import { buildUnitCommand } from '#src/bin/t.js'
 
 const base = {
   cwd: '/proj',

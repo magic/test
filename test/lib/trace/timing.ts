@@ -1,3 +1,8 @@
+import type { TestCase } from '#src/types.js'
+
+import is from '@magic/types'
+
+import { has } from '#lib/has.js'
 import {
   enableTracing,
   disableTracing,
@@ -10,9 +15,6 @@ import {
   getTraceSummary,
   getTraceData,
 } from '#lib/trace/timing.js'
-import { has } from '#lib/has.js'
-import is from '@magic/types'
-import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [
   // tracing disabled by default (unless TEST_TRACE=1)

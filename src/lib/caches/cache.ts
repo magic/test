@@ -5,15 +5,15 @@ import fs from '@magic/fs'
 import { ddlInitWatchdog } from '../svelte/compile/ddl.js'
 
 ddlInitWatchdog()
-import { LRUCache } from './LRUCache.js'
-
-import { getCwd } from '../../constants.js'
 import type {
   CompileCacheEntry,
   ImportCacheEntry,
   BarrelCacheEntry,
   CssObject,
 } from '../../types.js'
+
+import { getCwd } from '../../constants.js'
+import { LRUCache } from './LRUCache.js'
 import { getCachedCompile } from './persistentCache.js'
 
 // Export LRUCache for external use

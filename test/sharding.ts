@@ -1,7 +1,9 @@
+import type { TestCase } from '#src/types.js'
+
 import is from '@magic/types'
+
 import { tryCatch } from '#lib/tryCatch.js'
 import { getShardForTest } from '#src/run.js'
-import type { TestCase } from '#src/types.js'
 
 export default [
   {

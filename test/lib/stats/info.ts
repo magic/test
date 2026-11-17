@@ -1,14 +1,14 @@
+import type { RunSummary } from '#lib/stats/resultsFile.js'
+import type { Test, TestResults } from '#src/types.js'
+
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import { info } from '#lib/stats/info.js'
 import { has } from '#lib/has.js'
-import { createStore } from '#lib/store.js'
+import { info } from '#lib/stats/info.js'
 import { RESULTS_FILE_ENV, readRunSummary } from '#lib/stats/resultsFile.js'
-
-import type { Test, TestResults } from '#src/types.js'
-import type { RunSummary } from '#lib/stats/resultsFile.js'
+import { createStore } from '#lib/store.js'
 
 export default [
   // info with no results should return true

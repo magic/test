@@ -1,3 +1,5 @@
+import type { Test } from '#src/types.js'
+
 import {
   Event,
   MouseEvent,
@@ -9,9 +11,7 @@ import {
   AnimationEvent,
   WheelEvent,
 } from 'happy-dom'
-
 import { getEventClass, DragEvent, TransitionEvent } from '#lib/svelte/events.js'
-import type { Test } from '#src/types.js'
 
 export default [
   {

@@ -1,3 +1,6 @@
+import type { UnitCommand } from '#src/bin/t.js'
+import type { TestCase } from '#src/types.js'
+
 import {
   getEffectiveNice,
   wrapWithNice,
@@ -6,8 +9,6 @@ import {
   testTimeoutMs,
   workerTimeoutMs,
 } from '#src/bin/t.js'
-import type { UnitCommand } from '#src/bin/t.js'
-import type { TestCase } from '#src/types.js'
 
 const base: UnitCommand = { cmd: 'node', argv: ['/proj/dist/bin/unit.js'], coverage: null }
 

@@ -1,6 +1,8 @@
-import { stringify } from '#lib/stringify.js'
 import type { TestCase } from '#src/types.js'
+
 import is from '@magic/types'
+
+import { stringify } from '#lib/stringify.js'
 
 const tests: TestCase[] = [
   // Test basic string handling

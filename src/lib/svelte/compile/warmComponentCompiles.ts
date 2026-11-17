@@ -4,10 +4,10 @@ import fs from '@magic/fs'
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { findNearestPackageJson, resolveImportMapSpecifier } from './resolveImportMap.js'
+import { getCwd } from '../../../constants.js'
 import { compileSvelteWithWrite } from './compileSvelteWithWrite.js'
 import { parallelMap } from './parallelMap.js'
-import { getCwd } from '../../../constants.js'
+import { findNearestPackageJson, resolveImportMapSpecifier } from './resolveImportMap.js'
 
 type ComponentRef = { component?: string | [string, Record<string, unknown>?] }
 

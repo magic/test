@@ -1,8 +1,7 @@
 import type { Window } from 'happy-dom'
+import type { ImageInstance, ImageConstructor } from './types.js'
 
 import { loadImage } from '@napi-rs/canvas/node-canvas.js'
-
-import type { ImageInstance, ImageConstructor } from './types.js'
 
 export const parsePngDimensions = (dataUrl: string): { width: number; height: number } => {
   try {

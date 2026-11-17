@@ -1,5 +1,7 @@
+import type { TestCase } from '#src/types.js'
+
 import is from '@magic/types'
-import { has } from '#lib/has.js'
+
 import {
   handleResponse,
   parseHttpResponseContent,
@@ -9,7 +11,7 @@ import {
   SizeLimitError,
   NetworkError,
 } from '#lib/handleResponse.js'
-import type { TestCase } from '#src/types.js'
+import { has } from '#lib/has.js'
 
 // Fake readable response stream with a controllable data/end emitter.
 const makeRes = (

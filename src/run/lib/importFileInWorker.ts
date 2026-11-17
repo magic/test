@@ -1,8 +1,8 @@
 import is from '@magic/types'
 
+import { loadTestDefines, parseDefineValue } from '../../bin/lib/loadTestDefines.js'
 import { initDOM } from '../../lib/dom/index.js'
 import { getViteDefine } from '../../lib/svelte/viteConfig/index.js'
-import { loadTestDefines, parseDefineValue } from '../../bin/lib/loadTestDefines.js'
 
 export const importFileInWorker = async (filePath: string): Promise<unknown> => {
   try {

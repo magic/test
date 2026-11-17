@@ -1,9 +1,10 @@
+import type { Test } from '#src/index.js'
+
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-import type { Test } from '#src/index.js'
 import { load } from '#src/bin/lib/tsLoader.js'
 import { CACHE_DIR, getCwd } from '#src/constants.js'
 

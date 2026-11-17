@@ -1,6 +1,7 @@
-import { html, createSnippet } from '#lib/svelte/index.js'
-import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
+
+import { has } from '#lib/has.js'
+import { html, createSnippet } from '#lib/svelte/index.js'
 
 const component = '#lib/svelte/testFixtures/components/SnippetButton.svelte'
 

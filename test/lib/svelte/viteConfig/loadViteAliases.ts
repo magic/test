@@ -1,10 +1,11 @@
 import path from 'node:path'
-import fs from '@magic/fs'
-import { CACHE_DIR } from '#src/constants.js'
 
-import { loadViteAliases } from '#lib/svelte/viteConfig/loadViteAliases.js'
-import { configCache, aliasCache } from '#lib/svelte/viteConfig/cache.js'
+import fs from '@magic/fs'
 import is from '@magic/types'
+
+import { configCache, aliasCache } from '#lib/svelte/viteConfig/cache.js'
+import { loadViteAliases } from '#lib/svelte/viteConfig/loadViteAliases.js'
+import { CACHE_DIR } from '#src/constants.js'
 
 // Each test uses its own fixture root so the suite is safe under parallel
 // execution (no shared mutable state between tests).

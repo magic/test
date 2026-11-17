@@ -1,10 +1,10 @@
-import path from 'node:path'
-
 import type { Test } from '../../types.js'
+import type { DtsCheckResult } from './typeCheckDts.js'
+
+import path from 'node:path'
 
 import { collectDtsFiles } from './collectDtsFiles.js'
 import { checkDtsFile, summarizeErrors } from './typeCheckDts.js'
-import type { DtsCheckResult } from './typeCheckDts.js'
 
 /**
  * Suite key prefix for the virtual .d.ts test suites.

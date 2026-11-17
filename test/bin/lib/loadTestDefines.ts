@@ -2,13 +2,15 @@
 // and relies on process.cwd(). These tests require complex setup.
 // For now, we test the function exists and returns expected types.
 
+import type { TestCase } from '#src/types.js'
+
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
 import is from '@magic/types'
+
 import { loadTestDefines, parseDefineValue } from '#src/bin/lib/loadTestDefines.js'
-import type { TestCase } from '#src/types.js'
 
 const withDefDir = async (files: Record<string, string>, fn: (dir: string) => Promise<unknown>) => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'magic-defines-'))

@@ -1,9 +1,9 @@
+import type { RunSummary } from './resultsFile.js'
+
 import log from '@magic/log'
 
 import { printPercent } from './printPercent.js'
 import { readRunSummary } from './resultsFile.js'
-
-import type { RunSummary } from './resultsFile.js'
 
 /**
  * Formats the final run summary lines from a RunSummary.

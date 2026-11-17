@@ -1,9 +1,11 @@
-import { resolvePackageExport } from '#src/lib/svelte/compile/resolvePackageExport.js'
-import { packageExportCache } from '#src/lib/caches/cache.js'
-import { getCwd } from '#src/constants.js'
-import { has } from '#lib/has.js'
-import is from '@magic/types'
 import type { TestCase } from '#src/types.js'
+
+import is from '@magic/types'
+
+import { has } from '#lib/has.js'
+import { getCwd } from '#src/constants.js'
+import { packageExportCache } from '#src/lib/caches/cache.js'
+import { resolvePackageExport } from '#src/lib/svelte/compile/resolvePackageExport.js'
 
 const SRC = getCwd()
 

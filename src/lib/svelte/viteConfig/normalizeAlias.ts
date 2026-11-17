@@ -1,8 +1,8 @@
+import type { AliasEntry } from './cache.js'
+
 import is from '@magic/types'
 
 import { normalizeSingleAlias } from './normalizeSingleAlias.js'
-
-import type { AliasEntry } from './cache.js'
 
 export const normalizeAlias = (alias: unknown, configDir: string): AliasEntry[] => {
   if (is.array(alias)) {

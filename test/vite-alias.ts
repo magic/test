@@ -1,11 +1,13 @@
 import path from 'node:path'
+
+import type { CustomError } from '@magic/error'
 import { fs } from '@magic/fs'
-import { CACHE_DIR } from '#src/constants.js'
-import { mount } from '#src/svelte.js'
-import { resolveAlias } from '#lib/svelte/viteConfig/index.js'
+
 import { configCache, aliasCache, resolvedAliasCache } from '#lib/svelte/viteConfig/cache.js'
 import { findProjectRoot } from '#lib/svelte/viteConfig/findProjectRoot.js'
-import type { CustomError } from '@magic/error'
+import { resolveAlias } from '#lib/svelte/viteConfig/index.js'
+import { CACHE_DIR } from '#src/constants.js'
+import { mount } from '#src/svelte.js'
 
 const TEST_BASE = path.join(CACHE_DIR, 'vite-alias')
 

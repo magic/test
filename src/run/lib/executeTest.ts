@@ -1,5 +1,6 @@
-import is from '@magic/types'
 import type { ContextOption } from '../../types.js'
+
+import is from '@magic/types'
 
 /**
  * Execute a single test function with proper isolation

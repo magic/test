@@ -1,10 +1,11 @@
 import type { Test } from '#src/types.js'
-import is from '@magic/types'
-import { has } from '#src/lib/has.js'
 
-import * as IndexSvelteJs from '#lib/svelte/testFixtures/barrelFixtures/Index.svelte.js'
+import is from '@magic/types'
+
 import * as DefaultBarrel from '#lib/svelte/testFixtures/barrelFixtures/DefaultBarrel.svelte.js'
+import * as IndexSvelteJs from '#lib/svelte/testFixtures/barrelFixtures/Index.svelte.js'
 import * as TypeExports from '#lib/svelte/testFixtures/barrelFixtures/TypeExports.svelte.js'
+import { has } from '#src/lib/has.js'
 
 export default [
   {

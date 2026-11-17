@@ -6,9 +6,9 @@
  * owning Isolation instance can terminate them all on shutdown.
  * -------------------------------------------------------------------------- */
 
-import { Worker } from 'node:worker_threads'
-
 import type { Snapshot, TestResult } from '../../../types.js'
+
+import { Worker } from 'node:worker_threads'
 
 /**
  * Terminations in flight: a settled round-trip calls worker.terminate(), but

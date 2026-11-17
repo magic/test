@@ -1,7 +1,8 @@
-import { suiteNeedsIsolation } from '#lib/suiteNeedsIsolation.js'
-import { has } from '#lib/has.js'
-import { walkTests } from '#lib/analysis/testWalker.js'
 import type { Test } from '#src/types.js'
+
+import { walkTests } from '#lib/analysis/testWalker.js'
+import { has } from '#lib/has.js'
+import { suiteNeedsIsolation } from '#lib/suiteNeedsIsolation.js'
 
 export default [
   // Array with plain test (no hooks) - no isolation

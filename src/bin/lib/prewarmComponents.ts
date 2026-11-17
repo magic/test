@@ -19,16 +19,16 @@
  * MAGIC_TEST_PREWARM_WORKERS sets the prewarm thread count (default 4).
  */
 import path from 'node:path'
-import { Worker } from 'node:worker_threads'
 import { pathToFileURL } from 'node:url'
+import { Worker } from 'node:worker_threads'
 
 import log from '@magic/log'
 
+import { loadManifest, getCachedCompile } from '../../lib/caches/persistentCache.js'
 import {
   collectComponentPaths,
   resolveComponentPath,
 } from '../../lib/svelte/compile/warmComponentCompiles.js'
-import { loadManifest, getCachedCompile } from '../../lib/caches/persistentCache.js'
 import { traceStart, traceEnd } from '../../lib/trace/timing.js'
 
 const DEFAULT_PREWARM_WORKERS = 4

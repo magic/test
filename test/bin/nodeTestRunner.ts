@@ -1,6 +1,10 @@
+import type { TestCase, TestBeforeHook, TestAfterHook } from '#src/types.js'
+
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+
+import is from '@magic/types'
 
 import {
   convertSuite,
@@ -11,8 +15,6 @@ import {
   processFile,
   scanDir,
 } from '#src/bin/node-test-runner.js'
-import is from '@magic/types'
-import type { TestCase, TestBeforeHook, TestAfterHook } from '#src/types.js'
 
 const makeTmpDir = async (prefix: string) => mkdtemp(path.join(os.tmpdir(), `magic-ntr-${prefix}-`))
 

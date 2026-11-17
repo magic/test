@@ -1,5 +1,6 @@
-import { env } from '#lib/env.js'
 import type { TestCase } from '#src/types.js'
+
+import { env } from '#lib/env.js'
 
 // Store original env
 const originalEnv = { ...process.env }

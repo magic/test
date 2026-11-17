@@ -1,6 +1,7 @@
-import { parseFile, extractExports, extractImports } from '#lib/svelte/compile/astParse.js'
-import { has } from '#lib/has.js'
 import is from '@magic/types'
+
+import { has } from '#lib/has.js'
+import { parseFile, extractExports, extractImports } from '#lib/svelte/compile/astParse.js'
 
 const extractNamedImportsFromCode = (code: string, spec: string): string[] => {
   const namedImports: string[] = []

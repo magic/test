@@ -6,12 +6,12 @@
  * src/run/isolation.ts uses these for per-test and per-suite isolation.
  * -------------------------------------------------------------------------- */
 
-import is from '@magic/types'
+import type { Snapshot, PropertyDescriptorRecord } from '../../../types.js'
+
 import log from '@magic/log'
+import is from '@magic/types'
 
 import { skipProps } from './skipProps.js'
-
-import type { Snapshot, PropertyDescriptorRecord } from '../../../types.js'
 
 /**
  * Map stringified symbol keys back to the Symbol itself.

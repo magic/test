@@ -1,8 +1,10 @@
-import { runTestFnInWorker } from '#src/run/lib/runTestFnInWorker.js'
-import { has } from '#lib/has.js'
-import is from '@magic/types'
 import type { TestCase } from '#src/types.js'
 import type { WrappedTest } from '#src/types.js'
+
+import is from '@magic/types'
+
+import { has } from '#lib/has.js'
+import { runTestFnInWorker } from '#src/run/lib/runTestFnInWorker.js'
 
 const makeTest = (overrides: Partial<WrappedTest> = {}): WrappedTest =>
   ({

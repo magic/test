@@ -1,11 +1,12 @@
+import type { TestCase } from '#src/types.js'
+
+import { mkdir, writeFile, rm } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { mkdir, writeFile, rm } from 'node:fs/promises'
 
 import { CacheManager, pendingPromises } from '#lib/caches/cache.js'
 import { loadManifest, sweepStaleManifest } from '#lib/caches/persistentCache.js'
 import { has } from '#lib/has.js'
-import type { TestCase } from '#src/types.js'
 
 // TestCache for generic type
 interface TestCache {

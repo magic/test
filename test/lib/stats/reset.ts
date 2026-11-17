@@ -1,7 +1,8 @@
-import { Store } from '#lib/store.js'
+import type { TestCase } from '#src/types.js'
+
 import { has } from '#lib/has.js'
 import { reset } from '#lib/stats/reset.js'
-import type { TestCase } from '#src/types.js'
+import { Store } from '#lib/store.js'
 
 export default [
   // Basic reset

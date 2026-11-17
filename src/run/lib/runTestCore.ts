@@ -1,9 +1,9 @@
+import type { WrappedTest, EvaluateResult } from '../../types.js'
+
 import is from '@magic/types'
 
 import { toCleanError, ERRORS } from '../../lib/index.js'
 import { withSvelteKitStore } from '../../lib/sveltekit.js'
-import type { WrappedTest, EvaluateResult } from '../../types.js'
-
 import { evaluateTestResult } from './evaluateTestResult.js'
 import { getTestTimeout } from './getTestTimeout.js'
 import { withTimeout } from './withTimeout.js'

@@ -1,6 +1,7 @@
 import is from '@magic/types'
-import { has } from '#lib/has.js'
+
 import { initGlobals } from '#lib/dom/globals.js'
+import { has } from '#lib/has.js'
 
 export default {
   beforeAll: initGlobals,

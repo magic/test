@@ -1,6 +1,7 @@
-import { html, props } from '#lib/svelte/index.js'
 import type { TestContext, TestCase } from '#src/types.js'
+
 import { has } from '#lib/has.js'
+import { html, props } from '#lib/svelte/index.js'
 
 const component = '#lib/svelte/testFixtures/components/Button.svelte'
 

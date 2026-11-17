@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 
-import path from 'node:path'
 import os from 'node:os'
+import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import cli from '@magic/cli'
 import fs from '@magic/fs'
-import is from '@magic/types'
 import log from '@magic/log'
+import is from '@magic/types'
 
-import { abort } from '../run.js'
-import { isolation } from '../run/isolation.js'
 import * as stats from '../lib/stats/index.js'
 import { RESULTS_FILE_ENV } from '../lib/stats/resultsFile.js'
+import { abort } from '../run.js'
+import { isolation } from '../run/isolation.js'
 
 const cwd = process.cwd()
 let childProcess: ReturnType<typeof cli.spawn> | null = null

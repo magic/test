@@ -1,6 +1,8 @@
-import is from '@magic/types'
-import { evaluateTestResult } from '#src/run/lib/evaluateTestResult.js'
 import type { TestCase } from '#src/types.js'
+
+import is from '@magic/types'
+
+import { evaluateTestResult } from '#src/run/lib/evaluateTestResult.js'
 
 export default [
   {

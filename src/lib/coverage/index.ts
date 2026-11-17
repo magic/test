@@ -6,15 +6,16 @@
  * same files and prints a text report. No external dependencies.
  */
 
-import path from 'node:path'
+import type { CoverageOptions, FileCoverage, RawSourceMap, V8ScriptCoverage } from './types.js'
+
 import fs from 'node:fs'
+import path from 'node:path'
 
 import is from '@magic/types'
 
-import type { CoverageOptions, FileCoverage, RawSourceMap, V8ScriptCoverage } from './types.js'
-import { loadCoverage } from './v8read.js'
-import { FileFilter } from './filter.js'
 import { convertScript, mergeFileCoverage } from './convert.js'
+import { FileFilter } from './filter.js'
+import { loadCoverage } from './v8read.js'
 
 interface ConvertItem {
   script: V8ScriptCoverage

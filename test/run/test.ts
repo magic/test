@@ -1,9 +1,10 @@
+import type { TestCase, TestResult } from '#src/types.js'
+
 import { is } from '@magic/types'
 
-import { runTest } from '#src/run/test.js'
-import { createStore } from '#lib/store.js'
 import { has } from '#lib/has.js'
-import type { TestCase, TestResult } from '#src/types.js'
+import { createStore } from '#lib/store.js'
+import { runTest } from '#src/run/test.js'
 
 export default [
   {

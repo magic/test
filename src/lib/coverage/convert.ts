@@ -11,12 +11,13 @@
  * wrapper-length adjustment is needed.
  */
 
+import type { FileCoverage, Location, Position, RawSourceMap, V8ScriptCoverage } from './types.js'
+
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import is from '@magic/types'
 
-import type { FileCoverage, Location, Position, RawSourceMap, V8ScriptCoverage } from './types.js'
 import {
   decodeSourceMap,
   originalPositionTryBoth,

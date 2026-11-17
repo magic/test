@@ -1,5 +1,6 @@
-import { hasTestProperties } from '#src/run/lib/hasTestProperties.js'
 import type { TestCase } from '#src/types.js'
+
+import { hasTestProperties } from '#src/run/lib/hasTestProperties.js'
 
 export default [
   {

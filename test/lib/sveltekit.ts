@@ -1,5 +1,6 @@
-import { withSvelteKitStore } from '#lib/sveltekit.js'
 import type { TestCase } from '#src/types.js'
+
+import { withSvelteKitStore } from '#lib/sveltekit.js'
 
 // NOTE: this repo does NOT have @sveltejs/kit installed, so withSvelteKitStore
 // exercises the no-op fallback: the kit import fails (cached) and the wrapped

@@ -7,13 +7,13 @@
  * test/workerDeath.ts) and asserted on via exit code + printed report.
  * -------------------------------------------------------------------------- */
 
+import type { TestCase } from '#src/types.js'
+
 import { spawn } from 'node:child_process'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-
-import type { TestCase } from '#src/types.js'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const unitBin = path.join(repoRoot, 'dist', 'bin', 'unit.js')

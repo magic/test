@@ -1,5 +1,5 @@
-import { testExportsPreprocessor } from '#lib/svelte/index.js'
 import { has } from '#lib/has.js'
+import { testExportsPreprocessor } from '#lib/svelte/index.js'
 
 const sourceWithState = `
 <script>

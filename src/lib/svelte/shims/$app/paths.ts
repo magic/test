@@ -1,9 +1,10 @@
 // Shim for $app/paths
 // Provides path utilities and asset resolution
 
-import is from '@magic/types'
-import fs from '@magic/fs'
 import { join } from 'node:path'
+
+import fs from '@magic/fs'
+import is from '@magic/types'
 
 // Default configuration
 let base: string = ''

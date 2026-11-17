@@ -12,19 +12,18 @@
  * - runParallelArray:    no isolation needed → plain parallel execution.
  * -------------------------------------------------------------------------- */
 
+import type { Store } from '../../lib/store.js'
+import type { Suite, WrappedTest, Snapshot, TestResult, TestObject, Test } from '../../types.js'
+
 import is from '@magic/types'
 
-import { runTest } from '../test.js'
-import { isolation } from '../isolation.js'
 import { getWorkerPool } from '../../lib/workerPool.js'
-import { wrapTest } from './wrapTest.js'
+import { isolation } from '../isolation.js'
+import { runTest } from '../test.js'
 import { handleWorkerError } from './handleWorkerError.js'
 import { processWorkerResults } from './processWorkerResults.js'
 import { testNeedsIsolation } from './testNeedsIsolation.js'
-
-import type { Suite, WrappedTest, Snapshot, TestResult, TestObject, Test } from '../../types.js'
-
-import type { Store } from '../../lib/store.js'
+import { wrapTest } from './wrapTest.js'
 
 type BaseStrategyArgs = {
   tests: Test[]

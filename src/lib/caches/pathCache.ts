@@ -1,5 +1,6 @@
-import { LRUCache } from './LRUCache.js'
 import fs from '@magic/fs'
+
+import { LRUCache } from './LRUCache.js'
 
 // LRU cache for file stats (includes existence check)
 const statsCache = new LRUCache<{ exists: boolean; mtime?: number; size?: number }>(1000)

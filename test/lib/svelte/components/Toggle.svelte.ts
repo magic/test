@@ -1,6 +1,7 @@
-import { mount, html } from '#lib/svelte/index.js'
-import { has } from '#lib/has.js'
 import type { TestContext, TestCase } from '#src/types.js'
+
+import { has } from '#lib/has.js'
+import { mount, html } from '#lib/svelte/index.js'
 
 const component = '#lib/svelte/testFixtures/components/Toggle.svelte'
 

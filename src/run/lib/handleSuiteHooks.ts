@@ -1,6 +1,6 @@
-import is from '@magic/types'
-
 import type { TestCollection, CleanupResult } from '../../types.js'
+
+import is from '@magic/types'
 
 /**
  * Handle suite-level beforeAll and afterAll hooks

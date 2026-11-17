@@ -8,24 +8,6 @@ const __dirname = path.dirname(__filename)
 
 import(path.join(__dirname, 'lib/registerLoader.js'))
 
-import { stats } from '../lib/index.js'
-
-import cli from '@magic/cli'
-import log from '@magic/log'
-
-import { describe, before, after, it } from 'node:test'
-import fs from '@magic/fs'
-import is from '@magic/types'
-import { CACHE_DIR } from '../constants.js'
-import { maybeInjectMagic } from './lib/index.js'
-import { evaluateTestResult } from '../run/lib/index.js'
-import {
-  isBeforeAllFile,
-  isAfterAllFile,
-  beforeAllFileNames,
-  afterAllFileNames,
-} from '../lib/hookFiles.js'
-
 import type {
   WrappedTest,
   TestHooks,
@@ -35,6 +17,24 @@ import type {
   ComponentProps,
   TestContext,
 } from '../types.js'
+
+import { describe, before, after, it } from 'node:test'
+
+import cli from '@magic/cli'
+import fs from '@magic/fs'
+import log from '@magic/log'
+import is from '@magic/types'
+
+import { CACHE_DIR } from '../constants.js'
+import {
+  isBeforeAllFile,
+  isAfterAllFile,
+  beforeAllFileNames,
+  afterAllFileNames,
+} from '../lib/hookFiles.js'
+import { stats } from '../lib/index.js'
+import { evaluateTestResult } from '../run/lib/index.js'
+import { maybeInjectMagic } from './lib/index.js'
 
 /**
  * Internal suite type for node-test-runner

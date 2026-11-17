@@ -1,16 +1,17 @@
+import type { InputValue, Suite, Test, TestObject, TestResults } from '../../types.js'
+
+import path from 'node:path'
+
 import log from '@magic/log'
 import is from '@magic/types'
 
 import { env } from '../env.js'
-import { stringify } from '../stringify.js'
 import { getDuration } from '../getDuration.js'
 import { Store } from '../store.js'
+import { stringify } from '../stringify.js'
 import { isTestResult } from './isTestResult.js'
 import { printPercent } from './printPercent.js'
 import { RESULTS_FILE_ENV, writeRunSummary } from './resultsFile.js'
-
-import type { InputValue, Suite, Test, TestObject, TestResults } from '../../types.js'
-import path from 'node:path'
 
 const SLOW_TEST_THRESHOLD_MS = 500
 const SLOW_TEST_REPORT_COUNT = 20

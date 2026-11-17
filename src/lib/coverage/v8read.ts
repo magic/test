@@ -7,13 +7,13 @@
  * structurally with range trees (counts are summed over matching spans).
  */
 
+import type { SourceMapCache, V8FunctionCoverage, V8Range, V8ScriptCoverage } from './types.js'
+
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import is from '@magic/types'
-
-import type { SourceMapCache, V8FunctionCoverage, V8Range, V8ScriptCoverage } from './types.js'
 
 interface LoadResult {
   /** merged scripts, urls converted to absolute paths, sorted by url */

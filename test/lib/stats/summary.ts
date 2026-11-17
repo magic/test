@@ -1,13 +1,14 @@
-import type { Test } from '@magic/test'
+import type { RunSummary } from '#lib/stats/resultsFile.js'
+
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import { formatRunSummary, summary } from '#lib/stats/summary.js'
-import { readRunSummary, writeRunSummary } from '#lib/stats/resultsFile.js'
-import { printPercent } from '#lib/stats/printPercent.js'
+import type { Test } from '@magic/test'
 
-import type { RunSummary } from '#lib/stats/resultsFile.js'
+import { printPercent } from '#lib/stats/printPercent.js'
+import { readRunSummary, writeRunSummary } from '#lib/stats/resultsFile.js'
+import { formatRunSummary, summary } from '#lib/stats/summary.js'
 
 /** Patches console.log synchronously around fn and returns the logged lines. */
 const captureLog = (fn: () => void): string[] => {

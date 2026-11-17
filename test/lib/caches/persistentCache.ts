@@ -1,5 +1,6 @@
-import is from '@magic/types'
 import fs from '@magic/fs'
+import is from '@magic/types'
+
 import { has } from '#lib/has.js'
 
 export default [

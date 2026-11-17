@@ -1,6 +1,7 @@
-import { executeTest } from '#src/run/lib/executeTest.js'
-import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
+
+import { has } from '#lib/has.js'
+import { executeTest } from '#src/run/lib/executeTest.js'
 
 const tests: TestCase[] = [
   // sync function

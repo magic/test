@@ -1,5 +1,6 @@
-import is from '@magic/types'
 import type { State } from '../types.js'
+
+import is from '@magic/types'
 
 const defaultState: State = {
   suites: {},

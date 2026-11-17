@@ -1,4 +1,5 @@
 import type { Test } from '#src/index.js'
+
 import { resolve } from '#src/bin/lib/tsLoader.js'
 
 export default [

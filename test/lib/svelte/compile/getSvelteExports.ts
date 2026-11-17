@@ -1,10 +1,11 @@
-import path from 'node:path'
 import fs from 'node:fs'
+import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { getSvelteExports } from '#lib/svelte/compile/getSvelteExports.js'
-import { has } from '#lib/has.js'
 import is from '@magic/types'
+
+import { has } from '#lib/has.js'
+import { getSvelteExports } from '#lib/svelte/compile/getSvelteExports.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtureBase = path.join(

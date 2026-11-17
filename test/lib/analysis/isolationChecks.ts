@@ -1,12 +1,14 @@
-import path from 'node:path'
+import type { TestCase } from '#src/types.js'
+
 import { mkdtemp, writeFile, rm } from 'node:fs/promises'
 import os from 'node:os'
+import path from 'node:path'
+
 import {
   testUsesFixedPorts,
   testUsesSharedFiles,
   testImportsMutableModuleState,
 } from '#lib/analysis/isolationChecks.js'
-import type { TestCase } from '#src/types.js'
 
 const CWD = process.cwd()
 

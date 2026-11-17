@@ -1,13 +1,14 @@
-import is from '@magic/types'
-import log from '@magic/log'
+import type { WrappedTest, TestResult, Suite, ContextOption } from '../types.js'
 
+import log from '@magic/log'
+import is from '@magic/types'
+
+import { beginTimerScope } from '../lib/dom/globals.js'
 import { toCleanError, cleanFunctionString, getTestKey, ERRORS } from '../lib/index.js'
 import { Store } from '../lib/store.js'
 import { isolation } from './isolation.js'
-import { runSuite } from './suite.js'
 import { executeTest, prepareTest, runTestCore, testNeedsIsolation } from './lib/index.js'
-import { beginTimerScope } from '../lib/dom/globals.js'
-import type { WrappedTest, TestResult, Suite, ContextOption } from '../types.js'
+import { runSuite } from './suite.js'
 
 type TestExecutionResult = {
   result: unknown

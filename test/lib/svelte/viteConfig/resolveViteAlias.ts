@@ -1,4 +1,5 @@
 import is from '@magic/types'
+
 import { resolveAlias } from '#lib/svelte/viteConfig/resolveAlias.js'
 
 export default [

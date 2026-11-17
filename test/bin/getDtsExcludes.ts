@@ -1,5 +1,6 @@
-import { getDtsExcludes } from '#src/bin/unit.js'
 import type { TestCase } from '#src/types.js'
+
+import { getDtsExcludes } from '#src/bin/unit.js'
 
 // getDtsExcludes reads process.env; tests in a file run in parallel, so
 // serialize env mutation with a promise-chain lock.

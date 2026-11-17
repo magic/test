@@ -1,7 +1,9 @@
-import { runSingleTestInWorker } from '#src/run/lib/runSingleTestInWorker.js'
-import { has } from '#lib/has.js'
-import is from '@magic/types'
 import type { Test } from '#src/types.js'
+
+import is from '@magic/types'
+
+import { has } from '#lib/has.js'
+import { runSingleTestInWorker } from '#src/run/lib/runSingleTestInWorker.js'
 
 export default [
   // test without fn -> fail result

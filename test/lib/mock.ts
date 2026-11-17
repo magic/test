@@ -1,7 +1,9 @@
-import is from '@magic/types'
-import { mock } from '#src/index.js'
-import { tryCatch } from '#lib/tryCatch.js'
 import type { TestCase } from '#src/types.js'
+
+import is from '@magic/types'
+
+import { tryCatch } from '#lib/tryCatch.js'
+import { mock } from '#src/index.js'
 
 export default [
   {

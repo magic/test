@@ -1,4 +1,5 @@
 import log from '@magic/log'
+
 import { toMinimalFixed } from './toMinimalFixed.js'
 
 /**

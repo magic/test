@@ -35,6 +35,7 @@ Minimal structure:
 
 ```ts
 import type { Test } from '@magic/test'
+
 import { fnUnderTest } from '../../src/lib/thing.js' // .js extension for .ts sources
 
 export default [

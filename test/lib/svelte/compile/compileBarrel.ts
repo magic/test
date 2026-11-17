@@ -1,12 +1,13 @@
+import type { TestCase } from '#src/types.js'
+
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { compileBarrel } from '#src/lib/svelte/compile/compileBarrel.js'
-import { barrelCache } from '#src/lib/caches/cache.js'
-import { getTempFilePath } from '#src/lib/svelte/compile/getTempFilePath.js'
 import { getCwd } from '#src/constants.js'
-import type { TestCase } from '#src/types.js'
+import { barrelCache } from '#src/lib/caches/cache.js'
 import { has } from '#src/lib/has.js'
+import { compileBarrel } from '#src/lib/svelte/compile/compileBarrel.js'
+import { getTempFilePath } from '#src/lib/svelte/compile/getTempFilePath.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtureBase = path.join(

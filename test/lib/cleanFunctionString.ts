@@ -1,5 +1,6 @@
-import { cleanFunctionString } from '#lib/cleanFunctionString.js'
 import type { Test } from '#src/types.js'
+
+import { cleanFunctionString } from '#lib/cleanFunctionString.js'
 
 export default [
   // falsy values return 'false'

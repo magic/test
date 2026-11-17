@@ -1,8 +1,8 @@
+import type { WrappedTest, TestResult } from '../../types.js'
+
 import is from '@magic/types'
 
 import { cleanFunctionString } from '../../lib/index.js'
-import type { WrappedTest, TestResult } from '../../types.js'
-
 import { createFailResult } from './createFailResult.js'
 import { runTestFnInWorker } from './runTestFnInWorker.js'
 

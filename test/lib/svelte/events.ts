@@ -1,3 +1,5 @@
+import type { Test } from '#src/types.js'
+
 import { Event } from 'happy-dom'
 import { initDOM, getDocument } from '#lib/dom/index.js'
 import {
@@ -47,7 +49,6 @@ import {
   volumeChange,
   checked,
 } from '#lib/svelte/events.js'
-import type { Test } from '#src/types.js'
 
 initDOM()
 const doc = getDocument()

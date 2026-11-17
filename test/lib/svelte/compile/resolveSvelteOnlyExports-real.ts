@@ -1,3 +1,5 @@
+import type { TestCase } from '#src/types.js'
+
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
@@ -7,7 +9,6 @@ import {
   compileSvelteOnlyExport,
   buildOnDemandSvelteBarrel,
 } from '#lib/svelte/compile/resolveSvelteOnlyExports.js'
-import type { TestCase } from '#src/types.js'
 
 const SUV = '<script>\nexport let name = "hi"\n</script>\n<div>{name}</div>\n'
 

@@ -1,5 +1,6 @@
-import is from '@magic/types'
 import type { TestResult } from '../../types.js'
+
+import is from '@magic/types'
 
 /**
  * Type guard to check if a value is a TestResult.

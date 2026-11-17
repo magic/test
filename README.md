@@ -1224,8 +1224,8 @@ svelte. Install it with `npm i -D svelte` when you need component tests.
 internally uses happy-dom to create the dom and html elements.
 
 ```javascript
-import { mount } from '@magic/test/svelte'
 import { tryCatch } from '@magic/test'
+import { mount } from '@magic/test/svelte'
 
 const component = './path/to/MyComponent.svelte'
 
@@ -1340,8 +1340,8 @@ export default [
 **Example: Accessing Component State**
 
 ```javascript
-import { mount, html } from '@magic/test/svelte'
 import { tick } from 'svelte'
+import { mount, html } from '@magic/test/svelte'
 
 const component = './src/lib/svelte/components/Counter.svelte'
 
@@ -1372,8 +1372,8 @@ export default [
 **Example: Testing Error Handling**
 
 ```javascript
-import { mount } from '@magic/test/svelte'
 import { tryCatch } from '@magic/test'
+import { mount } from '@magic/test/svelte'
 
 const component = './src/lib/svelte/components/MyComponent.svelte'
 

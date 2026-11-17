@@ -1,11 +1,14 @@
-import path from 'node:path'
+import type { TestCase } from '#src/types.js'
+
 import fs from 'node:fs'
 import os from 'node:os'
-import { importFileInWorker } from '#src/run/lib/importFileInWorker.js'
-import { getCwd } from '#src/constants.js'
-import { has } from '#lib/has.js'
+import path from 'node:path'
+
 import is from '@magic/types'
-import type { TestCase } from '#src/types.js'
+
+import { has } from '#lib/has.js'
+import { getCwd } from '#src/constants.js'
+import { importFileInWorker } from '#src/run/lib/importFileInWorker.js'
 
 const tests: TestCase[] = [
   // imports a module with a default export -> returns default

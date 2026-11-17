@@ -1,9 +1,10 @@
+import type { TestCase } from '#src/types.js'
+
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
 import { collectDtsFiles } from '#lib/dts/collectDtsFiles.js'
-import type { TestCase } from '#src/types.js'
 
 /**
  * Fixture tree (content irrelevant to collection):

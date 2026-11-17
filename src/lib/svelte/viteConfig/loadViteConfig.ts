@@ -1,11 +1,13 @@
-import fs from '@magic/fs'
+import type { ViteConfig } from '../../../types.js'
+
 import { pathToFileURL } from 'node:url'
 
-import { findConfigFile } from './findConfigFile.js'
-import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
+import fs from '@magic/fs'
+
 import { defineCache, configCache, type AliasEntry } from './cache.js'
-import type { ViteConfig } from '../../../types.js'
+import { findConfigFile } from './findConfigFile.js'
 import { normalizeAlias } from './normalizeAlias.js'
+import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
 
 export const loadViteConfig = async (rootDir: string): Promise<ViteConfig> => {
   const cacheKey = rootDir + ':vite-full'

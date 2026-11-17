@@ -1,4 +1,5 @@
 import is from '@magic/types'
+
 import { initGlobals } from '#lib/dom/globals.js'
 
 export default {

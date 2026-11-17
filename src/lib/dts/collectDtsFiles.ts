@@ -1,6 +1,8 @@
-import path from 'node:path'
-import fs from '@magic/fs'
 import type { Dirent } from 'node:fs'
+
+import path from 'node:path'
+
+import fs from '@magic/fs'
 
 import { FileFilter } from '../coverage/filter.js'
 

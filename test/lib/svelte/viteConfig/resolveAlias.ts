@@ -1,7 +1,8 @@
-import path from 'node:path'
 import { mkdir, writeFile, rm } from 'node:fs/promises'
+import path from 'node:path'
 
 import is from '@magic/types'
+
 import { resolveAlias } from '#lib/svelte/viteConfig/resolveAlias.js'
 import { CACHE_DIR } from '#src/constants.js'
 

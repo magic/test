@@ -1,5 +1,6 @@
-import { expectedArguments } from '#lib/expectedArguments.js'
 import type { Test } from '#src/types.js'
+
+import { expectedArguments } from '#lib/expectedArguments.js'
 
 export default [
   // No arguments

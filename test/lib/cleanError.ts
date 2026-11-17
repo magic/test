@@ -1,7 +1,9 @@
+import type { Test } from '#src/types.js'
+
+import is from '@magic/types'
+
 import { cleanError } from '#lib/cleanError.js'
 import { has } from '#lib/has.js'
-import type { Test } from '#src/types.js'
-import is from '@magic/types'
 
 export default [
   // cleanError with null

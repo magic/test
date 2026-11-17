@@ -1,6 +1,8 @@
-import { getShardConfig, handleError } from '#src/bin/unit.js'
-import log from '@magic/log'
 import type { TestCase } from '#src/types.js'
+
+import log from '@magic/log'
+
+import { getShardConfig, handleError } from '#src/bin/unit.js'
 
 // getShardConfig reads process.env; tests in a file run in parallel, so
 // serialize env mutation with a promise-chain lock.

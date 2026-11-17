@@ -1,7 +1,8 @@
-import type { Test } from '@magic/test'
-import { printTextReport } from '#lib/coverage/text.js'
-
 import type { FileCoverage, Location } from '#lib/coverage/types.js'
+
+import type { Test } from '@magic/test'
+
+import { printTextReport } from '#lib/coverage/text.js'
 
 const loc = (line: number): Location => ({
   start: { line, column: 0 },

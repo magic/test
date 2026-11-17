@@ -1,5 +1,6 @@
-import { parseSync } from 'oxc-parser'
 import type { Program } from 'oxc-parser'
+
+import { parseSync } from 'oxc-parser'
 
 export type { Program }
 

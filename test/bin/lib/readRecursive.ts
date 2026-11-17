@@ -1,9 +1,10 @@
+import type { TestCase } from '#src/types.js'
+
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
 import { readRecursive } from '#src/bin/lib/readRecursive.js'
-import type { TestCase } from '#src/types.js'
 
 const GOOD = `export default [
   { fn: () => 1, expect: 1, info: 'good test' },

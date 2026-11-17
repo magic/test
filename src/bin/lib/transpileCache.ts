@@ -2,8 +2,9 @@ import crypto from 'node:crypto'
 import path from 'node:path'
 
 import fs from '@magic/fs'
-import { traceStart, traceEnd } from '../../lib/trace/timing.js'
+
 import { CACHE_DIR, getCwd } from '../../constants.js'
+import { traceStart, traceEnd } from '../../lib/trace/timing.js'
 
 /**
  * Persistent, content-addressed cache for ts.transpileModule output.

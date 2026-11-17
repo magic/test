@@ -1,4 +1,5 @@
 import is from '@magic/types'
+
 import { createStaticPage, browser, dev, prod, platform } from '#lib/svelte/sveltekit-mocks.js'
 
 export default [

@@ -1,6 +1,7 @@
-import { parsePngDimensions, createImagePolyfill } from '#lib/dom/image.js'
-import { initGlobals } from '#lib/dom/globals.js'
 import type { TestCase } from '#src/types.js'
+
+import { initGlobals } from '#lib/dom/globals.js'
+import { parsePngDimensions, createImagePolyfill } from '#lib/dom/image.js'
 
 const getWin = () => (globalThis as { window?: { Event: new (t: string) => unknown } }).window
 

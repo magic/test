@@ -1,4 +1,5 @@
 import is from '@magic/types'
+
 import { has } from '#lib/has.js'
 import { transpileWithTypescript } from '#src/bin/lib/tsTranspile.js'
 

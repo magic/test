@@ -1,5 +1,6 @@
-import is from '@magic/types'
 import type { Test } from '#src/types.js'
+
+import is from '@magic/types'
 
 import { state } from '#docsrc/app.js'
 

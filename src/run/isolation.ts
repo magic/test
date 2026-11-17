@@ -9,7 +9,10 @@
  * - lib/isolation/skipProps.ts: globals excluded from snapshots
  * -------------------------------------------------------------------------- */
 
+import type { Snapshot, TestResult } from '../types.js'
+
 import { Worker } from 'node:worker_threads'
+
 import log from '@magic/log'
 
 import {
@@ -23,8 +26,6 @@ import {
   executeInWorker as runInWorker,
   executeBatchInWorker as runBatchInWorker,
 } from './lib/isolation/worker.js'
-
-import type { Snapshot, TestResult } from '../types.js'
 
 export class Isolation {
   private snapshots: Map<string, Snapshot>

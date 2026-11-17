@@ -1,5 +1,6 @@
-import { curry } from '#lib/curry.js'
 import type { TestCase } from '#src/types.js'
+
+import { curry } from '#lib/curry.js'
 
 const tests: TestCase[] = [
   // curry with function as first argument, one pre-filled arg

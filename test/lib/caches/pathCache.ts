@@ -1,8 +1,11 @@
+import type { TestCase } from '#src/types.js'
+
 import path from 'node:path'
+
+import is from '@magic/types'
+
 import { statCached, existsCached, clearPathCache } from '#lib/caches/pathCache.js'
 import { has } from '#lib/has.js'
-import is from '@magic/types'
-import type { TestCase } from '#src/types.js'
 
 const CWD = process.cwd()
 const existingFile = path.join(CWD, 'package.json')

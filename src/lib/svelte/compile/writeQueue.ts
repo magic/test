@@ -1,5 +1,6 @@
-import fs from '@magic/fs'
 import path from 'node:path'
+
+import fs from '@magic/fs'
 
 import { writeAtomic } from '../../caches/persistentCache.js'
 

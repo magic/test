@@ -1,7 +1,9 @@
-import is from '@magic/types'
-import { has } from '#lib/has.js'
-import { createCanvasPolyfill } from '#lib/dom/canvas.js'
 import type { TestCase } from '#src/types.js'
+
+import is from '@magic/types'
+
+import { createCanvasPolyfill } from '#lib/dom/canvas.js'
+import { has } from '#lib/has.js'
 
 export default [
   // createCanvasPolyfill - called twice should not throw

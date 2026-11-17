@@ -1,8 +1,10 @@
-import { has } from '../src/lib/has.js'
-import { mount, html, tick } from '#src/svelte.js'
-import { flushSync as flushSyncSvelte } from 'svelte'
-import { reset as resetPage } from '#lib/svelte/shims/$app/state.js'
 import type { Test } from '#src/types.js'
+
+import { flushSync as flushSyncSvelte } from 'svelte'
+
+import { reset as resetPage } from '#lib/svelte/shims/$app/state.js'
+import { mount, html, tick } from '#src/svelte.js'
+import { has } from '../src/lib/has.js'
 
 export default [
   // $app/environment

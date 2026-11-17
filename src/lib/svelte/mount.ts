@@ -1,3 +1,5 @@
+import type { CssObject, ComponentProps, ContextOption, ContextInfo } from '../../types.js'
+
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
@@ -6,15 +8,14 @@ import fs from '@magic/fs'
 import log from '@magic/log'
 import is from '@magic/types'
 
-import { compileSvelteWithWrite } from './compile/index.js'
+import { initDOM, getDocument, getWindow, hasTrackedTimerGlobals } from '../../lib/dom/index.js'
 import {
   findNearestPackageJson,
   resolveImportMapSpecifier,
 } from '../../lib/svelte/compile/resolveImportMap.js'
-import { initDOM, getDocument, getWindow, hasTrackedTimerGlobals } from '../../lib/dom/index.js'
-import type { CssObject, ComponentProps, ContextOption, ContextInfo } from '../../types.js'
-import { createContext, runWithContext } from './shims/$app/state.js'
+import { compileSvelteWithWrite } from './compile/index.js'
 import { detectSvelteKitImports, needsSvelteKitContext } from './detect-sveltekit-imports.js'
+import { createContext, runWithContext } from './shims/$app/state.js'
 
 let svelteMount: (component: unknown, options: unknown) => SvelteComponent
 

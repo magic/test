@@ -1,14 +1,17 @@
-import path from 'node:path'
-import { isSvelteFile } from '#lib/svelte/compile/isSvelteFile.js'
-import { getTempFilePath } from '#lib/svelte/compile/getTempFilePath.js'
-import { computeRelativePath } from '#lib/svelte/compile/computeRelativePath.js'
-import { transformForNode } from '#lib/svelte/compile/transformForNode.js'
-import { parallelMap, MAX_CONCURRENT } from '#lib/svelte/compile/parallelMap.js'
-import { acquireLock } from '#lib/svelte/compile/acquireLock.js'
-import { CACHE_DIR, getCwd } from '#src/constants.js'
-import { has } from '#lib/has.js'
-import is from '@magic/types'
 import type { TestCase } from '#src/types.js'
+
+import path from 'node:path'
+
+import is from '@magic/types'
+
+import { has } from '#lib/has.js'
+import { acquireLock } from '#lib/svelte/compile/acquireLock.js'
+import { computeRelativePath } from '#lib/svelte/compile/computeRelativePath.js'
+import { getTempFilePath } from '#lib/svelte/compile/getTempFilePath.js'
+import { isSvelteFile } from '#lib/svelte/compile/isSvelteFile.js'
+import { parallelMap, MAX_CONCURRENT } from '#lib/svelte/compile/parallelMap.js'
+import { transformForNode } from '#lib/svelte/compile/transformForNode.js'
+import { CACHE_DIR, getCwd } from '#src/constants.js'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 

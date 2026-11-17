@@ -1,5 +1,5 @@
-import path from 'node:path'
 import { mkdir, writeFile, rm } from 'node:fs/promises'
+import path from 'node:path'
 
 import {
   getCachedCompile,

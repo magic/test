@@ -1,10 +1,12 @@
+import type { TestCase } from '#src/types.js'
+
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
 import is from '@magic/types'
+
 import { parseTsConfig } from '#lib/svelte/viteConfig/parseTsConfig.js'
-import type { TestCase } from '#src/types.js'
 
 const withDir = async (files: Record<string, string>, fn: (dir: string) => Promise<unknown>) => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'magic-tsconfig-'))

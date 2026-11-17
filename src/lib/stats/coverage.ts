@@ -1,7 +1,7 @@
+import type { CoverageOptions } from '../coverage/types.js'
+
 import { buildCoverageMap } from '../coverage/index.js'
 import { printTextReport } from '../coverage/text.js'
-
-import type { CoverageOptions } from '../coverage/types.js'
 
 export type { CoverageOptions }
 

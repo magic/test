@@ -1,5 +1,6 @@
-import { suiteHasBeforeAllOrAfterAll } from '#src/run/lib/suiteHasBeforeAllOrAfterAll.js'
 import type { TestCase } from '#src/types.js'
+
+import { suiteHasBeforeAllOrAfterAll } from '#src/run/lib/suiteHasBeforeAllOrAfterAll.js'
 
 export default [
   {

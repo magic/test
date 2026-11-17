@@ -1,4 +1,5 @@
 import is from '@magic/types'
+
 import { findProjectRoot } from '#lib/svelte/viteConfig/findProjectRoot.js'
 
 export default [

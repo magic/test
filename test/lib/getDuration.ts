@@ -1,6 +1,7 @@
+import type { Test } from '#src/types.js'
+
 import { getDuration } from '#lib/getDuration.js'
 import { createStore } from '#lib/store.js'
-import type { Test } from '#src/types.js'
 
 export default [
   // getDuration with no startTime returns empty string

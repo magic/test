@@ -1,6 +1,8 @@
-import is from '@magic/types'
-import { walkTests } from './analysis/testWalker.js'
 import type { Test, TestCollection, TestObject } from '../types.js'
+
+import is from '@magic/types'
+
+import { walkTests } from './analysis/testWalker.js'
 
 // Match globals that a test might write to / read from. Word boundaries
 // keep identifiers like `globalStartTime` or `windowWidth` from tripping

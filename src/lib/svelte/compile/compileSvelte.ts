@@ -1,19 +1,19 @@
+import type { CssObject } from '../../../types.js'
+
 import path from 'node:path'
 
 import fs from '@magic/fs'
 
+import { getCwd } from '../../../constants.js'
+import { cache, pendingPromises } from '../../caches/cache.js'
+import { getSvelteCompiler } from '../compiler-cache.js'
 import {
   testExportsPreprocessor,
   viteDefinePreprocessor,
   resolveNodeModulesRelativeImportsPreprocessor,
 } from '../preprocess.js'
-import { getSvelteCompiler } from '../compiler-cache.js'
-
-import { cache, pendingPromises } from '../../caches/cache.js'
 import { ddl, ddlHold, ddlRelease } from './ddl.js'
 import { processImports } from './processImports.js'
-import { getCwd } from '../../../constants.js'
-import type { CssObject } from '../../../types.js'
 
 export interface CompileSvelteReturn {
   js: string

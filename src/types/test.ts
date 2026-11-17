@@ -3,6 +3,7 @@
  * -------------------------------------------------------------------------- */
 
 import type { Store } from '../lib/store.js'
+
 import { BEFORE_ALL_KEYS, AFTER_ALL_KEYS } from '../lib/hookFiles.js'
 
 type BeforeAllKey = (typeof BEFORE_ALL_KEYS)[number]

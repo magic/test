@@ -10,9 +10,9 @@
  *  - columns are 0-based
  */
 
-import is from '@magic/types'
-
 import type { RawSourceMap } from './types.js'
+
+import is from '@magic/types'
 
 /** a single decoded mapping segment: [genCol, srcIdx, origLine0, origCol, nameIdx?] */
 export type Segment = [number, number, number, number, number?]

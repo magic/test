@@ -1,5 +1,6 @@
-import { getTestKey } from '#lib/getTestKey.js'
 import type { TestCase } from '#src/types.js'
+
+import { getTestKey } from '#lib/getTestKey.js'
 
 const tests: TestCase[] = [
   // No arguments

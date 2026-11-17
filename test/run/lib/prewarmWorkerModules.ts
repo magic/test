@@ -1,7 +1,8 @@
+import type { TestCase } from '#src/types.js'
+
 import path from 'node:path'
 
 import { prewarmWorkerModules } from '#src/run/lib/prewarmWorkerModules.js'
-import type { TestCase } from '#src/types.js'
 
 const CWD = process.cwd()
 const FIXTURES = path.join(CWD, 'src', 'lib', 'svelte', 'testFixtures', 'components')

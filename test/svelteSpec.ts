@@ -1,5 +1,4 @@
 import { version } from '#src/index.js'
-
 import * as test from '#src/svelte.js'
 
 const spec = {

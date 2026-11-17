@@ -1,6 +1,7 @@
-import { html } from '#lib/svelte/index.js'
-import { has } from '#lib/has.js'
 import type { TestContext } from '#src/types.js'
+
+import { has } from '#lib/has.js'
+import { html } from '#lib/svelte/index.js'
 
 const component = '#lib/svelte/testFixtures/components/Modal.svelte'
 

@@ -1,11 +1,11 @@
-import fs from '@magic/fs'
-import is from '@magic/types'
 import path from 'node:path'
 
-import { stripJsonComments } from './stripJsonComments.js'
-import { escapeRegex } from './escapeRegex.js'
+import fs from '@magic/fs'
+import is from '@magic/types'
 
 import { aliasCache, type AliasEntry } from './cache.js'
+import { escapeRegex } from './escapeRegex.js'
+import { stripJsonComments } from './stripJsonComments.js'
 
 // mtime + size of the tsconfig last parsed per root (null = no tsconfig.json).
 // This module keeps per-thread state — the ESM loader runs in its own

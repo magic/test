@@ -1,3 +1,7 @@
+import type { TestCase } from '#src/types.js'
+
+import os from 'node:os'
+
 import {
   ddl,
   ddlClearWatchdog,
@@ -5,8 +9,6 @@ import {
   ddlRelease,
   ddlInitWatchdog,
 } from '#lib/svelte/compile/ddl.js'
-import os from 'node:os'
-import type { TestCase } from '#src/types.js'
 
 // The ddl helpers only act when MAGIC_TEST_DDL is set, and they write through
 // process._rawDebug and a shared globalThis.__DDL map. Tests in one file run in

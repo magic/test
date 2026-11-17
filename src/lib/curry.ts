@@ -1,4 +1,5 @@
 import is from '@magic/types'
+
 import { expectedArguments } from './expectedArguments.js'
 
 const invalidArgsMsg = 'curry expects a function as first or last argument'

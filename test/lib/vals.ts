@@ -1,7 +1,9 @@
-import is from '@magic/types'
-import log from '@magic/log'
-import { vals } from '#src/index.js'
 import type { TestCase } from '#src/types.js'
+
+import log from '@magic/log'
+import is from '@magic/types'
+
+import { vals } from '#src/index.js'
 
 type IsFn = (item: unknown) => boolean
 

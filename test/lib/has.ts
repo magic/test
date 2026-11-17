@@ -1,4 +1,7 @@
+import type { TestCase } from '#src/types.js'
+
 import is from '@magic/types'
+
 import {
   has,
   property,
@@ -14,7 +17,6 @@ import {
   at,
   not,
 } from '#lib/has.js'
-import type { TestCase } from '#src/types.js'
 
 export default [
   {

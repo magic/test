@@ -1,15 +1,17 @@
-import fs from '@magic/fs'
-import is from '@magic/types'
+import type { AliasEntry } from './cache.js'
+
 import path from 'node:path'
 
+import fs from '@magic/fs'
+import is from '@magic/types'
+
 import { LRUCache } from '../../caches/LRUCache.js'
-import { findProjectRoot } from './findProjectRoot.js'
-import { parseTsConfig } from './parseTsConfig.js'
-import { loadViteAliases } from './loadViteAliases.js'
 import { classifyImport } from './classifyImport.js'
 import { findConfigFile } from './findConfigFile.js'
+import { findProjectRoot } from './findProjectRoot.js'
+import { loadViteAliases } from './loadViteAliases.js'
+import { parseTsConfig } from './parseTsConfig.js'
 import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
-import type { AliasEntry } from './cache.js'
 
 export interface ResolveAliasOptions {
   includeShims?: boolean

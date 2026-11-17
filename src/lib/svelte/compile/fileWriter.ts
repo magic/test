@@ -1,5 +1,6 @@
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+
 import fs from '@magic/fs'
 
 import { getCwd } from '../../../constants.js'

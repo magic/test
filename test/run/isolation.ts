@@ -1,8 +1,10 @@
+import type { TestCase } from '#src/types.js'
+
 import is from '@magic/types'
-import { isolation } from '#src/run/isolation.js'
+
 import { beginTimerScope, trackedDomTimerCount } from '#lib/dom/globals.js'
 import { has } from '#lib/has.js'
-import type { TestCase } from '#src/types.js'
+import { isolation } from '#src/run/isolation.js'
 
 const re = /test/gi
 

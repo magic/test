@@ -1,10 +1,12 @@
 import path from 'node:path'
-import { has } from '#lib/has.js'
+
 import { fs } from '@magic/fs'
-import { CACHE_DIR } from '#src/constants.js'
+
+import { has } from '#lib/has.js'
+import { configCache, aliasCache } from '#lib/svelte/viteConfig/cache.js'
 import { loadViteAliases } from '#lib/svelte/viteConfig/loadViteAliases.js'
 import { loadViteConfig } from '#lib/svelte/viteConfig/loadViteConfig.js'
-import { configCache, aliasCache } from '#lib/svelte/viteConfig/cache.js'
+import { CACHE_DIR } from '#src/constants.js'
 
 // Regression: these caches keep per-thread state — the ESM loader runs in
 // its own thread with its own module instances. A "no aliases" result

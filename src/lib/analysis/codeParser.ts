@@ -1,10 +1,11 @@
-import is from '@magic/types'
 import type {
   ImportDefaultSpecifier,
   ImportNamespaceSpecifier,
   ImportSpecifier,
   Node as AstNode,
 } from 'oxc-parser'
+
+import is from '@magic/types'
 
 import { parseAst } from './parseAst.js'
 

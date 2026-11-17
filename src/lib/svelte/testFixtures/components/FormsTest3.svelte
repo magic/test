@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { applyAction, enhance } from '$app/forms'
   import is from '@magic/types'
+
+  import { applyAction, enhance } from '$app/forms'
 
   let enhanceResult = $state<{ destroy: boolean } | null>(null)
 

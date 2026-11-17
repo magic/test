@@ -1,10 +1,11 @@
+import type { TestCase } from '#src/types.js'
+
 import {
   getImportNames,
   mutatesImportedState,
   getPortPatterns,
   getFilePaths,
 } from '#lib/analysis/codeParser.js'
-import type { TestCase } from '#src/types.js'
 
 const tests: TestCase[] = [
   // --- getImportNames ---
