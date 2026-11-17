@@ -2,7 +2,7 @@ import { has } from '../src/lib/has.js'
 import { mount, html, tick } from '#src/svelte.js'
 import { flushSync as flushSyncSvelte } from 'svelte'
 import { reset as resetPage } from '#lib/svelte/shims/$app/state.js'
-import type { TestCase } from '#src/types.js'
+import type { Test } from '#src/types.js'
 
 export default [
   // $app/environment
@@ -25,57 +25,70 @@ export default [
     expect: has.includes('class="state"'),
     info: '$app/state page has correct default values',
   },
-  // goto updates URL
+  // Navigation tests — run sequentially, not in parallel with the rest of the
+  // file. NavTest's template reads the $app/state `page` proxy, which falls
+  // back to a module-level default context when the AsyncLocalStorage scope
+  // is not active; Svelte's render flush is GLOBAL, so a flush triggered by
+  // one test can re-render ANOTHER test's component under the first test's
+  // context (observed flake: the pushState test's span rendering the goto
+  // test's '/target' URL). Sequential execution + a context reset between
+  // tests removes the cross-test render path entirely.
   {
-    component: '#lib/svelte/testFixtures/components/NavTest.svelte',
-    props: { triggerGoto: true },
-    fn: async ({ target }) => {
-      await flushSyncSvelte()
-      await tick()
-      const url = html(target).match(/<span class="url">([^<]*)<\/span>/)?.[1]
-      return url
-    },
-    expect: '/target',
-    info: 'goto updates URL',
-  },
-  // goto updates navigating
-  {
-    component: '#lib/svelte/testFixtures/components/NavTest.svelte',
-    props: { triggerGoto: true },
-    fn: async ({ target }) => {
-      await flushSyncSvelte()
-      await tick()
-      const nav = html(target).match(/<span class="navigating">([^<]*)<\/span>/)?.[1]
-      return nav
-    },
-    expect: 'busy',
-    info: 'goto updates navigating store',
-  },
-  // callbacks fire
-  {
-    component: '#lib/svelte/testFixtures/components/NavTest.svelte',
-    props: { triggerGoto: true },
-    fn: async ({ target }) => {
-      // Navigation callbacks are async, wait for them to fully complete
-      await new Promise(r => setTimeout(r, 20))
-      const logs = html(target).match(/<span class="logs">([^<]*)<\/span>/)?.[1]
-      return logs
-    },
-    expect: 'before:goto|after:goto|on:goto|on:cleanup',
-    info: 'beforeNavigate, afterNavigate, onNavigate callbacks fire in order',
-  },
-  // pushState updates page.url
-  {
-    component: '#lib/svelte/testFixtures/components/NavTest.svelte',
-    props: { triggerPush: true },
-    fn: async ({ target }) => {
-      await flushSyncSvelte()
-      await tick()
-      const url = html(target).match(/<span class="url">([^<]*)<\/span>/)?.[1]
-      return url
-    },
-    expect: '/',
-    info: 'pushState updates page.url',
+    beforeEach: () => resetPage(),
+    tests: [
+      {
+        component: '#lib/svelte/testFixtures/components/NavTest.svelte',
+        props: { triggerGoto: true },
+        fn: async ({ target }) => {
+          await flushSyncSvelte()
+          await tick()
+          const url = html(target).match(/<span class="url">([^<]*)<\/span>/)?.[1]
+          return url
+        },
+        expect: '/target',
+        info: 'goto updates URL',
+      },
+      {
+        component: '#lib/svelte/testFixtures/components/NavTest.svelte',
+        props: { triggerGoto: true },
+        fn: async ({ target }) => {
+          await flushSyncSvelte()
+          await tick()
+          const nav = html(target).match(/<span class="navigating">([^<]*)<\/span>/)?.[1]
+          return nav
+        },
+        expect: 'busy',
+        info: 'goto updates navigating store',
+      },
+      {
+        component: '#lib/svelte/testFixtures/components/NavTest.svelte',
+        props: { triggerGoto: true },
+        fn: async ({ target }) => {
+          // Navigation callbacks are async, wait for them to fully complete
+          await new Promise(r => setTimeout(r, 20))
+          const logs = html(target).match(/<span class="logs">([^<]*)<\/span>/)?.[1]
+          return logs
+        },
+        expect: 'before:goto|after:goto|on:goto|on:cleanup',
+        info: 'beforeNavigate, afterNavigate, onNavigate callbacks fire in order',
+      },
+      {
+        component: '#lib/svelte/testFixtures/components/NavTest.svelte',
+        props: { triggerPush: true },
+        fn: async ({ target }) => {
+          await flushSyncSvelte()
+          await tick()
+          // The push-url span is populated by the fixture capturing
+          // page.url.pathname into local state right after pushState —
+          // deterministic, unlike a template that reads the context-
+          // dependent `page` proxy at (possibly foreign) render time.
+          const url = html(target).match(/<span class="push-url">([^<]*)<\/span>/)?.[1]
+          return url
+        },
+        expect: '/push',
+        info: 'pushState updates page.url',
+      },
+    ],
   },
   // $app/paths resolve and match
   {
@@ -298,4 +311,4 @@ export default [
       '<div class="forms3"><span class="enhance-destroy">has-destroy</span> <span class="applyaction-promise">is-promise</span></div>',
     info: '$app/forms applyAction returns promise and enhance returns destroy',
   },
-] satisfies TestCase[]
+] satisfies Test[]
