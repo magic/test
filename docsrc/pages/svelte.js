@@ -2,17 +2,17 @@ export const View = () => [
   h1({ id: 'svelte' }, 'Svelte Testing'),
 
   p([
-    '@magic/test includes built-in support for testing Svelte 5 components.',
-    ' It compiles Svelte components, mounts them in a DOM environment,',
-    ' and provides utilities for interacting with and asserting on component behavior.',
+    '@magic/test has built-in support for testing Svelte 5 components:',
+    ' it compiles your components, mounts them in a DOM,',
+    ' and hands you helpers to poke at and assert on.',
   ]),
 
-  p(['Internally uses js-dom to create the DOM and HTML elements.']),
+  p(['internally uses happy-dom to create the DOM and html elements.']),
 
   h2({ id: 'lib-svelte' }, 'mount'),
 
   Pre(`
-import { mount, html, tryCatch } from '@magic/test'
+import { mount, html } from '@magic/test/svelte'
 
 const component = './path/to/MyComponent.svelte'
 
@@ -31,75 +31,52 @@ export default [
 
   ul([
     li(
-      'mount(filePath, options) - Mounts a Svelte component and returns { target, component, unmount }',
+      'mount(filePath, options) - mounts a component, returns { target, component, unmount, css }',
     ),
-    li("html(target) - Returns innerHTML of a mounted component's target element"),
-    li('text(target) - Returns textContent of a target element'),
-    li('component(instance) - Returns the component instance for accessing exported values'),
-    li('props(target) - Returns an object of attribute name/value pairs from the target element'),
+    li("html(target) - innerHTML of a mounted component's target element"),
+    li('text(target) - textContent of a target element'),
+    li('component(instance) - the component instance, for accessing exported values'),
+    li('props(target) - attribute name/value pairs from the target element'),
+    li('createSnippet(renderFn) - a raw snippet to pass as a children prop'),
+    li("tick() - svelte's tick, retry-wrapped — await it after interactions"),
   ]),
 
   h3({}, 'Interaction Functions'),
 
+  p('fire everything a user can do:'),
+
   ul([
-    li('click(target, selector?) - Clicks an element (optionally filtered by CSS selector)'),
-    li('dblClick(target) - Double clicks'),
-    li('contextMenu(target) - Right click'),
-    li('mouseDown(target) - Mouse down'),
-    li('mouseUp(target) - Mouse up'),
-    li('mouseMove(target) - Mouse move'),
-    li('mouseEnter(target) - Mouse enter'),
-    li('mouseLeave(target) - Mouse leave'),
-    li('mouseOver(target) - Mouse over'),
-    li('mouseOut(target) - Mouse out'),
-    li('keyDown(target, key) - Key down'),
-    li('keyPress(target, key) - Key press'),
-    li('keyUp(target, key) - Key up'),
-    li('type(target, text) - Type text into input'),
-    li('input(target, value) - Input value'),
-    li('change(target, value) - Change event'),
-    li('blur(target) - Blur event'),
-    li('focus(target) - Focus event'),
-    li('submit(target) - Submit form'),
-    li('pointerDown(target) - Pointer down'),
-    li('pointerUp(target) - Pointer up'),
-    li('pointerMove(target) - Pointer move'),
-    li('touchStart(target) - Touch start'),
-    li('touchMove(target) - Touch move'),
-    li('touchEnd(target) - Touch end'),
-    li('copy(target) - Copy event'),
-    li('cut(target) - Cut event'),
-    li('paste(target) - Paste event'),
-    li('dragStart(target) - Drag start'),
-    li('drag(target) - Drag'),
-    li('dragEnd(target) - Drag end'),
-    li('dragEnter(target) - Drag enter'),
-    li('dragLeave(target) - Drag leave'),
-    li('dragOver(target) - Drag over'),
-    li('drop(target) - Drop'),
-    li('resize(target, w, h) - Resize'),
-    li('scroll(target, x, y) - Scroll'),
-    li('animationStart(target) - Animation start'),
-    li('animationEnd(target) - Animation end'),
-    li('transitionEnd(target) - Transition end'),
-    li('play(target) - Play media'),
-    li('pause(target) - Pause media'),
-    li('trigger(target, eventType, options?) - Custom event'),
-    li('checked(target) - Checkbox state'),
+    li(
+      'mouse: click (target, selector?), dblClick, contextMenu, mouseDown/Up/Move/Enter/Leave/Over/Out',
+    ),
+    li('keys: keyDown, keyPress, keyUp (target, key), type, input, change'),
+    li('focus: focus, focusIn, focusOut, blur, submit'),
+    li('pointer: pointerDown, pointerUp, pointerMove, pointerOver, pointerOut'),
+    li('touch: touchStart, touchMove, touchEnd'),
+    li('drag: dragStart, drag, dragEnd, dragEnter, dragLeave, dragOver, drop'),
+    li('clipboard: copy, cut, paste'),
+    li('media: play, pause, ended, volumeChange'),
+    li('animation: animationStart, animationEnd, animationIteration, transitionEnd'),
+    li(
+      'other: resize(target, w, h), scroll(target, x, y), checked, fireEvent, trigger(target, eventType, options?)',
+    ),
   ]),
 
   h3({}, 'Test Properties'),
 
   ul([
-    li('component - Path to the .svelte file'),
-    li('props - Props to pass to the component'),
-    li('fn - Test function receiving { target, component, unmount }'),
+    li('component - path to the .svelte file'),
+    li('props - props to pass to the component'),
+    li(
+      'context - svelte context: a static object, or a factory (info: { target, props }) => object',
+    ),
+    li('fn - test function receiving { target, component, unmount }'),
   ]),
 
   h2({ id: 'svelte-state' }, 'Accessing Component State'),
 
   Pre(`
-import { mount, html } from '@magic/test'
+import { mount } from '@magic/test/svelte'
 
 const component = './src/lib/svelte/components/Counter.svelte'
 
@@ -118,14 +95,9 @@ export default [
   h2({ id: 'svelte-auto-export' }, 'Automatic Test Exports'),
 
   p([
-    'When testing Svelte 5 components, @magic/test automatically exports ',
-    '$state and $derived variables, making them accessible in tests',
-    ' without requiring manual exports.',
-  ]),
-
-  p([
-    '**Note:** This automatic export feature is specific to **Svelte 5** only.',
-    ' Svelte 4 components do not have this capability.',
+    '$state and $derived variables are exported automatically,',
+    ' so they are accessible in tests without manual exports.',
+    " Svelte 5 only — svelte 4 components can't do this.",
   ]),
 
   Pre(`
@@ -140,7 +112,7 @@ export default [
 <span>{doubled}</span>
 `),
 
-  p('Test - works automatically!'),
+  p('and in the test:'),
 
   Pre(`
 import { mount } from '@magic/test'
@@ -161,12 +133,13 @@ export default [
 ]
 `),
 
-  p('This works automatically for all $state and $derived runes. No configuration needed!'),
+  p('works for every $state and $derived rune, no config.'),
 
   h2({ id: 'svelte-error' }, 'Testing Error Handling'),
 
   Pre(`
-import { mount, tryCatch } from '@magic/test'
+import { tryCatch } from '@magic/test'
+import { mount } from '@magic/test/svelte'
 
 const component = './src/lib/svelte/components/MyComponent.svelte'
 
@@ -181,62 +154,64 @@ export default [
 
   h2({ id: 'lib-sveltekit-mocks' }, 'SvelteKit Mocks'),
 
-  p('Mocks SvelteKit $app modules:'),
+  p('mocks SvelteKit $app modules:'),
 
   Pre(`
-import { browser, dev, prod, createStaticPage } from '@magic/test'
+import { browser, dev, prod, createStaticPage } from '@magic/test/svelte'
 
 export default [
   {
-    fn: () => browser, // true if in browser environment
-    expect: false,
-    info: 'not in browser by default',
+    fn: () => browser, // mocks a browser environment
+    expect: true,
+    info: 'always true',
   },
   {
-    fn: () => dev, // true if in dev mode
-    expect: process.env.NODE_ENV === 'development',
-    info: 'dev reflects NODE_ENV',
+    fn: () => dev, // production mode is set by -p
+    expect: process.env.MAGIC_TEST_ENV !== 'production',
+    info: 'true unless the run is in production mode (-p)',
   },
   {
-    fn: () => prod, // true if in production mode
-    expect: false,
-    info: 'not in prod by default',
+    fn: () => prod, // production mode is set by -p
+    expect: process.env.MAGIC_TEST_ENV === 'production',
+    info: 'true only in production mode (-p)',
   },
 ]
 `),
 
   h2({ id: 'lib-create-static-page' }, 'createStaticPage'),
 
-  p('Creates a static page mock for SvelteKit testing:'),
+  p('creates a static $app/state page proxy (url/params/state):'),
 
   Pre(`
-import { createStaticPage } from '@magic/test'
+import { createStaticPage } from '@magic/test/svelte'
 
 export default [
   {
-    fn: createStaticPage,
-    expect: t => typeof t.html === 'string' && typeof t.render === 'function',
-    info: 'createStaticPage returns html string and render function',
+    fn: () => {
+      const page = createStaticPage({ url: 'http://example.com', params: { id: '1' } })
+      return page.url.hostname === 'example.com' && page.params.id === '1'
+    },
+    expect: true,
+    info: 'createStaticPage returns a page proxy with url/params/state',
   },
 ]
 `),
 
   h2({ id: 'lib-compile-svelte' }, 'compileSvelte'),
 
-  p('Compile Svelte component source to a module for testing:'),
+  p('compile a .svelte file to js/css (async, file path in):'),
 
   Pre(`
-import { compileSvelte } from '@magic/test'
+import { compileSvelte } from '@magic/test/svelte'
 
 export default [
   {
     fn: async () => {
-      const source = \`<button>Click</button>\`
-      const { js, css } = compileSvelte(source, 'button.svelte')
-      return js.code.includes('button') && css.code === ''
+      const { js } = await compileSvelte('./path/to/button.svelte')
+      return typeof js === 'string'
     },
     expect: true,
-    info: 'compiles Svelte source to module',
+    info: 'compiles a svelte file to js/css',
   },
 ]
 `),
@@ -250,10 +225,10 @@ export default [
 
   h2({ id: 'svelte-ensure' }, 'ensureSvelte'),
 
-  p('Lazy-loads the Svelte package. Throws if Svelte is not installed:'),
+  p('lazy-loads the svelte package, throws if it is not installed:'),
 
   Pre(`
-import { ensureSvelte } from '@magic/test'
+import { ensureSvelte } from '@magic/test/svelte'
 
 export default [
   {

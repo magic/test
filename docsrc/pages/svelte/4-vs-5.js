@@ -84,7 +84,7 @@ export const View = () => [
 `),
 
   Pre(`
-import { mount } from '@magic/test'
+import { mount } from '@magic/test/svelte'
 
 export default [
   {
@@ -109,7 +109,7 @@ export default [
 `),
 
   Pre(`
-import { mount } from '@magic/test'
+import { mount } from '@magic/test/svelte'
 
 export default [
   {

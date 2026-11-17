@@ -55,24 +55,18 @@ t --shards 4 --shard-id 0 --workers 2
 
   h2({}, 'Run All Shards in Parallel'),
 
-  p('Use a single command to run all shards in parallel:'),
+  p('One command to run all shards in parallel (the scripts already run with -p):'),
 
   Pre(`
-# Run all 4 shards in parallel and wait for all to complete
-npm run test:shard:0 & npm run test:shard:1 & npm run test:shard:2 & npm run test:shard:3 & wait
-`),
-
-  p('Or with production mode:'),
-
-  Pre(`
+# run all 4 shards in parallel and wait for all to complete
 npm run test:shard:0 & npm run test:shard:1 & npm run test:shard:2 & npm run test:shard:3 & wait
 `),
 
   h2({}, 'Deterministic Distribution'),
 
   p([
-    'Test distribution is deterministic - the same test file will always run in the same shard.',
-    ' This ensures consistent behavior across CI runs.',
+    'distribution is deterministic: same file, same shard, every run.',
+    ' CI runs stay consistent.',
   ]),
 
   h2({}, 'See Also'),

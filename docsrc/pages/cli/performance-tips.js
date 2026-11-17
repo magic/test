@@ -1,17 +1,17 @@
 export const View = () => [
   h1({ id: 'performance-tips' }, 'Performance Tips'),
 
-  p('Follow these tips to get the most out of @magic/test:'),
+  p('make runs faster:'),
 
   h2({}, 'Use the -p Flag'),
 
   p(['Run tests in production mode to skip coverage and get faster output:']),
 
   Pre(`
-# Fast mode - no coverage, only shows failures
-npm test
-# or
+# fast mode - no coverage, only shows failures
 t -p
+# or via the recommended npm script
+npm test
 `),
 
   h2({}, 'Shard Large Test Suites'),
@@ -23,7 +23,7 @@ t -p
 t --shards 4 --shard-id 0
 `),
 
-  p(['Tests are distributed deterministically using a hash of the test file path.']),
+  p(['tests are distributed with a hash of the file path — same file, same shard.']),
 
   h2({}, 'Minimize Async Overhead'),
 
@@ -84,10 +84,40 @@ export default [
     'flag. Default is auto-detect CPU count:',
   ]),
 
+  p([
+    'Control max parallel workers with the',
+    ' --workers ',
+    'flag. The auto default spawns max(1, min(CPUs - 2, 4)) workers,',
+    ' and throttles itself on a busy machine (MAGIC_TEST_ADAPTIVE=0 or CI disables it):',
+  ]),
+
   Pre(`
-# Use 2 workers
+# use 2 workers
 t -p --workers 2
 `),
 
-  p(['Link: ', Link({ to: '/cli/' }, 'CLI & Usage'), ' for full flag reference.']),
+  h2({}, 'Be nice'),
+
+  p([
+    'on a busy machine the run is wrapped in nice (default 10)',
+    ' so your own work stays responsive. --nice 0 disables it:',
+  ]),
+
+  Pre(`
+t --nice 5
+t --nice 0
+`),
+
+  h2({}, 'Compile cache'),
+
+  p([
+    'svelte and ts compilation is cached persistently between runs.',
+    ' Set MAGIC_TEST_COMPILE_CACHE=0 to restore the old always-recompile behavior:',
+  ]),
+
+  Pre(`
+MAGIC_TEST_COMPILE_CACHE=0 t -p
+`),
+
+  p(['see ', Link({ to: '/cli/' }, 'CLI & Usage'), ' for the full flag reference.']),
 ]

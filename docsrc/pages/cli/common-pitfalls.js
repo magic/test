@@ -49,7 +49,7 @@ export default {
 let counter = 0
 export default [
   { fn: () => ++counter, expect: 1 },
-  { fn: () => ++counter, expect: 2 }, // fails! counter is now 1
+  { fn: () => ++counter, expect: 1 }, // fails! counter is now 2
 ]
 
 # Correct: use beforeEach to reset state

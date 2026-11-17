@@ -23,7 +23,7 @@ export default [
 ]
 `),
 
-  p(['Note: the test function is called automatically. ', 'expect: true ', 'is optional.']),
+  p(['heads up: the test function gets called automatically, ', 'expect: true ', 'is optional.']),
 
   h2({}, 'Add npm Scripts'),
 
@@ -55,7 +55,7 @@ npm test
 
   Pre(`
 ### Testing package: @magic/test
-Ran 2 tests. Passed 2/2 100%
+Ran 2 tests in 3ms. Passed 2/2 100%
 `),
 
   p('Faster output from a bigger project:'),

@@ -1,10 +1,7 @@
 export const View = () => [
   h1({ id: 'lib' }, 'Utility Belt'),
 
-  p([
-    '@magic/test exports some utility functions',
-    ' that make working with complex test workflows simpler.',
-  ]),
+  p(['@magic/test exports some utility functions', ' that make complex test workflows easier.']),
 
   h2({ id: 'lib-deep' }, 'deep'),
 
@@ -84,8 +81,8 @@ export default [
   h2({ id: 'lib-curry' }, 'curry'),
 
   p([
-    'Currying can be used to split the arguments of a function into multiple nested functions.',
-    ' This helps if you have a function with complicated arguments that you just want to quickly shim.',
+    "splits a function's arguments into nested functions,",
+    ' handy for shimming functions with lots of arguments.',
   ]),
   Pre(`
 import { curry } from '@magic/test'
@@ -103,7 +100,7 @@ export default {
 
   h2({ id: 'lib-log' }, 'log'),
 
-  p('Logging utility for test output. Colors supported automatically.'),
+  p('log to test output, colors included.'),
 
   Pre(`
 import { log } from '@magic/test'
@@ -124,8 +121,8 @@ log.info('Testing', library, 'at version', version)
   h2({ id: 'lib-vals' }, 'vals'),
 
   p([
-    'Exports JavaScript type constants for testing against any value.',
-    ' Useful for fuzzing and property-based testing.',
+    'JavaScript type constants for testing against any value.',
+    ' Handy for fuzzing and property-based testing.',
   ]),
 
   Pre(`
@@ -153,7 +150,7 @@ export default [
 
   h2({ id: 'lib-env' }, 'env'),
 
-  p('Environment detection utilities for conditional test behavior.'),
+  p('check the environment, branch your tests on it.'),
 
   p('Available utilities:'),
 
@@ -193,11 +190,33 @@ export default [
   },
   {
     fn: env.getErrorLength,
-    expect: 70,
-    info: 'get error length limit',
+    expect: undefined,
+    info: 'get error length limit (undefined until set)',
   },
 ]
 `),
+
+  h2({ id: 'lib-env-vars' }, 'Env vars'),
+
+  p('environment variables read by @magic/test:'),
+
+  ul([
+    li('MAGIC_TEST_WORKERS — max parallel workers (same as --workers)'),
+    li('MAGIC_TEST_VERBOSE — 1 = verbose output (same as -l)'),
+    li('MAGIC_TEST_ERROR_LENGTH — error string limit, 0 = unlimited (same as --error-length)'),
+    li('MAGIC_TEST_TIMEOUT — per-test timeout in ms (same as --timeout)'),
+    li('MAGIC_TEST_DISCOVERY_TIMEOUT — per-file discovery/import budget in ms'),
+    li('MAGIC_TEST_WORKER_TIMEOUT_MS — worker round-trip backstop in ms'),
+    li('MAGIC_TEST_NICE — CPU nice value 0-19 (same as --nice)'),
+    li('MAGIC_TEST_ADAPTIVE — 0 = disable load-adaptive worker throttling (also off on CI)'),
+    li('MAGIC_TEST_WORKER_REUSE — 0 = one fresh worker per test'),
+    li('MAGIC_TEST_COMPILE_CACHE — 0 = disable the persistent svelte/ts compile cache'),
+    li('MAGIC_TEST_SKIP_DTS_TESTS — 1 = skip the auto-generated .d.ts type tests'),
+    li('MAGIC_TEST_PREWARM — 0 = skip the pre-run component-graph prewarm'),
+    li('MAGIC_TEST_PREWARM_WORKERS — prewarm thread count (default 4)'),
+    li('MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED — false/0 = accept self-signed certificates'),
+    li('MAGIC_TEST_VERBOSE_ERRORS — 1 = verbose error output'),
+  ]),
 
   h3({ id: 'lib-env-constants' }, 'Environment Constants'),
 
@@ -216,8 +235,8 @@ export default [
   h2({ id: 'lib-promises' }, 'promises'),
 
   p([
-    'Helper function to wrap nodejs callback functions and promises with ease.',
-    ' Handles the try/catch steps internally and returns a resolved or rejected promise.',
+    'wrap node callbacks and promises, try/catch handled for you.',
+    ' resolves to the value, rejects with the error.',
   ]),
   Pre(`
 import { promise, is } from '@magic/test'
@@ -238,7 +257,7 @@ export default [
 
   h2({ id: 'lib-http' }, 'http'),
 
-  p('HTTP utility for making requests in tests. Supports both HTTP and HTTPS.'),
+  p('http/https requests from tests.'),
 
   Pre(`
 import { http } from '@magic/test'
@@ -281,13 +300,15 @@ export default [
 ]
 `),
 
-  p('Note: HTTP module automatically handles:'),
+  p('http handles for you:'),
 
   ul([
     li('Protocol detection (HTTP vs HTTPS)'),
     li('JSON parsing for responses with Content-Type: application/json'),
     li('Raw string returns for non-JSON responses'),
-    li('rejectUnauthorized: false for self-signed certificates'),
+    li(
+      'rejectUnauthorized defaults to true — pass false (or set MAGIC_TEST_HTTP_REJECT_UNAUTHORIZED=false) for self-signed certificates',
+    ),
   ]),
 
   h3({}, 'HttpOptions'),
@@ -305,7 +326,7 @@ import type { HttpOptions } from '@magic/test'
 
   h2({ id: 'lib-trycatch' }, 'trycatch'),
 
-  p('allows to catch and test functions without bubbling the errors up into the runtime'),
+  p('run a function and catch what it throws, without it bubbling into the runtime'),
 
   Pre(`
 import { is, tryCatch } from '@magic/test'
@@ -330,9 +351,9 @@ export default [
   h2({ id: 'lib-error' }, 'error'),
 
   p([
-    'exports ',
+    're-exports ',
     Link({ to: 'https://github.com/magic/error', text: '@magic/error' }),
-    ' which returns errors with optional names.',
+    ' — errors with optional names.',
   ]),
 
   Pre(`
@@ -349,7 +370,7 @@ export default [
 
   h2({ id: 'lib-mock' }, 'mock'),
 
-  p('Mock and spy utilities for function testing.'),
+  p('spies and mocks for functions.'),
 
   Pre(`
 import { mock, tryCatch } from '@magic/test'
@@ -416,7 +437,7 @@ export default [
 
   h3({ id: 'lib-mock-log' }, 'mock.log'),
 
-  p('Logging utilities that respect NODE_ENV for conditional output:'),
+  p('log calls that respect NODE_ENV:'),
 
   Pre(`
 import { mock } from '@magic/test'
@@ -431,8 +452,8 @@ mock.log.timeEnd('operation')   // Logs timing end if not NODE_ENV=production
   h2({ id: 'lib-has' }, 'has'),
 
   p([
-    'Functions for asserting object properties without needing explicit type annotations',
-    ' or stringifying functions.',
+    'assert on object properties, array contents and strings,',
+    ' without type annotations or stringifying.',
   ]),
 
   p([
@@ -535,15 +556,12 @@ import { has, is } from '@magic/test'
 
   h2({ id: 'lib-version' }, 'version'),
 
-  p([
-    'The version plugin checks your code according to a spec defined by you.',
-    ' This is designed to warn you on changes to your exports.',
-  ]),
+  p(['checks your exports against a spec you write,', ' so export changes make noise.']),
 
   p([
-    'Internally, the version function calls ',
+    'the spec uses ',
     Link({ to: 'https://github.com/magic/types', text: '@magic/types' }),
-    ' and all functions exported from it are valid type strings in version specs.',
+    ' — every type it exports is a valid spec string.',
   ]),
 
   Pre(`
@@ -594,6 +612,9 @@ export default version(lib, spec)
     li('Networking: URL, URLSearchParams, XMLHttpRequest, fetch, WebSocket'),
     li('Storage: Storage, sessionStorage, localStorage'),
     li('Observers: MutationObserver, IntersectionObserver, ResizeObserver'),
+    li('File APIs: FileReader, AbortController, AbortSignal'),
+    li('Streams: ReadableStream, WritableStream, TransformStream'),
+    li('Misc: DOMParser, XMLSerializer, TextEncoder, TextDecoder, atob, btoa'),
     li('Timers: setTimeout, setInterval, requestAnimationFrame'),
   ]),
 

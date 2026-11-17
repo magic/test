@@ -2,9 +2,9 @@ export const View = () => [
   h1({ id: 'has' }, 'has'),
 
   p([
-    'Functions for asserting object properties, array contents, and string',
-    ' values without needing explicit type annotations or stringifying',
-    ' functions. Every has.* check returns a predicate, so it works directly',
+    'assert on object properties, array contents and strings,',
+    ' without type annotations or stringifying.',
+    ' Every has.* check returns a predicate, so it works directly',
     ' as a test expectation:',
   ]),
 
@@ -88,7 +88,7 @@ import { has, is } from '@magic/test'
 }
 `),
 
-  h2({ id: 'has-string' }, 'has.string(...substring)'),
+  h2({ id: 'has-string' }, 'has.string(substrings)'),
 
   p(
     'Check if value is a string containing every given substring. Substring entries can also be predicates receiving the full string.',
@@ -169,7 +169,7 @@ const roles = ['admin', 'root', 'user']
 }
 `),
 
-  h2({ id: 'has-oneof' }, 'has.oneOf(...options)'),
+  h2({ id: 'has-oneof' }, 'has.oneOf(options)'),
 
   p('Check if value equals one of the options (uses deep.equal).'),
 
@@ -195,7 +195,7 @@ const roles = ['admin', 'root', 'user']
   Pre(`
 {
   fn: () => phoneNumber,
-  expect: has.matches(/^d{3}-d{4}$/),
+  expect: has.matches(/^\\d{3}-\\d{4}$/),
   info: 'phone number is valid format',
 }
 `),
@@ -248,9 +248,8 @@ const roles = ['admin', 'root', 'user']
 `),
 
   p([
-    'Because the negation is logical, values the base check rejects also pass:',
-    ' has.not.property(...)(null) is true, since has.property(...) is false',
-    ' for null, and has.not.keys([])({...}) is false, since has.keys([])',
-    ' always passes for objects.',
+    'negation is purely logical: has.not.X passes wherever has.X fails.',
+    ' So has.not.property(...)(null) is true (has.property is false for null),',
+    ' and has.not.keys([])({...}) is false (has.keys([]) always passes for objects).',
   ]),
 ]

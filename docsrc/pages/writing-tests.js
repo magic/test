@@ -31,7 +31,7 @@ export default { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect: 
 
   h2({ id: 'tests-multiple' }, 'Multiple Tests'),
 
-  p('Multiple tests can be created by exporting an array or object of single test objects.'),
+  p('Export an array (or an object of named arrays) of test objects:'),
 
   Pre(`
 export default [
@@ -40,7 +40,7 @@ export default [
 ]
 `),
 
-  p('Or exporting an object with named test arrays:'),
+  p('Or an object of named arrays:'),
 
   Pre(`
 export default {
@@ -53,7 +53,7 @@ export default {
 
   h2({ id: 'tests-runs' }, 'Running Tests Multiple Times'),
 
-  p('Use the `runs` property to run a test multiple times:'),
+  p('The runs property runs a test multiple times:'),
 
   Pre(`
 import { is } from '@magic/test'
@@ -76,7 +76,7 @@ export default [
   ]),
 
   p([
-    '@magic/types is a richly featured and thoroughly tested type library without dependencies.',
+    '@magic/types is a full-featured type library, zero dependencies.',
     ' It is exported from this library for convenience.',
   ]),
 
@@ -156,8 +156,8 @@ export default {
   h3({ id: 'caveat' }, 'Caveat'),
 
   p([
-    'If you want to test if a function is a function, you need to wrap the function in a function.',
-    ' This is because functions passed to fn get executed automatically.',
+    'To test that a function is a function, wrap it in another function.',
+    ' Bare functions passed to fn get called.',
   ]),
 
   Pre(`
@@ -176,10 +176,7 @@ export default [
 
   h2({ id: 'tests-typescript' }, 'TypeScript Support'),
 
-  p([
-    '@magic/test supports TypeScript test files.',
-    ' You can write tests in .ts files and they will be executed directly without transpilation.',
-  ]),
+  p(['@magic/test runs .ts test files directly — no transpilation.']),
 
   Pre(`
 import type { Test } from '@magic/test'
@@ -298,8 +295,8 @@ export default {
 `),
 
   p([
-    'Note: Suites that use beforeAll, afterAll, beforeEach or afterEach',
-    ' will run in a worker to make sure globals are not polluted for other suites.',
+    'Suites that use beforeAll, afterAll, beforeEach or afterEach',
+    ' run in a worker, so globals are not polluted for other suites.',
   ]),
 
   h4({}, 'File-based Hooks'),
@@ -386,13 +383,13 @@ export default [
 
   h2({ id: 'test-suites' }, 'Test Suites'),
 
-  p('Expectations for optimal test messages:'),
+  p('What good tests look like:'),
 
   ul([
     li('src and test directories have the same structure and files'),
-    li('tests one src file per test file'),
-    li('tests one function per suite'),
-    li('tests one feature per test'),
+    li('one test file per src file'),
+    li('one suite per function'),
+    li('one test per feature'),
   ]),
 
   h3({}, 'Filesystem Based Naming'),

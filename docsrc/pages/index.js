@@ -4,7 +4,7 @@ export const View = () => [
   p([
     'Declaratively test your ecmascript module files.',
     ' No transpiling of either your codebase nor the tests.',
-    ' Incredibly fast.',
+    ' Fast.',
   ]),
 
   GitBadges('@magic/test'),
@@ -12,9 +12,9 @@ export const View = () => [
   h2({ id: 'getting-started' }, 'Getting Started'),
 
   p([
-    'See the ',
+    'the ',
     Link({ to: '/getting-started/' }, 'Getting Started'),
-    ' guide for full instructions.',
+    ' page walks you through the whole thing.',
   ]),
 
   Pre({ lines: 'false' }, 'npm i --save-dev --save-exact @magic/test'),
@@ -94,7 +94,7 @@ export default [
 ]
 `),
 
-  h2({ id: 'learn-more' }, 'Learn More'),
+  h2({ id: 'learn-more' }, 'Next steps'),
 
   ul([
     li([Link({ to: '/getting-started/' }, 'Getting Started'), ' - install, setup, first test']),

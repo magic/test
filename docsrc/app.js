@@ -4,7 +4,7 @@ export const state = {
   description: [
     'Declaratively test your ecmascript module files.',
     ' No transpiling required for ecmascript.',
-    ' Incredibly fast.',
+    ' Fast.',
   ],
 
   logotext: '@magic/test',

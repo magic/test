@@ -28,7 +28,7 @@ export default [
   p([
     'By default, tests in the same file share global state.',
     ' To enable strict isolation where each test gets a fresh environment,',
-    ' set `export const __isolate = true` at the top of your test file.',
+    ' add the __isolate export at the top of your test file:',
   ]),
 
   Pre(`
@@ -40,17 +40,11 @@ export default [
 ]
 `),
 
-  p([
-    'This ensures each test runs with a fresh global environment,',
-    ' preventing state leakage between tests.',
-  ]),
+  p(['each test starts with fresh globals.']),
 
   h2({}, 'Programmatic Detection'),
 
-  p([
-    'You can programmatically check if a suite requires isolation',
-    ' using the `suiteNeedsIsolation` utility:',
-  ]),
+  p(['suiteNeedsIsolation(tests) tells you if a suite requires isolation:']),
 
   Pre(`
 import { suiteNeedsIsolation } from '@magic/test'
@@ -58,5 +52,5 @@ import { suiteNeedsIsolation } from '@magic/test'
 const needsIsolation = suiteNeedsIsolation(tests)
 `),
 
-  p('This is useful for custom runners or when building test tooling.'),
+  p(['for custom runners / test tooling.']),
 ]

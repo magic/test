@@ -3,7 +3,7 @@ export const View = () => [
 
   p([
     '@magic/test uses error codes to help with debugging and programmatic error handling.',
-    ' You can import these constants from `@magic/test`:',
+    ' You can import these constants from @magic/test:',
   ]),
 
   Pre(`
@@ -16,10 +16,12 @@ import { ERRORS, createError } from '@magic/test'
   p('| ---- | ----------- |'),
   p('| ERRORS.E_EMPTY_SUITE | Test suite is not exporting any tests |'),
   p('| ERRORS.E_RUN_SUITE_UNKNOWN | Unknown error occurred while running a suite |'),
-  p('| ERRORS.E_TEST_NO_FN | Test object is missing the `fn` property |'),
+  p('| ERRORS.E_TEST_NO_FN | Test object is missing the fn property |'),
   p('| ERRORS.E_TEST_EXPECT | Test expectation failed |'),
   p('| ERRORS.E_TEST_BEFORE | Before hook failed |'),
+  p('| ERRORS.E_TEST_BEFORE_EACH | BeforeEach hook failed (suite) |'),
   p('| ERRORS.E_TEST_AFTER | After hook failed |'),
+  p('| ERRORS.E_TEST_AFTER_EACH | AfterEach hook failed (suite) |'),
   p('| ERRORS.E_TEST_FN | Test function threw an error |'),
   p('| ERRORS.E_NO_TESTS | No test suites found |'),
   p('| ERRORS.E_IMPORT | Failed to import a test file |'),
@@ -27,7 +29,7 @@ import { ERRORS, createError } from '@magic/test'
 
   h2({}, 'createError'),
 
-  p('Create custom errors with specific codes and messages:'),
+  p('make your own errors with a code:'),
 
   Pre(`
 import { createError, ERRORS } from '@magic/test'

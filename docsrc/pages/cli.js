@@ -28,13 +28,10 @@ npm run coverage
 
   p([
     'You can install this library globally,',
-    ' but the recommendation is to add the dependency and scripts to the package.json file.',
+    ' but adding the dependency and scripts to package.json is better.',
   ]),
 
-  p([
-    'This both explains to everyone that your app has these dependencies',
-    ' as well as keeping your bash free of clutter.',
-  ]),
+  p(['everyone sees the dependency,', ' and your shell stays free of clutter.']),
 
   Pre(`
 npm i -g @magic/test
@@ -58,13 +55,13 @@ t
     li('--shards N - Total number of shards to split tests across'),
     li('--shard-id N - Shard ID (0-indexed) to run'),
     li('-w, --workers N - Max parallel workers (default: auto)'),
+    li('-s, --slow, --timing - Show the slowest tests'),
+    li('--nice N - CPU nice value for the test process (default 10, 0 disables)'),
+    li('--native - Use the native node --test runner (with coverage)'),
     li('--help - Show help text'),
   ]),
 
-  p([
-    'Note: `--shards` and `--shard-id` must be used together.',
-    ' `--shard-id` is 0-indexed (0 to N-1).',
-  ]),
+  p(['Use --shards and --shard-id together.', ' --shard-id is 0-indexed (0 to N-1).']),
 
   h2({ id: 'sharding' }, 'Sharding Tests'),
 
@@ -82,8 +79,8 @@ t -p --shards 4 --shard-id 2
 `),
 
   p([
-    'Tests are distributed deterministically using a hash of the test file path,',
-    ' ensuring each test always runs in the same shard.',
+    'Tests are distributed with a hash of the test file path:',
+    ' same file, same shard, every run.',
   ]),
 
   p('Add to your package.json for CI/CD:'),
@@ -109,7 +106,7 @@ npm run test:shard:0 & npm run test:shard:1 & npm run test:shard:2 & npm run tes
 
   h2({ id: 'exit-codes' }, 'Exit Codes'),
 
-  p('@magic/test returns specific exit codes to indicate test results:'),
+  p('exit codes:'),
 
   p('| Exit Code | Meaning |'),
   p('| --------- | ------- |'),
@@ -161,25 +158,26 @@ Ran 7 tests in 12ms. Passed 7/7 100%
 
   Pre(`
 ### Testing package: my-lib
-▶ addition
-  ✔ adds two positive numbers (1.2ms)
-  ✔ handles zero correctly (0.8ms)
-  ✔ handles negative numbers (0.9ms)
-▶ multiplication
-  ✔ multiplies by zero (0.7ms)
-  ✔ multiplies by one (0.6ms)
-  ✔ multiplies two positives (0.8ms)
-  ✔ handles negative numbers (0.9ms)
+* pass: got 3 expected 3
+* pass: got "hello" expected "hello"
+--- /addition.js, Pass: 3/3 100% 2ms
+/addition.js => Pass: 3/3 100%
+--- /multiplication.js, Pass: 4/4 100% 3ms
+/multiplication.js => Pass: 4/4 100%
 Ran 7 tests in 12ms. Passed 7/7 100%
 `),
 
-  h2({ id: 'performance-tips' }, 'Performance Tips'),
+  h2({}, '.d.ts type tests'),
 
   p([
-    'For a detailed guide, see the ',
-    Link({ to: '/cli/performance-tips/' }, 'Performance Tips'),
-    ' page.',
+    'every run also type-checks the .d.ts files of your project (the __dts__ suites in the output).',
+    ' They read types from the tsconfig.json of the tested repository.',
+    ' -e / --exclude applies to them too, and MAGIC_TEST_SKIP_DTS_TESTS=1 skips them.',
   ]),
+
+  h2({ id: 'performance-tips' }, 'Performance Tips'),
+
+  p(['see the ', Link({ to: '/cli/performance-tips/' }, 'Performance Tips'), ' page.']),
 
   h3({}, 'Quick Reference'),
 
@@ -193,11 +191,7 @@ t --shards 4 --shard-id 0
 
   h2({ id: 'common-pitfalls' }, 'Common Pitfalls'),
 
-  p([
-    'For a detailed guide, see the ',
-    Link({ to: '/cli/common-pitfalls/' }, 'Common Pitfalls'),
-    ' page.',
-  ]),
+  p(['see the ', Link({ to: '/cli/common-pitfalls/' }, 'Common Pitfalls'), ' page.']),
 
   h3({}, 'Quick Reference'),
 
