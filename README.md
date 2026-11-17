@@ -4,7 +4,7 @@ declaratively test your ecmascript module files
 
 no transpiling of either your codebase nor the tests.
 
-incredibly fast.
+fast.
 
 [agent skill](./MAGIC-TEST-SKILL.md) — a ready-to-use skill that teaches coding
 agents how to write and debug tests for your project with this runner
@@ -80,13 +80,14 @@ agents how to write and debug tests for your project with this runner
   - [Common Pitfalls](#common-pitfalls)
 - [Test Isolation](#test-isolation)
   - [\_\_isolate](#test-isolate)
+  - [worker reuse](#worker-reuse)
 
 #### <a name="install"></a>getting started
 
 be in a nodejs project.
 
 ```bash
-npm i --save-dev @magic/test
+npm i --save-dev --save-exact @magic/test
 
 mkdir test
 ```
@@ -150,19 +151,19 @@ run coverage reports and get full test report including from passing tests:
 
 This library tests itself, have a look at [the tests](https://github.com/magic/test/tree/master/test)
 
-Checkout [@magic/types](https://github.com/magic/types)
+Check out [@magic/types](https://github.com/magic/types)
 and the other @magic libraries for more test examples.
 
 example output, from this repository, lots of worker tests:
 (passing test files are silent if -p is passed)
 
 ```
-### Testing package: @magic/test@0.3.15
+### Testing package: @magic/test@0.3.57
 
-Ran 2116 tests in 1.4s. Passed 2116/2116 100%
+Ran 2940 tests in 11.1s. Passed 2940/2940 100%
 ```
 
-fastest tests from a private project
+fastest run, from a private project
 
 ```
 ###  Testing package: @artificialmuseum/engine
@@ -194,18 +195,19 @@ notes:
 
 ### benchmarks are a lie.
 
-those numbers lie a bit,
-the actual time to finish usually is around 1-2 seconds for smaller projects,
-5-15 seconds for bigger projects with lots of svelte components,
-mainly caused by c8 coverage, svelte compilation, worker isolation and node.js runtime start times.
+those numbers lie a bit.
+real-world finish times are usually 1-2 seconds for smaller projects,
+5-15 seconds for bigger ones with lots of svelte components,
+mostly coverage, svelte compilation, worker isolation and node startup.
 
 ##### <a name="test-suites"></a>data/fs driven test suite creation:
 
-- **expectations for optimal test messages:**
+what good tests look like:
+
 - src and test directories have the same structure and files.
-- tests one src file per test file.
-- tests one function per suite
-- tests one feature per test
+- one test file per src file.
+- one suite per function.
+- one test per feature.
 
 ###### Filesystem or Data driven naming for tests
 
@@ -265,8 +267,7 @@ export default { fn: promise(fnWithCallback(null, 'arg', (e, a) => a)), expect: 
 
 types can be compared using [@magic/types](https://github.com/magic/types)
 
-@magic/types is a full featured and thoroughly tested type library
-without dependencies.
+@magic/types is a full-featured type library, zero dependencies.
 
 it is exported from this library for convenience.
 
@@ -352,7 +353,7 @@ export default {
 
 ###### <a name="tests-typescript"></a> TypeScript support
 
-@magic/test supports TypeScript test files. You can write tests in `.ts` files and they will be executed directly without transpilation.
+@magic/test runs `.ts` test files directly — no transpilation.
 
 ```javascript
 // test/mytest.ts
@@ -450,7 +451,7 @@ export default [
 
 ##### <a name="tests-hooks"></a>run functions before and/or after individual tests
 
-Since before and after usually setup globals, all tests with before/after properties will be run in a worker to make sure they do not pollute the globals
+Since before and after usually set up globals, all tests with before/after properties will be run in a worker to make sure they do not pollute the globals
 
 ```javascript
 const after = () => {
@@ -564,7 +565,7 @@ export default [
 
 #### <a name="lib">Utility Belt
 
-@magic/test exports some utility functions that make working with complex test workflows simpler.
+@magic/test exports some utility functions that make complex test workflows easier.
 
 ###### <a name="lib-deep"></a>deep
 
@@ -649,7 +650,7 @@ export default {
 
 ###### <a name="lib-log"></a>log
 
-Logging utility for test output. Colors supported automatically.
+log to test output, colors included.
 
 ```javascript
 import { log } from '@magic/test'
@@ -696,7 +697,7 @@ export default [
 
 ##### <a name="lib-env"></a>env
 
-Environment detection utilities for conditional test behavior.
+check the environment, branch your tests on it.
 
 **Available utilities:**
 
@@ -720,6 +721,13 @@ environment variables read by @magic/test:
 | `MAGIC_TEST_WORKER_REUSE`             | set to `0` to force one fresh worker per test (default: run a file's isolated tests in one shared worker — faster, but tests share module-level state) |
 | `MAGIC_TEST_PREWARM`                  | set to `0` to skip the pre-run component-graph prewarm (on by default)                                                                                 |
 | `MAGIC_TEST_PREWARM_WORKERS`          | prewarm thread count (default `4`)                                                                                                                     |
+| `MAGIC_TEST_TIMEOUT`                  | per-test timeout in ms (same as `--timeout`)                                                                                                           |
+| `MAGIC_TEST_DISCOVERY_TIMEOUT`        | per-file discovery/import budget in ms (default 30000, 120000 on a busy machine)                                                                       |
+| `MAGIC_TEST_WORKER_TIMEOUT_MS`        | worker round-trip backstop in ms (default 120000, 600000 on a busy machine)                                                                            |
+| `MAGIC_TEST_NICE`                     | CPU nice value 0-19 for the test process (same as `--nice`, default 10)                                                                                |
+| `MAGIC_TEST_ADAPTIVE`                 | set to `0` to disable load-adaptive worker throttling (also off on CI)                                                                                 |
+| `MAGIC_TEST_COMPILE_CACHE`            | set to `0` to disable the persistent svelte/ts compile cache                                                                                           |
+| `MAGIC_TEST_SKIP_DTS_TESTS`           | set to `1` to skip the auto-generated .d.ts type tests                                                                                                 |
 | `NODE_ENV`                            | set to `production` by the `-p` flag; defaults to `test`                                                                                               |
 
 ```javascript
@@ -727,23 +735,23 @@ import { env, isProd, isTest, isDev } from '@magic/test'
 
 export default [
   {
-    fn: env.isNodeProd && process.env.NODE_ENV === 'production',
-    expect: true,
+    fn: env.isNodeProd,
+    expect: process.env.NODE_ENV === 'production',
     info: 'checks if NODE_ENV is production',
   },
   {
-    fn: env.isNodeDev && process.env.NODE_ENV === 'development',
-    expect: true,
+    fn: env.isNodeDev,
+    expect: process.env.NODE_ENV === 'development',
     info: 'checks if NODE_ENV is development',
   },
   {
-    fn: env.isProd && process.argv.includes('-p'),
-    expect: true,
+    fn: env.isProd,
+    expect: process.argv.includes('-p'),
     info: 'checks if -p flag is passed',
   },
   {
-    fn: env.isVerbose && process.argv.includes('-l'),
-    expect: true,
+    fn: env.isVerbose,
+    expect: process.argv.includes('--verbose'),
     info: 'checks if -l or --verbose flag is passed',
   },
   {
@@ -756,8 +764,8 @@ export default [
 
 ##### <a name="lib-promises"></a>promises
 
-Helper function to wrap nodejs callback functions and promises with ease.
-Handles the try/catch steps internally and returns a resolved or rejected promise.
+wrap node callbacks and promises, try/catch handled for you.
+resolves to the value, rejects with the error.
 
 ```javascript
 import { promise, is } from '@magic/test'
@@ -778,7 +786,7 @@ export default [
 
 ###### <a name="lib-http"></a>http
 
-HTTP utility for making requests in tests. Supports both HTTP and HTTPS.
+http/https requests from tests.
 
 ```javascript
 import { http } from '@magic/test'
@@ -843,7 +851,7 @@ import type { HttpOptions } from '@magic/test'
 
 ###### <a name="lib-trycatch"></a> tryCatch
 
-allows to catch and test functions without bubbling the errors up into the runtime
+run a function and catch what it throws, without it bubbling into the runtime
 
 ```javascript
 import { is, tryCatch } from '@magic/test'
@@ -866,7 +874,7 @@ export default [
 
 ###### <a name="lib-error"></a> error
 
-export [@magic/error](https://github.com/magic/error) which returns errors with optional names.
+re-exports [@magic/error](https://github.com/magic/error) — errors with optional names.
 
 ```javascript
 import { error } from '@magic/test'
@@ -882,7 +890,7 @@ export default [
 
 ###### <a name="lib-version"></a> version
 
-The version plugin checks your code according to a spec defined by you. This is designed to warn you on changes to your exports. Internally, the version function calls @magic/types and all functions exported from it are valid type strings in version specs.
+checks your exports against a spec you write, so export changes make noise. the spec uses @magic/types — every type it exports is a valid spec string.
 
 ```javascript
 // test/spec.js
@@ -914,7 +922,7 @@ export default version(lib, spec)
 
 ###### <a name="lib-mock"></a> mock
 
-Mock and spy utilities for function testing.
+spies and mocks for functions.
 
 ```javascript
 import { mock, tryCatch } from '@magic/test'
@@ -1244,7 +1252,7 @@ export default [
 
 When testing Svelte 5 components, @magic/test automatically exports `$state` and `$derived` variables, making them accessible in tests without requiring manual exports.
 
-**Note:** This automatic export feature is specific to **Svelte 5** only. Svelte 4 components do not have this capability.
+svelte 5 only — svelte 4 components can't do this.
 
 ```svelte
 <!-- Component.svelte -->
@@ -1278,21 +1286,22 @@ export default [
 ]
 ```
 
-This works automatically for all `$state` and `$derived` runes in your component.
+works for every `$state` and `$derived` rune in your component.
 
 **Exported Functions:**
 
-| Function                               | Description                                                                                |
-| -------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `mount(filePath, options)`             | Mounts a Svelte component and returns the target, component instance, and unmount function |
-| `html(target)`                         | Returns the innerHTML of a mounted component's target element                              |
-| `text(target)`                         | Returns the textContent of a target element                                                |
-| `component(instance)`                  | Returns the component instance for accessing exported values                               |
-| `props(target)`                        | Returns an object of attribute name/value pairs from the target element                    |
-| `click(target, selector?)`             | Clicks an element (optionally filtered by CSS selector)                                    |
-| `trigger(target, eventType, options?)` | Dispatches a custom event on an element                                                    |
-| `scroll(target, x, y)`                 | Scrolls an element to x/y coordinates                                                      |
-| `createSnippet(parent, snippetFn)`     | Creates a snippet and mounts it to a parent element                                        |
+| Function                               | Description                                                                               |
+| -------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `mount(filePath, options)`             | Mounts a Svelte component and returns `{ target, component, unmount, css }`               |
+| `html(target)`                         | Returns the innerHTML of a mounted component's target element                             |
+| `text(target)`                         | Returns the textContent of a target element                                               |
+| `component(instance)`                  | Returns the component instance for accessing exported values                              |
+| `props(target)`                        | Returns an object of attribute name/value pairs from the target element                   |
+| `click(target, selector?)`             | Clicks an element (optionally filtered by CSS selector)                                   |
+| `trigger(target, eventType, options?)` | Dispatches a custom event on an element                                                   |
+| `scroll(target, x, y)`                 | Scrolls an element to x/y coordinates                                                     |
+| `createSnippet(renderFn)`              | Creates a raw snippet to pass as a `children` prop (`renderFn`: string or `() => string`) |
+| `tick()`                               | svelte's `tick()`, retry-wrapped — await it after interactions                            |
 
 **Test Properties:**
 
@@ -1305,7 +1314,7 @@ This works automatically for all `$state` and `$derived` runes in your component
 
 **Context Factory**
 
-The `context` option allows you to provide a factory function that receives the mount target and processed props. This is particularly useful when you need to pass dynamic values to the component that depend on the test context.
+the `context` option can be a factory function that receives the mount target and processed props — handy for values that depend on the test context.
 
 ```javascript
 import { mount } from '@magic/test/svelte'
@@ -1327,7 +1336,7 @@ export default [
   {
     component,
     fn: async ({ target, context }) => {
-      // Example: pass a computed value derived from the test context
+      // pass a computed value derived from the test context
       const computed = context.target.scrollWidth * 2;
       return computed;
     },
@@ -1337,7 +1346,7 @@ export default [
 ]
 ```
 
-**Example: Accessing Component State**
+**Component state**
 
 ```javascript
 import { tick } from 'svelte'
@@ -1369,7 +1378,7 @@ export default [
 ]
 ```
 
-**Example: Testing Error Handling**
+**Error handling**
 
 ```javascript
 import { tryCatch } from '@magic/test'
@@ -1406,13 +1415,13 @@ export default [
   },
   {
     fn: () => dev,
-    expect: process.env.NODE_ENV !== 'production',
-    info: 'true unless NODE_ENV=production',
+    expect: process.env.MAGIC_TEST_ENV !== 'production',
+    info: 'true unless the run is in production mode (-p)',
   },
   {
     fn: () => prod,
-    expect: process.env.NODE_ENV === 'production',
-    info: 'true only when NODE_ENV=production',
+    expect: process.env.MAGIC_TEST_ENV === 'production',
+    info: 'true only in production mode (-p)',
   },
   {
     fn: () => {
@@ -1425,11 +1434,21 @@ export default [
 ]
 ```
 
+the loader resolves **all** `$app/*` imports to shims, not just environment:
+
+| import                          | you get                                                             |
+| ------------------------------- | ------------------------------------------------------------------- |
+| `$app/state`                    | `page` proxy (url/params/state), `navigating`, `updated`            |
+| `$app/navigation`               | `goto`, `pushState`, `replaceState`, `invalidate`, `beforeNavigate` |
+| `$app/stores`                   | legacy `page` / `navigating` readable stores (+ `updated`)          |
+| `$app/paths`                    | `resolve`, `match`, `asset`, `base`, `assets`                       |
+| `$app/environment` / `$app/env` | `browser`, `dev`, `prod`, `building`, `version`                     |
+
 ###### <a name="lib-sveltekit-static"></a>compileSvelte and ensureSvelte
 
 **compileSvelte:**
 
-Compile Svelte component source to a module for testing:
+compile a .svelte file to js/css (async, file path in):
 
 ```javascript
 import { compileSvelte } from '@magic/test/svelte'
@@ -1437,12 +1456,11 @@ import { compileSvelte } from '@magic/test/svelte'
 export default [
   {
     fn: async () => {
-      const source = `<button>Click</button>`
-      const { js, css } = compileSvelte(source, 'button.svelte')
-      return js.code.includes('button') && css.code === ''
+      const { js } = await compileSvelte('./path/to/button.svelte')
+      return typeof js === 'string'
     },
     expect: true,
-    info: 'compiles Svelte source to module',
+    info: 'compiles a svelte file to js/css',
   },
 ]
 ```
@@ -1511,7 +1529,7 @@ import { suiteNeedsIsolation } from '@magic/test'
 const needsIsolation = suiteNeedsIsolation(tests)
 ```
 
-This is useful for custom runners or when building test tooling.
+for custom runners / test tooling.
 
 ### <a name="worker-reuse"></a>Worker reuse (component tests)
 
@@ -1588,10 +1606,9 @@ then use the npm run scripts
 ##### <a name="usage-global"></a>Globally (not recommended):
 
 you can install this library globally,
-but the recommendation is to add the dependency and scripts to the package.json file.
+but adding the dependency and scripts to package.json is better.
 
-this both explains to everyone that your app has this dependencies
-and keeps your bash free of clutter
+everyone sees the dependency, and your shell stays free of clutter
 
 ```bash
   npm i -g @magic/test
@@ -1605,18 +1622,21 @@ and keeps your bash free of clutter
 
 **CLI Flags:**
 
-| Flag             | Aliases                  | Description                                                   |
-| ---------------- | ------------------------ | ------------------------------------------------------------- |
-| `-p`             | `--production`, `--prod` | Run tests without coverage (faster)                           |
-| `-l`             | `--verbose`, `--loud`    | Show detailed output including passing tests                  |
-| `-i`             | `--include`              | Files to include in coverage                                  |
-| `-e`             | `--exclude`              | Files to exclude from coverage                                |
-| `--shards`       | `--shard-count`          | Total number of shards (use with `--shard-id`)                |
-| `--shard-id`     |                          | Shard ID (0-indexed, use with `--shards`)                     |
-| `--error-length` |                          | Max length for error strings (default 70, 0 = no limit)       |
-| `--timeout`      | `-t`, `--to`             | Test timeout in ms (default: 30000)                           |
-| `--workers`      | `-w`                     | Max parallel workers (default: auto, env: MAGIC_TEST_WORKERS) |
-| `--help`         |                          | Show help text                                                |
+| Flag             | Aliases                  | Description                                                                 |
+| ---------------- | ------------------------ | --------------------------------------------------------------------------- |
+| `-p`             | `--production`, `--prod` | Run tests without coverage (faster)                                         |
+| `-l`             | `--verbose`, `--loud`    | Show detailed output including passing tests                                |
+| `-i`             | `--include`              | Files to include in coverage                                                |
+| `-e`             | `--exclude`              | Files to exclude from coverage                                              |
+| `--shards`       | `--shard-count`          | Total number of shards (use with `--shard-id`)                              |
+| `--shard-id`     |                          | Shard ID (0-indexed, use with `--shards`)                                   |
+| `--error-length` |                          | Max length for error strings (default 70, 0 = no limit)                     |
+| `--timeout`      | `-t`, `--to`             | Test timeout in ms (default: 30000)                                         |
+| `--workers`      | `-w`                     | Max parallel workers (default: auto, env: MAGIC_TEST_WORKERS)               |
+| `--slow`         | `-s`, `--timing`         | Show the slowest tests                                                      |
+| `--nice`         |                          | CPU nice value 0-19 for the test process (default 10, env: MAGIC_TEST_NICE) |
+| `--native`       |                          | Run with the native node --test runner (with coverage)                      |
+| `--help`         |                          | Show help text                                                              |
 
 **Note:** `--shards` and `--shard-id` must be used together. `--shard-id` is 0-indexed (0 to N-1).
 
@@ -1656,13 +1676,13 @@ t --shards 4 --shard-id 1
 t -p --shards 4 --shard-id 2
 ````
 
-Tests are distributed deterministically using a hash of the test file path, ensuring:
+tests are distributed with a hash of the test file path:
 
-- Each test always runs in the same shard (consistent across runs)
-- No duplicate test execution across shards
-- Even distribution based on file paths
+- same file, same shard, every run
+- no test runs twice
+- even distribution based on file paths
 
-This hash-based approach guarantees that sharding is reproducible and works well with CI caching.
+reproducible sharding plays nice with CI caching.
 
 Add to your `package.json` for CI/CD:
 
@@ -1687,7 +1707,7 @@ npm run test:shard:0 & npm run test:shard:1 & npm run test:shard:2 & npm run tes
 
 #### Exit Codes
 
-@magic/test returns specific exit codes to indicate test results:
+exit codes:
 
 | Exit Code | Meaning                  |
 | --------- | ------------------------ |
@@ -1700,9 +1720,15 @@ npm test
 echo "Exit code: $?"  # 0 = success, 1 = failure
 ```
 
+#### .d.ts type tests
+
+every run also type-checks the .d.ts files of your project (the `__dts__` suites in the output).
+they read types from the tsconfig.json of the tested repository.
+`-e` / `--exclude` applies to them too, and `MAGIC_TEST_SKIP_DTS_TESTS=1` skips them entirely.
+
 #### Performance Tips
 
-Follow these tips to get the most out of @magic/test:
+make runs faster:
 
 **Use the `-p` flag for development:**
 
@@ -1730,7 +1756,9 @@ t -w 2
 MAGIC_TEST_WORKERS=2 t -p
 ```
 
-By default, @magic/test auto-detects CPU count and spawns `max(1, CPUs - 2)` workers to keep 2 threads free for the system.
+by default, @magic/test auto-detects CPU count and spawns `max(1, min(CPUs - 2, 4))` workers.
+on a busy machine it throttles itself (halves between 1x and 2x the core count, drops to 1 above that) —
+`MAGIC_TEST_ADAPTIVE=0` or CI disables the throttling, an explicit `-w` bypasses the cap.
 
 **Minimize async overhead:**
 
@@ -1788,7 +1816,7 @@ Set `MAGIC_TEST_VERBOSE_ERRORS=1` to see detailed error information during test 
 - Import errors show file-specific details
 - Runtime errors include the exact error object
 
-This is useful for debugging complex test failures or when tests are failing silently.
+for when tests fail and you want to know why.
 
 Example output with `MAGIC_TEST_VERBOSE_ERRORS=1`:
 

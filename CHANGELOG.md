@@ -2,13 +2,23 @@
 
 #### 0.3.58
 
-- fix: the ESM loader now serves `.svelte.js` files from the compile cache verbatim instead of re-transpiling them — the re-transpiled in-memory source was longer than the on-disk file, so V8 coverage offsets remapped against the on-disk source map produced phantom uncovered statements/branches/functions (some past EOF), capping branch coverage of Svelte projects at ~94% no matter how many tests were added
+- fix: the ESM loader now serves `.svelte.js` files from the compile cache verbatim instead of re-transpiling them, the re-transpiled in-memory source was longer than the on-disk file, so V8 coverage offsets remapped against the on-disk source map produced phantom uncovered statements/branches/functions (some past EOF), capping branch coverage of Svelte projects at ~94% no matter how many tests were added
 - test: regression for verbatim serving of cache `.svelte.js` files (plus transpilation of `.svelte.js` files outside the cache, which is unchanged)
-- perf: the auto worker pool is capped at 4 workers by default and adapts to system load (halves between 1× and 2× the core count, drops to 1 above that; `MAGIC_TEST_ADAPTIVE=0` or CI disables it) — a test run no longer saturates a 16-core machine
+- perf: the auto worker pool is capped at 4 workers by default and adapts to system load (halves between 1× and 2× the core count, drops to 1 above that; `MAGIC_TEST_ADAPTIVE=0` or CI disables it), a test run no longer saturates the cpus
 - feat: `--nice` / `MAGIC_TEST_NICE` (default 10): on macOS/Linux the run is wrapped in `nice` when the machine is busy at spawn (1-min load average above half the cores) so the user's own work stays responsive; on an idle machine the suite runs at full speed; `--nice 0` / `MAGIC_TEST_NICE=0` disables throttling
-- fix: on a busy machine at spawn the wall-clock budgets are bumped — per-file discovery/import 30 s → 120 s, per-test 30 s → 300 s, worker round-trip backstop 120 s → 600 s — a starved run is slow, not hung; explicit `MAGIC_TEST_DISCOVERY_TIMEOUT` / `MAGIC_TEST_TIMEOUT` / `--timeout` / `MAGIC_TEST_WORKER_TIMEOUT_MS` still win
-- fix: the getTestTimeout tests no longer leak their MAGIC_TEST_TIMEOUT mutation into the ambient process env — a leaked delete downgraded every later test in the process to the stock 30 s default
+- fix: on a busy machine at spawn the wall-clock budgets are bumped, per-file discovery/import 30 s → 120 s, per-test 30 s → 300 s, worker round-trip backstop 120 s → 600 s, a starved run is slow, not hung; explicit `MAGIC_TEST_DISCOVERY_TIMEOUT` / `MAGIC_TEST_TIMEOUT` / `--timeout` / `MAGIC_TEST_WORKER_TIMEOUT_MS` still win
+- fix: the getTestTimeout tests no longer leak their MAGIC_TEST_TIMEOUT mutation into the ambient process env, a leaked delete downgraded every later test in the process to the stock 30 s default
 - test: worker-pool, E2E-child and DDL-watchdog deadlines now scale with the load, so the suite stays green on a busy machine (tight contracts unchanged on an idle one)
+- perf: components are no longer recompiled on every mount, compileSvelteWithWrite checks the persistent compile cache first (mtime+size fast path, hash authoritative), so an unchanged .svelte file costs a stat instead of a full compile + file write + manifest rewrite; set MAGIC_TEST_COMPILE_CACHE=0 to restore the old always-recompile behavior
+- fix: the compile-cache manifest is updated under a cross-process file lock with a fresh disk read inside the lock, concurrent workers could previously clobber each other's entries, silently losing cache entries (phantom misses and duplicate compiles)
+- fix: a cached compile is only served when the source hash still matches (hash cache entries are stat-validated, so a rewritten file within one mtime tick is detected) and when its compiled relative imports still exist, deleted sibling components no longer leave stale imports behind
+- fix: the compile cache is invalidated when the installed svelte version changes; sources outside the project root (pnpm store, monorepo siblings, /tmp fixtures) are cached under outside/ in the cache directory instead of being scattered into the project tree
+- perf: TypeScript transpilation (.ts / .svelte.ts / .mjs) is cached persistently by content hash, a warm run transpiles nothing that a previous run already transpiled
+- perf: vite/tsconfig alias resolution is cached per project root (revalidated with 2-3 stat calls per resolve), removes multi-second tail latency from suite startup on projects with many aliased imports
+- perf: happy-dom is loaded lazily and the svelte rune-detection parse is skipped for components without $state( / $derived( call sites
+- fix: sharding configuration is no longer exported to the process environment, child processes spawned by tests could inherit a sharded view of the suite
+- test: self-tests for the persistent manifest (hit/miss, invalidation, stale sweep, outside/ anchoring), cache-aware compile (no rewrite on hit, css parity, stale-island healing, kill switch), transpile cache, and the alias cache lifecycle
+- test: sveltekit navigation tests capture the URL into component state after pushState (instead of reading the page proxy at render time, which the global flush queue could evaluate under a foreign context) and run sequentially with a context reset between tests
 
 #### 0.3.57
 
@@ -17,13 +27,13 @@
 
 #### 0.3.56
 
-- fix: rare DDL watchdog flake ("waiting: false") — `globalThis.__DDL` (the 5s-watchdog singleton held by test/lib/svelte/compile/ddl.ts) is now in the isolation skipProps list, so a sibling isolated test's snapshot/restore cycle can no longer delete it mid-test
-- fix: snapshot/restore no longer deep-clones `WebAssembly`, `Intl`, `Atomics`, `customElements`, or the shared happy-dom window — deep cloning turned them into broken shells (`WebAssembly.Module is not a constructor`, dead `WeakRef`s inside a cloned window) that restore installed over the real globals
+- fix: rare DDL watchdog flake ("waiting: false"), `globalThis.__DDL` (the 5s-watchdog singleton held by test/lib/svelte/compile/ddl.ts) is now in the isolation skipProps list, so a sibling isolated test's snapshot/restore cycle can no longer delete it mid-test
+- fix: snapshot/restore no longer deep-clones `WebAssembly`, `Intl`, `Atomics`, `customElements`, or the shared happy-dom window, deep cloning turned them into broken shells (`WebAssembly.Module is not a constructor`, dead `WeakRef`s inside a cloned window) that restore installed over the real globals
 - fix: localStorage/sessionStorage are captured as entries and re-populated into the LIVE storage on restore instead of being replaced by a clone whose private state is empty
-- fix: worker postMessage payloads are sanitized recursively (functions nested in a test's result/expect become their source string) — a single unclonable value previously threw DataCloneError and killed the worker mid-batch, losing every remaining test of the file
-- fix: the globals detector no longer false-positives on global names inside string/template literals, comments, or as identifier substrings (`globalStartTime`, `windowWidth`, `subprocess.`) — fewer suites routed to unnecessary workers
+- fix: worker postMessage payloads are sanitized recursively (functions nested in a test's result/expect become their source string), a single unclonable value previously threw DataCloneError and killed the worker mid-batch, losing every remaining test of the file
+- fix: the globals detector no longer false-positives on global names inside string/template literals, comments, or as identifier substrings (`globalStartTime`, `windowWidth`, `subprocess.`), fewer suites routed to unnecessary workers
 - test: deterministic regression for the __DDL restore race, storage restore, skipProps additions, and payload sanitization
-- feat: `--exclude` / `-e` now also applies to the auto-generated .d.ts type tests — excluded dirs and files are not collected or checked
+- feat: `--exclude` / `-e` now also applies to the auto-generated .d.ts type tests, excluded dirs and files are not collected or checked
 - feat: .d.ts tests now use types declarations from tsconfig.json of the tested repository
 
 #### 0.3.55
@@ -36,7 +46,7 @@
 
 #### 0.3.53
 
-- feat: local c8 replacement — v8 coverage reader with source-map remapping and istanbul text report
+- feat: local c8 replacement, v8 coverage reader with source-map remapping and istanbul text report
 - feat: coverage stats + summary output, results-file handoff between processes
 - feat: drop c8 dependency, test:native now uses `t --native`
 - feat: local coverage via NODE_V8_COVERAGE, add `--native` flag, summary printed after coverage
@@ -47,7 +57,7 @@
 
 #### 0.3.52
 
-- feat: default worker reuse on — a file's isolated tests now run sequentially in one shared worker by default (faster, ~22 s → ~15 s wall time on a 159-test SvelteKit suite). Set `MAGIC_TEST_WORKER_REUSE=0` to force one fresh worker per test (full per-test isolation).
+- feat: default worker reuse on, a file's isolated tests now run sequentially in one shared worker by default (faster, ~22 s → ~15 s wall time on a 159-test SvelteKit suite). Set `MAGIC_TEST_WORKER_REUSE=0` to force one fresh worker per test (full per-test isolation).
 - fix: remove run-tests.sh
 - test: silence console.log for info message test
 - fix: replace canvas with @napi-rs/canvas
@@ -63,9 +73,9 @@
 
 #### 0.3.51
 
-- feat: changed usage of `--production` / `-p` flag — reads prod mode from CLI arg instead of `NODE_ENV`, sets `MAGIC_TEST_ENV`; SvelteKit dev/prod sentinels read `MAGIC_TEST_ENV` instead of `NODE_ENV`
-- feat: synthesize `$app/env/private` and `$app/env/public` from `src/env.ts` — parses top-level `defineEnvVars` keys from `src/env.ts` (cached per project root), emits temp module files exporting `process.env.<var>` at module-evaluation time
-- feat: support remote module URLs and raw string Vite defines — materialize remote `http/https` modules as local cached files; rewrite relative specifiers in remote sources to absolute URLs; keep `http/https` alias targets verbatim; parse Vite define values as JSON when possible, keep raw strings otherwise
+- feat: changed usage of `--production` / `-p` flag, reads prod mode from CLI arg instead of `NODE_ENV`, sets `MAGIC_TEST_ENV`; SvelteKit dev/prod sentinels read `MAGIC_TEST_ENV` instead of `NODE_ENV`
+- feat: synthesize `$app/env/private` and `$app/env/public` from `src/env.ts`, parses top-level `defineEnvVars` keys from `src/env.ts` (cached per project root), emits temp module files exporting `process.env.<var>` at module-evaluation time
+- feat: support remote module URLs and raw string Vite defines, materialize remote `http/https` modules as local cached files; rewrite relative specifiers in remote sources to absolute URLs; keep `http/https` alias targets verbatim; parse Vite define values as JSON when possible, keep raw strings otherwise
 - deps: update dependencies
 - chore: switch from ESLint to Oxlint
 - fix: replace `@typescript-eslint/parser` with `oxc-parser` for static source analysis (import/export extraction, module-state mutation checks, Svelte rune & compiled-output detection). `oxc-parser` is the same parser oxlint is built on, ~3× faster than the previous one.
@@ -76,12 +86,12 @@
 #### 0.3.50
 
 - feat: add -s, --slow, --timing flag to get slow test information
-- feat: `has.not` — negated versions of every `has.*` check: `has.not.property`,
+- feat: `has.not`, negated versions of every `has.*` check: `has.not.property`,
   `has.not.properties`, `has.not.any`, `has.not.nested`, `has.not.string`,
   `has.not.at`, `has.not.key`, `has.not.keys`, `has.not.includes`,
   `has.not.oneOf`, `has.not.matches`. Each `has.not.X(...)` passes exactly when
   the matching `has.X(...)` would fail (pure logical negation).
-- feat: `has.at(index, checks[])` — an array of checks now passes only when
+- feat: `has.at(index, checks[])`, an array of checks now passes only when
   every check matches the array element
 
 #### 0.3.49
@@ -90,7 +100,7 @@
 
 #### 0.3.48
 
-- perf: component import graphs — per-process memoization of resolved import
+- perf: component import graphs, per-process memoization of resolved import
   paths, larger in-memory LRU caches, and cross-worker reuse of the persistent
   compile cache: a test worker now reuses compiled output recorded by a
   sibling worker instead of recompiling the shared package barrels from
@@ -99,7 +109,7 @@
 - perf: barrel wrappers are now persistent. `compileBarrel` writes the
   generated wrapper to the standard temp location and records it in the
   manifest (keyed by the barrel file hash), and barrel exports are recorded
-  per file — so a warm run skips the multi-second export-graph walk and the
+  per file, so a warm run skips the multi-second export-graph walk and the
   per-worker recompilation of a barrel's svelte exports entirely. The wrapper
   location change is safe: stale caches simply re-record on first use.
 - perf: `compileSvelteWithWrite` (the warmup path) records its output in the
@@ -109,7 +119,7 @@
   manifest reloads when a sibling worker writes a newer one, and manifests
   are merged on save so concurrent workers no longer clobber each other's
   entries.
-- feat: prewarm component graphs before test workers start — a small pool of
+- feat: prewarm component graphs before test workers start, a small pool of
   worker threads (default 4) imports each referenced component once and
   records the compiled graph in the shared disk cache, so test workers reuse
   it instead of all recompiling the barrels from source. The redundant
@@ -118,7 +128,7 @@
   skipped automatically when the cache is already warm (hash probe), so warm
   runs pay nothing. `MAGIC_TEST_PREWARM=0` disables it, `MAGIC_TEST_PREWARM_WORKERS=n`
   sets the thread count.
-- feat: `MAGIC_TEST_WORKER_REUSE=1` — run a file's isolated tests
+- feat: `MAGIC_TEST_WORKER_REUSE=1`, run a file's isolated tests
   sequentially in one shared worker instead of one fresh worker per test.
   The first mount pays the one-time component-graph cost, subsequent mounts
   reuse the imported modules (~40 ms each): ~22 s → ~15 s warm wall time on
@@ -128,7 +138,7 @@
   timeout budget. Trade-off: batched tests share module-level state, so it
   is opt-in for stateless/props-driven component suites. Default (off) keeps
   full per-test isolation.
-- fix: svelte-only barrel generation — the per-export compile raced a 30 s
+- fix: svelte-only barrel generation, the per-export compile raced a 30 s
   timeout that silently emitted an `export const X = {}` placeholder on
   expiry, and the broken result was persisted to the resolve-transform
   cache, hiding the export (`X is not a function`) in every later run until
@@ -138,14 +148,14 @@
 
 #### 0.3.47
 
-- fix: coverage attribution for .ts/.svelte modules — removed the per-module
+- fix: coverage attribution for .ts/.svelte modules, removed the per-module
   `globalThis.addEventListener` shim that the loader prepended to the in-memory
   source. The prefix (absent from the on-disk file) shifted every V8 coverage
   offset, so c8 reported phantom uncovered import lines and missed
   async-continuation code. `initGlobals()` already installs those globals at
   loader init, so the shim was redundant.
 - fix: component tests can now mount components with side-effect asset
-  imports (e.g. a root layout doing `import '../app.css'`) — the Svelte
+  imports (e.g. a root layout doing `import '../app.css'`), the Svelte
   compile pipeline drops side-effect CSS/asset imports (no Node.js equivalent)
   instead of failing module resolution.
 - fix: compiled output for sources outside the project (e.g. file:-symlinked
