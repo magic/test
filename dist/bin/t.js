@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import path from 'node:path'
+import os from 'node:os'
 import { fileURLToPath } from 'node:url'
 import cli from '@magic/cli'
 import fs from '@magic/fs'
@@ -23,6 +24,7 @@ const res = cli({
     ['--timeout', '--to', '-t'],
     ['--slow', '--timing', '-s'],
     ['--workers', '--w', '-w'],
+    ['--nice'],
     ['--production', '--prod', '--p', '-p'],
     ['--native'],
   ],
@@ -41,6 +43,8 @@ const res = cli({
       '--slow': 'show slowest tests (alias: --timing, -s)',
       '--timing': 'show slowest tests (alias: --slow, -s)',
       '--workers': 'max parallel workers (default: auto, env: MAGIC_TEST_WORKERS)',
+      '--nice':
+        'CPU nice value 0-19 for the test process (default 10 on macOS/Linux: keeps the machine responsive; 0 = no throttling, env: MAGIC_TEST_NICE)',
       '--native': 'use the Node.js native test runner (node --test) instead of the unit runner',
     },
     header: `
@@ -64,6 +68,66 @@ npm example:
 `.trim(),
   },
 })
+/**
+ * Effective CPU nice value for the unit.js child process: --nice flag /
+ * MAGIC_TEST_NICE env, else 10. POSIX only - Node has no priority API and
+ * Windows has no `nice` binary, so there the value is ignored (see
+ * wrapWithNice).
+ */
+export const getEffectiveNice = () => {
+  const raw = process.env.MAGIC_TEST_NICE
+  if (raw !== undefined) {
+    const parsed = Number(raw)
+    if (!Number.isNaN(parsed)) {
+      return Math.min(19, Math.max(0, Math.floor(parsed)))
+    }
+  }
+  return 10
+}
+/**
+ * Whether the suite should yield CPU to other work: when the machine is
+ * already busy (1-min load average above half the core count) the test run
+ * is wrapped in `nice` so the user's own work stays responsive; on an idle
+ * machine it runs at full speed.
+ */
+export const shouldYieldCpu = (load1, cores) => load1 > cores / 2
+/**
+ * Wall-clock budgets for the unit.js child, in ms. When the machine is busy
+ * at spawn (load1 > cores / 2), starved work — file imports, test bodies,
+ * worker round-trips — can take far longer than the stock budgets even
+ * without nice (the worker pool fights for CPU), so the budgets follow the
+ * load, not the nice decision. An explicit env value always wins. Returns
+ * undefined when the stock default applies (env left unset).
+ * Pure helper, exported for testing.
+ */
+const busyBudgetMs = (load1, cores, envValue, busyMs) => {
+  if (envValue !== undefined && envValue !== '') {
+    return envValue
+  }
+  return shouldYieldCpu(load1, cores) ? busyMs : undefined
+}
+/** Per-file discovery/import budget: stock 30 s → 120 s when busy. */
+export const discoveryTimeoutMs = (load1, cores, envValue) =>
+  busyBudgetMs(load1, cores, envValue, '120000')
+/** Per-test budget: stock 30 s → 300 s when busy. */
+export const testTimeoutMs = (load1, cores, envValue) =>
+  busyBudgetMs(load1, cores, envValue, '300000')
+/** Worker round-trip backstop: stock 120 s → 600 s when busy (a batch of
+ * starved tests may legitimately outlast the per-test budget). */
+export const workerTimeoutMs = (load1, cores, envValue) =>
+  busyBudgetMs(load1, cores, envValue, '600000')
+/**
+ * Wrap the runner command in `nice -n <value>` on POSIX so the whole test
+ * process tree (main thread, worker threads, tsc type-checks, prewarm) runs
+ * below user work and the machine stays responsive. No-op for value 0 and
+ * on Windows. Pure helper, exported for testing.
+ */
+export const wrapWithNice = (command, nice) => {
+  if (nice <= 0 || process.platform === 'win32') {
+    return command
+  }
+  return { ...command, cmd: 'nice', argv: ['-n', String(nice), command.cmd, ...command.argv] }
+}
 /**
  * Build the child command for the unit.js runner:
  *   prod:     node unit.js (no coverage)
@@ -116,7 +180,7 @@ const run = async () => {
   }
   const includeArgs = res.args.include || ['src']
   const userExclude = res.args.exclude
-  const { shards, shardId, errorLength, timeout, workers } = res.args
+  const { shards, shardId, errorLength, timeout, workers, nice } = res.args
   const include = (is.array(includeArgs) ? includeArgs : [includeArgs]).map(String)
   const exclude = userExclude
     ? (is.array(userExclude) ? userExclude : [userExclude]).map(String)
@@ -144,6 +208,9 @@ const run = async () => {
   if (workers !== undefined) {
     process.env.MAGIC_TEST_WORKERS = String(workers)
   }
+  if (nice !== undefined) {
+    process.env.MAGIC_TEST_NICE = String(nice)
+  }
   // Forward --exclude so the unit runner can exclude the same files/dirs from
   // the auto-generated .d.ts type-check suites (only user-passed excludes;
   // the coverage-only 'test' default is already covered by SKIP_DIRS).
@@ -158,14 +225,43 @@ const run = async () => {
     .filter(Boolean)
     .concat(['--enable-source-maps'])
     .join(' ')
-  const { cmd, argv, coverage } = buildUnitCommand({
-    isProd,
-    cwd,
-    name,
-    include,
-    exclude,
-    native: res.args.native,
-  })
+  const niceValue = getEffectiveNice()
+  const [load1Raw] = os.loadavg()
+  const cores = os.availableParallelism()
+  const load1 = load1Raw ?? 0
+  const yieldCpu = niceValue > 0 && shouldYieldCpu(load1, cores)
+  // Wall-clock budgets (discovery/import, per-test, worker round-trip) are
+  // bumped independently of the nice decision: on a busy machine starved
+  // work can exceed the stock budgets even without nice, so the budgets
+  // follow the load, not the priority. An explicit env value (or --timeout
+  // for the per-test budget) wins.
+  const discoveryTimeout = discoveryTimeoutMs(
+    load1,
+    cores,
+    process.env.MAGIC_TEST_DISCOVERY_TIMEOUT,
+  )
+  if (discoveryTimeout) {
+    process.env.MAGIC_TEST_DISCOVERY_TIMEOUT = discoveryTimeout
+  }
+  const testTimeout = testTimeoutMs(load1, cores, process.env.MAGIC_TEST_TIMEOUT)
+  if (testTimeout) {
+    process.env.MAGIC_TEST_TIMEOUT = testTimeout
+  }
+  const workerTimeout = workerTimeoutMs(load1, cores, process.env.MAGIC_TEST_WORKER_TIMEOUT_MS)
+  if (workerTimeout) {
+    process.env.MAGIC_TEST_WORKER_TIMEOUT_MS = workerTimeout
+  }
+  const { cmd, argv, coverage } = wrapWithNice(
+    buildUnitCommand({
+      isProd,
+      cwd,
+      name,
+      include,
+      exclude,
+      native: res.args.native,
+    }),
+    yieldCpu ? niceValue : 0,
+  )
   // prepare the V8 coverage temp directory (c8 used to do this for us)
   // resultsFile: the unit.js child writes the run summary there so it can be
   // printed AFTER the coverage report. Not set for `t --native`: the native
