@@ -1,12 +1,32 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
+import { createRequire } from 'node:module'
+
 import is from '@magic/types'
-import { Document as HappyDocument, Window as HappyWindow } from 'happy-dom'
+
+// Type-only at compile time; the RUNTIME load is lazy (see loadHappyDom)
+// because this module is imported for its pure timer-scoping utilities
+// (beginTimerScope) by processes that may never touch the DOM. happy-dom
+// takes ~150ms to import per isolate; every worker thread pays it once,
+// so keeping it out of the module graph of non-DOM paths is worth a lot.
+import type { Document as HappyDocument, Window as HappyWindow } from 'happy-dom'
 
 import { createImagePolyfill } from './image.js'
 import { createCanvasPolyfill } from './canvas.js'
 
 let window: HappyWindow | null = null
 let document: HappyDocument | null = null
+
+let happyDom: typeof import('happy-dom') | null = null
+const loadHappyDom = (): typeof import('happy-dom') => {
+  if (!happyDom) {
+    // CJS require of the same module the ESM graph would load (happy-dom
+    // ships a single CJS build, no exports map) — one instance per process,
+    // shared by all worker threads.
+    const require = createRequire(import.meta.url)
+    happyDom = require('happy-dom') as typeof import('happy-dom')
+  }
+  return happyDom
+}
 
 // A process must have exactly ONE happy-dom window. Multiple copies of this
 // module can be loaded in the same process (e.g. the dist/ build and the src/
@@ -253,7 +273,7 @@ export const initGlobals = (): { window: HappyWindow; document: HappyDocument } 
       document,
     }
   }
-  window = new HappyWindow({ url: 'http://localhost/' })
+  window = new (loadHappyDom().Window)({ url: 'http://localhost/' })
   setSharedWindow(window)
   document = window!.document as unknown as HappyDocument
 
