@@ -1,5 +1,7 @@
 import path from 'node:path'
+
 import fs from '@magic/fs'
+
 import { FileFilter } from '../coverage/filter.js'
 /**
  * Directory names that are never searched for .d.ts files.

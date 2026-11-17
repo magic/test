@@ -1,13 +1,15 @@
-import path from 'node:path'
 import crypto from 'node:crypto'
+import path from 'node:path'
+
 import log from '@magic/log'
 import is from '@magic/types'
+
 import { LRUCache } from '../../caches/LRUCache.js'
 import { traceStart, traceEnd } from '../../trace/timing.js'
 import { extractImportsSync } from './astParse.js'
-import { resolveAndCompileImport } from './resolveAndCompileImport.js'
-import { parallelMap, MAX_CONCURRENT } from './parallelMap.js'
 import { ddl } from './ddl.js'
+import { parallelMap, MAX_CONCURRENT } from './parallelMap.js'
+import { resolveAndCompileImport } from './resolveAndCompileImport.js'
 // Cache for processImports results (key: codeHash:sourceFilePath)
 const processImportsCache = new LRUCache(4096)
 export const processImports = async (

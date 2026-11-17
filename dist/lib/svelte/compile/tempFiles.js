@@ -7,8 +7,9 @@
  * deduplicated via a pending-writes map.
  * -------------------------------------------------------------------------- */
 import path from 'node:path'
-import { writeQueue } from './writeQueue.js'
+
 import { getCwd, CACHE_DIR } from '../../../constants.js'
+import { writeQueue } from './writeQueue.js'
 const pendingWrites = new Map()
 export const computeTempPath = filePath => {
   if (filePath.includes('node_modules')) {

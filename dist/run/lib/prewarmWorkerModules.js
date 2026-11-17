@@ -31,13 +31,15 @@ var __rewriteRelativeImportExtension =
     return path
   }
 import path from 'node:path'
+
 import is from '@magic/types'
+
+import { getCwd } from '../../constants.js'
 import { compileSvelteWithWrite } from '../../lib/svelte/compile/compileSvelteWithWrite.js'
 import {
   resolveImportMapSpecifier,
   findNearestPackageJson,
 } from '../../lib/svelte/compile/resolveImportMap.js'
-import { getCwd } from '../../constants.js'
 const collectComponents = (node, out, seen) => {
   if (is.array(node)) {
     if (seen.has(node)) {

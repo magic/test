@@ -1,15 +1,17 @@
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+
 import fs from '@magic/fs'
+
 import { getCwd } from '../../../constants.js'
-import { transformForNode } from './transformForNode.js'
-import { processImports } from './processImports.js'
-import { compileSvelte } from './compileSvelte.js'
-import { getTempFilePath } from './getTempFilePath.js'
-import { writeCompiledFile } from './fileWriter.js'
 import { getCachedCompile, recordCompile } from '../../caches/persistentCache.js'
-import { extractImportsSync } from './astParse.js'
 import { traceStart, traceEnd } from '../../trace/timing.js'
+import { extractImportsSync } from './astParse.js'
+import { compileSvelte } from './compileSvelte.js'
+import { writeCompiledFile } from './fileWriter.js'
+import { getTempFilePath } from './getTempFilePath.js'
+import { processImports } from './processImports.js'
+import { transformForNode } from './transformForNode.js'
 /**
  * The single compile entry point for .svelte sources.
  *

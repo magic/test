@@ -17,12 +17,14 @@ var __rewriteRelativeImportExtension =
     }
     return path
   }
-import fs from '@magic/fs'
 import { pathToFileURL } from 'node:url'
-import { findConfigFile } from './findConfigFile.js'
-import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
+
+import fs from '@magic/fs'
+
 import { defineCache, configCache } from './cache.js'
+import { findConfigFile } from './findConfigFile.js'
 import { normalizeAlias } from './normalizeAlias.js'
+import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
 export const loadViteConfig = async rootDir => {
   const cacheKey = rootDir + ':vite-full'
   const cached = configCache.get(cacheKey)

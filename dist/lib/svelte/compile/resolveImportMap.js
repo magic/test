@@ -1,7 +1,9 @@
 import path from 'node:path'
+
 import fs from '@magic/fs'
-import { existsCached } from '../../caches/pathCache.js'
+
 import { getCwd } from '../../../constants.js'
+import { existsCached } from '../../caches/pathCache.js'
 /**
  * Find the nearest package.json by walking up from the directory containing
  * `fromPath`. Node resolves "#-prefixed" import-map specifiers against the

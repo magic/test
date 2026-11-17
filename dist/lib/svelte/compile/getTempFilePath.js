@@ -1,6 +1,7 @@
 import path from 'node:path'
-import { getCacheRelPath } from '../../caches/persistentCache.js'
+
 import { CACHE_DIR } from '../../../constants.js'
+import { getCacheRelPath } from '../../caches/persistentCache.js'
 // Temp file location for a compiled source. MUST stay path-identical to the
 // persistent-cache location (getCachePath in persistentCache.ts) — both are
 // derived from the shared getCacheRelPath helper so a cache hit can serve the

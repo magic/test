@@ -23,21 +23,23 @@ import { fileURLToPath } from 'node:url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 import(__rewriteRelativeImportExtension(path.join(__dirname, 'lib/registerLoader.js')))
-import { stats } from '../lib/index.js'
-import cli from '@magic/cli'
-import log from '@magic/log'
 import { describe, before, after, it } from 'node:test'
+
+import cli from '@magic/cli'
 import fs from '@magic/fs'
+import log from '@magic/log'
 import is from '@magic/types'
+
 import { CACHE_DIR } from '../constants.js'
-import { maybeInjectMagic } from './lib/index.js'
-import { evaluateTestResult } from '../run/lib/index.js'
 import {
   isBeforeAllFile,
   isAfterAllFile,
   beforeAllFileNames,
   afterAllFileNames,
 } from '../lib/hookFiles.js'
+import { stats } from '../lib/index.js'
+import { evaluateTestResult } from '../run/lib/index.js'
+import { maybeInjectMagic } from './lib/index.js'
 const cwd = process.cwd()
 const testDir = path.join(cwd, 'test')
 const EXCLUDED_DIRS = ['node_modules', '.tmp', '.git']

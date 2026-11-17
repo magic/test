@@ -1,10 +1,10 @@
-import { walkTests } from './testWalker.js'
 import {
   getImportNames,
   mutatesImportedState,
   getPortPatterns,
   getFilePaths,
 } from './codeParser.js'
+import { walkTests } from './testWalker.js'
 export const testImportsMutableModuleState = async (tests, testFilePath) => {
   let fsModule
   try {

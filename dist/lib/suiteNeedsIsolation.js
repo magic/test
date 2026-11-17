@@ -1,4 +1,5 @@
 import is from '@magic/types'
+
 import { walkTests } from './analysis/testWalker.js'
 /**
  * Check if any test in the suite needs isolation (has before/after hooks OR modifies globals)

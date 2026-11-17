@@ -1,5 +1,6 @@
-import { Store } from '../store.js'
 import type { Suite } from '../../types.js'
+
+import { Store } from '../store.js'
 /**
  * Prints test results for a package and its suites.
  */

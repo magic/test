@@ -1,13 +1,14 @@
-import is from '@magic/types'
 import log from '@magic/log'
-import { stats, createStore, ERRORS, Store } from './lib/index.js'
+import is from '@magic/types'
+
+import { clearCache as clearPersistentCache } from './lib/caches/persistentCache.js'
 import { BEFORE_ALL_KEYS, AFTER_ALL_KEYS } from './lib/hookFiles.js'
-import { runSuite } from './run/suite.js'
-import { drainIsolationWorkers } from './run/lib/isolation/worker.js'
-import { isolation } from './run/isolation.js'
+import { stats, createStore, ERRORS, Store } from './lib/index.js'
 import { warmComponentCompiles } from './lib/svelte/compile/warmComponentCompiles.js'
 import { printTraceSummary, isTraceEnabled } from './lib/trace/timing.js'
-import { clearCache as clearPersistentCache } from './lib/caches/persistentCache.js'
+import { isolation } from './run/isolation.js'
+import { drainIsolationWorkers } from './run/lib/isolation/worker.js'
+import { runSuite } from './run/suite.js'
 /**
  * Aggregate raw test results into the store's results object.
  * This replaces the incremental stats.test() calls to avoid race conditions.

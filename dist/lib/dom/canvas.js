@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module'
+
 import is from '@magic/types'
 let canvasModule = null
 let canvasLoadError = null

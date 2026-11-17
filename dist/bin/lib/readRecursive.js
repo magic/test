@@ -19,15 +19,17 @@ var __rewriteRelativeImportExtension =
   }
 import path from 'node:path'
 import { pathToFileURL, fileURLToPath } from 'node:url'
+
 import fs from '@magic/fs'
 import is from '@magic/types'
+
 import { initDOM } from '../../lib/dom/index.js'
-import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js'
-import { loadTestDefines, parseDefineValue } from './loadTestDefines.js'
 import {
   resolveSvelteOnlyExports,
   writeTempFile,
 } from '../../lib/svelte/compile/resolveSvelteOnlyExports.js'
+import { limitedPromiseAllSettled } from './limitedPromiseAllSettled.js'
+import { loadTestDefines, parseDefineValue } from './loadTestDefines.js'
 /**
  * Type guard for ImportResult.
  */

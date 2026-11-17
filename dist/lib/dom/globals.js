@@ -1,8 +1,10 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { createRequire } from 'node:module'
+
 import is from '@magic/types'
-import { createImagePolyfill } from './image.js'
+
 import { createCanvasPolyfill } from './canvas.js'
+import { createImagePolyfill } from './image.js'
 let window = null
 let document = null
 let happyDom = null

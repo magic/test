@@ -18,13 +18,15 @@ var __rewriteRelativeImportExtension =
     return path
   }
 import path from 'node:path'
+
 import fs from '@magic/fs'
 import log from '@magic/log'
 import is from '@magic/types'
-import { findNearestPackageJson, resolveImportMapSpecifier } from './resolveImportMap.js'
+
+import { getCwd } from '../../../constants.js'
 import { compileSvelteWithWrite } from './compileSvelteWithWrite.js'
 import { parallelMap } from './parallelMap.js'
-import { getCwd } from '../../../constants.js'
+import { findNearestPackageJson, resolveImportMapSpecifier } from './resolveImportMap.js'
 /**
  * Recursively collect component paths referenced by test entries.
  * Handles arrays, nested test objects, and both the `component: 'path'` and

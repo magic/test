@@ -12,7 +12,9 @@
  */
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+
 import is from '@magic/types'
+
 import { decodeSourceMap, originalPositionTryBoth, originalEndPositionFor } from './sourcemap.js'
 /** a source file with its line index */
 class CovSource {

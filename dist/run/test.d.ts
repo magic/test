@@ -1,5 +1,6 @@
-import { Store } from '../lib/store.js'
 import type { WrappedTest, TestResult, Suite } from '../types.js'
+
+import { Store } from '../lib/store.js'
 /**
  * Run a test or delegate to a suite.
  *

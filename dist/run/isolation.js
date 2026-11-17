@@ -9,7 +9,9 @@
  * - lib/isolation/skipProps.ts: globals excluded from snapshots
  * -------------------------------------------------------------------------- */
 import { Worker } from 'node:worker_threads'
+
 import log from '@magic/log'
+
 import {
   deepClone as deepCloneGlobal,
   shouldCaptureProperty as shouldCapture,

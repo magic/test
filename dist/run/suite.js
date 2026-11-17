@@ -1,10 +1,11 @@
 import path from 'node:path'
-import { beginTimerScope } from '../lib/dom/globals.js'
 import { pathToFileURL } from 'node:url'
+
 import error from '@magic/error'
 import log from '@magic/log'
 import is from '@magic/types'
-import { runTest } from './test.js'
+
+import { beginTimerScope } from '../lib/dom/globals.js'
 import {
   getFNS,
   ERRORS,
@@ -23,6 +24,7 @@ import {
   runSequentialHooked,
   runParallelArray,
 } from './lib/index.js'
+import { runTest } from './test.js'
 /**
  * Type guard to check if an Error has a string `code` property.
  */

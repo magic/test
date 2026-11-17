@@ -1,4 +1,5 @@
 import is from '@magic/types'
+
 import { env } from './env.js'
 /**
  * Recursively stringifies parts of an input value to make it JSON-safe.

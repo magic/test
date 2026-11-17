@@ -1,4 +1,5 @@
 import path from 'node:path'
+
 import { collectDtsFiles } from './collectDtsFiles.js'
 import { checkDtsFile, summarizeErrors } from './typeCheckDts.js'
 /**

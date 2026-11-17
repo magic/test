@@ -1,6 +1,8 @@
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+
 import fs from '@magic/fs'
+
 import { getCwd } from '../../../constants.js'
 import { writeAtomic } from '../../caches/persistentCache.js'
 export const writeCompiledFile = async (tempPath, code, map, sourceMapRef = false, sourcePath) => {

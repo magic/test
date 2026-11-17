@@ -1,5 +1,7 @@
-import is from '@magic/types'
 import path from 'node:path'
+
+import is from '@magic/types'
+
 import { escapeRegex } from './escapeRegex.js'
 export const normalizeSingleAlias = (entry, configDir) => {
   const e = entry

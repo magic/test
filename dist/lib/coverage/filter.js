@@ -5,8 +5,8 @@
  * that coverage tooling uses (`**`, `*`, `?`, `!` negation) plus a
  * recursive directory walker for the `--all` mode.
  */
-import path from 'node:path'
 import fs from 'node:fs'
+import path from 'node:path'
 const SEP = '/'
 /**
  * Normalizes a user pattern the same way test-exclude does:

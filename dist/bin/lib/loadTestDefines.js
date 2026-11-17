@@ -19,6 +19,7 @@ var __rewriteRelativeImportExtension =
   }
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+
 import fs from '@magic/fs'
 import is from '@magic/types'
 const DEFINE_FILE_NAMES = ['.defines.mjs', '.defines.ts', 'defines.mjs', 'defines.ts'].map(

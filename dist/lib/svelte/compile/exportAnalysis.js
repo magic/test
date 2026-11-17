@@ -7,9 +7,11 @@
  * resolveAndCompileImport.ts.
  * -------------------------------------------------------------------------- */
 import path from 'node:path'
+
 import fs from '@magic/fs'
-import { parseFile, extractExports, extractImportedNamesFromCode } from './astParse.js'
+
 import { LRUCache } from '../../caches/LRUCache.js'
+import { parseFile, extractExports, extractImportedNamesFromCode } from './astParse.js'
 export const traverseExports = async (filePath, visitor, visited = new Set()) => {
   if (visited.has(filePath)) {
     return

@@ -5,8 +5,9 @@
  * and apply snapshots of the current globalThis. The Isolation facade in
  * src/run/isolation.ts uses these for per-test and per-suite isolation.
  * -------------------------------------------------------------------------- */
-import is from '@magic/types'
 import log from '@magic/log'
+import is from '@magic/types'
+
 import { skipProps } from './skipProps.js'
 /**
  * Map stringified symbol keys back to the Symbol itself.

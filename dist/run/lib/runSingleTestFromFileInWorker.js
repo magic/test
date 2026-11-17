@@ -1,7 +1,8 @@
 import is from '@magic/types'
+
 import { getTestKey } from '../../lib/index.js'
-import { hasTestProperties } from './hasTestProperties.js'
 import { createFailResult } from './createFailResult.js'
+import { hasTestProperties } from './hasTestProperties.js'
 import { runSingleTestInWorker } from './runSingleTestInWorker.js'
 export const runSingleTestFromFileInWorker = async (
   tests,

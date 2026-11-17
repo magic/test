@@ -1,13 +1,15 @@
-import is from '@magic/types'
-import path from 'node:path'
-import fs from '@magic/fs'
 import { createRequire } from 'node:module'
+import path from 'node:path'
+
+import fs from '@magic/fs'
 import log from '@magic/log'
-import { LRUCache } from '../../caches/LRUCache.js'
-import { traceStart, traceEnd } from '../../trace/timing.js'
-import { existsCached } from '../../caches/pathCache.js'
-import { ddlHold, ddlRelease } from './ddl.js'
+import is from '@magic/types'
+
 import { pendingPromises, packageExportCache } from '../../caches/cache.js'
+import { LRUCache } from '../../caches/LRUCache.js'
+import { existsCached } from '../../caches/pathCache.js'
+import { traceStart, traceEnd } from '../../trace/timing.js'
+import { ddlHold, ddlRelease } from './ddl.js'
 // Combined LRU cache for file scanning operations (boolean results)
 // Keys prefixed: 'reexports:' or 'exportstar:'
 const fileScanCache = new LRUCache(500)

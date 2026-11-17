@@ -2,6 +2,7 @@
 // Provides navigation functions that manipulate the page store
 // Context-aware: resolves to current AsyncLocalStorage context
 import is from '@magic/types'
+
 import { get } from 'svelte/store'
 import { getContext, getDefaultContext } from './state.js'
 // OnNavigate extends AfterNavigate for type compatibility

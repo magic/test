@@ -1,5 +1,5 @@
-import type { Suite, Snapshot, TestResult, TestObject, Test } from '../../types.js'
 import type { Store } from '../../lib/store.js'
+import type { Suite, Snapshot, TestResult, TestObject, Test } from '../../types.js'
 type BaseStrategyArgs = {
   tests: Test[]
   name: string

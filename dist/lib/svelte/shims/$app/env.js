@@ -1,7 +1,8 @@
 // Shim for $app/environment
 // Reads config from vite.config.ts if available, otherwise uses defaults
-import fs from '@magic/fs'
 import { join } from 'node:path'
+
+import fs from '@magic/fs'
 const getViteConfig = () => {
   try {
     const root = process.cwd()

@@ -16,9 +16,11 @@
  * ------------------------------------------------------------------------- */
 import crypto from 'node:crypto'
 import path from 'node:path'
+
 import fs from '@magic/fs'
-import { LRUCache } from './LRUCache.js'
+
 import { CACHE_DIR } from '../../constants.js'
+import { LRUCache } from './LRUCache.js'
 const DIR = path.join(CACHE_DIR, 'resolve-transform')
 const SAME_SENTINEL = '\u0000RESOLVE_SAME'
 // In-memory layer for the current process

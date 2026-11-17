@@ -1,7 +1,9 @@
-import is from '@magic/types'
 import path from 'node:path'
-import { getViteDefine } from './viteConfig/index.js'
+
+import is from '@magic/types'
+
 import { getSvelteCompiler } from './compiler-cache.js'
+import { getViteDefine } from './viteConfig/index.js'
 const walk = (node, handlers) => {
   const visit = n => {
     if (!n || !is.object(n)) {

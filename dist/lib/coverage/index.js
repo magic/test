@@ -5,12 +5,14 @@
  * merges them, remaps them through the source maps Node cached in the
  * same files and prints a text report. No external dependencies.
  */
-import path from 'node:path'
 import fs from 'node:fs'
+import path from 'node:path'
+
 import is from '@magic/types'
-import { loadCoverage } from './v8read.js'
-import { FileFilter } from './filter.js'
+
 import { convertScript, mergeFileCoverage } from './convert.js'
+import { FileFilter } from './filter.js'
+import { loadCoverage } from './v8read.js'
 const readCache = new Map()
 /** reads a source file, null when it cannot be read */
 const readSource = p => {

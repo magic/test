@@ -1,7 +1,7 @@
-import { findConfigFile } from './findConfigFile.js'
-import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
 import { defineCache } from './cache.js'
+import { findConfigFile } from './findConfigFile.js'
 import { loadViteConfig } from './loadViteConfig.js'
+import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
 export const loadViteDefine = async rootDir => {
   const cacheKey = rootDir + ':vite-define'
   const cached = defineCache.get(cacheKey)

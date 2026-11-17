@@ -1,8 +1,10 @@
 import nodeHttp from 'node:http'
 import nodeHttps from 'node:https'
 import { URL } from 'node:url'
-import { handleResponse } from './handleResponse.js'
+
 import is from '@magic/types'
+
+import { handleResponse } from './handleResponse.js'
 /**
  * Validate and parse a URL, returning the parsed URL and HTTPS flag.
  */

@@ -1,4 +1,5 @@
 import is from '@magic/types'
+
 import {
   Element,
   Document,

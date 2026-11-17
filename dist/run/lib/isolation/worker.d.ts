@@ -1,5 +1,6 @@
-import { Worker } from 'node:worker_threads'
 import type { Snapshot, TestResult } from '../../../types.js'
+
+import { Worker } from 'node:worker_threads'
 /**
  * Wait up to timeoutMs for all in-flight worker terminations to complete.
  * Resolves true when everything drained, false on timeout (the caller

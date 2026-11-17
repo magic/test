@@ -1,8 +1,10 @@
 import crypto from 'node:crypto'
+
 import is from '@magic/types'
+
 import { parseAst } from '../../analysis/parseAst.js'
-import { getSvelteCompiler } from '../compiler-cache.js'
 import { LRUCache } from '../../caches/LRUCache.js'
+import { getSvelteCompiler } from '../compiler-cache.js'
 const MAX_AST_CACHE_SIZE = 500
 const analysisCache = new LRUCache(MAX_AST_CACHE_SIZE)
 // Use LRUCache for consistent cache behavior

@@ -1,4 +1,5 @@
 import is from '@magic/types'
+
 import { toCleanError } from '../../lib/index.js'
 import { isolation } from '../isolation.js'
 import { runTestCore } from './runTestCore.js'

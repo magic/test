@@ -3,14 +3,16 @@
 import './lib/registerLoader.js'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
+
 import log from '@magic/log'
 import is from '@magic/types'
-import { run, abort } from '../run.js'
+
+import { sweepStaleManifest } from '../lib/caches/persistentCache.js'
 import { releaseDomHandles } from '../lib/dom/globals.js'
+import { buildDtsTestSuites } from '../lib/dts/index.js'
+import { run, abort } from '../run.js'
 import { maybeInjectMagic, readRecursive, resetVisitedDirs } from './lib/index.js'
 import { prewarmComponentGraphs } from './lib/prewarmComponents.js'
-import { buildDtsTestSuites } from '../lib/dts/index.js'
-import { sweepStaleManifest } from '../lib/caches/persistentCache.js'
 // Create globalStartTime BEFORE anything else for accurate total timing
 const globalStartTime = log.hrtime()
 export const getShardConfig = () => {

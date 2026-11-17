@@ -1,6 +1,8 @@
-import path from 'node:path'
 import { statSync } from 'node:fs'
+import path from 'node:path'
+
 import fs from '@magic/fs'
+
 import ts from 'typescript'
 import { analyzeDts } from './analyzeDts.js'
 /**

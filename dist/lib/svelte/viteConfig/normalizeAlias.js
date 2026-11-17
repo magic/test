@@ -1,4 +1,5 @@
 import is from '@magic/types'
+
 import { normalizeSingleAlias } from './normalizeSingleAlias.js'
 export const normalizeAlias = (alias, configDir) => {
   if (is.array(alias)) {

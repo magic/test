@@ -1,4 +1,5 @@
 import is from '@magic/types'
+
 import { parseAst } from './parseAst.js'
 // Safely cast a value to AstNode after validation
 const toNode = val => {

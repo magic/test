@@ -1,10 +1,11 @@
-import { LRUCache } from './LRUCache.js'
 import type {
   CompileCacheEntry,
   ImportCacheEntry,
   BarrelCacheEntry,
   CssObject,
 } from '../../types.js'
+
+import { LRUCache } from './LRUCache.js'
 export { LRUCache }
 export { clearCache } from './persistentCache.js'
 export interface PackageExportResolveEntry {

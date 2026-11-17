@@ -1,4 +1,5 @@
 import log from '@magic/log'
+
 import { cacheManager } from '../caches/cache.js'
 // Global trace state
 const traces = new Map()

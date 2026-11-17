@@ -1,10 +1,12 @@
-import fs from '@magic/fs'
+import crypto from 'node:crypto'
 import { open as openFile, rm as rmFile } from 'node:fs/promises'
 import path from 'node:path'
-import crypto from 'node:crypto'
+
+import fs from '@magic/fs'
+
+import { CACHE_DIR } from '../../constants.js'
 import { LRUCache } from './LRUCache.js'
 import { clearResolveTransformCache } from './resolveTransformCache.js'
-import { CACHE_DIR } from '../../constants.js'
 const MANIFEST_FILE = path.join(CACHE_DIR, 'manifest.json')
 const LOCK_FILE = path.join(CACHE_DIR, 'manifest.lock')
 // Shared relative-path mapping for the compile cache location of a source

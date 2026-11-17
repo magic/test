@@ -1,33 +1,34 @@
+import { AsyncLocalStorage } from 'node:async_hooks'
+import crypto from 'node:crypto'
 import path from 'node:path'
 import { pathToFileURL, fileURLToPath } from 'node:url'
-import crypto from 'node:crypto'
-import { AsyncLocalStorage } from 'node:async_hooks'
+
 import fs from '@magic/fs'
 import log from '@magic/log'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-import { getSvelteCompiler } from '../compiler-cache.js'
-import { cacheManager } from '../../caches/cache.js'
-import { processImports } from './processImports.js'
-import { compileSvelteWithWrite } from './compileSvelteWithWrite.js'
-import { transformForNode } from './transformForNode.js'
-import { resolvePackageExport } from './resolvePackageExport.js'
-import { LRUCache } from '../../caches/LRUCache.js'
-import { cache as compileCache } from '../../caches/cache.js'
 import { getCwd, CACHE_DIR } from '../../../constants.js'
+import { cacheManager } from '../../caches/cache.js'
+import { cache as compileCache } from '../../caches/cache.js'
+import { LRUCache } from '../../caches/LRUCache.js'
+import { existsCached } from '../../caches/pathCache.js'
+import { getResolveTransform, recordResolveTransform } from '../../caches/resolveTransformCache.js'
+import { getSvelteCompiler } from '../compiler-cache.js'
 import { hasSvelteRunes } from './astParse.js'
 import { parseFile, extractExports, extractImports } from './astParse.js'
-import { getTempFilePath } from './getTempFilePath.js'
-import { existsCached } from '../../caches/pathCache.js'
-import { isSkipPattern, resolveFilePath, SHIM_EXTENSION_CANDIDATES } from './pathUtils.js'
+import { compileSvelteWithWrite } from './compileSvelteWithWrite.js'
+import { ddl, ddlInitWatchdog, ddlHold, ddlRelease } from './ddl.js'
 import {
   extractNamedExportsRecursive,
   findSvelteFileForExport,
   findExportSourceFile,
   extractNamedImportsFromCode,
 } from './exportAnalysis.js'
+import { getTempFilePath } from './getTempFilePath.js'
+import { isSkipPattern, resolveFilePath, SHIM_EXTENSION_CANDIDATES } from './pathUtils.js'
+import { processImports } from './processImports.js'
+import { resolvePackageExport } from './resolvePackageExport.js'
 import { computeTempPath, writeTempFile } from './tempFiles.js'
-import { getResolveTransform, recordResolveTransform } from '../../caches/resolveTransformCache.js'
-import { ddl, ddlInitWatchdog, ddlHold, ddlRelease } from './ddl.js'
+import { transformForNode } from './transformForNode.js'
 // Re-exported for import compatibility (tsLoader, readRecursive, tests)
 export { writeTempFile } from './tempFiles.js'
 ddlInitWatchdog()

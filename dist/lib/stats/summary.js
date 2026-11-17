@@ -1,4 +1,5 @@
 import log from '@magic/log'
+
 import { printPercent } from './printPercent.js'
 import { readRunSummary } from './resultsFile.js'
 /**
