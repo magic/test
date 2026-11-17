@@ -1,4 +1,9 @@
+import os from 'node:os'
+import path from 'node:path'
+import { mkdir, writeFile, rm } from 'node:fs/promises'
+
 import { CacheManager, pendingPromises } from '#lib/caches/cache.js'
+import { loadManifest, sweepStaleManifest } from '#lib/caches/persistentCache.js'
 import { has } from '#lib/has.js'
 import type { TestCase } from '#src/types.js'
 
@@ -8,15 +13,13 @@ interface TestCache {
   css: string | null
 }
 
-// Helper to access private methods for testing
+// Helper to access private members for testing
 function getPrivate<T>(cm: CacheManager<T>): {
   memoryCache: Map<string, unknown>
-  isSvelteResult: (result: unknown) => boolean
 } {
   // Use type assertion to access private members for testing
   const privateCm = cm as unknown as {
     memoryCache: Map<string, unknown>
-    isSvelteResult: (result: unknown) => boolean
   }
   return privateCm
 }
@@ -45,75 +48,64 @@ export default [
     expect: has.properties({ misses: 0, hits: 0 }),
     info: 'reset clears hits and misses',
   },
-  // isSvelteResult type guard - valid result
+  // P0-3 regression: the persistent cache entry is owned SOLELY by the
+  // compileFn (compileSvelteWithWrite records it, with the sourceMappingURL
+  // line). getOrCompile must NOT record a second entry — the old double
+  // record overwrote the persisted file with the bare result.js, stripping
+  // the sourceMappingURL line and breaking V8 coverage remapping.
   {
-    fn: () => {
-      const cm = new CacheManager<TestCache>()
-      const priv = getPrivate(cm)
-      return priv.isSvelteResult({ js: 'code' })
+    fn: async () => {
+      const dir = path.join(os.tmpdir(), `magic-cmgr-${process.pid}-${Date.now()}`)
+      await mkdir(dir, { recursive: true })
+      const file = path.join(dir, 'SingleOwner.svelte')
+      await writeFile(file, '<script>let a = 0</script>')
+      let calls = 0
+      try {
+        const cm = new CacheManager<TestCache>()
+        const result = await cm.getOrCompile(file, async () => {
+          calls++
+          return { js: 'compiled', css: null }
+        })
+        const m = await loadManifest()
+        const recorded = m ? m.sources[file] !== undefined : false
+        return { calls, recorded, js: result.js, cached: result.cacheStatus?.cached }
+      } finally {
+        await rm(dir, { recursive: true, force: true })
+        // never leak a manifest entry into the shared cache (and dogfood the
+        // stale sweep while at it)
+        await sweepStaleManifest().catch(() => undefined)
+      }
     },
-    expect: true,
-    info: 'isSvelteResult returns true for { js }',
+    expect: has.properties({ calls: 1, recorded: false, js: 'compiled', cached: false }),
+    info: 'getOrCompile does not write a persistent cache entry (compileFn is the single owner)',
   },
-  // isSvelteResult type guard - valid result with css
+  // P0-3 regression: a second getOrCompile for the same file hits the
+  // in-memory cache and does not re-invoke the compileFn (dedup + memo).
   {
-    fn: () => {
-      const cm = new CacheManager<TestCache>()
-      const priv = getPrivate(cm)
-      return priv.isSvelteResult({ js: 'code', css: '.style {}' })
+    fn: async () => {
+      const dir = path.join(os.tmpdir(), `magic-cmgr-${process.pid}-${Date.now()}`)
+      await mkdir(dir, { recursive: true })
+      const file = path.join(dir, 'Memoized.svelte')
+      await writeFile(file, '<script>let a = 0</script>')
+      let calls = 0
+      try {
+        const cm = new CacheManager<TestCache>()
+        await cm.getOrCompile(file, async () => {
+          calls++
+          return { js: 'one', css: null }
+        })
+        const again = await cm.getOrCompile(file, async () => {
+          calls++
+          return { js: 'two', css: null }
+        })
+        return { calls, js: again.js, cached: again.cacheStatus?.cached }
+      } finally {
+        await rm(dir, { recursive: true, force: true })
+        await sweepStaleManifest().catch(() => undefined)
+      }
     },
-    expect: true,
-    info: 'isSvelteResult returns true for { js, css }',
-  },
-  // isSvelteResult type guard - missing js
-  {
-    fn: () => {
-      const cm = new CacheManager<TestCache>()
-      const priv = getPrivate(cm)
-      return priv.isSvelteResult({ css: 'style' })
-    },
-    expect: false,
-    info: 'isSvelteResult returns false without js',
-  },
-  // isSvelteResult type guard - null
-  {
-    fn: () => {
-      const cm = new CacheManager<TestCache>()
-      const priv = getPrivate(cm)
-      return priv.isSvelteResult(null)
-    },
-    expect: false,
-    info: 'isSvelteResult returns false for null',
-  },
-  // isSvelteResult type guard - undefined
-  {
-    fn: () => {
-      const cm = new CacheManager<TestCache>()
-      const priv = getPrivate(cm)
-      return priv.isSvelteResult(undefined)
-    },
-    expect: false,
-    info: 'isSvelteResult returns false for undefined',
-  },
-  // isSvelteResult type guard - array
-  {
-    fn: () => {
-      const cm = new CacheManager<TestCache>()
-      const priv = getPrivate(cm)
-      return priv.isSvelteResult(['code'])
-    },
-    expect: false,
-    info: 'isSvelteResult returns false for array',
-  },
-  // isSvelteResult type guard - string
-  {
-    fn: () => {
-      const cm = new CacheManager<TestCache>()
-      const priv = getPrivate(cm)
-      return priv.isSvelteResult('not an object')
-    },
-    expect: false,
-    info: 'isSvelteResult returns false for string',
+    expect: has.properties({ calls: 1, js: 'one', cached: true }),
+    info: 'second getOrCompile hits the memory cache without re-compiling',
   },
   // memoryCache starts empty
   {

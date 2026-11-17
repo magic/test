@@ -19,7 +19,13 @@ export const writeCompiledFile = async (
   let contentToWrite = code
   if (sourceMapRef && map) {
     const sourceMapComment = `//# sourceMappingURL=${path.basename(tmpFileAbs)}.map\n`
-    contentToWrite = code + sourceMapComment
+    // Callers may already have appended the comment (compileSvelteWithWrite
+    // bakes it into the "canonical" string it also hands to recordCompile —
+    // the two writers must produce byte-identical content or the file mtime
+    // churns on every compile). Append only when missing.
+    if (!code.endsWith(sourceMapComment)) {
+      contentToWrite = code + sourceMapComment
+    }
 
     // Write source map file for c8 coverage remapping
     const mapObj = JSON.parse(map)

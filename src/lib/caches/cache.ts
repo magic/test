@@ -14,8 +14,7 @@ import type {
   BarrelCacheEntry,
   CssObject,
 } from '../../types.js'
-import { getCachedCompile, recordCompile } from './persistentCache.js'
-import is from '@magic/types'
+import { getCachedCompile } from './persistentCache.js'
 
 // Export LRUCache for external use
 export { LRUCache }
@@ -115,11 +114,11 @@ export class CacheManager<T> {
           // Ignore
         }
 
-        // Write to disk cache if it's the right type
-        if (this.isSvelteResult(result)) {
-          await this.writeDiskCache(absPath, result.js)
-        }
-
+        // NOTE: no disk write here. The compileFn for the svelte pipeline
+        // (compileSvelteWithWrite) is the single owner of the persistent
+        // cache entry — a second recordCompile with the bare `result.js`
+        // used to overwrite the persisted file and strip its
+        // sourceMappingURL line (breaking V8 coverage remapping).
         return result
       } finally {
         pendingPromises.delete(key)
@@ -129,13 +128,6 @@ export class CacheManager<T> {
     pendingPromises.set(key, compilePromise)
     const result = await compilePromise
     return { ...result, cacheStatus: { cached: false, source: null } }
-  }
-
-  /**
-   * Type guard to check if result is a Svelte compilation result
-   */
-  private isSvelteResult(result: unknown): result is { js: string; css: CssObject | null } {
-    return is.objectNative(result) && 'js' in result
   }
 
   /**
@@ -156,14 +148,6 @@ export class CacheManager<T> {
     }
 
     return null
-  }
-
-  /**
-   * Write compiled result to disk cache
-   */
-  private async writeDiskCache(filePath: string, js: string): Promise<void> {
-    // Write to persistent cache (hash-based)
-    await recordCompile(filePath, js)
   }
 
   /**

@@ -18,9 +18,14 @@ export const processImports = async (
   code: string,
   sourceFilePath: string,
   importChain: string[] = [],
+  /** Bypass the (filePath, code-hash) result cache. Used when re-running
+   *  resolution after known-bad external state (e.g. a compiled dependency
+   *  artifact was deleted) — the cached rewrite would still point at the
+   *  stale artifacts even though the source code is unchanged. */
+  force: boolean = false,
 ): Promise<string> => {
   // Skip caching if importChain is non-empty (might depend on circular deps)
-  if (importChain.length === 0) {
+  if (importChain.length === 0 && !force) {
     const cacheKey = `${sourceFilePath}:${crypto.createHash('md5').update(code).digest('hex')}`
     const cached = processImportsCache.get(cacheKey)
     if (cached && cached.code === code) {

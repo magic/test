@@ -509,7 +509,13 @@ const resolveAndCompileImportImplCore = async (
   const cached = importCache.get(resolvedPath)
   if (cached) {
     const stats = await fs.stat(resolvedPath)
-    if (stats.mtimeMs === cached.mtime) {
+    // The mtime check only proves the SOURCE is unchanged; the COMPILED file
+    // (cached.absPath) can have been deleted out from under us (fixture
+    // cleanup, partial cache wipe). Serving a URL to a missing file would
+    // break the import, so require the artifact to still exist — a miss
+    // here falls through to the disk check (which also verifies existence)
+    // and, failing that, recompiles, healing the island.
+    if (stats.mtimeMs === cached.mtime && (await fs.exists(cached.absPath))) {
       traceEnd(compileId, 'cache hit')
       const sourceTmpFile = getTempFilePath(sourceFilePath)
       const fromDir = path.dirname(sourceTmpFile)
