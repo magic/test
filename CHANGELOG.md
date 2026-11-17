@@ -4,6 +4,11 @@
 
 - fix: the ESM loader now serves `.svelte.js` files from the compile cache verbatim instead of re-transpiling them — the re-transpiled in-memory source was longer than the on-disk file, so V8 coverage offsets remapped against the on-disk source map produced phantom uncovered statements/branches/functions (some past EOF), capping branch coverage of Svelte projects at ~94% no matter how many tests were added
 - test: regression for verbatim serving of cache `.svelte.js` files (plus transpilation of `.svelte.js` files outside the cache, which is unchanged)
+- perf: the auto worker pool is capped at 4 workers by default and adapts to system load (halves between 1× and 2× the core count, drops to 1 above that; `MAGIC_TEST_ADAPTIVE=0` or CI disables it) — a test run no longer saturates a 16-core machine
+- feat: `--nice` / `MAGIC_TEST_NICE` (default 10): on macOS/Linux the run is wrapped in `nice` when the machine is busy at spawn (1-min load average above half the cores) so the user's own work stays responsive; on an idle machine the suite runs at full speed; `--nice 0` / `MAGIC_TEST_NICE=0` disables throttling
+- fix: on a busy machine at spawn the wall-clock budgets are bumped — per-file discovery/import 30 s → 120 s, per-test 30 s → 300 s, worker round-trip backstop 120 s → 600 s — a starved run is slow, not hung; explicit `MAGIC_TEST_DISCOVERY_TIMEOUT` / `MAGIC_TEST_TIMEOUT` / `--timeout` / `MAGIC_TEST_WORKER_TIMEOUT_MS` still win
+- fix: the getTestTimeout tests no longer leak their MAGIC_TEST_TIMEOUT mutation into the ambient process env — a leaked delete downgraded every later test in the process to the stock 30 s default
+- test: worker-pool, E2E-child and DDL-watchdog deadlines now scale with the load, so the suite stays green on a busy machine (tight contracts unchanged on an idle one)
 
 #### 0.3.57
 
