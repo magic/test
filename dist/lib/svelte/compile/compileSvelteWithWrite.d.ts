@@ -1,7 +1,9 @@
 import type { CssObject } from '../../../types.js'
-export declare const compileSvelteWithWrite: (filePath: string) => Promise<{
+type CompileWithWriteResult = {
   js: string
   css: CssObject | null
   tmpFile: string
   importUrl: string
-}>
+}
+export declare const compileSvelteWithWrite: (filePath: string) => Promise<CompileWithWriteResult>
+export {}

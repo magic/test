@@ -11,7 +11,7 @@ import { cacheManager } from '../../lib/caches/cache.js'
 import { writeQueue } from '../../lib/svelte/compile/writeQueue.js'
 import { hasSvelteRunes, extractImportsSync } from '../../lib/svelte/compile/astParse.js'
 import { getTempFilePath } from '../../lib/svelte/compile/getTempFilePath.js'
-import { transpileWithTypescript } from './tsTranspile.js'
+import { cachedTranspile } from './transpileCache.js'
 import { handleVirtualModule } from './virtual-module.js'
 import { compileSvelteWithWrite } from '../../lib/svelte/compile/compileSvelteWithWrite.js'
 import { findNearestPackageJson } from '../../lib/svelte/compile/resolveImportMap.js'
@@ -746,12 +746,6 @@ const resolveImpl = async (specifier, context, nextResolve) => {
   }
   return nextResolve(specifier, context)
 }
-const transpileWithTypeScript = code => {
-  const id = traceStart('tsLoader.transpile')
-  const output = transpileWithTypescript(code)
-  traceEnd(id)
-  return output
-}
 const resolveDollarLibImports = async (code, filePath) => {
   const imports = extractImportsSync(code)
   const dollarImports = imports.filter(i => {
@@ -826,7 +820,7 @@ const loadImplInner = async (url, context, nextLoad) => {
     if (await fs.exists(filePath)) {
       const source = await fs.readFile(filePath, 'utf-8')
       const withResolvedImports = await resolveDollarLibImports(source, filePath)
-      const transpiled = transpileWithTypeScript(withResolvedImports)
+      const transpiled = await cachedTranspile(withResolvedImports)
       try {
         const compiler = await getCompileModule()
         const result = compiler.compileModule(transpiled, { filename: filePath })
@@ -854,7 +848,7 @@ const loadImplInner = async (url, context, nextLoad) => {
       // node_modules_processed mirror) were already processed for node when
       // written (processImports + transformForNode: $lib/#lib imports resolved
       // to file: URLs, TypeScript stripped). Serve them verbatim: re-running
-      // resolveDollarLibImports + transpileWithTypeScript here produces a
+      // resolveDollarLibImports + cachedTranspile here produces a
       // different (longer) in-memory source than the on-disk file, so V8
       // coverage offsets (taken against the in-memory source) get remapped
       // with the on-disk file's source map and show up as phantom uncovered
@@ -867,7 +861,7 @@ const loadImplInner = async (url, context, nextLoad) => {
         }
       }
       const withResolvedImports = await resolveDollarLibImports(source, filePath)
-      const transpiled = transpileWithTypeScript(withResolvedImports)
+      const transpiled = await cachedTranspile(withResolvedImports)
       try {
         const compiler = await getCompileModule()
         const result = compiler.compileModule(transpiled, { filename: filePath })
@@ -892,7 +886,7 @@ const loadImplInner = async (url, context, nextLoad) => {
     if (await fs.exists(filePath)) {
       const source = await fs.readFile(filePath, 'utf-8')
       const withResolvedImports = await resolveDollarLibImports(source, filePath)
-      const transpiled = transpileWithTypeScript(withResolvedImports)
+      const transpiled = await cachedTranspile(withResolvedImports)
       // No in-memory preamble (e.g. a globalThis.addEventListener shim): the
       // loader-init initGlobals() already installs those globals, and any
       // in-memory-only prefix would shift V8 coverage offsets for c8 (c8
@@ -916,7 +910,7 @@ const loadImplInner = async (url, context, nextLoad) => {
         source.includes('satisfies') ||
         source.includes('declare ')
       if (hasTypeScript) {
-        const transpiled = transpileWithTypeScript(source)
+        const transpiled = await cachedTranspile(source)
         return { format: 'module', source: transpiled, shortCircuit: true }
       }
     }

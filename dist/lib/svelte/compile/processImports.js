@@ -10,9 +10,18 @@ import { parallelMap, MAX_CONCURRENT } from './parallelMap.js'
 import { ddl } from './ddl.js'
 // Cache for processImports results (key: codeHash:sourceFilePath)
 const processImportsCache = new LRUCache(4096)
-export const processImports = async (code, sourceFilePath, importChain = []) => {
+export const processImports = async (
+  code,
+  sourceFilePath,
+  importChain = [],
+  /** Bypass the (filePath, code-hash) result cache. Used when re-running
+   *  resolution after known-bad external state (e.g. a compiled dependency
+   *  artifact was deleted) — the cached rewrite would still point at the
+   *  stale artifacts even though the source code is unchanged. */
+  force = false,
+) => {
   // Skip caching if importChain is non-empty (might depend on circular deps)
-  if (importChain.length === 0) {
+  if (importChain.length === 0 && !force) {
     const cacheKey = `${sourceFilePath}:${crypto.createHash('md5').update(code).digest('hex')}`
     const cached = processImportsCache.get(cacheKey)
     if (cached && cached.code === code) {

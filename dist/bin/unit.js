@@ -10,12 +10,20 @@ import { releaseDomHandles } from '../lib/dom/globals.js'
 import { maybeInjectMagic, readRecursive, resetVisitedDirs } from './lib/index.js'
 import { prewarmComponentGraphs } from './lib/prewarmComponents.js'
 import { buildDtsTestSuites } from '../lib/dts/index.js'
+import { sweepStaleManifest } from '../lib/caches/persistentCache.js'
 // Create globalStartTime BEFORE anything else for accurate total timing
 const globalStartTime = log.hrtime()
 export const getShardConfig = () => {
   const rawShards = process.env.MAGIC_TEST_SHARDING_SHARDS
   const rawShardId = process.env.MAGIC_TEST_SHARDING_ID
   const rawWorkers = process.env.MAGIC_TEST_WORKERS
+  // Consume the sharding IPC vars: the t.ts CLI sets them for this unit.js
+  // child, and nothing in this process reads them again (run() receives the
+  // values as options). Leaving them in the environment would leak them into
+  // grandchild processes — e.g. fixture `t` runs spawned by self-spawning
+  // tests — which would shard their own suites and break their output.
+  delete process.env.MAGIC_TEST_SHARDING_SHARDS
+  delete process.env.MAGIC_TEST_SHARDING_ID
   const shards = Math.max(1, parseInt(rawShards || '1', 10)) || 1
   const shardId = Math.max(0, parseInt(rawShardId || '0', 10)) || 0
   const workers = rawWorkers ? Math.max(1, parseInt(rawWorkers, 10)) : undefined
@@ -47,9 +55,21 @@ export const getDtsExcludes = () => {
 }
 const init = async () => {
   try {
+    // Consume the sharding IPC env vars (set by the t.ts CLI for this
+    // unit.js child) as early as possible: worker threads snapshot
+    // process.env at creation, so any thread or child spawned before this
+    // line must not see them — and they must never reach grandchild
+    // processes (fixture `t` runs spawned by self-spawning tests would
+    // otherwise inherit a sharded view and report a different test count).
+    const shardConfig = getShardConfig()
     await maybeInjectMagic()
     // Reset state between runs to prevent stale cache issues
     resetVisitedDirs()
+    // Drop compile-cache manifest entries whose source no longer exists
+    // (e.g. /tmp fixture packages created by test runs). Fire-and-forget:
+    // collection below doesn't depend on it, and a failed sweep must never
+    // break the run.
+    void sweepStaleManifest().catch(() => undefined)
     // Progress tracking for test collection
     let testFileCount = 0
     const tests = await readRecursive('', count => {
@@ -97,7 +117,7 @@ const init = async () => {
     // workers reuse the shared disk cache instead of each re-importing the
     // package graphs (see prewarmComponents.ts).
     await prewarmComponentGraphs(tests)
-    const { shards, shardId, workers } = getShardConfig()
+    const { shards, shardId, workers } = shardConfig
     const outcome = await run(tests, { shards, shardId, workers, globalStartTime })
     // run() no longer exits the process — the CLI decides the exit code.
     // process.exitCode (not process.exit) lets stdout flush first: a hard

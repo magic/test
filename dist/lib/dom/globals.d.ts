@@ -1,4 +1,4 @@
-import { Document as HappyDocument, Window as HappyWindow } from 'happy-dom'
+import type { Document as HappyDocument, Window as HappyWindow } from 'happy-dom'
 export declare const define: (
   target: Record<string | symbol, unknown>,
   key: string | symbol,

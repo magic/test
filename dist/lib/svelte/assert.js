@@ -1,4 +1,3 @@
-import * as HappyDOM from 'happy-dom'
 export const html = target => target.innerHTML
 export const text = target => target.textContent ?? ''
 export const component = instance => instance

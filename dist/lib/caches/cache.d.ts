@@ -32,17 +32,9 @@ export declare class CacheManager<T> {
    */
   getOrCompile(filePath: string, compileFn: () => Promise<T>): Promise<CachedResult<T>>
   /**
-   * Type guard to check if result is a Svelte compilation result
-   */
-  private isSvelteResult
-  /**
    * Check disk cache for a compiled Svelte file
    */
   private checkDiskCache
-  /**
-   * Write compiled result to disk cache
-   */
-  private writeDiskCache
   /**
    * Get cache stats
    */

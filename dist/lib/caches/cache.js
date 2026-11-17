@@ -4,8 +4,7 @@ import { ddlInitWatchdog } from '../svelte/compile/ddl.js'
 ddlInitWatchdog()
 import { LRUCache } from './LRUCache.js'
 import { getCwd } from '../../constants.js'
-import { getCachedCompile, recordCompile } from './persistentCache.js'
-import is from '@magic/types'
+import { getCachedCompile } from './persistentCache.js'
 // Export LRUCache for external use
 export { LRUCache }
 // Re-export persistent cache functions
@@ -75,10 +74,11 @@ export class CacheManager {
         } catch {
           // Ignore
         }
-        // Write to disk cache if it's the right type
-        if (this.isSvelteResult(result)) {
-          await this.writeDiskCache(absPath, result.js)
-        }
+        // NOTE: no disk write here. The compileFn for the svelte pipeline
+        // (compileSvelteWithWrite) is the single owner of the persistent
+        // cache entry — a second recordCompile with the bare `result.js`
+        // used to overwrite the persisted file and strip its
+        // sourceMappingURL line (breaking V8 coverage remapping).
         return result
       } finally {
         pendingPromises.delete(key)
@@ -87,12 +87,6 @@ export class CacheManager {
     pendingPromises.set(key, compilePromise)
     const result = await compilePromise
     return { ...result, cacheStatus: { cached: false, source: null } }
-  }
-  /**
-   * Type guard to check if result is a Svelte compilation result
-   */
-  isSvelteResult(result) {
-    return is.objectNative(result) && 'js' in result
   }
   /**
    * Check disk cache for a compiled Svelte file
@@ -108,13 +102,6 @@ export class CacheManager {
       return { js: cached.js, css: cached.css, mtime: stats.mtimeMs }
     }
     return null
-  }
-  /**
-   * Write compiled result to disk cache
-   */
-  async writeDiskCache(filePath, js) {
-    // Write to persistent cache (hash-based)
-    await recordCompile(filePath, js)
   }
   /**
    * Get cache stats

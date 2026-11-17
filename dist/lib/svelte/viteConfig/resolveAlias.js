@@ -1,10 +1,69 @@
 import fs from '@magic/fs'
 import is from '@magic/types'
 import path from 'node:path'
+import { LRUCache } from '../../caches/LRUCache.js'
 import { findProjectRoot } from './findProjectRoot.js'
 import { parseTsConfig } from './parseTsConfig.js'
 import { loadViteAliases } from './loadViteAliases.js'
 import { classifyImport } from './classifyImport.js'
+import { findConfigFile } from './findConfigFile.js'
+import { VITE_CONFIG_NAMES } from './VITE_CONFIG_NAMES.js'
+const rootAliasState = new LRUCache(200)
+const refreshRootAliasState = async rootDir => {
+  const [viteAliases, tsAliases, rootStat] = await Promise.all([
+    loadViteAliases(rootDir),
+    parseTsConfig(rootDir),
+    fs.stat(rootDir).catch(() => null),
+  ])
+  const tsconfigPath = path.join(rootDir, 'tsconfig.json')
+  const tsStat = await fs.stat(tsconfigPath).catch(() => null)
+  const viteConfigPath = await findConfigFile(rootDir, VITE_CONFIG_NAMES)
+  const viteStat = viteConfigPath ? await fs.stat(viteConfigPath).catch(() => null) : null
+  const state = {
+    rootMtimeMs: rootStat ? rootStat.mtimeMs : -1,
+    tsconfig: tsStat ? { mtimeMs: tsStat.mtimeMs, size: tsStat.size } : null,
+    vite:
+      viteStat && viteConfigPath
+        ? { path: viteConfigPath, mtimeMs: viteStat.mtimeMs, size: viteStat.size }
+        : null,
+    aliases: [...viteAliases, ...tsAliases],
+  }
+  rootAliasState.set(rootDir, state)
+  return state
+}
+const getRootAliases = async rootDir => {
+  const state = rootAliasState.get(rootDir)
+  if (state) {
+    const rootStat = await fs.stat(rootDir).catch(() => null)
+    if (rootStat && rootStat.mtimeMs === state.rootMtimeMs) {
+      // Root unchanged since the last refresh: no file could have appeared
+      // or been deleted. Only in-place edits of the tracked configs remain
+      // possible — check exactly those (one stat each, zero when untracked).
+      if (state.tsconfig) {
+        const tsStat = await fs.stat(path.join(rootDir, 'tsconfig.json')).catch(() => null)
+        if (
+          !tsStat ||
+          tsStat.mtimeMs !== state.tsconfig.mtimeMs ||
+          tsStat.size !== state.tsconfig.size
+        ) {
+          return (await refreshRootAliasState(rootDir)).aliases
+        }
+      }
+      if (state.vite) {
+        const viteStat = await fs.stat(state.vite.path).catch(() => null)
+        if (
+          !viteStat ||
+          viteStat.mtimeMs !== state.vite.mtimeMs ||
+          viteStat.size !== state.vite.size
+        ) {
+          return (await refreshRootAliasState(rootDir)).aliases
+        }
+      }
+      return state.aliases
+    }
+  }
+  return (await refreshRootAliasState(rootDir)).aliases
+}
 export const resolveAlias = async (importPath, sourceFilePath, options = {}) => {
   const { includeShims } = options
   const importType = classifyImport(importPath)
@@ -28,9 +87,7 @@ export const resolveAlias = async (importPath, sourceFilePath, options = {}) => 
   }
   const sourceDir = path.dirname(sourceFilePath)
   const rootDir = await findProjectRoot(sourceDir)
-  const viteAliases = await loadViteAliases(rootDir)
-  const tsAliases = await parseTsConfig(rootDir)
-  const allAliases = [...viteAliases, ...tsAliases]
+  const allAliases = await getRootAliases(rootDir)
   for (const { find, replacement } of allAliases) {
     let resolved = null
     if (is.string(find)) {

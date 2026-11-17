@@ -1,10 +1,21 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
+import { createRequire } from 'node:module'
 import is from '@magic/types'
-import { Document as HappyDocument, Window as HappyWindow } from 'happy-dom'
 import { createImagePolyfill } from './image.js'
 import { createCanvasPolyfill } from './canvas.js'
 let window = null
 let document = null
+let happyDom = null
+const loadHappyDom = () => {
+  if (!happyDom) {
+    // CJS require of the same module the ESM graph would load (happy-dom
+    // ships a single CJS build, no exports map) — one instance per process,
+    // shared by all worker threads.
+    const require = createRequire(import.meta.url)
+    happyDom = require('happy-dom')
+  }
+  return happyDom
+}
 // A process must have exactly ONE happy-dom window. Multiple copies of this
 // module can be loaded in the same process (e.g. the dist/ build and the src/
 // build of this package imported side by side — the native test runner mounts
@@ -174,7 +185,7 @@ export const initGlobals = () => {
       document,
     }
   }
-  window = new HappyWindow({ url: 'http://localhost/' })
+  window = new (loadHappyDom().Window)({ url: 'http://localhost/' })
   setSharedWindow(window)
   document = window.document
   define(globalThis, 'document', document)

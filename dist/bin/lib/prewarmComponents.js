@@ -34,18 +34,22 @@ const WARM_PROBE_SAMPLE = 5
 /**
  * Skip the prewarm when the package graph is already warm: a fresh/cold
  * cache is the case the prewarm protects against; on a warm cache it is pure
- * overhead. Probe a sample of the recorded node_modules sources (hash check
- * via getCachedCompile) — a mismatch (dep update) or an empty manifest means
- * the graph needs (re)building.
+ * overhead. Probe a sample of the project's node_modules sources (stat/hash
+ * check via getCachedCompile) — a mismatch (dep update) or an empty manifest
+ * means the graph needs (re)building.
+ *
+ * Only entries under <cwd>/node_modules are probed: manifest keys from
+ * outside the project (e.g. /tmp fixture packages created by test runs)
+ * also contain "/node_modules/" in their path and would otherwise pollute
+ * the probe with stale paths that always miss.
  */
 const graphLooksWarm = async () => {
   const m = await loadManifest()
   if (!m) {
     return false
   }
-  const entries = Object.keys(m.sources).filter(k =>
-    k.includes(`${path.sep}node_modules${path.sep}`),
-  )
+  const projectNodeModules = path.join(process.cwd(), 'node_modules') + path.sep
+  const entries = Object.keys(m.sources).filter(k => k.startsWith(projectNodeModules))
   if (entries.length === 0) {
     return false
   }
