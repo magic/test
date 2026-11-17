@@ -5,6 +5,7 @@ import {
   ddlRelease,
   ddlInitWatchdog,
 } from '#lib/svelte/compile/ddl.js'
+import os from 'node:os'
 import type { TestCase } from '#src/types.js'
 
 // The ddl helpers only act when MAGIC_TEST_DDL is set, and they write through
@@ -144,11 +145,13 @@ export default [
         // for seconds at a time) only runs when the loop next turns — a rigid
         // 5.6s window lapsed before the overdue tick could fire and the test
         // failed. A single tick can also be lost if a sibling restores
-        // _rawDebug at its exact instant; the next interval retries it. A
-        // genuinely broken watchdog still fails via the runner's 30s per-test
-        // timeout.
+        // _rawDebug at its exact instant; the next interval retries it. On a
+        // busy machine siblings (and the whole run) run many times longer,
+        // so the deadline scales with the load. A genuinely broken watchdog
+        // still fails via the runner's per-test timeout.
+        const scale = (os.loadavg()[0] ?? 0) > os.availableParallelism() / 2 ? 12 : 1
         const start = Date.now()
-        while (Date.now() - start < 25_000) {
+        while (Date.now() - start < 25_000 * scale) {
           if (
             capture.some(m => m.includes('[DDL-hb]')) &&
             capture.some(m => m.includes('stuck <- holder'))

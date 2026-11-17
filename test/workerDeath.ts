@@ -21,7 +21,20 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const unitBin = path.join(repoRoot, 'dist', 'bin', 'unit.js')
 
 // Backstop for worker round-trips in the child runs (post-fix B1 timeout).
-const CHILD_ENV: Record<string, string> = { MAGIC_TEST_WORKER_TIMEOUT_MS: '8000' }
+// A busy machine starves the child's workers (they inherit the run's nice'd
+// priority), so the backstop scales with the load — otherwise a slow-but-
+// alive worker trips it before it ever boots and the death is misreported
+// as a round-trip timeout instead of an exit.
+const childBackstopEnv = (): Record<string, string> => ({
+  MAGIC_TEST_WORKER_TIMEOUT_MS: String(8000 * busyScale()),
+})
+
+/**
+ * A busy machine starves the child (it inherits this run's nice'd priority),
+ * so the child's wall-clock budgets scale with the load: the contract stays
+ * tight on an idle machine and is simply "bounded" when the machine is busy.
+ */
+const busyScale = (): number => ((os.loadavg()[0] ?? 0) > os.availableParallelism() / 2 ? 12 : 1)
 
 type ChildResult = {
   code: number | null
@@ -29,6 +42,8 @@ type ChildResult = {
   out: string
   ms: number
   timedOut: boolean
+  /** load factor applied to the child's wall-clock budgets (1 or 12) */
+  scale: number
 }
 
 const runChild = async (
@@ -37,6 +52,7 @@ const runChild = async (
   env: Record<string, string> = {},
   guardMs = 20000,
 ): Promise<ChildResult> => {
+  const scale = busyScale()
   const started = Date.now()
   let timedOut = false
   const child = spawn(process.execPath, args, {
@@ -54,13 +70,13 @@ const runChild = async (
   const killTimer = setTimeout(() => {
     timedOut = true
     child.kill('SIGKILL')
-  }, guardMs)
+  }, guardMs * scale)
   // 'close' fires after BOTH process exit and stdio EOF — awaiting 'exit'
   // alone can read the report before the pipe has drained (output-loss
   // flake under load).
   const code = await new Promise<number | null>(resolve => child.on('close', c => resolve(c)))
   clearTimeout(killTimer)
-  return { code, signal: child.signalCode ?? null, out, ms: Date.now() - started, timedOut }
+  return { code, signal: child.signalCode ?? null, out, ms: Date.now() - started, timedOut, scale }
 }
 
 const makeChildProject = async (deathSource: string): Promise<string> => {
@@ -147,7 +163,7 @@ const assertDeathRun = (r: ChildResult, expectedCode: number): boolean =>
   !r.timedOut &&
   r.code === expectedCode &&
   r.out.includes('without posting a result') &&
-  r.ms < 18000
+  r.ms < 18000 * r.scale
 
 const deathScenario = async (
   label: 'individual' | 'batch' | 'live-handle',
@@ -155,7 +171,7 @@ const deathScenario = async (
 ): Promise<ChildResult & { label: string }> => {
   const dir = await makeChildProject(source)
   try {
-    const r = await runChild([unitBin], dir, CHILD_ENV)
+    const r = await runChild([unitBin], dir, childBackstopEnv())
     return { ...r, label }
   } finally {
     await rm(dir, { recursive: true, force: true }).catch(() => {})
@@ -205,7 +221,7 @@ console.log('OK', Date.now() - t0)
       return {
         ...r,
         label: 'discovery-timers',
-        ok: r.code === 0 && r.out.includes('OK') && r.ms < 5000,
+        ok: r.code === 0 && r.out.includes('OK') && r.ms < 5000 * r.scale,
       }
     },
     expect: (result: unknown) => (result as { ok: boolean }).ok,

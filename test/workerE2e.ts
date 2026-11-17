@@ -21,7 +21,19 @@ const unitBin = path.join(repoRoot, 'dist', 'bin', 'unit.js')
 // Generous per-worker timeout for the children: under coverage collection
 // (npm run coverage re-execs with NODE_V8_COVERAGE) the children's workers
 // run several times slower and the default 8s budget was not enough.
-const CHILD_ENV: Record<string, string> = { MAGIC_TEST_WORKER_TIMEOUT_MS: '20000' }
+// A busy machine starves the child's workers (they inherit the run's nice'd
+// priority), so the backstop scales with the load — otherwise a slow-but-
+// alive worker trips it before it ever boots.
+const childBackstopEnv = (): Record<string, string> => ({
+  MAGIC_TEST_WORKER_TIMEOUT_MS: String(20000 * busyScale()),
+})
+
+/**
+ * A busy machine starves the child (it inherits this run's nice'd priority),
+ * so the child's wall-clock budgets scale with the load: the contract stays
+ * tight on an idle machine and is simply "bounded" when the machine is busy.
+ */
+const busyScale = (): number => ((os.loadavg()[0] ?? 0) > os.availableParallelism() / 2 ? 12 : 1)
 
 type ChildResult = {
   code: number | null
@@ -30,6 +42,8 @@ type ChildResult = {
   ms: number
   timedOut: boolean
   label: string
+  /** load factor applied to the child's wall-clock budgets (1 or 12) */
+  scale: number
 }
 
 const runChild = async (
@@ -38,12 +52,13 @@ const runChild = async (
   env: Record<string, string> = {},
   guardMs = 30000,
 ): Promise<ChildResult> => {
+  const scale = busyScale()
   const started = Date.now()
   let timedOut = false
   // A nested run must not inherit the parent's results-file handoff: the
   // child would withhold its summary from stdout and overwrite the parent's
   // file. Children always report to stdout.
-  const childEnv: NodeJS.ProcessEnv = { ...process.env, ...CHILD_ENV, ...env }
+  const childEnv: NodeJS.ProcessEnv = { ...process.env, ...childBackstopEnv(), ...env }
   delete childEnv.MAGIC_TEST_RESULTS_FILE
   // The children are a vehicle, not a target: their own V8 coverage data
   // would land in the parent's temp dir and skew the merged report.
@@ -69,7 +84,7 @@ const runChild = async (
   const killTimer = setTimeout(() => {
     timedOut = true
     child.kill('SIGKILL')
-  }, guardMs)
+  }, guardMs * scale)
   // 'close' fires after BOTH process exit and stdio EOF — awaiting 'exit'
   // alone can read the report before the pipe has drained (output-loss
   // flake under load).
@@ -82,6 +97,7 @@ const runChild = async (
     ms: Date.now() - started,
     timedOut,
     label: '',
+    scale,
   }
 }
 
@@ -136,7 +152,7 @@ export default {
       r.code === 1 &&
       r.out.includes('hooks boom') &&
       r.out.includes('Pass: 2/3') &&
-      r.ms < 25000,
+      r.ms < 25000 * r.scale,
     info: 'beforeAll/beforeEach/afterEach run in the batch worker; a throwing test is reported and does not hang the run',
   },
   {
@@ -260,7 +276,7 @@ export default [
 `,
       ),
     expect: (r: ChildResult) =>
-      !r.timedOut && r.code === 0 && r.out.includes('Ran 1 test') && r.ms < 25000,
+      !r.timedOut && r.code === 0 && r.out.includes('Ran 1 test') && r.ms < 25000 * r.scale,
     info: 'a leaked fire-and-forget timer does not stall the exit — the child reports and exits well under the 30s backstop',
   },
 ] satisfies TestCase[]

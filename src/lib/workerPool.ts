@@ -2,6 +2,39 @@ import os from 'node:os'
 
 const MAX_QUEUE_SIZE = 1000
 
+/**
+ * Cap for the AUTO worker count. Every worker is a full V8 isolate
+ * (loader + happy-dom + Svelte compilation), and the suite is
+ * compile/DOM-bound rather than CPU-bound: beyond 4 concurrent workers the
+ * wall-time gain is small while the machine pegs all cores and becomes
+ * unresponsive. Explicit limits (--workers / MAGIC_TEST_WORKERS) bypass
+ * this cap.
+ */
+export const DEFAULT_WORKER_CAP = 4
+
+/** How often the load-adaptive limit re-checks the 1-minute load average. */
+const ADAPTIVE_CHECK_MS = 5_000
+
+export const computeDefaultWorkerLimit = (cores: number): number =>
+  Math.max(1, Math.min(cores - 2, DEFAULT_WORKER_CAP))
+
+/**
+ * Load-adaptive scaling of the auto (shared pool) limit, based on the
+ * 1-minute load average:
+ *   load <= cores          -> configured (full limit)
+ *   cores < load <= 2*cores -> half (min 1)
+ *   load >  2*cores        -> 1
+ */
+export const computeAdaptiveLimit = (configured: number, load1: number, cores: number): number => {
+  if (load1 <= cores) {
+    return configured
+  }
+  if (load1 <= cores * 2) {
+    return Math.max(1, Math.ceil(configured / 2))
+  }
+  return 1
+}
+
 const getEffectiveLimit = (override?: number): number => {
   if (override !== undefined) {
     return Math.max(1, override)
@@ -13,13 +46,71 @@ const getEffectiveLimit = (override?: number): number => {
       return Math.max(1, Math.floor(parsed))
     }
   }
-  return Math.max(1, os.availableParallelism() - 2)
+  return computeDefaultWorkerLimit(os.availableParallelism())
 }
 
 export const WORKER_LIMIT = getEffectiveLimit()
 export const getEffectiveWorkerLimit = getEffectiveLimit
 
-let sharedPool: ReturnType<typeof createWorkerPool> | null = null
+/**
+ * Load-adaptive throttling of the shared pool: when the system is loaded
+ * beyond its core count the shared pool shrinks so the suite leaves CPU for
+ * whatever else is running (a frozen dev machine is worse than a slower
+ * suite). Disabled with MAGIC_TEST_ADAPTIVE=0 and on CI (dedicated machine:
+ * slowing down under load is pure waste).
+ */
+const adaptiveDisabled = (): boolean =>
+  process.env.MAGIC_TEST_ADAPTIVE === '0' || Boolean(process.env.CI)
+
+let loadSampler: () => number = () => os.loadavg()[1] ?? 0
+
+/** Test hook: replace the load-average source (pass undefined to restore). */
+export const setLoadSampler = (fn?: () => number) => {
+  loadSampler = fn ?? (() => os.loadavg()[1] ?? 0)
+}
+
+let sharedConfigured: number | null = null
+let sharedCurrent: number | null = null
+let sharedPool: WorkerPool | null = null
+let timer: ReturnType<typeof setInterval> | null = null
+
+/** Test hook: current effective shared-pool limit (0 if never initialized). */
+export const getSharedPoolLimitForTests = (): number => sharedCurrent ?? 0
+
+const sharedLimitFn = (): number => {
+  if (sharedCurrent !== null) {
+    return sharedCurrent
+  }
+  sharedConfigured ??= getEffectiveLimit()
+  return sharedConfigured
+}
+
+const updateAdaptiveLimit = (): number => {
+  if (adaptiveDisabled()) {
+    return sharedLimitFn()
+  }
+  sharedConfigured ??= getEffectiveLimit()
+  const next = computeAdaptiveLimit(sharedConfigured, loadSampler(), os.availableParallelism())
+  if (next !== sharedCurrent) {
+    sharedCurrent = next
+    sharedPool?.wake()
+  }
+  return sharedCurrent
+}
+
+/** Test hook: run one adaptive-limit update cycle immediately. */
+export const tickAdaptiveLimitForTests = (): number => updateAdaptiveLimit()
+
+const startTimer = (): void => {
+  if (timer) {
+    return
+  }
+  updateAdaptiveLimit()
+  timer = setInterval(updateAdaptiveLimit, ADAPTIVE_CHECK_MS)
+  timer.unref()
+}
+
+type WorkerPool = (<T>(fn: () => Promise<T>) => Promise<T>) & { wake: () => void }
 
 /**
  * Get a worker pool.
@@ -27,31 +118,40 @@ let sharedPool: ReturnType<typeof createWorkerPool> | null = null
  * Pools requested without an explicit limit share one process-wide pool, so
  * concurrently-running suites cannot multiply the worker count
  * (N suites × limit). Explicit limits get a dedicated pool.
+ *
+ * The shared pool's limit is load-adaptive (see updateAdaptiveLimit);
+ * dedicated pools are static.
  */
-export const getWorkerPool = (limit?: number) => {
+export const getWorkerPool = (limit?: number): WorkerPool => {
   if (limit === undefined) {
-    sharedPool ??= createWorkerPool(getEffectiveLimit())
+    if (!sharedPool) {
+      sharedPool = createWorkerPool(sharedLimitFn)
+      startTimer()
+    }
     return sharedPool
   }
-  return createWorkerPool(getEffectiveLimit(limit))
+  return createWorkerPool(() => Math.max(1, limit))
 }
 
-const createWorkerPool = (limit: number) => {
+const createWorkerPool = (getLimit: () => number): WorkerPool => {
   let running = 0
   const waitQueue: Array<() => void> = []
 
-  const release = () => {
-    running--
-    const next = waitQueue.shift()
-    if (next) {
+  const wake = () => {
+    while (waitQueue.length > 0 && running < getLimit()) {
+      const next = waitQueue.shift()!
+      running++
       next()
     }
   }
 
-  return async <T>(fn: () => Promise<T>): Promise<T> => {
-    if (running < limit) {
+  const pool = async <T>(fn: () => Promise<T>): Promise<T> => {
+    if (running < getLimit()) {
       running++
-      return fn().finally(release)
+      return fn().finally(() => {
+        running--
+        wake()
+      })
     }
 
     // Reject if queue is full to prevent unbounded memory growth
@@ -61,9 +161,15 @@ const createWorkerPool = (limit: number) => {
 
     return new Promise<T>(resolve => {
       waitQueue.push(() => {
-        running++
-        resolve(fn().finally(release))
+        resolve(
+          fn().finally(() => {
+            running--
+            wake()
+          }),
+        )
       })
     })
   }
+
+  return Object.assign(pool, { wake })
 }
