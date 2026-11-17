@@ -154,12 +154,9 @@ export const run = async (
     await clearPersistentCache()
   }
 
-  // Set environment variables for sharding (user-facing override; the values
-  // are also passed directly as options below)
-  if (shards > 1) {
-    process.env.MAGIC_TEST_SHARDING_SHARDS = String(shards)
-    process.env.MAGIC_TEST_SHARDING_ID = String(shardId)
-  }
+  // NOTE: sharding is passed as options below; it must not be exported as
+  // environment (the CLI layer consumes its own IPC copy in getShardConfig)
+  // or child processes spawned by tests would inherit a sharded view.
 
   if (!is.undefined(workers)) {
     process.env.MAGIC_TEST_WORKERS = String(workers)

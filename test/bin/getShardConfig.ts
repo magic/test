@@ -127,6 +127,32 @@ export default [
     info: 'getShardConfig documents current behavior: non-numeric workers yields NaN',
   },
   {
+    fn: () =>
+      withEnv(
+        {
+          MAGIC_TEST_SHARDING_SHARDS: '4',
+          MAGIC_TEST_SHARDING_ID: '2',
+          MAGIC_TEST_WORKERS: '8',
+        },
+        () => {
+          getShardConfig()
+          // The sharding IPC vars must be consumed (deleted) so they never
+          // leak into grandchild processes (fixture `t` runs spawned by
+          // self-spawning tests would otherwise inherit a sharded view).
+          // The workers var is NOT consumed: the in-process worker pool
+          // still reads it after getShardConfig.
+          return {
+            shardingGone:
+              process.env.MAGIC_TEST_SHARDING_SHARDS === undefined &&
+              process.env.MAGIC_TEST_SHARDING_ID === undefined,
+            workersKept: process.env.MAGIC_TEST_WORKERS === '8',
+          }
+        },
+      ),
+    expect: { shardingGone: true, workersKept: true },
+    info: 'getShardConfig consumes sharding IPC vars (no leak to child processes)',
+  },
+  {
     fn: () => runHandleError('simulated CLI failure: string input'),
     expect: { threw: true, exitCode: 1 },
     info: 'handleError(string) logs and exits 1',
