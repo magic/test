@@ -1,5 +1,16 @@
 ### Changelog
 
+#### 0.3.59
+
+- fix: circular node_modules svelte barrels (e.g. @systemkollektiv/components) could deadlock the whole run when a re-entry crossed an async boundary (ESM resolve hook) that drops the compile-stack context — the re-entry awaited the in-flight compile's own pending promise forever; the cycle break now also fires from the import chain threaded through resolveAndCompileImport, and any remaining pending wait is bounded (60 s) with a loud warning + cycle-break fallback instead of an infinite hang
+- fix: the async compile stack is now a true stack (entries are removed on completion) instead of an ever-growing visited set that mis-fired for unrelated siblings
+- feat: Vite-style query imports are now explicitly supported in the loader — `?worker&url` / `?url` export the target's file URL as the default export (the worker script is never evaluated, so no `self` dependency and no silent `undefined`), `?worker` exports a factory that fails fast with an actionable error on instantiation, `?raw` / `?inline` export the file contents as a string; unknown query suffixes keep the previous pass-through behavior and query-less specifiers are untouched
+- fix: import-path compiles (components compiled only as dependencies of a mount, and barrel-compiled exports) now persist the canonical content — trailing `sourceMappingURL` comment plus the `.map` sidecar — so V8 coverage remaps them to source instead of reporting 0%; a polluted cache no longer needs a manual wipe to recover
+- fix: island integrity now also validates absolute `file:` import targets inside the compile cache (node_modules_processed mirrors), wiping or moving a dependency mirror while compiled components survived used to leave a permanently broken island (ERR_MODULE_NOT_FOUND on every mount, never re-healed); such islands now recompile and re-heal
+- fix: $app/* detection for the mount page context now runs on the compiled output (raw .svelte source has its imports under `ast.instance`, so source-level AST extraction never matched and `usesApp` was always false) and also matches the shim paths that processImports rewrites `$app/*` to; the `url`/`routeId`/`params`/`data` mount props now actually reach `page` instead of being silently ignored for every component
+- fix: the component test `fn` now runs inside the mounted component's $app context (`mount` returns the `ctx`, `executeTest` wraps the `fn` in `runWithContext`); interactions in the test (clicks, form submits) that re-read $app/state now see the test's url/data instead of falling back to the default context mid-render
+- test: `MapListLocation`-class regression coverage lives in downstream projects (maplibre `?worker&url` graph + @systemkollektiv barrel); regression test for page context props surviving interaction (PageDataTest); self-test suite green (2941 tests)
+
 #### 0.3.58
 
 - fix: the ESM loader now serves `.svelte.js` files from the compile cache verbatim instead of re-transpiling them, the re-transpiled in-memory source was longer than the on-disk file, so V8 coverage offsets remapped against the on-disk source map produced phantom uncovered statements/branches/functions (some past EOF), capping branch coverage of Svelte projects at ~94% no matter how many tests were added
