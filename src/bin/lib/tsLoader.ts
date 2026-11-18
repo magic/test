@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { pathToFileURL, fileURLToPath } from 'node:url'
 
 import fs from '@magic/fs'
 import log from '@magic/log'
@@ -8,6 +8,7 @@ import is from '@magic/types'
 
 import { CACHE_DIR, getCwd } from '../../constants.js'
 import { cacheManager } from '../../lib/caches/cache.js'
+import { writeAtomic } from '../../lib/caches/persistentCache.js'
 import { initGlobals } from '../../lib/dom/globals.js'
 import { get as httpGet } from '../../lib/http.js'
 import { hasSvelteRunes, extractImportsSync } from '../../lib/svelte/compile/astParse.js'
@@ -195,6 +196,117 @@ export const resolve = async (
   } finally {
     traceEnd(id)
   }
+}
+
+// ---------------------------------------------------------------------------
+// Vite-style query imports (?worker&url, ?worker, ?url, ?raw, ?inline).
+//
+// Vite rewrites these specifiers at build time; Node has no equivalent, so
+// without handling, `import url from 'x.mjs?worker&url'` resolves to the REAL
+// file and evaluates it as an ordinary module — a worker script needs `self`
+// (crashes outside a DOM context) and exports no default (the import silently
+// becomes `undefined`). We serve a deterministic stub instead, matching Vite
+// semantics:
+//   ?worker&url / ?url  → default export: the URL string of the real file
+//   ?worker             → default export: a Worker factory that fails fast
+//   ?raw / ?inline      → default export: the file contents as a string
+// Unknown query suffixes fall through to the legacy resolution path (Node
+// tolerates and ignores the query) — no behavior change for other tools' query
+// idioms. Specifiers without `?` are never affected.
+// ---------------------------------------------------------------------------
+
+const queryStubCache = new Map<string, { url: string; shortCircuit: boolean }>()
+
+const WORKER_STUB_SOURCE = [
+  'export default class WorkerStub {',
+  '  constructor() {',
+  '    throw new Error(',
+  '      "Web Workers are not supported in @magic/test — the worker script is not executed; stub the worker in your test instead.",',
+  '    )',
+  '  }',
+  '}',
+  '',
+].join('\n')
+
+const resolveQueryImport = async (
+  specifier: string,
+  context: { parentURL?: string },
+  nextResolve: (specifier: string, context?: object) => Promise<{ url: string }>,
+): Promise<{ url: string; shortCircuit: boolean } | null> => {
+  const qIdx = specifier.indexOf('?')
+  const base = specifier.slice(0, qIdx)
+  if (!base) {
+    return null
+  }
+  const query = new URLSearchParams(specifier.slice(qIdx + 1))
+  const kind: 'worker-url' | 'worker' | 'url' | 'raw' | 'inline' | null = query.has('worker')
+    ? query.has('url')
+      ? 'worker-url'
+      : 'worker'
+    : query.has('raw')
+      ? 'raw'
+      : query.has('inline')
+        ? 'inline'
+        : query.has('url')
+          ? 'url'
+          : null
+  if (!kind) {
+    return null // unknown query → legacy behavior
+  }
+
+  const cached = queryStubCache.get(specifier)
+  if (cached) {
+    return cached
+  }
+
+  // Resolve the base specifier: Node's standard resolution first (covers bare
+  // package subpaths, relative paths, file: URLs), then the full magic path
+  // (vite aliases, #lib, package handling) as fallback.
+  let baseUrl: string | null = null
+  try {
+    baseUrl = (await nextResolve(base, context)).url
+  } catch {
+    try {
+      baseUrl = (await resolveImpl(base, context, nextResolve)).url
+    } catch {
+      return null // unresolvable → let the legacy path report the error
+    }
+  }
+  if (!baseUrl) {
+    return null
+  }
+
+  let stub: string
+  if (kind === 'worker') {
+    stub = WORKER_STUB_SOURCE
+  } else if (kind === 'worker-url' || kind === 'url') {
+    stub = `export default ${JSON.stringify(baseUrl)}\n`
+  } else {
+    // ?raw / ?inline: the file contents as a string. A non-file base (remote,
+    // virtual) has no contents — fall through to legacy resolution.
+    if (!baseUrl.startsWith('file://')) {
+      return null
+    }
+    let content: string
+    try {
+      content = await fs.readFile(fileURLToPath(baseUrl), 'utf-8')
+    } catch {
+      return null // unreadable → legacy path surfaces a readable error
+    }
+    stub = `export default ${JSON.stringify(content)}\n`
+  }
+
+  // Stub files live under the cache dir (coverage-excluded), named by the
+  // specifier hash so the same specifier always maps to the same module.
+  const hash = crypto.createHash('sha256').update(specifier).digest('hex').slice(0, 16)
+  const stubPath = path.join(getCwd(), CACHE_DIR, 'virtual-stubs', `${hash}.mjs`)
+  if (!(await fs.exists(stubPath))) {
+    await fs.mkdirp(path.dirname(stubPath))
+    await writeAtomic(stubPath, stub)
+  }
+  const result = { url: pathToFileURL(stubPath).href, shortCircuit: true }
+  queryStubCache.set(specifier, result)
+  return result
 }
 
 // Resolve a $app/* import to the built-in shims directory.
@@ -450,6 +562,23 @@ const resolveImpl = async (
     // rewriteRemoteSource, or explicit http(s) imports): materialize directly.
     if (/^https?:\/\//.test(specifier)) {
       return { url: await materializeRemoteModule(specifier), shortCircuit: true }
+    }
+
+    // Vite-style query imports (?worker&url, ?worker, ?url, ?raw, ?inline):
+    // serve a deterministic stub instead of evaluating the target file.
+    // Only bare/relative/alias specifiers qualify — file:, node: and virtual:
+    // specifiers keep their native behavior (an http URL's own `?` was already
+    // handled above).
+    if (
+      specifier.includes('?') &&
+      !specifier.startsWith('file:') &&
+      !specifier.startsWith('node:') &&
+      !specifier.startsWith('virtual:')
+    ) {
+      const queryHandled = await resolveQueryImport(specifier, context, nextResolve)
+      if (queryHandled) {
+        return queryHandled
+      }
     }
     // svelte runtime: prefer the `browser` (client) variant so that dependencies
     // importing bare `svelte` (e.g. svelte-maplibre's context.svelte.js)
