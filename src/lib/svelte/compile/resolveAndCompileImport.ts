@@ -20,6 +20,7 @@ import { compileSvelte } from './compileSvelte.js'
 import { computeRelativePath } from './computeRelativePath.js'
 import { ddl } from './ddl.js'
 import { extractNamedImportsFromCode, isSvelteBarrel } from './exportAnalysis.js'
+import { sourceMapCommentFor, writeMapSidecar } from './fileWriter.js'
 import { getSvelteExports } from './getSvelteExports.js'
 import { getTempFilePath } from './getTempFilePath.js'
 import { isSvelteFile } from './isSvelteFile.js'
@@ -227,7 +228,12 @@ const resolveAndCompileImportImplCore = async (
           if (onDemandUrl) {
             return { filePath: importPath, js: '', url: onDemandUrl }
           }
-          const compiledPath = await compileSvelteOnlyExport(resolved.resolvedPath, sourceDir)
+          const compiledPath = await compileSvelteOnlyExport(
+            resolved.resolvedPath,
+            sourceDir,
+            undefined,
+            importChain,
+          )
           const compiledUrl = pathToFileURL(compiledPath).href
           return { filePath: importPath, js: '', url: compiledUrl }
         }
@@ -276,7 +282,12 @@ const resolveAndCompileImportImplCore = async (
           if (onDemandUrl) {
             return { filePath: importPath, js: '', url: onDemandUrl }
           }
-          const compiledPath = await compileSvelteOnlyExport(resolved.resolvedPath, sourceDir)
+          const compiledPath = await compileSvelteOnlyExport(
+            resolved.resolvedPath,
+            sourceDir,
+            undefined,
+            importChain,
+          )
           const compiledUrl = pathToFileURL(compiledPath).href
           return { filePath: importPath, js: '', url: compiledUrl }
         }
@@ -536,12 +547,20 @@ const resolveAndCompileImportImplCore = async (
     return { filePath: resolvedPath, js: diskCached.js, url: relativePath }
   }
 
-  const { js } = await compileSvelte(resolvedPath)
+  const { js, map } = await compileSvelte(resolvedPath)
 
   const newChain = [...importChain, resolvedPath]
   const processId = traceStart('processImports')
   const processed = await processImports(js, resolvedPath, newChain)
   traceEnd(processId)
+
+  // Canonical content: the trailing sourceMappingURL comment (and the .map
+  // sidecar written next to the compiled file) are what make V8 coverage
+  // remap this component back to its source. Import-path compiles used to
+  // persist the raw `processed` code, so components compiled only as
+  // dependencies of a mount showed 0% in the report and the polluted state
+  // persisted in the cache until it was wiped (single owner: fileWriter.ts).
+  const canonical = map ? processed + sourceMapCommentFor(tmpFileAbs) : processed
 
   ddl('COMPILE-FILE done-recursion ' + path.basename(resolvedPath))
 
@@ -553,7 +572,7 @@ const resolveAndCompileImportImplCore = async (
   ddl('COMPILE-FILE lock-held ' + path.basename(resolvedPath))
   try {
     const writeId = traceStart('fs.writeFile')
-    await writeQueue.write(tmpFile, processed)
+    await writeQueue.write(tmpFile, canonical)
     await writeQueue.flushPath(tmpFile)
     traceEnd(writeId)
   } finally {
@@ -563,19 +582,25 @@ const resolveAndCompileImportImplCore = async (
   const stats = await fs.stat(resolvedPath)
 
   importCache.set(resolvedPath, {
-    js: processed,
+    js: canonical,
     absPath: tmpFileAbs,
     mtime: stats.mtimeMs,
   })
   traceEnd(compileId)
 
+  // Map sidecar for coverage remapping (written outside the lock — atomic
+  // rename, and it is a separate file the temp-file lock does not cover).
+  if (map) {
+    await writeMapSidecar(tmpFileAbs, map, resolvedPath)
+  }
+
   // Record in the persistent cache so sibling workers (same run) and future
   // runs can skip the compile entirely.
-  await recordCompile(resolvedPath, processed)
+  await recordCompile(resolvedPath, canonical)
 
   const sourceTmpFile = getTempFilePath(sourceFilePath)
   const fromDir = path.dirname(sourceTmpFile)
   const relativePath = computeRelativePath(fromDir, tmpFileAbs)
 
-  return { filePath: resolvedPath, js: processed, url: relativePath }
+  return { filePath: resolvedPath, js: canonical, url: relativePath }
 }
