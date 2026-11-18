@@ -1,4 +1,5 @@
 import type { CssObject, ComponentProps, ContextOption, ContextInfo } from '../../types.js'
+import type { ShimContext } from './shims/$app/state.js'
 
 import { createRequire } from 'node:module'
 import path from 'node:path'
@@ -175,6 +176,7 @@ interface MountResult {
   component: Record<string, unknown>
   unmount: () => Promise<void>
   css: CssObject | null
+  ctx: ShimContext
 }
 
 /**
@@ -294,17 +296,14 @@ const mountWithMutex = async (
     throw new Error(`Svelte component not found: ${resolvedPath}`)
   }
 
-  // Read source to detect $app imports before compilation
-  const sourceCode = await fs.readFile(resolvedPath, 'utf-8')
-
-  const detection = await detectSvelteKitImports(sourceCode)
-  const usesApp = needsSvelteKitContext(detection)
-
-  // Create isolated context for this mount
+  // Create isolated context for this mount. The $app/* detection runs on the
+  // compiled output (below) — raw .svelte source has its script under
+  // `ast.instance`, so AST extraction on the source always missed the imports
+  // and ctx.page was never populated (url/data/routeId/params props silently
+  // ignored for every component).
   const ctx = createContext()
 
-  // If component uses $app/* imports, set up the context stores (like SvelteKit does)
-  if (usesApp) {
+  const setupPageContext = () => {
     const urlStr = (options.props?.url as string) || 'http://localhost/'
     const urlObj = new URL(urlStr)
     const routeId = (options.props?.routeId as string) || ''
@@ -324,7 +323,14 @@ const mountWithMutex = async (
 
   return runWithContext(ctx, async () => {
     // Compile and write synchronously before importing
-    const { css, importUrl } = await compileSvelteWithWrite(resolvedPath)
+    const { css, js, importUrl } = await compileSvelteWithWrite(resolvedPath)
+
+    // If component uses $app/* imports, set up the context stores (like
+    // SvelteKit does) before the module is imported and first rendered.
+    const detection = await detectSvelteKitImports(js)
+    if (needsSvelteKitContext(detection)) {
+      setupPageContext()
+    }
 
     let mod
     try {
@@ -515,6 +521,6 @@ const mountWithMutex = async (
       }
     }
 
-    return { target, component, unmount: wrappedUnmount, css }
+    return { target, component, unmount: wrappedUnmount, css, ctx }
   })
 }
