@@ -313,4 +313,36 @@ export default [
       '<div class="forms3"><span class="enhance-destroy">has-destroy</span> <span class="applyaction-promise">is-promise</span></div>',
     info: '$app/forms applyAction returns promise and enhance returns destroy',
   },
+  // Regression: $app/* detection must run on the compiled output. Raw .svelte
+  // source has its imports under `ast.instance`, so detection on the source
+  // never matched and ctx.page was never populated — url/routeId/params/data
+  // props were silently ignored for every component.
+  {
+    beforeEach: () => resetPage(),
+    component: '#lib/svelte/testFixtures/components/PageDataTest.svelte',
+    props: {
+      url: 'http://localhost/exhibition/ex1/loc1',
+      routeId: '/exhibition/[exhibition]/[location]',
+      params: { exhibition: 'ex1', location: 'loc1' },
+      data: { exhibition: { data: { id: 'ex1', name: 'Hall A' } } },
+    },
+    fn: async ({ target }) => {
+      const initial = target.querySelector('.initial')?.textContent ?? ''
+      const url = target.querySelector('.url')?.textContent ?? ''
+      const routeId = target.querySelector('.routeId')?.textContent ?? ''
+      ;(target.querySelector('.toggle') as HTMLElement | null)?.click()
+      await tick()
+      const expanded = target.querySelector('.expanded')?.textContent ?? ''
+      return { initial, url, routeId, expanded }
+    },
+    expect: (r: { initial: string; url: string; routeId: string; expanded: string }) =>
+      r.initial === '{"data":{"id":"ex1","name":"Hall A"}}' &&
+      r.url === '/exhibition/ex1/loc1' &&
+      r.routeId === '/exhibition/[exhibition]/[location]' &&
+      // the post-click render happens inside the test fn, which must run in
+      // the mount context (executeTest wraps fn in runWithContext) or page
+      // falls back to the default context and this would be 'null'
+      r.expanded === '{"id":"ex1","name":"Hall A"}',
+    info: 'page url/routeId/params/data props reach the component and survive interaction',
+  },
 ] satisfies Test[]
