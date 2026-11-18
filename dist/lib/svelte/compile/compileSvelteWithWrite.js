@@ -1,9 +1,9 @@
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { pathToFileURL, fileURLToPath } from 'node:url'
 
 import fs from '@magic/fs'
 
-import { getCwd } from '../../../constants.js'
+import { getCwd, CACHE_DIR } from '../../../constants.js'
 import { getCachedCompile, recordCompile } from '../../caches/persistentCache.js'
 import { traceStart, traceEnd } from '../../trace/timing.js'
 import { extractImportsSync } from './astParse.js'
@@ -57,12 +57,33 @@ const readCssSidecar = async resolvedPath => {
  */
 const compiledImportsExist = async (js, compiledFileAbs) => {
   const dir = path.dirname(compiledFileAbs)
+  const cacheRoot = path.join(getCwd(), CACHE_DIR)
   for (const imp of extractImportsSync(js)) {
     const src = imp.source
-    if (!src || !src.startsWith('.')) {
+    if (!src) {
       continue
     }
-    const target = path.resolve(dir, src.split('?')[0])
+    let target
+    if (src.startsWith('file://')) {
+      // Absolute cache reference: a node_modules_processed mirror or a
+      // compiled sibling .svelte.js. These used to be skipped (only relative
+      // imports were checked), so wiping the mirror while the compiled file
+      // survived left a permanently broken island — every mount of the
+      // component failed with ERR_MODULE_NOT_FOUND and never re-healed, since
+      // the source (and its manifest entry) was unchanged. Validate any
+      // file:// target that lands inside CACHE_DIR; targets outside it (the
+      // tool's own shims/dist) keep the old skip behavior.
+      const resolved = fileURLToPath(src.split('?')[0])
+      if (resolved.startsWith(cacheRoot + path.sep)) {
+        target = resolved
+      } else {
+        continue
+      }
+    } else if (src.startsWith('.')) {
+      target = path.resolve(dir, src.split('?')[0])
+    } else {
+      continue
+    }
     if (!(await fs.exists(target))) {
       return false
     }

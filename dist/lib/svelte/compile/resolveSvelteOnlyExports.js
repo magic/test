@@ -141,7 +141,38 @@ const reentryOutputPath = p => {
   }
   return computeTempPath(p)
 }
-export const compileSvelteOnlyExport = async (sveltePath, sourceDir, exportNames) => {
+// Bound for waiting on a concurrent compile of the same file. A pending that
+// never settles means the in-flight compile is (transitively) blocked on us —
+// a cross-context cycle, e.g. a re-entry that crosses an async boundary
+// dropping the compileStack store (ESM resolve hook / loader context). The
+// in-flight compile is an ancestor of our await chain, so breaking by
+// returning ITS temp-file URL is safe: it finishes (writing that file) before
+// the importer's module graph is evaluated. A plain sibling compile is not an
+// ancestor and settles normally — the bound only converts deadlocks into the
+// established cycle-break behavior, and bounds any other stall instead of
+// hanging the worker (and the whole run) forever.
+const PENDING_COMPILE_WAIT_MS = 60_000
+const waitForPendingCompile = async (pending, normalized) => {
+  let timer
+  const deadline = new Promise(resolve => {
+    timer = setTimeout(() => {
+      log.warn(
+        `compileOnly: in-flight compile of ${normalized} did not settle within ` +
+          `${PENDING_COMPILE_WAIT_MS / 1000}s — breaking the cycle and pointing the importer at its temp file. ` +
+          `Set MAGIC_TEST_DDL=1 to trace the wait graph.`,
+      )
+      resolve(reentryOutputPath(normalized))
+    }, PENDING_COMPILE_WAIT_MS)
+  })
+  try {
+    return await Promise.race([pending, deadline])
+  } finally {
+    if (timer) {
+      clearTimeout(timer)
+    }
+  }
+}
+export const compileSvelteOnlyExport = async (sveltePath, sourceDir, exportNames, importChain) => {
   const normalized = path.resolve(getCwd(), sveltePath)
   const store = compileStack.getStore()
   ddl(
@@ -155,11 +186,28 @@ export const compileSvelteOnlyExport = async (sveltePath, sourceDir, exportNames
     ddl('compileOnly CYCLE-BREAK ' + path.basename(normalized))
     return reentryOutputPath(normalized)
   }
+  // Chain-based break: the import chain threaded through resolveAndCompileImport
+  // proves the file is an ancestor of the current compile, even when the
+  // re-entry crossed an async boundary that dropped the compileStack store.
+  if (
+    importChain &&
+    importChain.some(chainPath => path.resolve(getCwd(), chainPath) === normalized)
+  ) {
+    ddl('compileOnly CHAIN-CYCLE-BREAK ' + path.basename(normalized))
+    return reentryOutputPath(normalized)
+  }
   const stack = store ?? { active: new Set() }
   stack.active.add(normalized)
-  return compileStack.run(stack, () =>
-    compileSvelteOnlyExportImpl(sveltePath, sourceDir, exportNames),
-  )
+  return compileStack.run(stack, async () => {
+    try {
+      return await compileSvelteOnlyExportImpl(sveltePath, sourceDir, exportNames)
+    } finally {
+      // True stack semantics: an entry must not survive past its compile, or
+      // the active set degrades into a visited set and the CYCLE-BREAK above
+      // mis-fires for unrelated siblings.
+      stack.active.delete(normalized)
+    }
+  })
 }
 const compileSvelteOnlyExportImpl = async (sveltePath, sourceDir, exportNames) => {
   ddl('compileOnly ENTER ' + path.basename(sveltePath))
@@ -183,7 +231,10 @@ const compileSvelteOnlyExportImpl = async (sveltePath, sourceDir, exportNames) =
     ddl('compileOnly PENDING-HIT ' + path.basename(sveltePath))
     ddlHold('compileOnly:' + cacheKey, path.basename(sveltePath))
     try {
-      return await existing
+      // Bounded wait: an unresolvable pending is a cross-context cycle (the
+      // in-flight compile is transitively blocked on us) — fall back to the
+      // in-flight compile's temp-file URL instead of hanging forever.
+      return await waitForPendingCompile(existing, path.resolve(getCwd(), sveltePath))
     } finally {
       ddlRelease('compileOnly:' + cacheKey, path.basename(sveltePath))
     }

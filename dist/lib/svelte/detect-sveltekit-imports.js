@@ -1,5 +1,18 @@
 import { extractImportsSync } from './compile/astParse.js'
 /**
+ * Match a $app/* import specifier. Handles both the raw form (`$app/state`)
+ * and the form rewritten by processImports to the shim file URL
+ * (`.../shims/$app/state.js`) — detection runs on the compiled output, where
+ * the raw specifiers no longer exist.
+ */
+const matchAppModule = source => {
+  if (source.startsWith('$app/')) {
+    return source.slice(5)
+  }
+  const m = /shims\/\$app\/(state|navigation|paths|environment)(\.js)?$/.exec(source)
+  return m?.[1] ?? null
+}
+/**
  * Detect if a compiled Svelte component uses $app/* imports.
  */
 export const detectSvelteKitImports = async compiledCode => {
@@ -12,23 +25,23 @@ export const detectSvelteKitImports = async compiledCode => {
     appEnvironment: false,
   }
   for (const imp of imports) {
-    if (imp.source.startsWith('$app/')) {
-      // Extract module name from "$app/module"
-      const module = imp.source.slice(5) // Remove "$app/" prefix
-      switch (module) {
-        case 'state':
-          result.appState = true
-          break
-        case 'navigation':
-          result.appNavigation = true
-          break
-        case 'paths':
-          result.appPaths = true
-          break
-        case 'environment':
-          result.appEnvironment = true
-          break
-      }
+    const module = matchAppModule(imp.source)
+    if (module === null) {
+      continue
+    }
+    switch (module) {
+      case 'state':
+        result.appState = true
+        break
+      case 'navigation':
+        result.appNavigation = true
+        break
+      case 'paths':
+        result.appPaths = true
+        break
+      case 'environment':
+        result.appEnvironment = true
+        break
     }
   }
   return result

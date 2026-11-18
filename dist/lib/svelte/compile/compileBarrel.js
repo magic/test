@@ -9,6 +9,7 @@ import { traceStart, traceEnd } from '../../trace/timing.js'
 import { compileSvelte } from './compileSvelte.js'
 import { computeRelativePath } from './computeRelativePath.js'
 import { ddl, ddlHold, ddlRelease } from './ddl.js'
+import { sourceMapCommentFor, writeMapSidecar } from './fileWriter.js'
 import { getSvelteExports } from './getSvelteExports.js'
 import { getTempFilePath } from './getTempFilePath.js'
 import { parallelMap, MAX_CONCURRENT } from './parallelMap.js'
@@ -95,22 +96,30 @@ const compileBarrelImpl = async (filePath, currentChain, knownExports) => {
       const { name, path: sveltePath, isDefaultReexport } = exp
       ddl('barrel EXPORT ' + name + ' ' + path.basename(sveltePath))
       const compileId = traceStart(`compileBarrel.export[${i + 1}/${validExports.length}] ${name}`)
-      const { js } = await compileSvelte(sveltePath)
+      const { js, map } = await compileSvelte(sveltePath)
       const processId = traceStart('processImports')
       const processed = await processImports(js, sveltePath, currentChain)
       traceEnd(processId)
       traceEnd(compileId)
+      const tmpFile = getTempFilePath(sveltePath)
+      const tmpFileAbs = path.join(getCwd(), tmpFile)
+      // Canonical content for coverage remapping (single owner: fileWriter.ts):
+      // the trailing sourceMappingURL comment + .map sidecar, so exports
+      // compiled only through the barrel remap to source like mount-path
+      // compiles do.
+      const canonical = map ? processed + sourceMapCommentFor(tmpFileAbs) : processed
       // Record each export in the persistent cache: the wrapper references
       // these temp files, and without manifest entries every worker would
       // recompile the whole barrel's svelte exports from source.
-      await recordCompile(sveltePath, processed)
-      const tmpFile = getTempFilePath(sveltePath)
-      const tmpFileAbs = path.join(getCwd(), tmpFile)
+      await recordCompile(sveltePath, canonical)
+      if (map) {
+        await writeMapSidecar(tmpFileAbs, map, sveltePath)
+      }
       return {
         name,
         absPath: tmpFileAbs,
         isDefaultReexport,
-        content: processed,
+        content: canonical,
       }
     },
     MAX_CONCURRENT,

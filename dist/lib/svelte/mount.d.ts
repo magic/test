@@ -1,4 +1,5 @@
 import type { CssObject, ComponentProps, ContextOption } from '../../types.js'
+import type { ShimContext } from './shims/$app/state.js'
 /**
  * Create a raw snippet for passing as children prop
  */
@@ -12,6 +13,7 @@ interface MountResult {
   component: Record<string, unknown>
   unmount: () => Promise<void>
   css: CssObject | null
+  ctx: ShimContext
 }
 export declare const mount: (
   filePath: string,

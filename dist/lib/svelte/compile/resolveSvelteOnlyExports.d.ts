@@ -3,6 +3,7 @@ export declare const compileSvelteOnlyExport: (
   sveltePath: string,
   sourceDir: string,
   exportNames?: string[],
+  importChain?: string[],
 ) => Promise<string>
 /**
  * Build a MINIMAL on-demand barrel for a svelte barrel entry: for each
