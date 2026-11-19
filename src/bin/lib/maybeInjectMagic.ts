@@ -109,10 +109,7 @@ export const maybeInjectMagic = async () => {
       globalThis.subscriptions = app.subscriptions
     }
 
-    const preLibModule = await import('@magic-modules/pre/src/lib/index.mjs')
-    const preLib = (preLibModule as { default?: unknown }).default
-
-    const lib: Record<string, unknown> = { pre: preLib }
+    const lib: Record<string, unknown> = {}
 
     if (is.ownProp(app, 'lib') && is.object(app.lib)) {
       for (const [k, v] of Object.entries(app.lib)) {
