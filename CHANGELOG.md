@@ -1,5 +1,9 @@
 ### Changelog
 
+#### 0.3.60
+
+- remove @magic-modules/pre from maybeInjectMagic lib handling
+
 #### 0.3.59
 
 - fix: circular node_modules svelte barrels (e.g. @systemkollektiv/components) could deadlock the whole run when a re-entry crossed an async boundary (ESM resolve hook) that drops the compile-stack context — the re-entry awaited the in-flight compile's own pending promise forever; the cycle break now also fires from the import chain threaded through resolveAndCompileImport, and any remaining pending wait is bounded (60 s) with a loud warning + cycle-break fallback instead of an infinite hang
